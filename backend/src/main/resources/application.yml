@@ -1,0 +1,58 @@
+# Cada propiedad se sobrescribe con su variable de entorno estándar de Spring, p. ej.
+# spring.datasource.url -> SPRING_DATASOURCE_URL, app.ai.provider -> APP_AI_PROVIDER,
+# app.security.jwt.secret -> APP_SECURITY_JWT_SECRET (en AWS, desde SSM Parameter Store).
+spring:
+  application:
+    name: galeno-api
+  datasource:
+    url: jdbc:mysql://localhost:3317/galeno?useUnicode=true&characterEncoding=utf8&connectionTimeZone=UTC
+    username: galeno
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate # el esquema lo manda Flyway, nunca Hibernate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    locations: classpath:db/migration
+  threads:
+    virtual:
+      enabled: true
+  web:
+    locale: es
+    locale-resolver: fixed # mensajes de validación siempre en español
+
+server:
+  port: 8090
+  shutdown: graceful
+  forward-headers-strategy: framework # detrás de CloudFront/ALB
+
+app:
+  web:
+    base-url: http://localhost:5180 # para los enlaces de invitación; en AWS, el dominio de CloudFront
+  security:
+    jwt:
+      secret: "" # obligatorio: APP_SECURITY_JWT_SECRET (mínimo 32 bytes)
+      issuer: galeno-api
+      ttl: 8h
+  ai:
+    provider: fake            # fake | bedrock
+    model: anthropic.claude-opus-5-5
+    max-tokens: 8000
+    effort: medium
+    worker-concurrency: 4
+    worker-poll-ms: 1000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true

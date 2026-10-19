@@ -1,0 +1,48 @@
+# Despliegue de la Capa 1 (EC2 + S3/CloudFront). Plantilla: requiere crear la infraestructura
+# (ver docs/aws-capa-1.md) y definir estas variables en GitHub > Settings > Variables:
+#   AWS_REGION, AWS_DEPLOY_ROLE_ARN, ECR_REPOSITORY, EC2_INSTANCE_ID, WEB_BUCKET, CLOUDFRONT_DISTRIBUTION_ID
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write # OIDC: GitHub asume un rol de AWS sin llaves guardadas
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Imagen del backend -> ECR
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}
+        run: |
+          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" backend
+          docker push --all-tags "$IMAGE"
+
+      - name: Front -> S3 + invalidación de CloudFront
+        working-directory: frontend
+        run: |
+          npm ci && npm run build
+          aws s3 sync dist "s3://${{ vars.WEB_BUCKET }}" --delete
+          aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/index.html"
+
+      - name: Actualizar la API en EC2 (SSM, sin SSH)
+        run: |
+          aws ssm send-command \
+            --instance-ids "${{ vars.EC2_INSTANCE_ID }}" \
+            --document-name AWS-RunShellScript \
+            --parameters 'commands=["cd /opt/galeno && docker compose pull && docker compose up -d"]' \
+            --comment "deploy ${{ github.sha }}"

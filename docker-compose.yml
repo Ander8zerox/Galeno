@@ -1,0 +1,40 @@
+# Entorno local. La misma imagen del backend es la que corre en EC2 (Capa 1) y en ECS (Capa 3).
+#   docker compose up -d mysql          -> solo la base de datos (backend desde el IDE)
+#   docker compose up -d --build        -> base de datos + API
+name: galeno
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: galeno
+      MYSQL_USER: galeno
+      MYSQL_PASSWORD: galeno_local
+      MYSQL_ROOT_PASSWORD: root_local
+      TZ: UTC
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    ports:
+      - "3317:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ugaleno", "-pgaleno_local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/galeno?useUnicode=true&characterEncoding=utf8&connectionTimeZone=UTC
+      APP_AI_PROVIDER: ${APP_AI_PROVIDER:-fake}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+    ports:
+      - "8090:8090"
+
+volumes:
+  mysql-data:

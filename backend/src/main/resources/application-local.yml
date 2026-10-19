@@ -1,0 +1,12 @@
+# Perfil de desarrollo local. Valores de prueba: nunca usarlos en producción.
+spring:
+  datasource:
+    password: galeno_local
+
+app:
+  security:
+    jwt:
+      secret: solo-desarrollo-local-cambiar-en-produccion-0123456789
+  seed:
+    email: medico@demo.local
+    password: Demo-Galeno-2026
