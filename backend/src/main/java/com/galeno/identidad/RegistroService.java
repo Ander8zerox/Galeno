@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -54,12 +55,14 @@ class RegistroService {
     private final TransactionTemplate tx;
     private final String baseUrl;
     private final int limitePorIp;
+    private final ApplicationEventPublisher eventos;
 
     RegistroService(RegistroPendienteRepository pendientes, UsuarioRepository usuarios, ConsultorioRepository consultorios,
                     MembresiaRepository membresias, PerfilMedicoRepository perfiles, PasswordEncoder passwordEncoder,
                     SesionService sesiones, EnvioCorreo correo, LimiteIntentos limites, TransactionTemplate tx,
                     @Value("${app.web.base-url}") String baseUrl,
-                    @Value("${app.registro.solicitudes-por-ip-hora:5}") int limitePorIp) {
+                    @Value("${app.registro.solicitudes-por-ip-hora:5}") int limitePorIp, ApplicationEventPublisher eventos) {
+        this.eventos = eventos;
         this.limitePorIp = limitePorIp;
         this.pendientes = pendientes;
         this.usuarios = usuarios;
@@ -175,6 +178,7 @@ class RegistroService {
         TenantContext.runAs(creado.consultorioId(), () -> tx.executeWithoutResult(t ->
                 membresias.save(new Membresia(creado.usuarioId(), roles))));
         log.info("Consultorio {} registrado", creado.consultorioId());
+        eventos.publishEvent(new ConsultorioRegistrado(creado.consultorioId()));
         return sesiones.elegir(creado.usuarioId(), creado.consultorioId());
     }
 

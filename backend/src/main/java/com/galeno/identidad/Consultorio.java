@@ -69,6 +69,10 @@ public class Consultorio {
         return zonaHoraria;
     }
 
+    public Instant getCreadoEn() {
+        return creadoEn;
+    }
+
     public String getNombre() {
         return nombre;
     }

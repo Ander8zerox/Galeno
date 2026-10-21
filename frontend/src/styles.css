@@ -145,3 +145,5 @@ a.evento:hover { background: #f0f6f8; }
   .evento { flex-wrap: wrap; }
   .evento-fecha { min-width: 0; }
 }
+.aviso-suscripcion { margin-bottom: 1rem; }
+.topnav a.active { font-weight: 700; text-decoration: underline; }

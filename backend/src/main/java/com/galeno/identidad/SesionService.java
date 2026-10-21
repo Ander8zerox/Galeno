@@ -61,6 +61,20 @@ public class SesionService {
         });
     }
 
+    public record Cuenta(UUID id, String nombre, String email) {
+    }
+
+    /** Verifica correo y contraseña sin abrir sesión en un consultorio (la usa la consola de plataforma). */
+    public Optional<Cuenta> verificarCredenciales(String email, String password) {
+        return comoSistema(() -> {
+            Optional<Usuario> usuario = usuarios.findByEmail(email.toLowerCase());
+            boolean valido = passwordEncoder.matches(password, usuario.map(Usuario::getPasswordHash).orElse(hashRelleno));
+            return valido && usuario.isPresent() && usuario.get().isActivo()
+                    ? Optional.of(new Cuenta(usuario.get().getId(), usuario.get().getNombre(), usuario.get().getEmail()))
+                    : Optional.<Cuenta>empty();
+        });
+    }
+
     /** Elegir (o cambiar de) consultorio. Sirve con el token de selección o con uno de sesión. */
     public SesionResponse elegir(UUID usuarioId, UUID consultorioId) {
         return comoSistema(() -> {

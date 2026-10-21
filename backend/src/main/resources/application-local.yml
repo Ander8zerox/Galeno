@@ -12,3 +12,5 @@ app:
     password: Demo-Galeno-2026
   registro:
     solicitudes-por-ip-hora: 1000 # en local todo llega desde 127.0.0.1 (proxy de Vite)
+  plataforma:
+    operadores: plataforma@demo.local

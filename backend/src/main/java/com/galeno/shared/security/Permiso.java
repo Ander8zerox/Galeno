@@ -20,5 +20,7 @@ public enum Permiso {
     /** Ver y gestionar citas. El alcance (qué médicos) lo decide el módulo de agenda según el rol. */
     AGENDA_GESTIONAR,
     /** Importar historias desde otros sistemas (además requiere HISTORIA_VER: ver datos clínicos). */
-    IMPORTAR_HISTORIAS
+    IMPORTAR_HISTORIAS,
+    /** Ver la suscripción del consultorio, elegir plan y reportar pagos. */
+    SUSCRIPCION_GESTIONAR
 }

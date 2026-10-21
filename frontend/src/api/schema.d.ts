@@ -4,6 +4,38 @@
  */
 
 export interface paths {
+    "/api/v1/plataforma/planes/{codigo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["actualizarPlan"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/datos-pago": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["datosPago"];
+        put: operations["cambiarDatosPago"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pacientes/{id}": {
         parameters: {
             query?: never;
@@ -148,6 +180,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/suscripcion/pagos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pagos"];
+        put?: never;
+        post: operations["reportar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/registro": {
         parameters: {
             query?: never;
@@ -190,6 +238,118 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["confirmar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/pagos/{id}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rechazar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/pagos/{id}/aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["aprobar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/consultorios/{id}/suspender": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["suspender"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/consultorios/{id}/reactivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reactivar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/consultorios/{id}/pagos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["registrarPago"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/consultorios/{id}/cortesia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cortesia"];
         delete?: never;
         options?: never;
         head?: never;
@@ -436,6 +596,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dev/suscripciones/avisos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["avisos"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/sesion": {
         parameters: {
             query?: never;
@@ -461,7 +637,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["login"];
+        post: operations["login_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -494,6 +670,118 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["agendar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/suscripcion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["estado"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/suscripcion/opciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["opciones"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/planes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["planes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/pagos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pagos_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/pagos/{id}/comprobante": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["comprobante"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/consultorios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["consultorios"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/auditoria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["auditoria"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -667,7 +955,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["consultorios"];
+        get: operations["consultorios_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -776,6 +1064,24 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CambioPlan: {
+            nombre: string;
+            /** Format: int64 */
+            precio?: number;
+            activo?: boolean;
+        };
+        PlanVista: {
+            codigo?: string;
+            nombre?: string;
+            /** Format: int32 */
+            meses?: number;
+            /** Format: int64 */
+            precio?: number;
+            activo?: boolean;
+        };
+        DatosPago: {
+            texto: string;
+        };
         PacienteRequest: {
             tipoDocumento: string;
             numeroDocumento: string;
@@ -1094,6 +1400,33 @@ export interface components {
             estado: "PROGRAMADA" | "CONFIRMADA" | "ATENDIDA" | "NO_ASISTIO" | "CANCELADA";
             motivoCancelacion?: string;
         };
+        PagoVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            consultorioId?: string;
+            consultorioNombre?: string;
+            plan?: string;
+            /** Format: int32 */
+            meses?: number;
+            /** Format: int64 */
+            monto?: number;
+            /** Format: date */
+            fechaPago?: string;
+            referencia?: string;
+            /** @enum {string} */
+            estado?: "REPORTADO" | "APROBADO" | "RECHAZADO";
+            motivoRechazo?: string;
+            tieneComprobante?: boolean;
+            /** Format: date-time */
+            reportadoEn?: string;
+            /** Format: date-time */
+            revisadoEn?: string;
+            /** Format: date-time */
+            periodoDesde?: string;
+            /** Format: date-time */
+            periodoHasta?: string;
+        };
         SolicitudRegistro: {
             consultorioNombre: string;
             nit?: string;
@@ -1133,6 +1466,47 @@ export interface components {
             expiresAt?: string;
             completa?: boolean;
             consultorios?: components["schemas"]["ConsultorioOpcion"][];
+        };
+        Motivo: {
+            motivo: string;
+        };
+        LoginPlataforma: {
+            email: string;
+            password: string;
+        };
+        SesionPlataforma: {
+            accessToken?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            nombre?: string;
+            email?: string;
+        };
+        EstadoVista: {
+            /** @enum {string} */
+            estado?: "PRUEBA" | "ACTIVA" | "VENCIDA" | "SUSPENDIDA";
+            /** Format: date-time */
+            venceEn?: string;
+            /** Format: date-time */
+            graciaHasta?: string;
+            /** Format: int64 */
+            diasRestantes?: number;
+            pagada?: boolean;
+            soloLectura?: boolean;
+            motivoSuspension?: string;
+            pagoEnRevision?: boolean;
+        };
+        PagoRecibido: {
+            plan: string;
+            /** Format: int64 */
+            monto?: number;
+            /** Format: date */
+            fechaPago: string;
+            referencia: string;
+        };
+        Cortesia: {
+            /** Format: int32 */
+            dias?: number;
+            motivo: string;
         };
         ConsultarInvitacion: {
             token: string;
@@ -1245,6 +1619,10 @@ export interface components {
             expiraEn?: string;
             enlace?: string;
         };
+        AvisosEnviados: {
+            /** Format: int32 */
+            enviados?: number;
+        };
         ElegirConsultorio: {
             /** Format: uuid */
             consultorioId: string;
@@ -1273,6 +1651,27 @@ export interface components {
             duracionMinutos?: number;
             motivo?: string;
             sobrecupo?: boolean;
+        };
+        OpcionesPago: {
+            planes?: components["schemas"]["PlanVista"][];
+            datosPago?: string;
+        };
+        ConsultorioVista: {
+            /** Format: uuid */
+            id?: string;
+            nombre?: string;
+            nit?: string;
+            /** Format: date-time */
+            creadoEn?: string;
+            suscripcion?: components["schemas"]["EstadoVista"];
+            administradores?: string[];
+        };
+        EventoAuditoria: {
+            /** Format: date-time */
+            fecha?: string;
+            accion?: string;
+            consultorio?: string;
+            detalle?: string;
         };
         PacientePage: {
             items?: components["schemas"]["PacienteResponse"][];
@@ -1371,7 +1770,7 @@ export interface components {
             /** Format: uuid */
             membresiaId?: string;
             roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
-            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS")[];
+            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR")[];
             /** Format: int32 */
             totalConsultorios?: number;
         };
@@ -1390,31 +1789,31 @@ export interface components {
             finalizadoEn?: string;
         };
         JsonNode: {
-            pojo?: boolean;
-            short?: boolean;
-            int?: boolean;
-            long?: boolean;
-            object?: boolean;
-            boolean?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            double?: boolean;
-            binary?: boolean;
-            string?: boolean;
             array?: boolean;
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            floatingPointNumber?: boolean;
-            number?: boolean;
-            integralNumber?: boolean;
-            valueNode?: boolean;
             container?: boolean;
+            valueNode?: boolean;
+            missingNode?: boolean;
+            bigInteger?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            missingNode?: boolean;
             bigDecimal?: boolean;
-            bigInteger?: boolean;
+            integralNumber?: boolean;
+            double?: boolean;
+            int?: boolean;
+            boolean?: boolean;
+            binary?: boolean;
+            pojo?: boolean;
+            long?: boolean;
+            short?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            string?: boolean;
+            floatingPointNumber?: boolean;
+            number?: boolean;
+            object?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -1465,6 +1864,76 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    actualizarPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioPlan"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanVista"];
+                };
+            };
+        };
+    };
+    datosPago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DatosPago"];
+                };
+            };
+        };
+    };
+    cambiarDatosPago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatosPago"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DatosPago"];
+                };
+            };
+        };
+    };
     get: {
         parameters: {
             query?: never;
@@ -1782,6 +2251,58 @@ export interface operations {
             };
         };
     };
+    pagos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagoVista"][];
+                };
+            };
+        };
+    };
+    reportar: {
+        parameters: {
+            query: {
+                plan: string;
+                monto: number;
+                fechaPago: string;
+                referencia: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    comprobante?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagoVista"];
+                };
+            };
+        };
+    };
     solicitar: {
         parameters: {
             query?: never;
@@ -1850,6 +2371,178 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SesionResponse"];
+                };
+            };
+        };
+    };
+    rechazar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Motivo"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagoVista"];
+                };
+            };
+        };
+    };
+    aprobar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagoVista"];
+                };
+            };
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginPlataforma"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SesionPlataforma"];
+                };
+            };
+        };
+    };
+    suspender: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Motivo"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstadoVista"];
+                };
+            };
+        };
+    };
+    reactivar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstadoVista"];
+                };
+            };
+        };
+    };
+    registrarPago: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PagoRecibido"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagoVista"];
+                };
+            };
+        };
+    };
+    cortesia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Cortesia"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstadoVista"];
                 };
             };
         };
@@ -2295,6 +2988,26 @@ export interface operations {
             };
         };
     };
+    avisos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AvisosEnviados"];
+                };
+            };
+        };
+    };
     sesion: {
         parameters: {
             query?: never;
@@ -2319,7 +3032,7 @@ export interface operations {
             };
         };
     };
-    login: {
+    login_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2387,6 +3100,150 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CitaVista"];
+                };
+            };
+        };
+    };
+    estado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstadoVista"];
+                };
+            };
+        };
+    };
+    opciones: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OpcionesPago"];
+                };
+            };
+        };
+    };
+    planes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanVista"][];
+                };
+            };
+        };
+    };
+    pagos_1: {
+        parameters: {
+            query?: {
+                estado?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagoVista"][];
+                };
+            };
+        };
+    };
+    comprobante: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    consultorios: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ConsultorioVista"][];
+                };
+            };
+        };
+    };
+    auditoria: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EventoAuditoria"][];
                 };
             };
         };
@@ -2630,7 +3487,7 @@ export interface operations {
             };
         };
     };
-    consultorios: {
+    consultorios_1: {
         parameters: {
             query?: never;
             header?: never;
