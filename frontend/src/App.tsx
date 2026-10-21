@@ -8,6 +8,7 @@ import { InvitacionPage } from "./pages/InvitacionPage";
 import { PacientesPage } from "./pages/PacientesPage";
 import { PacientePage } from "./pages/PacientePage";
 import { EquipoPage } from "./pages/EquipoPage";
+import { AgendaPage } from "./pages/AgendaPage";
 
 export function App() {
   const { me, seleccion, logout, puede } = useAuth();
@@ -20,9 +21,10 @@ export function App() {
   return (
     <div className="layout">
       <header className="topbar">
-        <Link to="/pacientes" className="brand">Galeno</Link>
+        <Link to="/" className="brand">Galeno</Link>
         <SelectorConsultorio />
         <nav className="topnav">
+          {puede("AGENDA_GESTIONAR") && <Link to="/agenda">Agenda</Link>}
           <Link to="/pacientes">Pacientes</Link>
           {puede("EQUIPO_GESTIONAR") && <Link to="/equipo">Equipo</Link>}
         </nav>
@@ -35,7 +37,8 @@ export function App() {
           <Route path="/pacientes" element={<PacientesPage />} />
           <Route path="/pacientes/:id" element={<PacientePage />} />
           {puede("EQUIPO_GESTIONAR") && <Route path="/equipo" element={<EquipoPage />} />}
-          <Route path="*" element={<Navigate to="/pacientes" replace />} />
+          {puede("AGENDA_GESTIONAR") && <Route path="/agenda" element={<AgendaPage />} />}
+          <Route path="*" element={<Navigate to={puede("AGENDA_GESTIONAR") ? "/agenda" : "/pacientes"} replace />} />
         </Routes>
       </main>
     </div>

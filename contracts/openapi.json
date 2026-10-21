@@ -153,6 +153,158 @@
         }
       }
     },
+    "/api/v1/agenda/medicos/{medicoId}/horario": {
+      "get": {
+        "tags": [
+          "agenda-controller"
+        ],
+        "operationId": "horario",
+        "parameters": [
+          {
+            "name": "medicoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Horario"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "agenda-controller"
+        ],
+        "operationId": "actualizarHorario",
+        "parameters": [
+          {
+            "name": "medicoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarHorario"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Horario"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agenda/citas/{citaId}/horario": {
+      "put": {
+        "tags": [
+          "agenda-controller"
+        ],
+        "operationId": "reprogramar",
+        "parameters": [
+          {
+            "name": "citaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reprogramar"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CitaVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agenda/citas/{citaId}/estado": {
+      "put": {
+        "tags": [
+          "agenda-controller"
+        ],
+        "operationId": "cambiarEstado",
+        "parameters": [
+          {
+            "name": "citaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambiarEstado"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CitaVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/pacientes": {
       "get": {
         "tags": [
@@ -524,6 +676,36 @@
         }
       }
     },
+    "/api/v1/agenda/citas": {
+      "post": {
+        "tags": [
+          "agenda-controller"
+        ],
+        "operationId": "agendar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevaCita"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CitaVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/equipo": {
       "get": {
         "tags": [
@@ -614,6 +796,158 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/AiJobResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agenda/pacientes/{pacienteId}/proximas": {
+      "get": {
+        "tags": [
+          "agenda-controller"
+        ],
+        "operationId": "proximasDelPaciente",
+        "parameters": [
+          {
+            "name": "pacienteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CitaVista"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agenda/medicos": {
+      "get": {
+        "tags": [
+          "agenda-controller"
+        ],
+        "operationId": "medicos",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MedicoAgenda"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agenda/medicos/{medicoId}/disponibilidad": {
+      "get": {
+        "tags": [
+          "agenda-controller"
+        ],
+        "operationId": "disponibilidad",
+        "parameters": [
+          {
+            "name": "medicoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "fecha",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Intervalo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/agenda/medicos/{medicoId}/citas": {
+      "get": {
+        "tags": [
+          "agenda-controller"
+        ],
+        "operationId": "citas",
+        "parameters": [
+          {
+            "name": "medicoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "desde",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CitaVista"
+                  }
                 }
               }
             }
@@ -802,6 +1136,181 @@
         },
         "required": [
           "medicos"
+        ]
+      },
+      "ActualizarHorario": {
+        "type": "object",
+        "properties": {
+          "duracionMinutos": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 240,
+            "minimum": 5
+          },
+          "bloques": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BloqueRequest"
+            },
+            "maxItems": 50,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "bloques"
+        ]
+      },
+      "BloqueRequest": {
+        "type": "object",
+        "properties": {
+          "diaSemana": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 7,
+            "minimum": 1
+          },
+          "horaInicio": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "horaFin": {
+            "type": "string",
+            "format": "time-local"
+          }
+        },
+        "required": [
+          "horaFin",
+          "horaInicio"
+        ]
+      },
+      "BloqueVista": {
+        "type": "object",
+        "properties": {
+          "diaSemana": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "horaInicio": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "horaFin": {
+            "type": "string",
+            "format": "time-local"
+          }
+        }
+      },
+      "Horario": {
+        "type": "object",
+        "properties": {
+          "medicoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "duracionMinutos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bloques": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BloqueVista"
+            }
+          }
+        }
+      },
+      "Reprogramar": {
+        "type": "object",
+        "properties": {
+          "inicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sobrecupo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "inicio"
+        ]
+      },
+      "CitaVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "medicoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "medicoNombre": {
+            "type": "string"
+          },
+          "pacienteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "pacienteNombre": {
+            "type": "string"
+          },
+          "pacienteDocumento": {
+            "type": "string"
+          },
+          "pacienteTelefono": {
+            "type": "string"
+          },
+          "inicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fin": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "PROGRAMADA",
+              "CONFIRMADA",
+              "ATENDIDA",
+              "NO_ASISTIO",
+              "CANCELADA"
+            ]
+          },
+          "motivo": {
+            "type": "string"
+          },
+          "sobrecupo": {
+            "type": "boolean"
+          },
+          "motivoCancelacion": {
+            "type": "string"
+          }
+        }
+      },
+      "CambiarEstado": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "PROGRAMADA",
+              "CONFIRMADA",
+              "ATENDIDA",
+              "NO_ASISTIO",
+              "CANCELADA"
+            ]
+          },
+          "motivoCancelacion": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "estado"
         ]
       },
       "ConsultarInvitacion": {
@@ -1213,6 +1722,42 @@
           "pacienteId"
         ]
       },
+      "NuevaCita": {
+        "type": "object",
+        "properties": {
+          "medicoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "pacienteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "inicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "duracionMinutos": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 240,
+            "minimum": 5
+          },
+          "motivo": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 0
+          },
+          "sobrecupo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "inicio",
+          "medicoId",
+          "pacienteId"
+        ]
+      },
       "PacientePage": {
         "type": "object",
         "properties": {
@@ -1340,6 +1885,9 @@
           "consultorioNombre": {
             "type": "string"
           },
+          "zonaHoraria": {
+            "type": "string"
+          },
           "membresiaId": {
             "type": "string",
             "format": "uuid"
@@ -1365,7 +1913,8 @@
                 "HISTORIA_VER",
                 "FORMULA_REDACTAR",
                 "FORMULA_FIRMAR",
-                "IA_DIAGNOSTICO"
+                "IA_DIAGNOSTICO",
+                "AGENDA_GESTIONAR"
               ]
             }
           },
@@ -1429,50 +1978,38 @@
           "float": {
             "type": "boolean"
           },
-          "object": {
-            "type": "boolean"
-          },
-          "short": {
-            "type": "boolean"
-          },
           "long": {
             "type": "boolean"
           },
+          "boolean": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          },
+          "int": {
+            "type": "boolean"
+          },
           "double": {
+            "type": "boolean"
+          },
+          "string": {
             "type": "boolean"
           },
           "textual": {
             "type": "boolean",
             "deprecated": true
           },
-          "string": {
-            "type": "boolean"
-          },
           "pojo": {
             "type": "boolean"
           },
-          "boolean": {
+          "short": {
             "type": "boolean"
           },
-          "int": {
-            "type": "boolean"
-          },
-          "binary": {
-            "type": "boolean"
-          },
-          "number": {
-            "type": "boolean"
-          },
-          "floatingPointNumber": {
-            "type": "boolean"
-          },
-          "missingNode": {
-            "type": "boolean"
-          },
-          "bigInteger": {
-            "type": "boolean"
-          },
-          "container": {
+          "integralNumber": {
             "type": "boolean"
           },
           "nodeType": {
@@ -1489,17 +2026,57 @@
               "STRING"
             ]
           },
+          "valueNode": {
+            "type": "boolean"
+          },
+          "missingNode": {
+            "type": "boolean"
+          },
+          "bigInteger": {
+            "type": "boolean"
+          },
+          "container": {
+            "type": "boolean"
+          },
           "bigDecimal": {
             "type": "boolean"
           },
-          "integralNumber": {
+          "number": {
             "type": "boolean"
           },
-          "valueNode": {
+          "floatingPointNumber": {
             "type": "boolean"
           },
           "embeddedValue": {
             "type": "boolean"
+          }
+        }
+      },
+      "MedicoAgenda": {
+        "type": "object",
+        "properties": {
+          "membresiaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "puedeEditarHorario": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Intervalo": {
+        "type": "object",
+        "properties": {
+          "inicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fin": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

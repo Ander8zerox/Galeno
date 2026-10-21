@@ -13,7 +13,7 @@ class RolTest {
     @Test
     void elSecretarioNoVeDatosClinicosNiUsaLaIa() {
         assertThat(Rol.permisosDe(List.of(Rol.SECRETARIO)))
-                .containsExactly(Permiso.PACIENTE_GESTIONAR)
+                .containsExactlyInAnyOrder(Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR)
                 .doesNotContain(Permiso.HISTORIA_VER, Permiso.FORMULA_FIRMAR, Permiso.IA_DIAGNOSTICO);
     }
 

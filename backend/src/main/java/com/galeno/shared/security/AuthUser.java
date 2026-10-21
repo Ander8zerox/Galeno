@@ -35,6 +35,11 @@ public record AuthUser(UUID id, UUID tenantId, UUID membresiaId, String nombre, 
         return authorities.contains(permiso.name());
     }
 
+    /** Rol en el consultorio de la sesión (ADMIN, MEDICO, SECRETARIO). */
+    public boolean tieneRol(String rol) {
+        return authorities.contains("ROLE_" + rol);
+    }
+
     private static UUID uuidOrNull(String value) {
         return value == null ? null : UUID.fromString(value);
     }

@@ -16,6 +16,7 @@
 | `pacientes` | Pacientes; `resumenAnonimizado()` es lo único que se envía a la IA |
 | `formulacion` | Borrador con IA → `ValidadorFormula` (alergias, datos faltantes) → fórmula firmada inmutable |
 | `apoyodiagnostico` | Diferenciales CIE-10, datos faltantes y signos de alarma |
+| `agenda` | Horario semanal por médico, cupos disponibles, citas y sus estados |
 | `shared.ai` | `LlmClient`, prompts versionados (`resources/prompts`), cola y auditoría `ai_jobs` |
 | `shared.tenancy` | `TenantContext`, filtro del JWT y resolver de Hibernate |
 | `shared.security` | Spring Security como resource server de JWT, `Permiso`, `SesionVigenteFilter` |
@@ -44,7 +45,16 @@ invitaciones (por consultorio, token de un solo uso, 7 días; solo se guarda su 
 - **Trabajos de IA.** Cada trabajo solo lo ve quien lo pidió.
 - **Firma.** Exige un perfil médico y guarda en la fórmula el registro médico vigente.
 - **Invitaciones.** El administrador crea la invitación y comparte el enlace (más adelante se enviará por correo con SES). El token va en el fragmento `#`, así que no llega a los logs del servidor ni de CloudFront. Si el correo ya tiene cuenta, se pide su contraseña actual y se le agrega el consultorio.
-- **Asignación secretario → médicos.** Queda guardada para la agenda, que es la siguiente entrega.
+- **Asignación secretario → médicos.** Define qué agendas maneja cada secretario.
+
+## Agenda
+
+- **Quién ve qué.** El administrador ve todas las agendas, el médico la suya y el secretario las de sus médicos asignados (o todas, si no tiene asignaciones). Los roles se suman. El horario solo lo cambian el propio médico o un administrador.
+- **Horario.** Franjas semanales en hora local del consultorio (`consultorios.zona_horaria`, por defecto `America/Bogota`) y una duración de cita por médico. Las citas se guardan en UTC.
+- **Reglas al agendar.** No se agenda en el pasado. La cita debe caber en una franja y no cruzarse con otra, salvo que sea **sobrecupo**, que es una decisión explícita y queda marcada. Al cambiar el horario, las citas ya agendadas no se mueven.
+- **Concurrencia.** La reserva bloquea la agenda del médico (`SELECT … FOR UPDATE`) y verifica los cruces con una lectura con bloqueo. Así, dos reservas simultáneas del mismo cupo no pueden ganar ambas. Está probado con reservas en paralelo.
+- **Estados.** PROGRAMADA → CONFIRMADA → ATENDIDA, NO_ASISTIO o CANCELADA (esta exige motivo). Solo el médico de la cita la marca como atendida. Reprogramar devuelve la cita a PROGRAMADA.
+- **Pendiente.** Bloqueos de agenda (vacaciones o festivos), recordatorios por WhatsApp o SMS, vista semanal y la conexión "Atender" → atención clínica.
 
 ## Flujo de IA
 

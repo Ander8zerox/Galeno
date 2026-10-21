@@ -25,6 +25,9 @@ public class Consultorio {
     @Column(length = 30)
     private String nit;
 
+    @Column(name = "zona_horaria", nullable = false, length = 40)
+    private String zonaHoraria;
+
     @Column(name = "creado_en", nullable = false)
     private Instant creadoEn;
 
@@ -34,11 +37,16 @@ public class Consultorio {
     public Consultorio(String nombre, String nit) {
         this.nombre = nombre;
         this.nit = nit;
+        this.zonaHoraria = "America/Bogota";
         this.creadoEn = Instant.now();
     }
 
     public UUID getId() {
         return id;
+    }
+
+    public String getZonaHoraria() {
+        return zonaHoraria;
     }
 
     public String getNombre() {

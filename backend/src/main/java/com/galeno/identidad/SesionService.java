@@ -80,11 +80,12 @@ public class SesionService {
                     .orElseThrow(() -> ApiProblem.unauthorized("Sesión no válida"));
             Usuario u = usuarios.findById(auth.id()).orElseThrow();
             Optional<PerfilMedico> perfil = perfiles.findById(u.getId());
-            String consultorio = consultorios.findById(m.getTenantId()).map(Consultorio::getNombre).orElse(null);
+            Consultorio consultorio = consultorios.findById(m.getTenantId()).orElseThrow();
             return new MeResponse(u.getId(), u.getNombre(), u.getEmail(),
                     perfil.map(PerfilMedico::getRegistroMedico).orElse(null),
                     perfil.map(PerfilMedico::getEspecialidad).orElse(null),
-                    m.getTenantId(), consultorio, m.getId(), ordenados(m), m.permisos().stream().sorted().toList(), 0);
+                    m.getTenantId(), consultorio.getNombre(), consultorio.getZonaHoraria(), m.getId(), ordenados(m),
+                    m.permisos().stream().sorted().toList(), 0);
         }));
         int total = consultorios(auth.id()).size();
         return me.conTotalConsultorios(total);
@@ -145,12 +146,12 @@ public class SesionService {
     }
 
     public record MeResponse(UUID id, String nombre, String email, String registroMedico, String especialidad,
-                             UUID consultorioId, String consultorioNombre, UUID membresiaId, List<Rol> roles,
-                             List<Permiso> permisos, int totalConsultorios) {
+                             UUID consultorioId, String consultorioNombre, String zonaHoraria, UUID membresiaId,
+                             List<Rol> roles, List<Permiso> permisos, int totalConsultorios) {
 
         MeResponse conTotalConsultorios(int total) {
             return new MeResponse(id, nombre, email, registroMedico, especialidad, consultorioId, consultorioNombre,
-                    membresiaId, roles, permisos, total);
+                    zonaHoraria, membresiaId, roles, permisos, total);
         }
     }
 }

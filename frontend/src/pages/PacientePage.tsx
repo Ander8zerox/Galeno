@@ -6,6 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import { RedactorFormula } from "../features/formulacion/RedactorFormula";
 import { HistorialFormulas } from "../features/formulacion/HistorialFormulas";
 import { ApoyoDiagnostico } from "../features/apoyo/ApoyoDiagnostico";
+import { ProximasCitas } from "../features/agenda/ProximasCitas";
 
 type Tab = "formula" | "diagnostico" | "historial";
 
@@ -43,6 +44,8 @@ export function PacientePage() {
           )}
         </div>
       </div>
+
+      {puede("AGENDA_GESTIONAR") && <ProximasCitas pacienteId={p.id!} />}
 
       {clinico && (
         <>

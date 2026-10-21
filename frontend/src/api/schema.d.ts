@@ -52,6 +52,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agenda/medicos/{medicoId}/horario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["horario"];
+        put: operations["actualizarHorario"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/citas/{citaId}/horario": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["reprogramar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/citas/{citaId}/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["cambiarEstado"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pacientes": {
         parameters: {
             query?: never;
@@ -196,6 +244,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agenda/citas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["agendar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/equipo": {
         parameters: {
             query?: never;
@@ -252,6 +316,70 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/pacientes/{pacienteId}/proximas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["proximasDelPaciente"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/medicos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["medicos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/medicos/{medicoId}/disponibilidad": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["disponibilidad"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/medicos/{medicoId}/citas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["citas"];
         put?: never;
         post?: never;
         delete?: never;
@@ -319,6 +447,65 @@ export interface components {
         };
         AsignarMedicos: {
             medicos: string[];
+        };
+        ActualizarHorario: {
+            /** Format: int32 */
+            duracionMinutos?: number;
+            bloques: components["schemas"]["BloqueRequest"][];
+        };
+        BloqueRequest: {
+            /** Format: int32 */
+            diaSemana?: number;
+            /** Format: time-local */
+            horaInicio: string;
+            /** Format: time-local */
+            horaFin: string;
+        };
+        BloqueVista: {
+            /** Format: int32 */
+            diaSemana?: number;
+            /** Format: time-local */
+            horaInicio?: string;
+            /** Format: time-local */
+            horaFin?: string;
+        };
+        Horario: {
+            /** Format: uuid */
+            medicoId?: string;
+            /** Format: int32 */
+            duracionMinutos?: number;
+            bloques?: components["schemas"]["BloqueVista"][];
+        };
+        Reprogramar: {
+            /** Format: date-time */
+            inicio: string;
+            sobrecupo?: boolean;
+        };
+        CitaVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            medicoId?: string;
+            medicoNombre?: string;
+            /** Format: uuid */
+            pacienteId?: string;
+            pacienteNombre?: string;
+            pacienteDocumento?: string;
+            pacienteTelefono?: string;
+            /** Format: date-time */
+            inicio?: string;
+            /** Format: date-time */
+            fin?: string;
+            /** @enum {string} */
+            estado?: "PROGRAMADA" | "CONFIRMADA" | "ATENDIDA" | "NO_ASISTIO" | "CANCELADA";
+            motivo?: string;
+            sobrecupo?: boolean;
+            motivoCancelacion?: string;
+        };
+        CambiarEstado: {
+            /** @enum {string} */
+            estado: "PROGRAMADA" | "CONFIRMADA" | "ATENDIDA" | "NO_ASISTIO" | "CANCELADA";
+            motivoCancelacion?: string;
         };
         ConsultarInvitacion: {
             token: string;
@@ -428,6 +615,18 @@ export interface components {
             signosVitales?: string;
             examenFisico?: string;
         };
+        NuevaCita: {
+            /** Format: uuid */
+            medicoId: string;
+            /** Format: uuid */
+            pacienteId: string;
+            /** Format: date-time */
+            inicio: string;
+            /** Format: int32 */
+            duracionMinutos?: number;
+            motivo?: string;
+            sobrecupo?: boolean;
+        };
         PacientePage: {
             items?: components["schemas"]["PacienteResponse"][];
             /** Format: int32 */
@@ -470,10 +669,11 @@ export interface components {
             /** Format: uuid */
             consultorioId?: string;
             consultorioNombre?: string;
+            zonaHoraria?: string;
             /** Format: uuid */
             membresiaId?: string;
             roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
-            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO")[];
+            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR")[];
             /** Format: int32 */
             totalConsultorios?: number;
         };
@@ -496,28 +696,40 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            object?: boolean;
-            short?: boolean;
             long?: boolean;
+            boolean?: boolean;
+            object?: boolean;
+            binary?: boolean;
+            int?: boolean;
             double?: boolean;
+            string?: boolean;
             /** @deprecated */
             textual?: boolean;
-            string?: boolean;
             pojo?: boolean;
-            boolean?: boolean;
-            int?: boolean;
-            binary?: boolean;
-            number?: boolean;
-            floatingPointNumber?: boolean;
+            short?: boolean;
+            integralNumber?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            valueNode?: boolean;
             missingNode?: boolean;
             bigInteger?: boolean;
             container?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             bigDecimal?: boolean;
-            integralNumber?: boolean;
-            valueNode?: boolean;
+            number?: boolean;
+            floatingPointNumber?: boolean;
             embeddedValue?: boolean;
+        };
+        MedicoAgenda: {
+            /** Format: uuid */
+            membresiaId?: string;
+            nombre?: string;
+            puedeEditarHorario?: boolean;
+        };
+        Intervalo: {
+            /** Format: date-time */
+            inicio?: string;
+            /** Format: date-time */
+            fin?: string;
         };
         BorradorFormula: {
             items?: components["schemas"]["ItemPropuesto"][];
@@ -648,6 +860,106 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    horario: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                medicoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Horario"];
+                };
+            };
+        };
+    };
+    actualizarHorario: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                medicoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarHorario"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Horario"];
+                };
+            };
+        };
+    };
+    reprogramar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                citaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Reprogramar"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CitaVista"];
+                };
+            };
+        };
+    };
+    cambiarEstado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                citaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambiarEstado"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CitaVista"];
+                };
             };
         };
     };
@@ -933,6 +1245,30 @@ export interface operations {
             };
         };
     };
+    agendar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NuevaCita"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CitaVista"];
+                };
+            };
+        };
+    };
     listar: {
         parameters: {
             query?: never;
@@ -1011,6 +1347,97 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AiJobResponse"];
+                };
+            };
+        };
+    };
+    proximasDelPaciente: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CitaVista"][];
+                };
+            };
+        };
+    };
+    medicos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MedicoAgenda"][];
+                };
+            };
+        };
+    };
+    disponibilidad: {
+        parameters: {
+            query: {
+                fecha: string;
+            };
+            header?: never;
+            path: {
+                medicoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Intervalo"][];
+                };
+            };
+        };
+    };
+    citas: {
+        parameters: {
+            query: {
+                desde: string;
+                hasta: string;
+            };
+            header?: never;
+            path: {
+                medicoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CitaVista"][];
                 };
             };
         };
