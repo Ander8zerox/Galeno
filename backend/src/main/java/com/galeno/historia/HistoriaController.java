@@ -66,6 +66,14 @@ public class HistoriaController {
         return historia.obtener(id);
     }
 
+    @GetMapping(value = "/atenciones/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> pdf(@PathVariable UUID id) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename("atencion-" + id + ".pdf").build().toString())
+                .body(historia.pdfAtencion(id));
+    }
+
     @PutMapping("/atenciones/{id}")
     public AtencionVista guardar(@PathVariable UUID id, @Valid @RequestBody GuardarAtencion r) {
         List<Diagnostico> dx = r.diagnosticos().stream()

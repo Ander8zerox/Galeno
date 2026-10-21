@@ -11,8 +11,28 @@ export const TIPO_DX: Record<Tipo, string> = {
   CONFIRMADO_REPETIDO: "Confirmado repetido",
 };
 
+type Cie10 = Schemas["Cie10Vista"];
+
+/** Por qué un código no aplica al paciente (RIPS valida sexo y edad), o null si aplica. */
+function incompatibilidad(c: Cie10, paciente?: { sexo?: string; edad?: number }): string | null {
+  if (!paciente) return null;
+  if (c.sexo === "F" && paciente.sexo === "M") return "Solo aplica a mujeres";
+  if (c.sexo === "M" && paciente.sexo === "F") return "Solo aplica a hombres";
+  const edad = paciente.edad;
+  if (edad !== undefined && c.edadMin !== undefined && edad < c.edadMin) return `Desde los ${c.edadMin} años`;
+  if (edad !== undefined && c.edadMax !== undefined && c.edadMax < 999 && edad > c.edadMax) return `Hasta los ${c.edadMax} años`;
+  return null;
+}
+
+interface Props {
+  value: DiagnosticoForm[];
+  onChange: (dx: DiagnosticoForm[]) => void;
+  /** Para advertir códigos que no aplican por sexo o edad. */
+  paciente?: { sexo?: string; edad?: number };
+}
+
 /** Lista de diagnósticos con búsqueda CIE-10. El primero que se agrega queda como principal. */
-export function DiagnosticosEditor({ value, onChange }: { value: DiagnosticoForm[]; onChange: (dx: DiagnosticoForm[]) => void }) {
+export function DiagnosticosEditor({ value, onChange, paciente }: Props) {
   const [q, setQ] = useState("");
   const busqueda = useQuery({
     queryKey: ["cie10", q],
@@ -53,11 +73,17 @@ export function DiagnosticosEditor({ value, onChange }: { value: DiagnosticoForm
       </label>
       {!!busqueda.data?.length && (
         <div className="resultados">
-          {busqueda.data.map((c) => (
-            <button type="button" key={c.codigo} className="opcion" onClick={() => agregar(c.codigo!, c.descripcion!)}>
-              <span><strong>{c.codigo}</strong> {c.descripcion}</span>
-            </button>
-          ))}
+          {busqueda.data.map((c) => {
+            const aviso = incompatibilidad(c, paciente);
+            return (
+              <button type="button" key={c.codigo} className="opcion" onClick={() => agregar(c.codigo!, c.descripcion!)}>
+                <span><strong>{c.codigo}</strong> {c.descripcion}</span>
+                {aviso
+                  ? <span className="badge badge-danger">No aplica a este paciente: {aviso.toLowerCase()}</span>
+                  : <span className="muted small">{c.capitulo}</span>}
+              </button>
+            );
+          })}
         </div>
       )}
       {busqueda.data?.length === 0 && <small className="muted">Sin resultados en el catálogo cargado.</small>}

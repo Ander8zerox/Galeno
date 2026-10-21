@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,7 @@ import com.galeno.historia.AccesoHistoria.Accion;
 import com.galeno.identidad.IdentidadService;
 import com.galeno.pacientes.Paciente;
 import com.galeno.pacientes.PacienteService;
+import com.galeno.shared.pdf.PdfRenderer;
 import com.galeno.shared.security.AuthUser;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
@@ -40,11 +42,12 @@ public class HistoriaService {
     private final PacienteService pacientes;
     private final IdentidadService identidad;
     private final AgendaPublica agenda;
+    private final PdfRenderer pdf;
 
     HistoriaService(AtencionRepository atenciones, NotaAclaratoriaRepository notas,
                     DocumentoClinicoRepository documentos, AccesoHistoriaRepository accesos, Cie10Repository cie10,
                     AlmacenDocumentos almacen, PacienteService pacientes, IdentidadService identidad,
-                    AgendaPublica agenda) {
+                    AgendaPublica agenda, PdfRenderer pdf) {
         this.atenciones = atenciones;
         this.notas = notas;
         this.documentos = documentos;
@@ -54,6 +57,7 @@ public class HistoriaService {
         this.pacientes = pacientes;
         this.identidad = identidad;
         this.agenda = agenda;
+        this.pdf = pdf;
     }
 
     // --- línea de tiempo ---
@@ -150,6 +154,32 @@ public class HistoriaService {
         return vista(atencion);
     }
 
+    /** PDF de la atención (con marca de agua si es un borrador). Queda auditado. */
+    @Transactional
+    public byte[] pdfAtencion(UUID atencionId) {
+        Atencion a = visible(atencionId);
+        Paciente p = pacientes.get(a.getPacienteId());
+        var consultorio = identidad.consultorio(AuthUser.current().tenantId());
+        auditar(a.getPacienteId(), Accion.IMPRIMIR_ATENCION, atencionId);
+        return pdf.render(AtencionPdf.html(a, p, consultorio, notas.findByAtencionIdOrderByCreadaEn(atencionId)));
+    }
+
+    /** Para la fórmula impresa: el diagnóstico principal de la atención en la que se emitió. */
+    @Transactional(readOnly = true)
+    public Optional<String> diagnosticoPrincipal(UUID atencionId) {
+        return atenciones.findById(atencionId).stream()
+                .flatMap(a -> a.getDiagnosticos().stream())
+                .filter(Diagnostico::isPrincipal)
+                .map(d -> d.getCodigoCie10() + " " + d.getDescripcion())
+                .findFirst();
+    }
+
+    /** Para otros módulos que también deben quedar en la auditoría de la historia. */
+    @Transactional
+    public void registrarAcceso(UUID pacienteId, Accion accion, UUID recursoId) {
+        auditar(pacienteId, accion, recursoId);
+    }
+
     /** Para otros módulos (p. ej. fórmulas): la atención existe, es de este paciente y la puede usar quien consulta. */
     @Transactional(readOnly = true)
     public void verificarAtencionDelPaciente(UUID atencionId, UUID pacienteId) {
@@ -198,7 +228,8 @@ public class HistoriaService {
             return List.of();
         }
         return cie10.buscar(texto, PageRequest.of(0, 20)).stream()
-                .map(c -> new Cie10Vista(c.getCodigo(), c.getDescripcion())).toList();
+                .map(c -> new Cie10Vista(c.getCodigo(), c.getDescripcion(), c.getSexo(), c.getEdadMin(), c.getEdadMax(),
+                        c.getCapitulo())).toList();
     }
 
     // --- reglas ---
@@ -267,7 +298,12 @@ public class HistoriaService {
     public record Archivo(String nombre, String contentType, byte[] contenido) {
     }
 
-    public record Cie10Vista(String codigo, String descripcion) {
+    /**
+     * @param sexo A (ambos), F o M: el diagnóstico solo aplica a ese sexo (lo valida RIPS)
+     * @param edadMin edad mínima en años; {@code edadMax} 999 = sin límite
+     */
+    public record Cie10Vista(String codigo, String descripcion, String sexo, Integer edadMin, Integer edadMax,
+                             String capitulo) {
     }
 
     public record NotaVista(UUID id, String autorNombre, String texto, Instant creadaEn) {

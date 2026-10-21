@@ -1081,6 +1081,70 @@
         }
       }
     },
+    "/api/v1/historia/atenciones/{id}/pdf": {
+      "get": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "pdf",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/formulacion/formulas/{id}/pdf": {
+      "get": {
+        "tags": [
+          "formulacion-controller"
+        ],
+        "operationId": "pdf_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/equipo": {
       "get": {
         "tags": [
@@ -2565,6 +2629,20 @@
           },
           "descripcion": {
             "type": "string"
+          },
+          "sexo": {
+            "type": "string"
+          },
+          "edadMin": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "edadMax": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "capitulo": {
+            "type": "string"
           }
         }
       },
@@ -2769,50 +2847,7 @@
           "number": {
             "type": "boolean"
           },
-          "long": {
-            "type": "boolean"
-          },
-          "boolean": {
-            "type": "boolean"
-          },
-          "textual": {
-            "type": "boolean",
-            "deprecated": true
-          },
-          "int": {
-            "type": "boolean"
-          },
-          "pojo": {
-            "type": "boolean"
-          },
-          "double": {
-            "type": "boolean"
-          },
-          "short": {
-            "type": "boolean"
-          },
-          "object": {
-            "type": "boolean"
-          },
-          "string": {
-            "type": "boolean"
-          },
-          "binary": {
-            "type": "boolean"
-          },
-          "integralNumber": {
-            "type": "boolean"
-          },
           "missingNode": {
-            "type": "boolean"
-          },
-          "valueNode": {
-            "type": "boolean"
-          },
-          "container": {
-            "type": "boolean"
-          },
-          "bigDecimal": {
             "type": "boolean"
           },
           "bigInteger": {
@@ -2831,6 +2866,49 @@
               "POJO",
               "STRING"
             ]
+          },
+          "bigDecimal": {
+            "type": "boolean"
+          },
+          "integralNumber": {
+            "type": "boolean"
+          },
+          "container": {
+            "type": "boolean"
+          },
+          "valueNode": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "boolean"
+          },
+          "double": {
+            "type": "boolean"
+          },
+          "int": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          },
+          "textual": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "long": {
+            "type": "boolean"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "pojo": {
+            "type": "boolean"
+          },
+          "string": {
+            "type": "boolean"
+          },
+          "short": {
+            "type": "boolean"
           },
           "floatingPointNumber": {
             "type": "boolean"

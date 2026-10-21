@@ -43,6 +43,7 @@ export function AgendaPage() {
     }
   }
 
+  // Solo se usa el médico recordado si está entre los permitidos: así nunca se piden citas ajenas
   const medico = medicos.data?.find((m) => m.membresiaId === medicoId);
 
   if (medicos.isLoading) return <p className="muted">Cargando…</p>;
@@ -80,12 +81,12 @@ export function AgendaPage() {
         )}
       </div>
 
-      {medicoId && (editandoHorario
-        ? <HorarioEditor medicoId={medicoId} onGuardado={() => setEditandoHorario(false)} />
+      {medico?.membresiaId && (editandoHorario
+        ? <HorarioEditor medicoId={medico.membresiaId} onGuardado={() => setEditandoHorario(false)} />
         : (
           <>
             <h2 className="dia-titulo">{fechaLarga(fecha)}</h2>
-            <AgendaDia medicoId={medicoId} fecha={fecha} zona={zona} />
+            <AgendaDia medicoId={medico.membresiaId} fecha={fecha} zona={zona} />
           </>
         ))}
     </section>

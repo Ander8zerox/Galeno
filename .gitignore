@@ -8,3 +8,4 @@ frontend/dist/
 .vscode/
 *.iml
 backend/data/
+TablaReferencia_CIE10*.xlsx

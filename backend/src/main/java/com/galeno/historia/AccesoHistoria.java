@@ -27,7 +27,9 @@ public class AccesoHistoria {
         FIRMAR_ATENCION,
         NOTA_ACLARATORIA,
         SUBIR_DOCUMENTO,
-        DESCARGAR_DOCUMENTO
+        DESCARGAR_DOCUMENTO,
+        IMPRIMIR_ATENCION,
+        IMPRIMIR_FORMULA
     }
 
     @Id
