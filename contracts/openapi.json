@@ -489,6 +489,96 @@
         }
       }
     },
+    "/api/v1/registro": {
+      "post": {
+        "tags": [
+          "registro-controller"
+        ],
+        "operationId": "solicitar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudRegistro"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistroSolicitado"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/registro/consultar": {
+      "post": {
+        "tags": [
+          "registro-controller"
+        ],
+        "operationId": "consultar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRegistro"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistroPublico"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/registro/confirmar": {
+      "post": {
+        "tags": [
+          "registro-controller"
+        ],
+        "operationId": "confirmar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmarRegistro"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SesionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/pacientes": {
       "get": {
         "tags": [
@@ -581,7 +671,7 @@
         "tags": [
           "invitacion-controller"
         ],
-        "operationId": "consultar",
+        "operationId": "consultar_1",
         "requestBody": {
           "content": {
             "application/json": {
@@ -672,7 +762,7 @@
         "tags": [
           "importacion-controller"
         ],
-        "operationId": "confirmar",
+        "operationId": "confirmar_1",
         "parameters": [
           {
             "name": "id",
@@ -1211,7 +1301,7 @@
         "tags": [
           "apoyo-diagnostico-controller"
         ],
-        "operationId": "solicitar",
+        "operationId": "solicitar_1",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1578,6 +1668,29 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/Miembro"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dev/buzon": {
+      "get": {
+        "tags": [
+          "buzon-controller"
+        ],
+        "operationId": "recientes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Enviado"
                   }
                 }
               }
@@ -2807,6 +2920,156 @@
           "estado"
         ]
       },
+      "SolicitudRegistro": {
+        "type": "object",
+        "properties": {
+          "consultorioNombre": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "nit": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 0
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 190,
+            "minLength": 0
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "esMedico": {
+            "type": "boolean"
+          },
+          "registroMedico": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 0
+          },
+          "especialidad": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 0
+          },
+          "aceptaTerminos": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "consultorioNombre",
+          "email",
+          "nombre",
+          "password"
+        ]
+      },
+      "RegistroSolicitado": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "TokenRegistro": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "RegistroPublico": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "consultorioNombre": {
+            "type": "string"
+          },
+          "cuentaExistente": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ConfirmarRegistro": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ConsultorioOpcion": {
+        "type": "object",
+        "properties": {
+          "consultorioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ADMIN",
+                "MEDICO",
+                "SECRETARIO"
+              ]
+            }
+          }
+        }
+      },
+      "SesionResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completa": {
+            "type": "boolean"
+          },
+          "consultorios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConsultorioOpcion"
+            }
+          }
+        }
+      },
       "ConsultarInvitacion": {
         "type": "object",
         "properties": {
@@ -2881,50 +3144,6 @@
           "password",
           "token"
         ]
-      },
-      "ConsultorioOpcion": {
-        "type": "object",
-        "properties": {
-          "consultorioId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "nombre": {
-            "type": "string"
-          },
-          "roles": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "ADMIN",
-                "MEDICO",
-                "SECRETARIO"
-              ]
-            }
-          }
-        }
-      },
-      "SesionResponse": {
-        "type": "object",
-        "properties": {
-          "accessToken": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "completa": {
-            "type": "boolean"
-          },
-          "consultorios": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ConsultorioOpcion"
-            }
-          }
-        }
       },
       "Asignacion": {
         "type": "object",
@@ -3582,6 +3801,24 @@
           }
         }
       },
+      "Enviado": {
+        "type": "object",
+        "properties": {
+          "para": {
+            "type": "string"
+          },
+          "asunto": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "enviadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "MeResponse": {
         "type": "object",
         "properties": {
@@ -3691,6 +3928,37 @@
       "JsonNode": {
         "type": "object",
         "properties": {
+          "pojo": {
+            "type": "boolean"
+          },
+          "short": {
+            "type": "boolean"
+          },
+          "int": {
+            "type": "boolean"
+          },
+          "long": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "boolean"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "textual": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "double": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          },
+          "string": {
+            "type": "boolean"
+          },
           "array": {
             "type": "boolean"
           },
@@ -3703,10 +3971,19 @@
           "float": {
             "type": "boolean"
           },
-          "bigDecimal": {
+          "floatingPointNumber": {
+            "type": "boolean"
+          },
+          "number": {
             "type": "boolean"
           },
           "integralNumber": {
+            "type": "boolean"
+          },
+          "valueNode": {
+            "type": "boolean"
+          },
+          "container": {
             "type": "boolean"
           },
           "nodeType": {
@@ -3723,53 +4000,13 @@
               "STRING"
             ]
           },
-          "bigInteger": {
-            "type": "boolean"
-          },
-          "object": {
-            "type": "boolean"
-          },
-          "pojo": {
-            "type": "boolean"
-          },
-          "boolean": {
-            "type": "boolean"
-          },
-          "long": {
-            "type": "boolean"
-          },
-          "double": {
-            "type": "boolean"
-          },
-          "textual": {
-            "type": "boolean",
-            "deprecated": true
-          },
-          "int": {
-            "type": "boolean"
-          },
-          "short": {
-            "type": "boolean"
-          },
-          "string": {
-            "type": "boolean"
-          },
-          "binary": {
-            "type": "boolean"
-          },
-          "container": {
-            "type": "boolean"
-          },
           "missingNode": {
             "type": "boolean"
           },
-          "valueNode": {
+          "bigDecimal": {
             "type": "boolean"
           },
-          "number": {
-            "type": "boolean"
-          },
-          "floatingPointNumber": {
+          "bigInteger": {
             "type": "boolean"
           },
           "embeddedValue": {

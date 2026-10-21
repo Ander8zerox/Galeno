@@ -9,13 +9,26 @@
 - CIE-10 oficial de MinSalud (con avisos de sexo y edad) y PDF de la fórmula y de la atención.
 - Importación de RIPS JSON (varios archivos o ZIP) con revisión, confirmación y deshacer; catálogo CUPS; completar datos de pacientes importados.
 - Importación de listados de pacientes (Excel o CSV) con mapeo de columnas recordado por sistema de origen; filtro y avisos de datos incompletos.
+- Registro de consultorios desde la web con verificación del correo, NIT con dígito de verificación, aceptación de términos y política de datos, y límite de intentos.
 
 ## Siguiente
 
 ### Historia clínica, siguiente iteración
 - Imagen de la firma del médico y código QR de verificación en los PDF, reporte de auditoría para el administrador, y documentos en S3.
 
-### Importación de historias desde otros sistemas
+### Agenda, siguiente iteración
+- Bloqueos (vacaciones, festivos de Colombia), vista semanal y recordatorios por WhatsApp o SMS.
+
+### Otros pendientes
+- Portal del paciente: cuenta separada que ve sus citas y fórmulas.
+- Recuperación de contraseña, envío real de correos con SES (registro e invitaciones) y MFA.
+- Revisión legal de los términos y de la política de datos (hoy un borrador en `/politica-datos`) antes de abrir el registro al público.
+- Catálogo CUM/INVIMA y rangos de dosis en `ValidadorFormula`.
+- Cifrado de campos sensibles.
+- Pruebas de integración con Testcontainers.
+- RIPS y facturación electrónica.
+
+### Importación de historias desde otros sistemas (pausada: queda para el final)
 El principio: primero las fuentes masivas, todas por el mismo flujo **extraer → revisar → confirmar**.
 
 | Prioridad | Fuente | Cómo se procesa |
@@ -33,14 +46,3 @@ El principio: primero las fuentes masivas, todas por el mismo flujo **extraer �
 - **Antes de construir el punto 3:** un piloto con 20 historias reales para medir calidad, tokens y costo.
 - **Legal.** Contrato de encargado del tratamiento (Ley 1581) que mencione la IA en AWS, auditoría de quién importó y aprobó, y conservación del original (Res. 1995).
 - **Comercial.** Ofrecer "migración asistida incluida" para el primer lote de cada cliente.
-
-### Agenda, siguiente iteración
-- Bloqueos (vacaciones, festivos de Colombia), vista semanal y recordatorios por WhatsApp o SMS.
-
-### Otros pendientes
-- Portal del paciente: cuenta separada que ve sus citas y fórmulas.
-- Registro de consultorios nuevos, recuperación de contraseña, invitaciones por correo (SES) y MFA.
-- Catálogo CUM/INVIMA y rangos de dosis en `ValidadorFormula`.
-- Cifrado de campos sensibles.
-- Pruebas de integración con Testcontainers.
-- RIPS y facturación electrónica.

@@ -34,6 +34,8 @@ server:
 app:
   documentos:
     dir: ./data/documentos # en AWS: bucket S3 cifrado
+  correo:
+    proveedor: local # local (buzón de desarrollo en /api/v1/dev/buzon) | ses (en AWS)
   web:
     base-url: http://localhost:5180 # para los enlaces de invitación; en AWS, el dominio de CloudFront
   security:

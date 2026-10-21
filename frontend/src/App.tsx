@@ -5,6 +5,7 @@ import { useAuth } from "./auth/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
 import { SeleccionConsultorioPage } from "./pages/SeleccionConsultorioPage";
 import { InvitacionPage } from "./pages/InvitacionPage";
+import { BuzonDevPage, ConfirmarRegistroPage, PoliticaDatosPage, RegistroPage } from "./pages/RegistroPage";
 import { PacientesPage } from "./pages/PacientesPage";
 import { PacientePage } from "./pages/PacientePage";
 import { EquipoPage } from "./pages/EquipoPage";
@@ -16,8 +17,12 @@ export function App() {
   const { me, seleccion, logout, puede } = useAuth();
   const location = useLocation();
 
-  // La invitación es pública: quien la abre puede no tener cuenta todavía
+  // Páginas públicas: quien las abre puede no tener cuenta todavía
   if (location.pathname === "/invitacion") return <InvitacionPage />;
+  if (location.pathname === "/registro") return <RegistroPage />;
+  if (location.pathname === "/registro/confirmar") return <ConfirmarRegistroPage />;
+  if (location.pathname === "/politica-datos") return <PoliticaDatosPage />;
+  if (import.meta.env.DEV && location.pathname === "/dev/buzon") return <BuzonDevPage />;
   if (!me) return seleccion ? <SeleccionConsultorioPage opciones={seleccion} /> : <LoginPage />;
 
   return (
