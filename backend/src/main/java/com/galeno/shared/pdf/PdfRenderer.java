@@ -43,6 +43,8 @@ public class PdfRenderer {
             .firma { margin-top: 28px; width: 60%; }
             .firma .linea { border-top: 1px solid #1f2933; padding-top: 4px; }
             .texto { white-space: pre-wrap; }
+            h3 { font-size: 10.5pt; margin: 0 0 4px; }
+            .salto { page-break-before: always; }
             .marca-agua { position: fixed; top: 40%; left: 10%; font-size: 60pt; color: #f3d9a4; transform: rotate(-30deg); }
             """;
 

@@ -66,6 +66,15 @@ public class HistoriaController {
         return historia.obtener(id);
     }
 
+    /** Historia clínica completa del paciente (atenciones firmadas, notas y lista de documentos). */
+    @GetMapping(value = "/pacientes/{pacienteId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> pdfHistoria(@PathVariable UUID pacienteId) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename("historia-clinica.pdf", StandardCharsets.UTF_8).build().toString())
+                .body(historia.pdfHistoria(pacienteId));
+    }
+
     @GetMapping(value = "/atenciones/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> pdf(@PathVariable UUID id) {
         return ResponseEntity.ok()
