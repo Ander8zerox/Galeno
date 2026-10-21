@@ -49,6 +49,9 @@ public class Formula {
     @Column(name = "ai_job_id")
     private UUID aiJobId;
 
+    @Column(name = "atencion_id")
+    private UUID atencionId;
+
     @Column(length = 1000)
     private String observaciones;
 
@@ -63,10 +66,12 @@ public class Formula {
     protected Formula() {
     }
 
-    public Formula(UUID pacienteId, UUID medicoId, String registroMedico, UUID aiJobId, String observaciones, List<FormulaItem> items) {
+    public Formula(UUID pacienteId, UUID medicoId, String registroMedico, UUID aiJobId, UUID atencionId,
+                   String observaciones, List<FormulaItem> items) {
         this.pacienteId = pacienteId;
         this.medicoId = medicoId;
         this.registroMedico = registroMedico;
+        this.atencionId = atencionId;
         this.aiJobId = aiJobId;
         this.observaciones = observaciones;
         this.items = new ArrayList<>(items);
@@ -91,6 +96,10 @@ public class Formula {
 
     public UUID getAiJobId() {
         return aiJobId;
+    }
+
+    public UUID getAtencionId() {
+        return atencionId;
     }
 
     public String getObservaciones() {

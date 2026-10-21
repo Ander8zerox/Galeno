@@ -13,7 +13,7 @@ export function ProximasCitas({ pacienteId }: { pacienteId: string }) {
     queryKey: ["citas", "paciente", pacienteId],
     queryFn: async () => unwrap(await api.GET("/api/v1/agenda/pacientes/{pacienteId}/proximas", { params: { path: { pacienteId } } })),
   });
-  const activas = (citas.data ?? []).filter((c) => c.estado !== "CANCELADA");
+  const activas = (citas.data ?? []).filter((c) => c.estado === "PROGRAMADA" || c.estado === "CONFIRMADA");
 
   return (
     <div className="card proximas">

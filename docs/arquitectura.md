@@ -17,6 +17,7 @@
 | `formulacion` | Borrador con IA → `ValidadorFormula` (alergias, datos faltantes) → fórmula firmada inmutable |
 | `apoyodiagnostico` | Diferenciales CIE-10, datos faltantes y signos de alarma |
 | `agenda` | Horario semanal por médico, cupos disponibles, citas y sus estados |
+| `historia` | Atenciones (borrador → firmada), diagnósticos CIE-10, notas aclaratorias, documentos clínicos y auditoría de acceso |
 | `shared.ai` | `LlmClient`, prompts versionados (`resources/prompts`), cola y auditoría `ai_jobs` |
 | `shared.tenancy` | `TenantContext`, filtro del JWT y resolver de Hibernate |
 | `shared.security` | Spring Security como resource server de JWT, `Permiso`, `SesionVigenteFilter` |
@@ -55,6 +56,20 @@ invitaciones (por consultorio, token de un solo uso, 7 días; solo se guarda su 
 - **Concurrencia.** La reserva bloquea la agenda del médico (`SELECT … FOR UPDATE`) y verifica los cruces con una lectura con bloqueo. Así, dos reservas simultáneas del mismo cupo no pueden ganar ambas. Está probado con reservas en paralelo.
 - **Estados.** PROGRAMADA → CONFIRMADA → ATENDIDA, NO_ASISTIO o CANCELADA (esta exige motivo). Solo el médico de la cita la marca como atendida. Reprogramar devuelve la cita a PROGRAMADA.
 - **Pendiente.** Bloqueos de agenda (vacaciones o festivos), recordatorios por WhatsApp o SMS, vista semanal y la conexión "Atender" → atención clínica.
+
+## Historia clínica
+
+- **Atención.** Motivo, enfermedad actual, antecedentes (se precargan del paciente), revisión por sistemas, signos vitales, examen físico, diagnósticos CIE-10 con tipo RIPS (impresión diagnóstica, confirmado nuevo o repetido), análisis y plan.
+- **Borrador → firmada.** El borrador solo lo ven y editan su autor. Tiene bloqueo optimista: si otra pestaña guardó antes, la API responde 409. Para firmar se exigen motivo de consulta y exactamente un diagnóstico principal; se guarda una copia del registro médico y del nombre del médico.
+- **Inmutable.** Una atención firmada no se edita ni se elimina (Res. 1995). Las correcciones son **notas aclaratorias**, también inmutables y con su autor.
+- **Historia compartida.** Todos los médicos del consultorio ven las atenciones firmadas. Secretarios y administradores sin rol médico no ven la historia.
+- **Conexiones.**
+  - Con la agenda: "Atender" crea o reabre la atención de la cita, y al firmarla la cita queda ATENDIDA.
+  - Con la fórmula: puede quedar ligada a la atención (`formulas.atencion_id`).
+  - Con el apoyo diagnóstico: usa los datos de la atención y sus diferenciales se agregan como diagnósticos.
+- **Documentos.** PDF, PNG o JPG de hasta 20 MB. El tipo se valida por el contenido del archivo, no por la extensión. El archivo es inmutable y se guarda su SHA-256. Hoy va a disco local (`app.documentos.dir`); en AWS irá a S3 cifrado con la misma interfaz `AlmacenDocumentos`.
+- **Auditoría.** Cada vista de historia o atención, cada firma, nota, carga o descarga queda en `accesos_historia` (quién, qué y cuándo).
+- **CIE-10.** El catálogo (`cie10`) trae una semilla de diagnósticos frecuentes. **Pendiente:** cargar la tabla completa de MinSalud.
 
 ## Flujo de IA
 

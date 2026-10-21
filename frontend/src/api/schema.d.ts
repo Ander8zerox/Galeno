@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/historia/atenciones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["obtener"];
+        put: operations["guardar"];
+        post?: never;
+        delete: operations["eliminarBorrador"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/equipo/{membresiaId}": {
         parameters: {
             query?: never;
@@ -148,6 +164,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/historia/pacientes/{pacienteId}/documentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["subirDocumento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/historia/atenciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["crear"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/historia/atenciones/{id}/notas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["agregarNota"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/historia/atenciones/{id}/firma": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["firmar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/formulacion/formulas": {
         parameters: {
             query?: never;
@@ -157,7 +237,7 @@ export interface paths {
         };
         get: operations["porPaciente"];
         put?: never;
-        post: operations["firmar"];
+        post: operations["firmar_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -254,6 +334,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["agendar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/historia/pacientes/{pacienteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["linea"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/historia/documentos/{id}/archivo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["descargar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/historia/cie10": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cie10"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -439,6 +567,112 @@ export interface components {
             alergias?: string;
             antecedentes?: string;
         };
+        DiagnosticoRequest: {
+            codigoCie10: string;
+            descripcion: string;
+            principal?: boolean;
+            /** @enum {string} */
+            tipo?: "IMPRESION_DIAGNOSTICA" | "CONFIRMADO_NUEVO" | "CONFIRMADO_REPETIDO";
+        };
+        GuardarAtencion: {
+            /** Format: int64 */
+            version?: number;
+            motivoConsulta?: string;
+            enfermedadActual?: string;
+            antecedentes?: string;
+            revisionSistemas?: string;
+            /** Format: int32 */
+            taSistolica?: number;
+            /** Format: int32 */
+            taDiastolica?: number;
+            /** Format: int32 */
+            frecuenciaCardiaca?: number;
+            /** Format: int32 */
+            frecuenciaRespiratoria?: number;
+            temperatura?: number;
+            /** Format: int32 */
+            saturacionO2?: number;
+            pesoKg?: number;
+            tallaCm?: number;
+            examenFisico?: string;
+            analisis?: string;
+            plan?: string;
+            diagnosticos: components["schemas"]["DiagnosticoRequest"][];
+        };
+        AtencionVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            pacienteId?: string;
+            /** Format: uuid */
+            citaId?: string;
+            medicoNombre?: string;
+            registroMedico?: string;
+            /** @enum {string} */
+            origen?: "GALENO" | "IMPORTADA";
+            /** @enum {string} */
+            estado?: "BORRADOR" | "FIRMADA";
+            /** Format: date-time */
+            fechaAtencion?: string;
+            /** Format: date-time */
+            firmadaEn?: string;
+            /** Format: int64 */
+            version?: number;
+            propia?: boolean;
+            motivoConsulta?: string;
+            enfermedadActual?: string;
+            antecedentes?: string;
+            revisionSistemas?: string;
+            /** Format: int32 */
+            taSistolica?: number;
+            /** Format: int32 */
+            taDiastolica?: number;
+            /** Format: int32 */
+            frecuenciaCardiaca?: number;
+            /** Format: int32 */
+            frecuenciaRespiratoria?: number;
+            temperatura?: number;
+            /** Format: int32 */
+            saturacionO2?: number;
+            pesoKg?: number;
+            tallaCm?: number;
+            examenFisico?: string;
+            analisis?: string;
+            plan?: string;
+            diagnosticos?: components["schemas"]["DiagnosticoVista"][];
+            notas?: components["schemas"]["NotaVista"][];
+            documentos?: components["schemas"]["DocumentoVista"][];
+        };
+        DiagnosticoVista: {
+            codigoCie10?: string;
+            descripcion?: string;
+            principal?: boolean;
+            /** @enum {string} */
+            tipo?: "IMPRESION_DIAGNOSTICA" | "CONFIRMADO_NUEVO" | "CONFIRMADO_REPETIDO";
+        };
+        DocumentoVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            atencionId?: string;
+            /** @enum {string} */
+            tipo?: "RESULTADO_LABORATORIO" | "IMAGEN_DIAGNOSTICA" | "HISTORIA_EXTERNA" | "CONSENTIMIENTO" | "REMISION" | "OTRO";
+            descripcion?: string;
+            nombreArchivo?: string;
+            contentType?: string;
+            /** Format: int64 */
+            tamanoBytes?: number;
+            /** Format: date-time */
+            creadoEn?: string;
+        };
+        NotaVista: {
+            /** Format: uuid */
+            id?: string;
+            autorNombre?: string;
+            texto?: string;
+            /** Format: date-time */
+            creadaEn?: string;
+        };
         ActualizarMiembro: {
             roles: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
             /** @enum {string} */
@@ -537,11 +771,22 @@ export interface components {
             completa?: boolean;
             consultorios?: components["schemas"]["ConsultorioOpcion"][];
         };
+        NuevaAtencion: {
+            /** Format: uuid */
+            pacienteId: string;
+            /** Format: uuid */
+            citaId?: string;
+        };
+        NuevaNota: {
+            texto: string;
+        };
         FirmarFormula: {
             /** Format: uuid */
             pacienteId: string;
             /** Format: uuid */
             aiJobId?: string;
+            /** Format: uuid */
+            atencionId?: string;
             observaciones?: string;
             items: components["schemas"]["ItemRequest"][];
         };
@@ -566,6 +811,8 @@ export interface components {
             registroMedico?: string;
             /** Format: uuid */
             aiJobId?: string;
+            /** Format: uuid */
+            atencionId?: string;
             observaciones?: string;
             /** Format: date-time */
             firmadaEn?: string;
@@ -636,6 +883,22 @@ export interface components {
             /** Format: int64 */
             total?: number;
         };
+        EventoHistoria: {
+            /** @enum {string} */
+            tipo?: "ATENCION" | "DOCUMENTO";
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            fecha?: string;
+            titulo?: string;
+            detalle?: string;
+            estado?: string;
+            autor?: string;
+        };
+        Cie10Vista: {
+            codigo?: string;
+            descripcion?: string;
+        };
         Miembro: {
             /** Format: uuid */
             membresiaId?: string;
@@ -673,7 +936,7 @@ export interface components {
             /** Format: uuid */
             membresiaId?: string;
             roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
-            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR")[];
+            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR")[];
             /** Format: int32 */
             totalConsultorios?: number;
         };
@@ -696,26 +959,26 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
+            number?: boolean;
             long?: boolean;
             boolean?: boolean;
-            object?: boolean;
-            binary?: boolean;
-            int?: boolean;
-            double?: boolean;
-            string?: boolean;
             /** @deprecated */
             textual?: boolean;
+            int?: boolean;
             pojo?: boolean;
+            double?: boolean;
             short?: boolean;
+            object?: boolean;
+            string?: boolean;
+            binary?: boolean;
             integralNumber?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            valueNode?: boolean;
             missingNode?: boolean;
-            bigInteger?: boolean;
+            valueNode?: boolean;
             container?: boolean;
             bigDecimal?: boolean;
-            number?: boolean;
+            bigInteger?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
@@ -812,6 +1075,74 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["PacienteResponse"];
                 };
+            };
+        };
+    };
+    obtener: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AtencionVista"];
+                };
+            };
+        };
+    };
+    guardar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuardarAtencion"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AtencionVista"];
+                };
+            };
+        };
+    };
+    eliminarBorrador: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1059,6 +1390,111 @@ export interface operations {
             };
         };
     };
+    subirDocumento: {
+        parameters: {
+            query: {
+                tipo: "RESULTADO_LABORATORIO" | "IMAGEN_DIAGNOSTICA" | "HISTORIA_EXTERNA" | "CONSENTIMIENTO" | "REMISION" | "OTRO";
+                descripcion?: string;
+                atencionId?: string;
+            };
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archivo: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentoVista"];
+                };
+            };
+        };
+    };
+    crear: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NuevaAtencion"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AtencionVista"];
+                };
+            };
+        };
+    };
+    agregarNota: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NuevaNota"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AtencionVista"];
+                };
+            };
+        };
+    };
+    firmar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AtencionVista"];
+                };
+            };
+        };
+    };
     porPaciente: {
         parameters: {
             query: {
@@ -1081,7 +1517,7 @@ export interface operations {
             };
         };
     };
-    firmar: {
+    firmar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -1265,6 +1701,72 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CitaVista"];
+                };
+            };
+        };
+    };
+    linea: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EventoHistoria"][];
+                };
+            };
+        };
+    };
+    descargar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    cie10: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Cie10Vista"][];
                 };
             };
         };

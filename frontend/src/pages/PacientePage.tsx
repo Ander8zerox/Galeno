@@ -7,13 +7,14 @@ import { RedactorFormula } from "../features/formulacion/RedactorFormula";
 import { HistorialFormulas } from "../features/formulacion/HistorialFormulas";
 import { ApoyoDiagnostico } from "../features/apoyo/ApoyoDiagnostico";
 import { ProximasCitas } from "../features/agenda/ProximasCitas";
+import { LineaHistoria } from "../features/historia/LineaHistoria";
 
-type Tab = "formula" | "diagnostico" | "historial";
+type Tab = "historia" | "formula" | "diagnostico" | "historial";
 
 export function PacientePage() {
   const { id } = useParams<{ id: string }>();
   const { puede } = useAuth();
-  const [tab, setTab] = useState<Tab>("formula");
+  const [tab, setTab] = useState<Tab>("historia");
   const paciente = useQuery({
     queryKey: ["paciente", id],
     queryFn: async () => unwrap(await api.GET("/api/v1/pacientes/{id}", { params: { path: { id: id! } } })),
@@ -50,10 +51,12 @@ export function PacientePage() {
       {clinico && (
         <>
           <nav className="tabs">
-            {puede("FORMULA_REDACTAR") && <button className={tab === "formula" ? "active" : ""} onClick={() => setTab("formula")}>Redactar fórmula</button>}
+            <button className={tab === "historia" ? "active" : ""} onClick={() => setTab("historia")}>Historia clínica</button>
+            {puede("FORMULA_REDACTAR") && <button className={tab === "formula" ? "active" : ""} onClick={() => setTab("formula")}>Fórmula rápida</button>}
             {puede("IA_DIAGNOSTICO") && <button className={tab === "diagnostico" ? "active" : ""} onClick={() => setTab("diagnostico")}>Apoyo diagnóstico</button>}
             {puede("FORMULA_REDACTAR") && <button className={tab === "historial" ? "active" : ""} onClick={() => setTab("historial")}>Fórmulas firmadas</button>}
           </nav>
+          {tab === "historia" && <LineaHistoria pacienteId={p.id!} />}
           {tab === "formula" && puede("FORMULA_REDACTAR") && <RedactorFormula pacienteId={p.id!} onFirmada={() => setTab("historial")} />}
           {tab === "diagnostico" && puede("IA_DIAGNOSTICO") && <ApoyoDiagnostico pacienteId={p.id!} />}
           {tab === "historial" && puede("FORMULA_REDACTAR") && <HistorialFormulas pacienteId={p.id!} />}

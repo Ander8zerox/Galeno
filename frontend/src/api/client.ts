@@ -40,6 +40,32 @@ const auth: Middleware = {
 export const api = createClient<paths>({ baseUrl: "/" });
 api.use(auth);
 
+async function problema(res: Response): Promise<ApiError> {
+  const p = (await res.json().catch(() => ({}))) as { detail?: string; errores?: Record<string, string> };
+  return new ApiError(res.status, p.detail ?? "Error inesperado", p.errores);
+}
+
+/** Sube un archivo (multipart). openapi-fetch no maneja bien FormData, así que va con fetch directo. */
+export async function subirArchivo<T>(ruta: string, datos: FormData): Promise<T> {
+  const res = await fetch(ruta, { method: "POST", body: datos, headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  if (res.status === 401) onUnauthorized();
+  if (!res.ok) throw await problema(res);
+  return (await res.json()) as T;
+}
+
+/** Descarga con el token (un enlace normal no lo enviaría) y abre el diálogo de guardar del navegador. */
+export async function descargarArchivo(ruta: string, nombre: string): Promise<void> {
+  const res = await fetch(ruta, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  if (res.status === 401) onUnauthorized();
+  if (!res.ok) throw await problema(res);
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombre;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 /** Para respuestas sin cuerpo (204): lanza ApiError si la petición falló. */
 export function expectOk(result: { error?: unknown; response: Response }): void {
   if (!result.response.ok) {

@@ -11,6 +11,8 @@ public enum Permiso {
     PACIENTE_GESTIONAR,
     /** Ver y editar datos clínicos: alergias, antecedentes, historia. */
     HISTORIA_VER,
+    /** Crear y firmar atenciones, agregar notas aclaratorias y subir documentos clínicos. */
+    HISTORIA_REGISTRAR,
     FORMULA_REDACTAR,
     /** Requiere además registro médico. */
     FORMULA_FIRMAR,

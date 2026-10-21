@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 import { AgendarForm } from "./AgendarForm";
@@ -77,6 +77,12 @@ function CitaFila({ cita, zona }: { cita: Cita; zona: string }) {
   const [motivo, setMotivo] = useState("");
   const abierta = cita.estado === "PROGRAMADA" || cita.estado === "CONFIRMADA";
   const esMiCita = cita.medicoId === me?.membresiaId;
+  const navigate = useNavigate();
+  const atender = useMutation({
+    mutationFn: async () =>
+      unwrap(await api.POST("/api/v1/historia/atenciones", { body: { pacienteId: cita.pacienteId!, citaId: cita.id } })),
+    onSuccess: (a) => navigate(`/pacientes/${cita.pacienteId}/atenciones/${a.id}`),
+  });
 
   const cambiar = useMutation({
     mutationFn: async (body: { estado: Estado; motivoCancelacion?: string }) =>
@@ -110,12 +116,12 @@ function CitaFila({ cita, zona }: { cita: Cita; zona: string }) {
             <button className="btn-link" onClick={() => setCancelando(false)}>Volver</button>
           </div>
         )}
-        {cambiar.error && <p className="alert alert-error">{cambiar.error.message}</p>}
+        {(cambiar.error || atender.error) && <p className="alert alert-error">{(cambiar.error ?? atender.error)?.message}</p>}
       </div>
       {abierta && !cancelando && (
         <div className="row acciones">
           {cita.estado === "PROGRAMADA" && <button className="btn-link" onClick={() => cambiar.mutate({ estado: "CONFIRMADA" })}>Confirmar</button>}
-          {puede("HISTORIA_VER") && esMiCita && <button className="btn-link" onClick={() => cambiar.mutate({ estado: "ATENDIDA" })}>Atendida</button>}
+          {puede("HISTORIA_REGISTRAR") && esMiCita && <button className="btn" disabled={atender.isPending} onClick={() => atender.mutate()}>Atender</button>}
           <button className="btn-link" onClick={() => cambiar.mutate({ estado: "NO_ASISTIO" })}>No asistió</button>
           <button className="btn-link danger" onClick={() => setCancelando(true)}>Cancelar</button>
         </div>
