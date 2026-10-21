@@ -113,11 +113,13 @@ export function SuscripcionPage() {
             {opciones.data.planes?.map((p) => (
               <div key={p.codigo} className="card" style={{ minWidth: "12rem" }}>
                 <strong>{p.nombre}</strong>
-                <div style={{ fontSize: "1.4rem" }}>{p.precio ? pesos(p.precio) : "Precio por definir"}</div>
+                {!!opciones.data?.descuentoPorcentaje && !!p.precio && <s className="muted small">{pesos(p.precio)}</s>}
+                <div style={{ fontSize: "1.4rem" }}>{p.precio ? pesos(p.precioConDescuento) : "Precio por definir"}</div>
                 <small className="muted">{p.meses === 1 ? "por mes" : `por ${p.meses} meses`}</small>
               </div>
             ))}
           </div>
+          {!!opciones.data.descuentoPorcentaje && <p className="badge badge-ok">Tiene {opciones.data.descuentoPorcentaje} % de descuento por venir recomendado por un partner de Galeno.</p>}
           <p className="muted small">Pague por transferencia o consignación y luego repórtelo aquí con la referencia y el comprobante:</p>
           <pre className="card" style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "inherit" }}>{opciones.data.datosPago}</pre>
           <ReportarPago planes={opciones.data.planes ?? []} bloqueado={!!s?.pagoEnRevision} />
@@ -150,11 +152,11 @@ export function SuscripcionPage() {
   );
 }
 
-function ReportarPago({ planes, bloqueado }: { planes: Schemas["PlanVista"][]; bloqueado: boolean }) {
+function ReportarPago({ planes, bloqueado }: { planes: Schemas["PlanPrecio"][]; bloqueado: boolean }) {
   const queryClient = useQueryClient();
   const hoy = new Date().toLocaleDateString("en-CA"); // aaaa-mm-dd en hora local
   const [plan, setPlan] = useState(planes[0]?.codigo ?? "MENSUAL");
-  const [monto, setMonto] = useState(String(planes[0]?.precio || ""));
+  const [monto, setMonto] = useState(String(planes[0]?.precioConDescuento || ""));
   const [fechaPago, setFechaPago] = useState(hoy);
   const [referencia, setReferencia] = useState("");
   const [archivo, setArchivo] = useState<File | null>(null);
@@ -189,7 +191,7 @@ function ReportarPago({ planes, bloqueado }: { planes: Schemas["PlanVista"][]; b
         <select value={plan} onChange={(e) => {
           setPlan(e.target.value);
           const p = planes.find((x) => x.codigo === e.target.value);
-          if (p?.precio) setMonto(String(p.precio));
+          if (p?.precioConDescuento) setMonto(String(p.precioConDescuento));
         }}>
           {planes.map((p) => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
         </select>

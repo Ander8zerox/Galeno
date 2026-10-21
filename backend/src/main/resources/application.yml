@@ -36,6 +36,11 @@ app:
     dir: ./data/documentos # en AWS: bucket S3 cifrado
   plataforma:
     operadores: "" # correos de las cuentas con acceso a la consola: APP_PLATAFORMA_OPERADORES (separados por coma)
+  partners:
+    comision-porcentaje: 20      # sobre cada pago aprobado de un consultorio referido, mientras siga pagando
+    descuento-porcentaje: 10     # para el consultorio referido, en todos sus pagos
+    minimo-liquidacion: 190000   # pesos: por debajo, las comisiones disponibles se acumulan
+    retencion-dias: 30           # una comisión se puede pagar 30 días después del pago (por si se reversa)
   correo:
     proveedor: local # local (buzón de desarrollo en /api/v1/dev/buzon) | ses (en AWS)
   web:

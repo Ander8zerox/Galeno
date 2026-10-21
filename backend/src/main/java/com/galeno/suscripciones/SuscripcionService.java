@@ -79,13 +79,17 @@ public class SuscripcionService implements EstadoSuscripcionVerifier {
      * @param diasRestantes días hasta {@code venceEn} (negativo si ya venció)
      */
     public record EstadoVista(Estado estado, Instant venceEn, Instant graciaHasta, long diasRestantes, boolean pagada,
-                              boolean soloLectura, String motivoSuspension, boolean pagoEnRevision) {
+                              boolean soloLectura, String motivoSuspension, boolean pagoEnRevision, int descuentoPorcentaje) {
     }
 
     public record PlanVista(String codigo, String nombre, int meses, long precio, boolean activo) {
     }
 
-    public record OpcionesPago(List<PlanVista> planes, String datosPago) {
+    /** @param precioConDescuento lo que debe pagar este consultorio (con su descuento, si tiene) */
+    public record PlanPrecio(String codigo, String nombre, int meses, long precio, long precioConDescuento) {
+    }
+
+    public record OpcionesPago(List<PlanPrecio> planes, String datosPago, int descuentoPorcentaje) {
     }
 
     public record PagoVista(UUID id, UUID consultorioId, String consultorioNombre, String plan, int meses, long monto,
@@ -111,8 +115,29 @@ public class SuscripcionService implements EstadoSuscripcionVerifier {
     }
 
     public OpcionesPago opciones() {
+        UUID tenant = AuthUser.current().tenantId();
+        int descuento = TenantContext.callAs(tenant, () -> tx.execute(t -> obtener(tenant).getDescuentoPorcentaje()));
         return TenantContext.callAs(TenantContext.SYSTEM, () -> tx.execute(t -> new OpcionesPago(
-                planes.findByActivoTrueOrderByMeses().stream().map(SuscripcionService::vista).toList(), datosPago())));
+                planes.findByActivoTrueOrderByMeses().stream()
+                        .map(p -> new PlanPrecio(p.getCodigo(), p.getNombre(), p.getMeses(), p.getPrecio(),
+                                conDescuento(p.getPrecio(), descuento)))
+                        .toList(), datosPago(), descuento)));
+    }
+
+    static long conDescuento(long precio, int porcentaje) {
+        return Math.round(precio * (100 - porcentaje) / 100.0);
+    }
+
+    /** Descuento permanente sobre los planes (lo aplica el módulo de partners a los consultorios referidos). */
+    public void aplicarDescuento(UUID consultorioId, int porcentaje) {
+        if (porcentaje < 0 || porcentaje > 100) {
+            throw ApiProblem.badRequest("Descuento no válido");
+        }
+        actualizar(consultorioId, s -> s.aplicarDescuento(porcentaje, Instant.now()));
+    }
+
+    /** Lo escucha el módulo de partners para generar la comisión. */
+    public record PagoAprobado(UUID pagoId, UUID consultorioId, long monto, Instant aprobadoEn) {
     }
 
     public List<PagoVista> misPagos() {
@@ -205,6 +230,7 @@ public class SuscripcionService implements EstadoSuscripcionVerifier {
             return vista(p, identidad.consultorio(p.getTenantId()).nombre());
         });
         eventos.publishEvent(new SuscripcionCambiada(consultorio));
+        eventos.publishEvent(new PagoAprobado(pago.id(), consultorio, pago.monto(), pago.revisadoEn()));
         avisar(pago.consultorioId(), "Pago aprobado: su suscripción a Galeno está al día", """
                 Hola:
 
@@ -261,6 +287,11 @@ public class SuscripcionService implements EstadoSuscripcionVerifier {
                         identidad.correosAdministradores(c.id())))
                 .sorted(Comparator.comparing(ConsultorioVista::creadoEn).reversed())
                 .toList();
+    }
+
+    /** Estado de la suscripción de un consultorio (para la plataforma y el portal de partners). */
+    public EstadoVista estadoDe(UUID consultorioId) {
+        return vista(asegurar(consultorioId), Instant.now(), false);
     }
 
     public EstadoVista regalarDias(UUID consultorioId, int dias) {
@@ -386,7 +417,7 @@ public class SuscripcionService implements EstadoSuscripcionVerifier {
         long segundos = Duration.between(ahora, vence).toSeconds();
         long dias = segundos >= 0 ? Math.ceilDiv(segundos, 86_400) : Math.floorDiv(segundos, 86_400);
         return new EstadoVista(estado, vence, vence.plus(Suscripcion.GRACIA), dias, s.getPagadaHasta() != null,
-                estado == Estado.SUSPENDIDA, s.getMotivoSuspension(), pagoEnRevision);
+                estado == Estado.SUSPENDIDA, s.getMotivoSuspension(), pagoEnRevision, s.getDescuentoPorcentaje());
     }
 
     private static PlanVista vista(PlanSuscripcion p) {

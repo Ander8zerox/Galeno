@@ -46,5 +46,7 @@ class AvisosSuscripcionTest {
         assertThat(SuscripcionService.tipoComprobante("%PDF-1.7 ...".getBytes())).isEqualTo("application/pdf");
         assertThat(SuscripcionService.tipoComprobante(new byte[] {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00})).isEqualTo("image/jpeg");
         assertThat(SuscripcionService.pesos(150000)).isEqualTo("$150.000");
+        assertThat(SuscripcionService.conDescuento(190_000, 10)).isEqualTo(171_000);
+        assertThat(SuscripcionService.conDescuento(190_000, 0)).isEqualTo(190_000);
     }
 }

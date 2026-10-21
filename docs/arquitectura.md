@@ -75,6 +75,23 @@ ACTIVA (pagada) ──┘                         └─────────
   - Los operadores son cuentas de Galeno marcadas por configuración (`app.plataforma.operadores`); nadie puede volverse operador desde la web.
   - Permite revisar pagos (ver el comprobante, aprobar, rechazar con motivo), registrar un pago recibido sin reporte, regalar días, suspender y reactivar, cambiar precios y datos de pago. Cada acción queda en `auditoria_plataforma`.
 
+## Programa de partners
+
+```
+partner se inscribe → la plataforma lo aprueba (código) → consultorio se registra con el código (atribuido, 10 % de descuento)
+    → cada pago aprobado → comisión del 20 % (retenida 30 días → disponible) → liquidación cuando suma $190.000
+```
+
+- **Módulo `partners`.** Depende de identidad, suscripciones y plataforma; ninguno de ellos depende de partners. Se engancha por eventos:
+  - `ConsultorioRegistrado` trae el código del registro. Partners atribuye el consultorio y aplica el descuento en la suscripción (`suscripciones.descuento_porcentaje`).
+  - `PagoAprobado` genera la comisión. Identidad valida el código al pedir el registro con la interfaz `CodigosReferido`, que implementa partners.
+- **Partner.** Es una cuenta normal de Galeno. Se inscribe en `/partner/inscripcion` (verifica el correo como el registro: `inscripciones_partner`, token de un solo uso) y queda PENDIENTE. Al aprobarlo, la plataforma le asigna un código (`PEDROV694`). Puede quedar SUSPENDIDO (sin comisiones nuevas y su código no sirve; al reactivarlo conserva el código) o RECHAZADO.
+- **Atribución** (`referidos`). A lo sumo un partner por consultorio, fijo desde el registro. Solo un operador lo cambia (`PUT /plataforma/consultorios/{id}/partner`), por ejemplo para un cliente que llegó sin el enlace. El enlace `/registro?ref=CODIGO` se recuerda 60 días en el navegador.
+- **Comisiones** (`comisiones_partner`). Hay una por pago aprobado, con el porcentaje vigente guardado. La prueba gratis no genera nada, y no hay comisión si el partner es el mismo administrador del consultorio o tiene su NIT. El estado se calcula: RETENIDA (30 días), DISPONIBLE, PAGADA (en una liquidación) o ANULADA (un operador la anula, por ejemplo por un pago reversado).
+- **Liquidación** (`liquidaciones_partner`). El operador transfiere y registra la referencia. Entran todas las comisiones disponibles, que deben sumar al menos el mínimo, y se toman con bloqueo para no pagar dos veces la misma.
+- **Portal `/partner`.** Login propio (authority `PARTNER`, sin consultorio). Muestra el código, el enlace, el saldo (retenido, disponible, pagado), los referidos (solo el nombre del consultorio y el estado de su suscripción, nunca datos de pacientes), las comisiones, los pagos recibidos y los datos de pago.
+- **Parámetros** (`app.partners.*`): `comision-porcentaje` 20, `descuento-porcentaje` 10, `minimo-liquidacion` 190000, `retencion-dias` 30.
+
 ## Agenda
 
 - **Quién ve qué.** El administrador ve todas las agendas, el médico la suya y el secretario las de sus médicos asignados (o todas, si no tiene asignaciones). Los roles se suman. El horario solo lo cambian el propio médico o un administrador.

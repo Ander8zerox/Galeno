@@ -66,6 +66,10 @@ public class Suscripcion {
     @Column(name = "actualizada_en", nullable = false)
     private Instant actualizadaEn;
 
+    /** Descuento sobre el precio de los planes (p. ej. por venir referido por un partner). */
+    @Column(name = "descuento_porcentaje", nullable = false)
+    private int descuentoPorcentaje;
+
     @Version
     private long version;
 
@@ -120,6 +124,15 @@ public class Suscripcion {
             this.pruebaHasta = hasta;
         }
         this.actualizadaEn = ahora;
+    }
+
+    void aplicarDescuento(int porcentaje, Instant ahora) {
+        this.descuentoPorcentaje = porcentaje;
+        this.actualizadaEn = ahora;
+    }
+
+    int getDescuentoPorcentaje() {
+        return descuentoPorcentaje;
     }
 
     void suspender(String motivo, Instant ahora) {

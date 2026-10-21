@@ -4,6 +4,7 @@ import createClient, { type Middleware } from "openapi-fetch";
 import { ApiError, unwrap, type Schemas } from "../api/client";
 import type { paths } from "../api/schema";
 import { ESTADO_SUSCRIPCION, pesos } from "./SuscripcionPage";
+import { ESTADO_PARTNER, TablaComisiones } from "./PartnerApp";
 
 type Pago = Schemas["PagoVista"];
 type Consultorio = Schemas["ConsultorioVista"];
@@ -87,7 +88,7 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
   );
 }
 
-type Pestana = "pagos" | "consultorios" | "configuracion" | "auditoria";
+type Pestana = "pagos" | "consultorios" | "partners" | "configuracion" | "auditoria";
 
 function Consola({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
   const [pestana, setPestana] = useState<Pestana>("pagos");
@@ -101,7 +102,7 @@ function Consola({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
       <header className="topbar">
         <span className="brand">Galeno · Plataforma</span>
         <nav className="topnav">
-          {([["pagos", "Pagos por revisar"], ["consultorios", "Consultorios"], ["configuracion", "Planes y datos de pago"], ["auditoria", "Auditoría"]] as const).map(([p, t]) => (
+          {([["pagos", "Pagos por revisar"], ["consultorios", "Consultorios"], ["partners", "Partners"], ["configuracion", "Planes y datos de pago"], ["auditoria", "Auditoría"]] as const).map(([p, t]) => (
             <a key={p} href="#" className={pestana === p ? "active" : ""} onClick={(e) => { e.preventDefault(); setPestana(p); }}>
               {t}{p === "pagos" && !!pendientes.data?.length && <> <span className="badge badge-warn">{pendientes.data.length}</span></>}
             </a>
@@ -114,6 +115,7 @@ function Consola({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
       <main className="content">
         {pestana === "pagos" && <PagosPorRevisar pagos={pendientes.data} cargando={pendientes.isLoading} />}
         {pestana === "consultorios" && <Consultorios />}
+        {pestana === "partners" && <Partners />}
         {pestana === "configuracion" && <Configuracion />}
         {pestana === "auditoria" && <Auditoria />}
       </main>
@@ -210,7 +212,7 @@ function Consultorios() {
   );
 }
 
-type Accion = "cortesia" | "suspender" | "pago" | null;
+type Accion = "cortesia" | "suspender" | "pago" | "partner" | null;
 
 function FilaConsultorio({ consultorio: c }: { consultorio: Consultorio }) {
   const queryClient = useQueryClient();
@@ -221,6 +223,7 @@ function FilaConsultorio({ consultorio: c }: { consultorio: Consultorio }) {
   const [monto, setMonto] = useState("");
   const [fechaPago, setFechaPago] = useState(new Date().toLocaleDateString("en-CA"));
   const [referencia, setReferencia] = useState("");
+  const [codigoPartner, setCodigoPartner] = useState("");
   const s = c.suscripcion!;
   const id = c.id!;
   const hecho = () => {
@@ -233,6 +236,7 @@ function FilaConsultorio({ consultorio: c }: { consultorio: Consultorio }) {
       const path = { params: { path: { id } } };
       if (accion === "cortesia") return unwrap(await api.POST("/api/v1/plataforma/consultorios/{id}/cortesia", { ...path, body: { dias: Number(dias), motivo } }));
       if (accion === "suspender") return unwrap(await api.POST("/api/v1/plataforma/consultorios/{id}/suspender", { ...path, body: { motivo } }));
+      if (accion === "partner") return unwrap(await api.PUT("/api/v1/plataforma/consultorios/{id}/partner", { ...path, body: { codigo: codigoPartner } }));
       return unwrap(await api.POST("/api/v1/plataforma/consultorios/{id}/pagos", { ...path, body: { plan, monto: Number(monto), fechaPago, referencia } }));
     },
     onSuccess: hecho,
@@ -255,9 +259,11 @@ function FilaConsultorio({ consultorio: c }: { consultorio: Consultorio }) {
       <div className="muted small">
         Registrado el {fecha.format(new Date(c.creadoEn!))} · {c.administradores?.join(", ") || "sin administradores activos"}
         {s.motivoSuspension && ` · Suspendido: ${s.motivoSuspension}`}
+        {!!s.descuentoPorcentaje && ` · Referido (${s.descuentoPorcentaje} % de descuento)`}
       </div>
       {accion ? (
         <form className="row" onSubmit={(e) => { e.preventDefault(); ejecutar.mutate(); }}>
+          {accion === "partner" && <label>Código del partner<input value={codigoPartner} onChange={(e) => setCodigoPartner(e.target.value.toUpperCase())} required maxLength={20} /></label>}
           {accion === "cortesia" && <label>Días<input type="number" min={1} max={366} value={dias} onChange={(e) => setDias(e.target.value)} required style={{ width: "6rem" }} /></label>}
           {accion === "pago" && (
             <>
@@ -267,9 +273,9 @@ function FilaConsultorio({ consultorio: c }: { consultorio: Consultorio }) {
               <label>Referencia<input value={referencia} onChange={(e) => setReferencia(e.target.value)} required maxLength={100} /></label>
             </>
           )}
-          {accion !== "pago" && <label className="grow">Motivo<input value={motivo} onChange={(e) => setMotivo(e.target.value)} required maxLength={300} /></label>}
+          {(accion === "cortesia" || accion === "suspender") && <label className="grow">Motivo<input value={motivo} onChange={(e) => setMotivo(e.target.value)} required maxLength={300} /></label>}
           <button className="btn" disabled={ejecutar.isPending}>
-            {accion === "cortesia" ? "Regalar días" : accion === "suspender" ? "Suspender" : "Registrar pago"}
+            {accion === "cortesia" ? "Regalar días" : accion === "suspender" ? "Suspender" : accion === "partner" ? "Asignar" : "Registrar pago"}
           </button>
           <button type="button" className="btn-link" onClick={() => setAccion(null)}>Cancelar</button>
         </form>
@@ -277,12 +283,123 @@ function FilaConsultorio({ consultorio: c }: { consultorio: Consultorio }) {
         <div className="row">
           <button className="btn btn-secondary" onClick={() => setAccion("pago")}>Registrar pago recibido</button>
           <button className="btn btn-secondary" onClick={() => setAccion("cortesia")}>Regalar días</button>
+          <button className="btn btn-secondary" onClick={() => setAccion("partner")}>Asignar partner</button>
           {s.estado === "SUSPENDIDA" && s.motivoSuspension
             ? <button className="btn btn-secondary" disabled={reactivar.isPending} onClick={() => reactivar.mutate()}>Reactivar</button>
             : <button className="btn-link danger" onClick={() => setAccion("suspender")}>Suspender…</button>}
         </div>
       )}
       {(ejecutar.error || reactivar.error) && <p className="alert alert-error">{(ejecutar.error ?? reactivar.error)!.message}</p>}
+    </div>
+  );
+}
+
+function Partners() {
+  const lista = useQuery({ queryKey: ["plataforma", "partners"], queryFn: async () => unwrap(await api.GET("/api/v1/plataforma/partners")) });
+  const [abierto, setAbierto] = useState<string | null>(null);
+  const pendientes = (lista.data ?? []).filter((p) => p.estado === "PENDIENTE").length;
+  return (
+    <section className="stack">
+      <div className="page-header"><h1>Partners</h1>{!!pendientes && <span className="badge badge-warn">{pendientes} por aprobar</span>}</div>
+      {lista.error && <p className="alert alert-error">{lista.error.message}</p>}
+      {lista.data?.length === 0 && <p className="muted">Todavía no hay partners inscritos.</p>}
+      {lista.data?.map((p) => (
+        <div key={p.id} className="card stack">
+          <div className="row">
+            <strong>{p.nombre}</strong>
+            <span className={`badge ${ESTADO_PARTNER[p.estado!][1]}`}>{ESTADO_PARTNER[p.estado!][0]}</span>
+            {p.codigo && <span className="badge">{p.codigo}</span>}
+            <span className="spacer" />
+            <span className="small">{p.referidos} referidos · disponible {pesos(p.saldo?.disponible)} · retenido {pesos(p.saldo?.retenido)}</span>
+          </div>
+          <div className="muted small">{p.tipoDocumento} {p.numeroDocumento} · {p.email} · {p.telefono} · inscrito el {fecha.format(new Date(p.creadoEn!))}{p.motivo && ` · ${p.motivo}`}</div>
+          <AccionesPartner partner={p} />
+          <button className="btn-link small" style={{ alignSelf: "flex-start" }} onClick={() => setAbierto(abierto === p.id ? null : p.id!)}>
+            {abierto === p.id ? "Ocultar detalle" : "Ver referidos, comisiones y pagos"}
+          </button>
+          {abierto === p.id && <DetallePartner id={p.id!} />}
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function AccionesPartner({ partner: p }: { partner: Schemas["PartnerVista"] }) {
+  const queryClient = useQueryClient();
+  const [accion, setAccion] = useState<"rechazar" | "suspender" | null>(null);
+  const [motivo, setMotivo] = useState("");
+  const hecho = () => { setAccion(null); setMotivo(""); queryClient.invalidateQueries({ queryKey: ["plataforma"] }); };
+  const aprobar = useMutation({
+    mutationFn: async () => unwrap(await api.POST("/api/v1/plataforma/partners/{id}/aprobar", { params: { path: { id: p.id! } } })),
+    onSuccess: hecho,
+  });
+  const cambiar = useMutation({
+    mutationFn: async () => accion === "rechazar"
+      ? unwrap(await api.POST("/api/v1/plataforma/partners/{id}/rechazar", { params: { path: { id: p.id! } }, body: { motivo } }))
+      : unwrap(await api.POST("/api/v1/plataforma/partners/{id}/suspender", { params: { path: { id: p.id! } }, body: { motivo } })),
+    onSuccess: hecho,
+  });
+  const error = aprobar.error ?? cambiar.error;
+  return (
+    <>
+      {accion ? (
+        <form className="row" onSubmit={(e) => { e.preventDefault(); cambiar.mutate(); }}>
+          <input className="grow" placeholder="Motivo (lo verá el partner)" value={motivo} onChange={(e) => setMotivo(e.target.value)} required maxLength={300} autoFocus />
+          <button className="btn" disabled={cambiar.isPending}>{accion === "rechazar" ? "Rechazar" : "Suspender"}</button>
+          <button type="button" className="btn-link" onClick={() => setAccion(null)}>Cancelar</button>
+        </form>
+      ) : (
+        <div className="row">
+          {p.estado === "PENDIENTE" && <><button className="btn" disabled={aprobar.isPending} onClick={() => aprobar.mutate()}>Aprobar</button>
+            <button className="btn btn-secondary" onClick={() => setAccion("rechazar")}>Rechazar…</button></>}
+          {p.estado === "SUSPENDIDO" && <button className="btn btn-secondary" disabled={aprobar.isPending} onClick={() => aprobar.mutate()}>Reactivar</button>}
+          {p.estado === "ACTIVO" && <button className="btn-link danger" onClick={() => setAccion("suspender")}>Suspender…</button>}
+        </div>
+      )}
+      {error && <p className="alert alert-error">{error.message}</p>}
+    </>
+  );
+}
+
+function DetallePartner({ id }: { id: string }) {
+  const queryClient = useQueryClient();
+  const detalle = useQuery({ queryKey: ["plataforma", "partner", id], queryFn: async () => unwrap(await api.GET("/api/v1/plataforma/partners/{id}", { params: { path: { id } } })) });
+  const [referencia, setReferencia] = useState("");
+  const [fechaPago, setFechaPago] = useState(new Date().toLocaleDateString("en-CA"));
+  const liquidar = useMutation({
+    mutationFn: async () => unwrap(await api.POST("/api/v1/plataforma/partners/{id}/liquidaciones", { params: { path: { id } }, body: { referencia, fechaPago } })),
+    onSuccess: () => { setReferencia(""); queryClient.invalidateQueries({ queryKey: ["plataforma"] }); },
+  });
+  const anular = useMutation({
+    mutationFn: async ({ comision, motivo }: { comision: string; motivo: string }) =>
+      unwrap(await api.POST("/api/v1/plataforma/comisiones/{id}/anular", { params: { path: { id: comision } }, body: { motivo } })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plataforma"] }),
+  });
+  if (!detalle.data) return <p className="muted">Cargando…</p>;
+  const d = detalle.data;
+  const p = d.partner!;
+  return (
+    <div className="stack">
+      <div className="muted small">Cuenta: {p.banco ?? "—"} {p.tipoCuenta?.toLowerCase() ?? ""} {p.numeroCuenta ?? "sin registrar"}</div>
+      {d.puedeLiquidar ? (
+        <form className="row" onSubmit={(e) => { e.preventDefault(); liquidar.mutate(); }}>
+          <span>Disponible <strong>{pesos(p.saldo?.disponible)}</strong>: transfiera y registre el pago</span>
+          <input placeholder="Referencia de la transferencia" value={referencia} onChange={(e) => setReferencia(e.target.value)} required maxLength={100} />
+          <input type="date" value={fechaPago} onChange={(e) => setFechaPago(e.target.value)} required />
+          <button className="btn" disabled={liquidar.isPending}>Registrar pago al partner</button>
+        </form>
+      ) : <p className="muted small">El disponible ({pesos(p.saldo?.disponible)}) aún no llega al mínimo de {pesos(d.minimoLiquidacion)}.</p>}
+      {(liquidar.error || anular.error) && <p className="alert alert-error">{(liquidar.error ?? anular.error)!.message}</p>}
+      <div className="table-wrap">
+        <table>
+          <thead><tr><th>Referido</th><th>Desde</th><th>Origen</th><th>Suscripción</th></tr></thead>
+          <tbody>{d.referidos?.map((r) => <tr key={r.consultorioId}><td>{r.consultorio}</td><td>{fecha.format(new Date(r.desde!))}</td><td>{r.origen === "REGISTRO" ? "Con su código" : "Asignado"}</td><td>{r.estadoSuscripcion}</td></tr>)}</tbody>
+        </table>
+      </div>
+      <TablaComisiones comisiones={d.comisiones ?? []} onAnular={(c) => {
+        const motivo = prompt("Motivo de la anulación (lo verá el partner)");
+        if (motivo) anular.mutate({ comision: c.id!, motivo });
+      }} />
     </div>
   );
 }

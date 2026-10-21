@@ -110,6 +110,28 @@ public class IdentidadService implements SesionVerifier {
                         .collect(java.util.stream.Collectors.toMap(Usuario::getEmail, Usuario::getId))));
     }
 
+    /** Crea una cuenta sin consultorio (p. ej. un partner). Falla si el correo ya tiene cuenta. */
+    public UUID crearCuenta(String email, String nombre, String passwordHash) {
+        return com.galeno.shared.tenancy.TenantContext.callAs(com.galeno.shared.tenancy.TenantContext.SYSTEM, () -> tx.execute(s -> {
+            if (usuarios.existsByEmail(email.toLowerCase())) {
+                throw com.galeno.shared.web.ApiExceptionHandler.ApiProblem.conflict("Ya existe una cuenta con este correo");
+            }
+            return usuarios.save(new Usuario(email, passwordHash, nombre)).getId();
+        }));
+    }
+
+    /** Correo de cada cuenta (para avisos a partners y operadores). */
+    public java.util.Map<UUID, String> correosDeCuentas(java.util.Collection<UUID> ids) {
+        return com.galeno.shared.tenancy.TenantContext.callAs(com.galeno.shared.tenancy.TenantContext.SYSTEM, () ->
+                tx.execute(s -> usuarios.findAllById(ids).stream()
+                        .collect(java.util.stream.Collectors.toMap(Usuario::getId, Usuario::getEmail))));
+    }
+
+    public boolean existeCuenta(String email) {
+        return com.galeno.shared.tenancy.TenantContext.callAs(com.galeno.shared.tenancy.TenantContext.SYSTEM, () ->
+                tx.execute(s -> usuarios.existsByEmail(email.toLowerCase())));
+    }
+
     public record ConsultorioPlataforma(UUID id, String nombre, String nit, java.time.Instant creadoEn) {
     }
 

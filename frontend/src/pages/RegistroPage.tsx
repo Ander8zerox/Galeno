@@ -10,12 +10,37 @@ const MIN_PASSWORD = 10;
 
 const VACIA: Solicitud = {
   consultorioNombre: "", nit: "", nombre: "", email: "", password: "", esMedico: true, registroMedico: "",
-  especialidad: "", aceptaTerminos: false,
+  especialidad: "", aceptaTerminos: false, codigoPartner: "",
 };
+
+const CLAVE_REF = "galeno.ref";
+const DIAS_REF = 60;
+
+/** El código del enlace de un partner (?ref=) se recuerda 60 días, por si la persona vuelve después. */
+function codigoReferido(): string {
+  const deEnlace = new URLSearchParams(window.location.search).get("ref");
+  try {
+    if (deEnlace) {
+      localStorage.setItem(CLAVE_REF, JSON.stringify({ codigo: deEnlace.toUpperCase(), hasta: Date.now() + DIAS_REF * 86_400_000 }));
+      return deEnlace.toUpperCase();
+    }
+    const guardado = JSON.parse(localStorage.getItem(CLAVE_REF) ?? "null") as { codigo: string; hasta: number } | null;
+    return guardado && guardado.hasta > Date.now() ? guardado.codigo : "";
+  } catch {
+    return deEnlace?.toUpperCase() ?? "";
+  }
+}
 
 /** Registro público de un consultorio nuevo. Nada se crea hasta que la persona abre el enlace de su correo. */
 export function RegistroPage() {
-  const [form, setForm] = useState<Solicitud>(VACIA);
+  const [form, setForm] = useState<Solicitud>(() => ({ ...VACIA, codigoPartner: codigoReferido() }));
+  const codigo = (form.codigoPartner ?? "").trim();
+  const partner = useQuery({
+    queryKey: ["codigo-partner", codigo.toUpperCase()],
+    enabled: codigo.length >= 4,
+    retry: false,
+    queryFn: async () => unwrap(await api.GET("/api/v1/partners/codigos/{codigo}", { params: { path: { codigo } } })),
+  });
   const [confirmacion, setConfirmacion] = useState("");
   const [errorLocal, setErrorLocal] = useState<string | null>(null);
   const set = (campo: keyof Solicitud) => (e: { target: { value: string } }) => setForm({ ...form, [campo]: e.target.value });
@@ -36,6 +61,7 @@ export function RegistroPage() {
       nit: form.nit || undefined,
       registroMedico: form.esMedico ? form.registroMedico : undefined,
       especialidad: form.esMedico && form.especialidad ? form.especialidad : undefined,
+      codigoPartner: codigo || undefined,
     });
   }
 
@@ -98,6 +124,12 @@ export function RegistroPage() {
             </Campo>
           </>
         )}
+
+        <Campo label="Código de partner (opcional)" error={errores.codigoPartner}>
+          <input value={form.codigoPartner} onChange={(e) => setForm({ ...form, codigoPartner: e.target.value.toUpperCase() })} maxLength={20} placeholder="Si alguien le recomendó Galeno" />
+          {partner.data && <small className="badge badge-ok">Recomendado por {partner.data.partner}: {partner.data.descuentoPorcentaje} % de descuento en su suscripción</small>}
+          {partner.isError && codigo.length >= 4 && <small className="field-error">Ese código no existe o no está activo</small>}
+        </Campo>
 
         <label className="check">
           <input type="checkbox" checked={form.aceptaTerminos} onChange={(e) => setForm({ ...form, aceptaTerminos: e.target.checked })} />
