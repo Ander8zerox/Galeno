@@ -6,7 +6,8 @@
   },
   "servers": [
     {
-      "url": "/"
+      "url": "http://localhost:8090",
+      "description": "Generated server url"
     }
   ],
   "security": [
@@ -78,6 +79,97 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/PacienteResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/importaciones/{id}/registros": {
+      "put": {
+        "tags": [
+          "importacion-controller"
+        ],
+        "operationId": "incluirTodos",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Inclusion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoteVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/importaciones/{id}/registros/{registroId}": {
+      "put": {
+        "tags": [
+          "importacion-controller"
+        ],
+        "operationId": "incluir",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "registroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Inclusion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistroVista"
                 }
               }
             }
@@ -535,6 +627,109 @@
         }
       }
     },
+    "/api/v1/importaciones/{id}/deshacer": {
+      "post": {
+        "tags": [
+          "importacion-controller"
+        ],
+        "operationId": "deshacer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoteVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/importaciones/{id}/confirmar": {
+      "post": {
+        "tags": [
+          "importacion-controller"
+        ],
+        "operationId": "confirmar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoteVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/importaciones/rips": {
+      "post": {
+        "tags": [
+          "importacion-controller"
+        ],
+        "operationId": "subirRips",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivos": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                },
+                "required": [
+                  "archivos"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoteVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/historia/pacientes/{pacienteId}/documentos": {
       "post": {
         "tags": [
@@ -982,6 +1177,140 @@
         }
       }
     },
+    "/api/v1/importaciones": {
+      "get": {
+        "tags": [
+          "importacion-controller"
+        ],
+        "operationId": "listar",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaLoteVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/importaciones/{id}": {
+      "get": {
+        "tags": [
+          "importacion-controller"
+        ],
+        "operationId": "obtener_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "NUEVO",
+                "EXISTENTE",
+                "ERROR"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoteDetalle"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "importacion-controller"
+        ],
+        "operationId": "descartar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/v1/historia/pacientes/{pacienteId}": {
       "get": {
         "tags": [
@@ -1150,7 +1479,7 @@
         "tags": [
           "equipo-controller"
         ],
-        "operationId": "listar",
+        "operationId": "listar_1",
         "responses": {
           "200": {
             "description": "OK",
@@ -1427,7 +1756,7 @@
           "tipoDocumento": {
             "type": "string",
             "minLength": 1,
-            "pattern": "CC|TI|CE|PA|RC|PT|MS|AS"
+            "pattern": "CC|TI|CE|PA|RC|PT|MS|AS|CN|NV|SC|PE|CD|DE|SI"
           },
           "numeroDocumento": {
             "type": "string",
@@ -1525,6 +1854,255 @@
           },
           "antecedentes": {
             "type": "string"
+          },
+          "datosIncompletos": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Inclusion": {
+        "type": "object",
+        "properties": {
+          "incluido": {
+            "type": "boolean"
+          }
+        }
+      },
+      "LoteVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "RIPS_JSON"
+            ]
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "EN_REVISION",
+              "CONFIRMADO",
+              "DESHECHO",
+              "DESCARTADO"
+            ]
+          },
+          "archivos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "facturas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "prestadores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pacientes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "atenciones": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errores": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "omitidos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "incluidos": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "resultado": {
+            "$ref": "#/components/schemas/Resultado"
+          },
+          "erroresArchivo": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "confirmadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deshechoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Resultado": {
+        "type": "object",
+        "properties": {
+          "pacientesCreados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pacientesActualizados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "atencionesCreadas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "atencionesYaImportadas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "atencionesEliminadas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pacientesEliminados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pacientesConservados": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AtencionDatos": {
+        "type": "object",
+        "properties": {
+          "clave": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "codigoCups": {
+            "type": "string"
+          },
+          "nombreCups": {
+            "type": "string"
+          },
+          "profesional": {
+            "type": "string"
+          },
+          "factura": {
+            "type": "string"
+          },
+          "diagnosticos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DxDatos"
+            }
+          }
+        }
+      },
+      "DxDatos": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "principal": {
+            "type": "boolean"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "IMPRESION_DIAGNOSTICA",
+              "CONFIRMADO_NUEVO",
+              "CONFIRMADO_REPETIDO"
+            ]
+          }
+        }
+      },
+      "Mensaje": {
+        "type": "object",
+        "properties": {
+          "nivel": {
+            "type": "string",
+            "enum": [
+              "ERROR",
+              "ADVERTENCIA"
+            ]
+          },
+          "texto": {
+            "type": "string"
+          }
+        }
+      },
+      "RegistroVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoDocumento": {
+            "type": "string"
+          },
+          "numeroDocumento": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "NUEVO",
+              "EXISTENTE",
+              "ERROR"
+            ]
+          },
+          "incluido": {
+            "type": "boolean"
+          },
+          "totalAtenciones": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date"
+          },
+          "sexo": {
+            "type": "string"
+          },
+          "mensajes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Mensaje"
+            }
+          },
+          "pacienteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombreActual": {
+            "type": "string"
+          },
+          "atenciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtencionDatos"
+            }
           }
         }
       },
@@ -2589,6 +3167,63 @@
           }
         }
       },
+      "PaginaLoteVista": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoteVista"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "LoteDetalle": {
+        "type": "object",
+        "properties": {
+          "lote": {
+            "$ref": "#/components/schemas/LoteVista"
+          },
+          "registros": {
+            "$ref": "#/components/schemas/PaginaRegistroVista"
+          }
+        }
+      },
+      "PaginaRegistroVista": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RegistroVista"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "EventoHistoria": {
         "type": "object",
         "properties": {
@@ -2780,7 +3415,8 @@
                 "FORMULA_REDACTAR",
                 "FORMULA_FIRMAR",
                 "IA_DIAGNOSTICO",
-                "AGENDA_GESTIONAR"
+                "AGENDA_GESTIONAR",
+                "IMPORTAR_HISTORIAS"
               ]
             }
           },
@@ -2847,10 +3483,38 @@
           "number": {
             "type": "boolean"
           },
-          "missingNode": {
+          "int": {
             "type": "boolean"
           },
-          "bigInteger": {
+          "string": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "boolean"
+          },
+          "pojo": {
+            "type": "boolean"
+          },
+          "short": {
+            "type": "boolean"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "long": {
+            "type": "boolean"
+          },
+          "textual": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "double": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          },
+          "container": {
             "type": "boolean"
           },
           "nodeType": {
@@ -2867,47 +3531,19 @@
               "STRING"
             ]
           },
-          "bigDecimal": {
+          "missingNode": {
+            "type": "boolean"
+          },
+          "bigInteger": {
             "type": "boolean"
           },
           "integralNumber": {
             "type": "boolean"
           },
-          "container": {
-            "type": "boolean"
-          },
           "valueNode": {
             "type": "boolean"
           },
-          "object": {
-            "type": "boolean"
-          },
-          "double": {
-            "type": "boolean"
-          },
-          "int": {
-            "type": "boolean"
-          },
-          "binary": {
-            "type": "boolean"
-          },
-          "textual": {
-            "type": "boolean",
-            "deprecated": true
-          },
-          "long": {
-            "type": "boolean"
-          },
-          "boolean": {
-            "type": "boolean"
-          },
-          "pojo": {
-            "type": "boolean"
-          },
-          "string": {
-            "type": "boolean"
-          },
-          "short": {
+          "bigDecimal": {
             "type": "boolean"
           },
           "floatingPointNumber": {

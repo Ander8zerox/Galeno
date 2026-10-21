@@ -10,6 +10,7 @@ import { PacientePage } from "./pages/PacientePage";
 import { EquipoPage } from "./pages/EquipoPage";
 import { AgendaPage } from "./pages/AgendaPage";
 import { AtencionPage } from "./pages/AtencionPage";
+import { ImportarPage, LoteImportacionPage } from "./pages/ImportarPage";
 
 export function App() {
   const { me, seleccion, logout, puede } = useAuth();
@@ -28,6 +29,7 @@ export function App() {
           {puede("AGENDA_GESTIONAR") && <Link to="/agenda">Agenda</Link>}
           <Link to="/pacientes">Pacientes</Link>
           {puede("EQUIPO_GESTIONAR") && <Link to="/equipo">Equipo</Link>}
+          {puede("IMPORTAR_HISTORIAS") && <Link to="/importar">Importar</Link>}
         </nav>
         <span className="spacer" />
         <span>{me.nombre}</span>
@@ -39,6 +41,8 @@ export function App() {
           <Route path="/pacientes/:id" element={<PacientePage />} />
           {puede("HISTORIA_VER") && <Route path="/pacientes/:pacienteId/atenciones/:atencionId" element={<AtencionPage />} />}
           {puede("EQUIPO_GESTIONAR") && <Route path="/equipo" element={<EquipoPage />} />}
+          {puede("IMPORTAR_HISTORIAS") && <Route path="/importar" element={<ImportarPage />} />}
+          {puede("IMPORTAR_HISTORIAS") && <Route path="/importar/:id" element={<LoteImportacionPage />} />}
           {puede("AGENDA_GESTIONAR") && <Route path="/agenda" element={<AgendaPage />} />}
           <Route path="*" element={<Navigate to={puede("AGENDA_GESTIONAR") ? "/agenda" : "/pacientes"} replace />} />
         </Routes>

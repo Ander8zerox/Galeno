@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record PacienteRequest(
-        @NotBlank @Pattern(regexp = "CC|TI|CE|PA|RC|PT|MS|AS", message = "Tipo de documento no válido") String tipoDocumento,
+        @NotBlank @Pattern(regexp = TiposDocumento.PATRON, message = "Tipo de documento no válido") String tipoDocumento,
         @NotBlank @Size(max = 30) String numeroDocumento,
         @NotBlank @Size(max = 120) String nombres,
         @NotBlank @Size(max = 120) String apellidos,

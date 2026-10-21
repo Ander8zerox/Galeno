@@ -78,6 +78,17 @@ invitaciones (por consultorio, token de un solo uso, 7 días; solo se guarda su 
   - Cada impresión queda en la auditoría (`IMPRIMIR_FORMULA`, `IMPRIMIR_ATENCION`).
   - Endpoints: `GET /api/v1/formulacion/formulas/{id}/pdf` y `GET /api/v1/historia/atenciones/{id}/pdf`.
 
+## Importación de historias (RIPS)
+
+- **Fuente.** El JSON de RIPS que todo prestador genera con cada factura electrónica (un archivo por factura). Se suben varios a la vez o un ZIP (hasta 50 MB; el ZIP se corta a 5.000 archivos o 300 MB descomprimidos).
+- **Flujo.** Subir → lote `EN_REVISION` con un registro por paciente (todas sus atenciones de todos los archivos) → confirmar → opcionalmente deshacer. Nada llega a la historia antes de confirmar.
+- **Deduplicación.** Por tipo y número de documento. El paciente que ya existe conserva sus datos (si el RIPS trae otra fecha de nacimiento u otro sexo, se avisa). El que no existe se crea con `datos_incompletos`: el RIPS no trae nombres, así que queda como "Paciente CC 123" hasta que alguien use **Completar datos**.
+- **Atenciones.** Consultas, procedimientos, urgencias y hospitalización se crean FIRMADAS con origen IMPORTADA, sin médico de Galeno (el documento del profesional del RIPS queda en el nombre), con el CUPS (catálogo `cups`, generado con `tools/cups/generar-migracion.js`; la tabla que tenemos es parcial) y los diagnósticos CIE-10 con su tipo RIPS. Medicamentos, recién nacidos y otros servicios se cuentan como omitidos.
+- **Idempotencia.** Cada servicio tiene una `clave_importacion` (factura, usuario, tipo y consecutivo) única por consultorio: subir los mismos archivos otra vez no duplica nada.
+- **Deshacer.** Quita las atenciones del lote y los pacientes que creó, salvo los que ya tienen otra actividad (citas, fórmulas, documentos u otras atenciones). Se niega si alguien ya agregó notas aclaratorias o fórmulas a lo importado. La auditoría (`IMPORTAR_ATENCIONES`, `DESHACER_IMPORTACION`) no se borra.
+- **Permisos.** `IMPORTAR_HISTORIAS` (rol ADMIN). El detalle clínico de cada registro (atenciones y diagnósticos) solo se muestra a quien además tiene `HISTORIA_VER`.
+- **Endpoints.** `POST /api/v1/importaciones/rips` (multipart `archivos`), `GET /api/v1/importaciones`, `GET /api/v1/importaciones/{id}?estado=`, `PUT …/{id}/registros[/{registroId}]`, `POST …/{id}/confirmar`, `POST …/{id}/deshacer` y `DELETE …/{id}` (descartar).
+
 ## Flujo de IA
 
 ```

@@ -23,6 +23,11 @@ public class AgendaPublica {
                 .map(c -> new CitaResumen(c.getId(), c.getPacienteId(), c.getMedicoMembresiaId(), c.getInicio(), c.getEstado()));
     }
 
+    @Transactional(readOnly = true)
+    public long citasDelPaciente(UUID pacienteId) {
+        return citas.countByPacienteId(pacienteId);
+    }
+
     /** Al firmar la atención de una cita, la cita queda atendida (si aún estaba abierta). */
     @Transactional
     public void marcarAtendida(UUID citaId) {

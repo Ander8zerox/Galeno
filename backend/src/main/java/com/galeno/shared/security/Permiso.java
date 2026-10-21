@@ -18,5 +18,7 @@ public enum Permiso {
     FORMULA_FIRMAR,
     IA_DIAGNOSTICO,
     /** Ver y gestionar citas. El alcance (qué médicos) lo decide el módulo de agenda según el rol. */
-    AGENDA_GESTIONAR
+    AGENDA_GESTIONAR,
+    /** Importar historias desde otros sistemas (además requiere HISTORIA_VER: ver datos clínicos). */
+    IMPORTAR_HISTORIAS
 }

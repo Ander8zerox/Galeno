@@ -20,6 +20,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/importaciones/{id}/registros": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["incluirTodos"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/importaciones/{id}/registros/{registroId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["incluir"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/historia/atenciones/{id}": {
         parameters: {
             query?: never;
@@ -158,6 +190,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["aceptar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/importaciones/{id}/deshacer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["deshacer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/importaciones/{id}/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/importaciones/rips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["subirRips"];
         delete?: never;
         options?: never;
         head?: never;
@@ -340,6 +420,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/importaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/importaciones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["obtener_1"];
+        put?: never;
+        post?: never;
+        delete: operations["descartar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/historia/pacientes/{pacienteId}": {
         parameters: {
             query?: never;
@@ -427,7 +539,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar"];
+        get: operations["listar_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -598,6 +710,99 @@ export interface components {
             email?: string;
             alergias?: string;
             antecedentes?: string;
+            datosIncompletos?: boolean;
+        };
+        Inclusion: {
+            incluido?: boolean;
+        };
+        LoteVista: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            origen?: "RIPS_JSON";
+            /** @enum {string} */
+            estado?: "EN_REVISION" | "CONFIRMADO" | "DESHECHO" | "DESCARTADO";
+            /** Format: int32 */
+            archivos?: number;
+            /** Format: int32 */
+            facturas?: number;
+            prestadores?: string[];
+            /** Format: int32 */
+            pacientes?: number;
+            /** Format: int32 */
+            atenciones?: number;
+            /** Format: int32 */
+            errores?: number;
+            /** Format: int32 */
+            omitidos?: number;
+            /** Format: int64 */
+            incluidos?: number;
+            resultado?: components["schemas"]["Resultado"];
+            erroresArchivo?: string[];
+            /** Format: date-time */
+            creadoEn?: string;
+            /** Format: date-time */
+            confirmadoEn?: string;
+            /** Format: date-time */
+            deshechoEn?: string;
+        };
+        Resultado: {
+            /** Format: int32 */
+            pacientesCreados?: number;
+            /** Format: int32 */
+            pacientesActualizados?: number;
+            /** Format: int32 */
+            atencionesCreadas?: number;
+            /** Format: int32 */
+            atencionesYaImportadas?: number;
+            /** Format: int32 */
+            atencionesEliminadas?: number;
+            /** Format: int32 */
+            pacientesEliminados?: number;
+            /** Format: int32 */
+            pacientesConservados?: number;
+        };
+        AtencionDatos: {
+            clave?: string;
+            tipo?: string;
+            /** Format: date-time */
+            fecha?: string;
+            codigoCups?: string;
+            nombreCups?: string;
+            profesional?: string;
+            factura?: string;
+            diagnosticos?: components["schemas"]["DxDatos"][];
+        };
+        DxDatos: {
+            codigo?: string;
+            descripcion?: string;
+            principal?: boolean;
+            /** @enum {string} */
+            tipo?: "IMPRESION_DIAGNOSTICA" | "CONFIRMADO_NUEVO" | "CONFIRMADO_REPETIDO";
+        };
+        Mensaje: {
+            /** @enum {string} */
+            nivel?: "ERROR" | "ADVERTENCIA";
+            texto?: string;
+        };
+        RegistroVista: {
+            /** Format: uuid */
+            id?: string;
+            tipoDocumento?: string;
+            numeroDocumento?: string;
+            /** @enum {string} */
+            estado?: "NUEVO" | "EXISTENTE" | "ERROR";
+            incluido?: boolean;
+            /** Format: int32 */
+            totalAtenciones?: number;
+            /** Format: date */
+            fechaNacimiento?: string;
+            sexo?: string;
+            mensajes?: components["schemas"]["Mensaje"][];
+            /** Format: uuid */
+            pacienteId?: string;
+            nombreActual?: string;
+            atenciones?: components["schemas"]["AtencionDatos"][];
         };
         DiagnosticoRequest: {
             codigoCie10: string;
@@ -915,6 +1120,28 @@ export interface components {
             /** Format: int64 */
             total?: number;
         };
+        PaginaLoteVista: {
+            items?: components["schemas"]["LoteVista"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            total?: number;
+        };
+        LoteDetalle: {
+            lote?: components["schemas"]["LoteVista"];
+            registros?: components["schemas"]["PaginaRegistroVista"];
+        };
+        PaginaRegistroVista: {
+            items?: components["schemas"]["RegistroVista"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            total?: number;
+        };
         EventoHistoria: {
             /** @enum {string} */
             tipo?: "ATENCION" | "DOCUMENTO";
@@ -974,7 +1201,7 @@ export interface components {
             /** Format: uuid */
             membresiaId?: string;
             roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
-            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR")[];
+            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS")[];
             /** Format: int32 */
             totalConsultorios?: number;
         };
@@ -998,25 +1225,25 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            missingNode?: boolean;
-            bigInteger?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            bigDecimal?: boolean;
-            integralNumber?: boolean;
-            container?: boolean;
-            valueNode?: boolean;
-            object?: boolean;
-            double?: boolean;
             int?: boolean;
-            binary?: boolean;
+            string?: boolean;
+            object?: boolean;
+            pojo?: boolean;
+            short?: boolean;
+            boolean?: boolean;
+            long?: boolean;
             /** @deprecated */
             textual?: boolean;
-            long?: boolean;
-            boolean?: boolean;
-            pojo?: boolean;
-            string?: boolean;
-            short?: boolean;
+            double?: boolean;
+            binary?: boolean;
+            container?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            missingNode?: boolean;
+            bigInteger?: boolean;
+            integralNumber?: boolean;
+            valueNode?: boolean;
+            bigDecimal?: boolean;
             floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
@@ -1112,6 +1339,59 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PacienteResponse"];
+                };
+            };
+        };
+    };
+    incluirTodos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Inclusion"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteVista"];
+                };
+            };
+        };
+    };
+    incluir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                registroId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Inclusion"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistroVista"];
                 };
             };
         };
@@ -1424,6 +1704,76 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SesionResponse"];
+                };
+            };
+        };
+    };
+    deshacer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteVista"];
+                };
+            };
+        };
+    };
+    confirmar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteVista"];
+                };
+            };
+        };
+    };
+    subirRips: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    archivos: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteVista"];
                 };
             };
         };
@@ -1743,6 +2093,75 @@ export interface operations {
             };
         };
     };
+    listar: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaginaLoteVista"];
+                };
+            };
+        };
+    };
+    obtener_1: {
+        parameters: {
+            query?: {
+                estado?: "NUEVO" | "EXISTENTE" | "ERROR";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteDetalle"];
+                };
+            };
+        };
+    };
+    descartar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     linea: {
         parameters: {
             query?: never;
@@ -1853,7 +2272,7 @@ export interface operations {
             };
         };
     };
-    listar: {
+    listar_1: {
         parameters: {
             query?: never;
             header?: never;

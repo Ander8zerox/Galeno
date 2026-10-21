@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 interface NotaAclaratoriaRepository extends JpaRepository<NotaAclaratoria, UUID> {
 
     List<NotaAclaratoria> findByAtencionIdOrderByCreadaEn(UUID atencionId);
+
+    long countByAtencionIdIn(java.util.Collection<UUID> atencionIds);
 }

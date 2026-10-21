@@ -65,9 +65,15 @@ final class AtencionPdf {
         if (a.getRegistroMedico() != null) {
             b.append("Registro médico ").append(esc(a.getRegistroMedico())).append("<br />");
         }
-        b.append(a.firmada()
-                ? "<span class=\"small muted\">Firmada electrónicamente en Galeno el " + esc(fechaHora(a.getFirmadaEn(), consultorio.zona())) + "</span>"
-                : "<span class=\"small muted\">Borrador sin firmar: sin validez como registro clínico</span>");
+        if (a.getOrigen() == Atencion.Origen.IMPORTADA) {
+            b.append("<span class=\"small muted\">Registro importado de otro sistema el ")
+                    .append(esc(fechaHora(a.getFirmadaEn(), consultorio.zona())))
+                    .append(". No corresponde a una firma en Galeno.</span>");
+        } else {
+            b.append(a.firmada()
+                    ? "<span class=\"small muted\">Firmada electrónicamente en Galeno el " + esc(fechaHora(a.getFirmadaEn(), consultorio.zona())) + "</span>"
+                    : "<span class=\"small muted\">Borrador sin firmar: sin validez como registro clínico</span>");
+        }
         b.append("</div></div>");
 
         if (!notas.isEmpty()) {

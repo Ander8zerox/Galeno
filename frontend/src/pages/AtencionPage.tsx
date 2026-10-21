@@ -261,11 +261,12 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
   return (
     <div className="stack">
       <div className="row between">
-        <h1>Atención {a.estado === "FIRMADA" ? <span className="badge badge-ok">Firmada</span> : <span className="badge badge-warn">Borrador</span>}</h1>
+        <h1>Atención {a.origen === "IMPORTADA" ? <span className="badge">Importada de otro sistema</span>
+          : a.estado === "FIRMADA" ? <span className="badge badge-ok">Firmada</span> : <span className="badge badge-warn">Borrador</span>}</h1>
         <BotonArchivo ruta={`/api/v1/historia/atenciones/${a.id}/pdf`} nombre={`atencion-${a.id!.slice(0, 8)}.pdf`} className="btn btn-secondary">Descargar PDF</BotonArchivo>
         <span className="muted small">
           {a.medicoNombre}{a.registroMedico && ` · Reg. médico ${a.registroMedico}`} · {fechaHoraCorta(a.fechaAtencion!, zona)}
-          {a.firmadaEn && ` · firmada ${fechaHoraCorta(a.firmadaEn, zona)}`}
+          {a.firmadaEn && (a.origen === "IMPORTADA" ? ` · importada ${fechaHoraCorta(a.firmadaEn, zona)}` : ` · firmada ${fechaHoraCorta(a.firmadaEn, zona)}`)}
         </span>
       </div>
       <div className="card stack lectura">

@@ -39,6 +39,31 @@ public class PacienteService {
     }
 
     @Transactional(readOnly = true)
+    public java.util.Optional<Paciente> buscar(UUID id) {
+        return repository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.Optional<Paciente> porDocumento(String tipoDocumento, String numeroDocumento) {
+        return repository.findByTipoDocumentoAndNumeroDocumento(tipoDocumento, numeroDocumento);
+    }
+
+    /** Para la importación: el RIPS identifica al paciente pero no trae su nombre. */
+    @Transactional
+    public Paciente crearImportado(String tipoDocumento, String numeroDocumento, java.time.LocalDate fechaNacimiento,
+                                   String sexo, UUID loteImportacionId) {
+        return repository.save(Paciente.importado(tipoDocumento, numeroDocumento, fechaNacimiento, sexo, loteImportacionId));
+    }
+
+    /** Al deshacer una importación (quien llama verifica antes que el paciente no tenga otra actividad). */
+    @Transactional
+    public void eliminarImportado(UUID id, UUID loteImportacionId) {
+        repository.findById(id)
+                .filter(p -> loteImportacionId.equals(p.getLoteImportacionId()))
+                .ifPresent(repository::delete);
+    }
+
+    @Transactional(readOnly = true)
     public Page<Paciente> search(String q, Pageable pageable) {
         return repository.search(q == null || q.isBlank() ? null : q.trim(), pageable);
     }

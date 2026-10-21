@@ -11,6 +11,12 @@ interface AtencionRepository extends JpaRepository<Atencion, UUID> {
 
     Optional<Atencion> findByCitaId(UUID citaId);
 
+    boolean existsByClaveImportacion(String claveImportacion);
+
+    List<Atencion> findByLoteImportacionId(UUID loteImportacionId);
+
+    long countByPacienteId(UUID pacienteId);
+
     /** Las firmadas del paciente y los borradores propios de quien consulta. */
     @Query("""
             select a from Atencion a
