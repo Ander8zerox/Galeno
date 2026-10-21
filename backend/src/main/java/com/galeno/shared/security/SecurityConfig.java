@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/apoyo-diagnostico/**").hasAuthority(Permiso.IA_DIAGNOSTICO.name())
                         .requestMatchers("/api/v1/ai-jobs/**").hasAnyAuthority(Permiso.FORMULA_REDACTAR.name(), Permiso.IA_DIAGNOSTICO.name())
                         .requestMatchers("/api/v1/pacientes/**").hasAuthority(Permiso.PACIENTE_GESTIONAR.name())
+                        .requestMatchers("/api/v1/agenda/**").hasAuthority(Permiso.AGENDA_GESTIONAR.name())
                         // El resto exige un token de sesión en un consultorio
                         .anyRequest().hasAuthority(TokenService.MIEMBRO))
                 .oauth2ResourceServer(rs -> rs.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))

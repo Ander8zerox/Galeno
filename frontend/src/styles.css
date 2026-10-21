@@ -100,3 +100,29 @@ tr.clickable:hover { background: #f0f6f8; }
 .check { flex-direction: row; align-items: center; gap: .4rem; font-weight: 400; color: var(--text); }
 .grow { flex: 1; min-width: 0; }
 .suspendido { opacity: .65; }
+
+/* Agenda */
+.dia-titulo { font-size: 1.1rem; margin: .25rem 0 0; }
+.dia-titulo::first-letter { text-transform: uppercase; }
+.timeline { display: flex; flex-direction: column; gap: .4rem; }
+.slot, .cita { display: flex; align-items: center; gap: 1rem; padding: .55rem .9rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); font: inherit; text-align: left; }
+.slot { border-style: dashed; cursor: pointer; color: var(--muted); }
+.slot:hover { border-color: var(--primary); background: #f0f6f8; }
+.slot-hora { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--text); min-width: 3.2rem; }
+.slot-accion { margin-left: auto; color: var(--primary); font-weight: 600; }
+.cita { border-left: 4px solid var(--primary); }
+.cita-cancelada { opacity: .6; border-left-color: var(--danger); }
+.cita .acciones { gap: .9rem; }
+.badge-ok { background: #e3f4ea; color: #1e6b3c; }
+.agendar { border-color: var(--primary); }
+.resultados { display: flex; flex-direction: column; gap: .3rem; margin-top: .3rem; }
+.horario { display: flex; flex-direction: column; gap: .6rem; }
+.horario-dia { display: grid; grid-template-columns: 7rem 1fr; gap: .75rem; align-items: start; padding: .5rem 0; border-bottom: 1px solid var(--border); }
+.proximas { margin-top: 1rem; }
+.proximas ul { margin: .4rem 0 0; padding-left: 1.2rem; }
+@media (max-width: 640px) {
+  .cita { flex-wrap: wrap; }
+  .horario-dia { grid-template-columns: 1fr; }
+}
+
+label.row { flex-direction: row; align-items: center; }

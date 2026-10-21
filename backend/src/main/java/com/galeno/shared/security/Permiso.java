@@ -14,5 +14,7 @@ public enum Permiso {
     FORMULA_REDACTAR,
     /** Requiere además registro médico. */
     FORMULA_FIRMAR,
-    IA_DIAGNOSTICO
+    IA_DIAGNOSTICO,
+    /** Ver y gestionar citas. El alcance (qué médicos) lo decide el módulo de agenda según el rol. */
+    AGENDA_GESTIONAR
 }
