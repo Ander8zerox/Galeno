@@ -53,8 +53,11 @@ export async function subirArchivo<T>(ruta: string, datos: FormData): Promise<T>
   return (await res.json()) as T;
 }
 
-/** Descarga con el token (un enlace normal no lo enviaría) y abre el diálogo de guardar del navegador. */
-export async function descargarArchivo(ruta: string, nombre: string): Promise<void> {
+/**
+ * Descarga con el token (un enlace normal no lo enviaría) y la guarda con el nombre dado. Devuelve una URL local del
+ * archivo, válida 5 minutos, para abrirlo también en una pestaña (algunos navegadores guardan sin avisar).
+ */
+export async function descargarArchivo(ruta: string, nombre: string): Promise<string> {
   const res = await fetch(ruta, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
   if (res.status === 401) onUnauthorized();
   if (!res.ok) throw await problema(res);
@@ -63,7 +66,8 @@ export async function descargarArchivo(ruta: string, nombre: string): Promise<vo
   a.href = url;
   a.download = nombre;
   a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000);
+  return url;
 }
 
 /** Para respuestas sin cuerpo (204): lanza ApiError si la petición falló. */
