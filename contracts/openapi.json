@@ -505,6 +505,15 @@
             }
           },
           {
+            "name": "incompletos",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -723,6 +732,86 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/LoteVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/importaciones/pacientes": {
+      "post": {
+        "tags": [
+          "importacion-controller"
+        ],
+        "operationId": "subirListado",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "mapeo": {
+                    "$ref": "#/components/schemas/MapeoColumnas"
+                  }
+                },
+                "required": [
+                  "archivo",
+                  "mapeo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoteVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/importaciones/pacientes/columnas": {
+      "post": {
+        "tags": [
+          "importacion-controller"
+        ],
+        "operationId": "columnasListado",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "archivo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Columnas"
                 }
               }
             }
@@ -1878,7 +1967,8 @@
           "origen": {
             "type": "string",
             "enum": [
-              "RIPS_JSON"
+              "RIPS_JSON",
+              "PACIENTES_LISTADO"
             ]
           },
           "estado": {
@@ -1977,6 +2067,10 @@
           "pacientesConservados": {
             "type": "integer",
             "format": "int32"
+          },
+          "pacientesRestaurados": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2010,6 +2104,44 @@
             "items": {
               "$ref": "#/components/schemas/DxDatos"
             }
+          }
+        }
+      },
+      "Cambio": {
+        "type": "object",
+        "properties": {
+          "campo": {
+            "type": "string"
+          },
+          "antes": {
+            "type": "string"
+          },
+          "despues": {
+            "type": "string"
+          }
+        }
+      },
+      "DatosPersona": {
+        "type": "object",
+        "properties": {
+          "nombres": {
+            "type": "string"
+          },
+          "apellidos": {
+            "type": "string"
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "format": "date"
+          },
+          "sexo": {
+            "type": "string"
+          },
+          "telefono": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
           }
         }
       },
@@ -2102,6 +2234,19 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AtencionDatos"
+            }
+          },
+          "fila": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "persona": {
+            "$ref": "#/components/schemas/DatosPersona"
+          },
+          "cambios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Cambio"
             }
           }
         }
@@ -2778,6 +2923,84 @@
             "items": {
               "$ref": "#/components/schemas/ConsultorioOpcion"
             }
+          }
+        }
+      },
+      "Asignacion": {
+        "type": "object",
+        "properties": {
+          "campo": {
+            "type": "string",
+            "enum": [
+              "TIPO_DOCUMENTO",
+              "NUMERO_DOCUMENTO",
+              "NOMBRES",
+              "APELLIDOS",
+              "PRIMER_NOMBRE",
+              "SEGUNDO_NOMBRE",
+              "PRIMER_APELLIDO",
+              "SEGUNDO_APELLIDO",
+              "NOMBRE_COMPLETO",
+              "FECHA_NACIMIENTO",
+              "SEXO",
+              "TELEFONO",
+              "EMAIL"
+            ]
+          },
+          "columna": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MapeoColumnas": {
+        "type": "object",
+        "properties": {
+          "asignaciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Asignacion"
+            }
+          },
+          "tipoDocumentoPorDefecto": {
+            "type": "string"
+          },
+          "ordenNombre": {
+            "type": "string",
+            "enum": [
+              "NOMBRES_APELLIDOS",
+              "APELLIDOS_NOMBRES"
+            ]
+          }
+        }
+      },
+      "Columnas": {
+        "type": "object",
+        "properties": {
+          "encabezados": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "muestra": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "filas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sugerido": {
+            "$ref": "#/components/schemas/MapeoColumnas"
+          },
+          "recordado": {
+            "type": "boolean"
           }
         }
       },
@@ -3480,41 +3703,10 @@
           "float": {
             "type": "boolean"
           },
-          "number": {
+          "bigDecimal": {
             "type": "boolean"
           },
-          "int": {
-            "type": "boolean"
-          },
-          "string": {
-            "type": "boolean"
-          },
-          "object": {
-            "type": "boolean"
-          },
-          "pojo": {
-            "type": "boolean"
-          },
-          "short": {
-            "type": "boolean"
-          },
-          "boolean": {
-            "type": "boolean"
-          },
-          "long": {
-            "type": "boolean"
-          },
-          "textual": {
-            "type": "boolean",
-            "deprecated": true
-          },
-          "double": {
-            "type": "boolean"
-          },
-          "binary": {
-            "type": "boolean"
-          },
-          "container": {
+          "integralNumber": {
             "type": "boolean"
           },
           "nodeType": {
@@ -3531,19 +3723,50 @@
               "STRING"
             ]
           },
-          "missingNode": {
-            "type": "boolean"
-          },
           "bigInteger": {
             "type": "boolean"
           },
-          "integralNumber": {
+          "object": {
+            "type": "boolean"
+          },
+          "pojo": {
+            "type": "boolean"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "long": {
+            "type": "boolean"
+          },
+          "double": {
+            "type": "boolean"
+          },
+          "textual": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "int": {
+            "type": "boolean"
+          },
+          "short": {
+            "type": "boolean"
+          },
+          "string": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          },
+          "container": {
+            "type": "boolean"
+          },
+          "missingNode": {
             "type": "boolean"
           },
           "valueNode": {
             "type": "boolean"
           },
-          "bigDecimal": {
+          "number": {
             "type": "boolean"
           },
           "floatingPointNumber": {

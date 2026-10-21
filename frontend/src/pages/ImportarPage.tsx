@@ -2,6 +2,7 @@ import { Fragment, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, expectOk, subirArchivo, unwrap, type Schemas } from "../api/client";
+import { SubirListado } from "../features/importacion/SubirListado";
 
 type Lote = Schemas["LoteVista"];
 type Registro = Schemas["RegistroVista"];
@@ -23,6 +24,15 @@ const ESTADO_REGISTRO: Record<EstadoRegistro, [string, string]> = {
   ERROR: ["Con error", "badge-danger"],
 };
 
+const ORIGEN: Record<NonNullable<Lote["origen"]>, string> = {
+  RIPS_JSON: "RIPS",
+  PACIENTES_LISTADO: "Listado de pacientes",
+};
+
+const CAMPO_CAMBIO: Record<string, string> = {
+  nombres: "Nombres", apellidos: "Apellidos", telefono: "Teléfono", email: "Correo", datosIncompletos: "Datos incompletos",
+};
+
 const TIPO_SERVICIO: Record<string, string> = {
   consultas: "Consulta",
   procedimientos: "Procedimiento",
@@ -30,7 +40,7 @@ const TIPO_SERVICIO: Record<string, string> = {
   hospitalizacion: "Hospitalización",
 };
 
-/** Lista de importaciones y carga de archivos RIPS. */
+/** Lista de importaciones y carga de archivos RIPS o de listados de pacientes. */
 export function ImportarPage() {
   const lotes = useQuery({
     queryKey: ["importaciones"],
@@ -41,6 +51,7 @@ export function ImportarPage() {
     <section className="stack">
       <div className="page-header"><h1>Importar historias</h1></div>
       <SubirRips />
+      <SubirListado />
       <div className="stack">
         <h3>Importaciones</h3>
         {lotes.isLoading && <p className="muted">Cargando…</p>}
@@ -49,15 +60,15 @@ export function ImportarPage() {
         {!!lotes.data?.items?.length && (
           <div className="card table-wrap">
             <table>
-              <thead><tr><th>Fecha</th><th>Estado</th><th>Archivos</th><th>Pacientes</th><th>Atenciones</th><th>Errores</th><th /></tr></thead>
+              <thead><tr><th>Fecha</th><th>Origen</th><th>Estado</th><th>Pacientes</th><th>Atenciones</th><th>Errores</th><th /></tr></thead>
               <tbody>
                 {lotes.data.items.map((l) => (
                   <tr key={l.id}>
                     <td>{fechaHora.format(new Date(l.creadoEn!))}</td>
+                    <td>{ORIGEN[l.origen!]}</td>
                     <td><EstadoLote estado={l.estado!} /></td>
-                    <td>{l.archivos}</td>
                     <td>{l.pacientes}</td>
-                    <td>{l.atenciones}</td>
+                    <td>{l.origen === "RIPS_JSON" ? l.atenciones : "—"}</td>
                     <td>{l.errores ? <span className="badge badge-danger">{l.errores}</span> : 0}</td>
                     <td><Link to={`/importar/${l.id}`}>{l.estado === "EN_REVISION" ? "Revisar" : "Ver"}</Link></td>
                   </tr>
@@ -166,6 +177,7 @@ export function LoteImportacionPage() {
   const lote = detalle.data!.lote!;
   const registros = detalle.data!.registros!;
   const enRevision = lote.estado === "EN_REVISION";
+  const listado = lote.origen === "PACIENTES_LISTADO";
   const error = incluirTodos.error ?? confirmar.error ?? deshacer.error ?? descartar.error;
   const total = registros.total ?? 0;
 
@@ -173,20 +185,25 @@ export function LoteImportacionPage() {
     <section className="stack">
       <Link to="/importar" className="back">← Importaciones</Link>
       <div className="page-header between">
-        <h1>Importación del {fechaHora.format(new Date(lote.creadoEn!))}</h1>
+        <h1>{ORIGEN[lote.origen!]} del {fechaHora.format(new Date(lote.creadoEn!))}</h1>
         <EstadoLote estado={lote.estado!} />
       </div>
 
       <div className="card stack">
         <div className="row">
-          <Cifra valor={lote.archivos} texto="archivos" />
-          <Cifra valor={lote.facturas} texto="facturas" />
-          <Cifra valor={lote.pacientes} texto="pacientes" />
-          <Cifra valor={lote.atenciones} texto="atenciones" />
+          {listado ? <Cifra valor={lote.pacientes} texto="pacientes en el archivo" /> : (
+            <>
+              <Cifra valor={lote.archivos} texto="archivos" />
+              <Cifra valor={lote.facturas} texto="facturas" />
+              <Cifra valor={lote.pacientes} texto="pacientes" />
+              <Cifra valor={lote.atenciones} texto="atenciones" />
+            </>
+          )}
           {!!lote.errores && <Cifra valor={lote.errores} texto="con error" />}
         </div>
         {!!lote.prestadores?.length && <small className="muted">Prestador (NIT): {lote.prestadores.join(", ")}</small>}
-        {!!lote.omitidos && (
+        {!!lote.omitidos && listado && <small className="muted">{lote.omitidos} filas vacías no se tienen en cuenta.</small>}
+        {!!lote.omitidos && !listado && (
           <small className="muted">
             {lote.omitidos === 1 ? "1 servicio" : `${lote.omitidos} servicios`} de medicamentos, recién nacidos u otros
             no se importan en esta versión.
@@ -204,7 +221,8 @@ export function LoteImportacionPage() {
         {enRevision && (
           <div className="row">
             <button className="btn" disabled={!lote.incluidos || confirmar.isPending} onClick={() => {
-              if (confirm(`Se importarán ${lote.incluidos} pacientes a la historia clínica. ¿Continuar?`)) confirmar.mutate();
+              if (confirm(listado ? `Se completarán o crearán ${lote.incluidos} pacientes. ¿Continuar?`
+                : `Se importarán ${lote.incluidos} pacientes a la historia clínica. ¿Continuar?`)) confirmar.mutate();
             }}>
               {confirmar.isPending ? "Importando…" : `Importar ${lote.incluidos} pacientes`}
             </button>
@@ -219,9 +237,13 @@ export function LoteImportacionPage() {
         {lote.estado === "CONFIRMADO" && (
           <div className="row">
             <button className="btn btn-secondary" disabled={deshacer.isPending} onClick={() => {
-              if (confirm("Se quitarán las atenciones importadas y los pacientes creados que no tengan otra actividad. ¿Deshacer?")) deshacer.mutate();
+              if (confirm(listado
+                ? "Los pacientes completados vuelven a sus datos anteriores y se borran los creados que no tengan otra actividad. ¿Deshacer?"
+                : "Se quitarán las atenciones importadas y los pacientes creados que no tengan otra actividad. ¿Deshacer?")) deshacer.mutate();
             }}>{deshacer.isPending ? "Deshaciendo…" : "Deshacer importación"}</button>
-            <small className="muted">Solo es posible mientras nadie haya agregado notas o fórmulas a lo importado.</small>
+            <small className="muted">{listado
+              ? "Los datos que alguien haya editado después de importar se conservan."
+              : "Solo es posible mientras nadie haya agregado notas o fórmulas a lo importado."}</small>
           </div>
         )}
       </div>
@@ -238,10 +260,21 @@ export function LoteImportacionPage() {
       {lote.estado === "DESCARTADO" ? <p className="muted">Los registros de una importación descartada se eliminan.</p> : (
         <div className="card table-wrap">
           <table>
-            <thead><tr>{enRevision && <th>Importar</th>}<th>Documento</th><th>Estado</th><th>Nacimiento</th><th>Sexo</th><th>Atenciones</th><th>Observaciones</th></tr></thead>
-            <tbody>
-              {registros.items?.map((r) => <FilaRegistro key={r.id} loteId={id!} registro={r} editable={enRevision} onCambio={refrescar} />)}
-            </tbody>
+            {listado ? (
+              <>
+                <thead><tr>{enRevision && <th>Importar</th>}<th>Fila</th><th>Documento</th><th>Estado</th><th>En el listado</th><th>{enRevision ? "Qué cambia" : "Qué cambió"}</th><th>Observaciones</th></tr></thead>
+                <tbody>
+                  {registros.items?.map((r) => <FilaListado key={r.id} loteId={id!} registro={r} editable={enRevision} onCambio={refrescar} />)}
+                </tbody>
+              </>
+            ) : (
+              <>
+                <thead><tr>{enRevision && <th>Importar</th>}<th>Documento</th><th>Estado</th><th>Nacimiento</th><th>Sexo</th><th>Atenciones</th><th>Observaciones</th></tr></thead>
+                <tbody>
+                  {registros.items?.map((r) => <FilaRegistro key={r.id} loteId={id!} registro={r} editable={enRevision} onCambio={refrescar} />)}
+                </tbody>
+              </>
+            )}
           </table>
           {!registros.items?.length && <p className="muted">No hay registros con ese estado.</p>}
         </div>
@@ -265,6 +298,20 @@ function Cifra({ valor, texto }: { valor?: number; texto: string }) {
 function Resultado({ lote }: { lote: Lote }) {
   const r = lote.resultado;
   if (!r) return null;
+  if (lote.origen === "PACIENTES_LISTADO") {
+    return lote.estado === "DESHECHO" ? (
+      <p className="alert">
+        Deshecha el {fechaHora.format(new Date(lote.deshechoEn!))}: {r.pacientesRestaurados} pacientes volvieron a sus datos
+        anteriores y se borraron {r.pacientesEliminados} creados por la importación
+        {!!r.pacientesConservados && ` (${r.pacientesConservados} se conservaron porque ya tienen otra actividad)`}.
+      </p>
+    ) : (
+      <p className="alert">
+        Importada el {fechaHora.format(new Date(lote.confirmadoEn!))}: {r.pacientesActualizados} pacientes completados
+        y {r.pacientesCreados} nuevos.
+      </p>
+    );
+  }
   if (lote.estado === "DESHECHO") {
     return (
       <p className="alert">
@@ -281,6 +328,55 @@ function Resultado({ lote }: { lote: Lote }) {
       {!!r.atencionesYaImportadas && ` ${r.atencionesYaImportadas} atenciones ya se habían importado antes y no se duplicaron.`}
       {!!r.pacientesCreados && " Los pacientes nuevos quedan con datos incompletos: el RIPS no trae nombres."}
     </p>
+  );
+}
+
+/** Un paciente de un listado: lo que trae el archivo y qué cambiaría en Galeno. */
+function FilaListado({ loteId, registro: r, editable, onCambio }: { loteId: string; registro: Registro; editable: boolean; onCambio: () => void }) {
+  const incluir = useMutation({
+    mutationFn: async (incluido: boolean) => unwrap(await api.PUT("/api/v1/importaciones/{id}/registros/{registroId}", {
+      params: { path: { id: loteId, registroId: r.id! } }, body: { incluido },
+    })),
+    onSuccess: onCambio,
+  });
+  const [texto, clase] = ESTADO_REGISTRO[r.estado!];
+  const p = r.persona;
+  const cambios = (r.cambios ?? []).filter((c) => c.campo !== "datosIncompletos");
+
+  return (
+    <tr>
+      {editable && (
+        <td><input type="checkbox" aria-label={`Importar fila ${r.fila}`}
+          checked={!!r.incluido} disabled={r.estado === "ERROR" || incluir.isPending}
+          onChange={(e) => incluir.mutate(e.target.checked)} /></td>
+      )}
+      <td>{r.fila}</td>
+      <td>
+        {r.numeroDocumento?.startsWith("fila ") ? "—" : `${r.tipoDocumento} ${r.numeroDocumento}`}
+        {r.pacienteId && <><br /><Link to={`/pacientes/${r.pacienteId}`} className="small">{r.nombreActual ?? "Ver paciente"}</Link></>}
+      </td>
+      <td><span className={`badge ${clase}`}>{texto}</span></td>
+      <td>
+        {p && <>
+          <div>{[p.nombres, p.apellidos].filter(Boolean).join(" ") || <span className="muted">Sin nombre</span>}</div>
+          <div className="muted small">{[p.fechaNacimiento, p.sexo, p.telefono, p.email].filter(Boolean).join(" · ")}</div>
+        </>}
+      </td>
+      <td>
+        {r.estado === "NUEVO" && <span className="small">Se crea el paciente</span>}
+        {cambios.map((c) => (
+          <div key={c.campo} className="small">
+            {CAMPO_CAMBIO[c.campo!] ?? c.campo}: {c.antes ? <><s className="muted">{c.antes}</s> → </> : ""}{c.despues}
+          </div>
+        ))}
+      </td>
+      <td>
+        {r.mensajes?.map((m, i) => (
+          <div key={i} className={m.nivel === "ERROR" ? "field-error" : "muted small"}>{m.texto}</div>
+        ))}
+        {incluir.error && <div className="field-error">{incluir.error.message}</div>}
+      </td>
+    </tr>
   );
 }
 

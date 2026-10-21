@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.galeno.importacion.ImportacionListadoService.Columnas;
+import com.galeno.importacion.ImportacionListadoService.MapeoColumnas;
 import com.galeno.importacion.ImportacionService.ArchivoSubido;
 import com.galeno.importacion.ImportacionService.LoteDetalle;
 import com.galeno.importacion.ImportacionService.LoteVista;
@@ -48,6 +50,19 @@ public class ImportacionController {
     @ResponseStatus(HttpStatus.CREATED)
     public LoteVista subirRips(@RequestPart("archivos") List<MultipartFile> archivos) {
         return importacion.crearDesdeRips(archivos.stream().map(ImportacionController::leer).toList());
+    }
+
+    /** Listado de pacientes (.xlsx o .csv), paso 1: qué columnas trae y cómo se propone leerlas. */
+    @PostMapping(path = "/pacientes/columnas", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Columnas columnasListado(@RequestPart("archivo") MultipartFile archivo) {
+        return importacion.columnasListado(leer(archivo));
+    }
+
+    /** Paso 2: el mismo archivo con el mapeo elegido (parte "mapeo" en JSON). Arma el lote en revisión. */
+    @PostMapping(path = "/pacientes", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public LoteVista subirListado(@RequestPart("archivo") MultipartFile archivo, @RequestPart("mapeo") MapeoColumnas mapeo) {
+        return importacion.crearDesdeListado(leer(archivo), mapeo);
     }
 
     @GetMapping

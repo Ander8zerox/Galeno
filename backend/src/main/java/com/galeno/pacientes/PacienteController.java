@@ -35,9 +35,10 @@ public class PacienteController {
 
     @GetMapping
     public PacientePage list(@RequestParam(required = false) String q,
+                             @RequestParam(defaultValue = "false") boolean incompletos,
                              @RequestParam(defaultValue = "0") int page,
                              @RequestParam(defaultValue = "20") int size) {
-        Page<Paciente> result = service.search(q, PageRequest.of(page, Math.min(size, 100), Sort.by("apellidos", "nombres")));
+        Page<Paciente> result = service.search(q, incompletos, PageRequest.of(page, Math.min(size, 100), Sort.by("apellidos", "nombres")));
         return new PacientePage(result.map(p -> PacienteResponse.of(p, clinicos())).getContent(), result.getNumber(), result.getSize(),
                 result.getTotalElements());
     }
