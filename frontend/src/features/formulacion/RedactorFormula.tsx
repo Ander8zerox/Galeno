@@ -21,9 +21,17 @@ const CAMPOS: { key: keyof Item; label: string; requerido?: boolean }[] = [
 const ITEM_VACIO: Item = { medicamento: "", dosis: "", frecuencia: "", duracion: "" };
 
 /** Flujo: el médico escribe en texto libre → la IA estructura → el médico revisa/edita → firma. */
-export function RedactorFormula({ pacienteId, onFirmada }: { pacienteId: string; onFirmada: () => void }) {
+interface Props {
+  pacienteId: string;
+  onFirmada: () => void;
+  /** Si se redacta dentro de una atención, la fórmula queda ligada a ella. */
+  atencionId?: string;
+  diagnosticoInicial?: string;
+}
+
+export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnosticoInicial }: Props) {
   const [texto, setTexto] = useState("");
-  const [diagnostico, setDiagnostico] = useState("");
+  const [diagnostico, setDiagnostico] = useState(diagnosticoInicial ?? "");
   const [jobId, setJobId] = useState<string>();
   const [items, setItems] = useState<Item[]>([]);
   const [advertencias, setAdvertencias] = useState<string[]>([]);
@@ -47,7 +55,7 @@ export function RedactorFormula({ pacienteId, onFirmada }: { pacienteId: string;
   const firmar = useMutation({
     mutationFn: async () =>
       unwrap(await api.POST("/api/v1/formulacion/formulas", {
-        body: { pacienteId, aiJobId: jobId, observaciones: observaciones || undefined, items },
+        body: { pacienteId, aiJobId: jobId, atencionId, observaciones: observaciones || undefined, items },
       })),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["formulas", pacienteId] });

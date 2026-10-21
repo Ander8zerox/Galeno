@@ -8,7 +8,7 @@ import com.galeno.shared.security.Permiso;
 
 public enum Rol {
     ADMIN(EnumSet.of(Permiso.EQUIPO_GESTIONAR, Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR)),
-    MEDICO(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.HISTORIA_VER, Permiso.FORMULA_REDACTAR,
+    MEDICO(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.HISTORIA_VER, Permiso.HISTORIA_REGISTRAR, Permiso.FORMULA_REDACTAR,
             Permiso.FORMULA_FIRMAR, Permiso.IA_DIAGNOSTICO, Permiso.AGENDA_GESTIONAR)),
     SECRETARIO(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR));
 

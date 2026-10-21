@@ -18,6 +18,10 @@ spring:
   threads:
     virtual:
       enabled: true
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 21MB
   web:
     locale: es
     locale-resolver: fixed # mensajes de validación siempre en español
@@ -28,6 +32,8 @@ server:
   forward-headers-strategy: framework # detrás de CloudFront/ALB
 
 app:
+  documentos:
+    dir: ./data/documentos # en AWS: bucket S3 cifrado
   web:
     base-url: http://localhost:5180 # para los enlaces de invitación; en AWS, el dominio de CloudFront
   security:

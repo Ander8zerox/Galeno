@@ -24,6 +24,7 @@ import com.galeno.pacientes.PacienteService;
 import com.galeno.shared.ai.jobs.AiJobController.AiJobAccepted;
 import com.galeno.shared.ai.jobs.AiJobService;
 import com.galeno.shared.ai.jobs.AiJobType;
+import com.galeno.historia.HistoriaService;
 import com.galeno.identidad.IdentidadService;
 import com.galeno.shared.security.AuthUser;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
@@ -36,13 +37,15 @@ public class FormulacionController {
     private final PacienteService pacientes;
     private final FormulaRepository formulas;
     private final IdentidadService identidad;
+    private final HistoriaService historia;
 
     FormulacionController(AiJobService jobs, PacienteService pacientes, FormulaRepository formulas,
-                          IdentidadService identidad) {
+                          IdentidadService identidad, HistoriaService historia) {
         this.jobs = jobs;
         this.pacientes = pacientes;
         this.formulas = formulas;
         this.identidad = identidad;
+        this.historia = historia;
     }
 
     /** Encola la redacción con IA; el resultado se consulta en {@code GET /api/v1/ai-jobs/{jobId}}. */
@@ -64,11 +67,14 @@ public class FormulacionController {
         AuthUser medico = AuthUser.current();
         String registroMedico = identidad.registroMedico(medico.id())
                 .orElseThrow(() -> ApiProblem.conflict("Para firmar fórmulas debe tener su registro médico en el perfil"));
+        if (request.atencionId() != null) {
+            historia.verificarAtencionDelPaciente(request.atencionId(), request.pacienteId());
+        }
         List<FormulaItem> items = request.items().stream()
                 .map(i -> new FormulaItem(i.medicamento(), i.concentracion(), i.formaFarmaceutica(), i.via(), i.dosis(),
                         i.frecuencia(), i.duracion(), i.cantidad(), i.indicaciones()))
                 .toList();
-        Formula formula = formulas.save(new Formula(request.pacienteId(), medico.id(), registroMedico, request.aiJobId(),
+        Formula formula = formulas.save(new Formula(request.pacienteId(), medico.id(), registroMedico, request.aiJobId(), request.atencionId(),
                 request.observaciones(), items));
         return FormulaResponse.of(formula);
     }
@@ -83,7 +89,8 @@ public class FormulacionController {
                                     @Size(max = 300) String diagnostico) {
     }
 
-    public record FirmarFormula(@NotNull UUID pacienteId, UUID aiJobId, @Size(max = 1000) String observaciones,
+    /** @param atencionId atención en la que se emite (opcional) */
+    public record FirmarFormula(@NotNull UUID pacienteId, UUID aiJobId, UUID atencionId, @Size(max = 1000) String observaciones,
                                 @NotEmpty List<@Valid ItemRequest> items) {
     }
 
@@ -94,7 +101,8 @@ public class FormulacionController {
                               @Size(max = 500) String indicaciones) {
     }
 
-    public record FormulaResponse(UUID id, UUID pacienteId, UUID medicoId, String registroMedico, UUID aiJobId, String observaciones,
+    public record FormulaResponse(UUID id, UUID pacienteId, UUID medicoId, String registroMedico, UUID aiJobId,
+                                  UUID atencionId, String observaciones,
                                   Instant firmadaEn, List<ItemRequest> items) {
 
         static FormulaResponse of(Formula f) {
@@ -103,7 +111,7 @@ public class FormulacionController {
                             i.getVia(), i.getDosis(), i.getFrecuencia(), i.getDuracion(), i.getCantidad(),
                             i.getIndicaciones()))
                     .toList();
-            return new FormulaResponse(f.getId(), f.getPacienteId(), f.getMedicoId(), f.getRegistroMedico(), f.getAiJobId(),
+            return new FormulaResponse(f.getId(), f.getPacienteId(), f.getMedicoId(), f.getRegistroMedico(), f.getAiJobId(), f.getAtencionId(),
                     f.getObservaciones(), f.getFirmadaEn(), items);
         }
     }

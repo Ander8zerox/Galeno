@@ -5,14 +5,12 @@
 - Esqueleto de la Capa 1: pacientes, redactor de fórmulas con IA, apoyo diagnóstico y multi-tenant.
 - Equipo del consultorio: membresías con varios roles, permisos, selector de consultorio e invitaciones.
 - Agenda por médico: horario semanal, cupos, citas, sobrecupos, estados y vista para secretarios.
+- Historia clínica: atenciones con firma e inmutabilidad, notas aclaratorias, documentos, CIE-10, auditoría y conexión con agenda, fórmulas y apoyo diagnóstico.
 
 ## Siguiente
 
-### Modelo de historia clínica (es requisito de la importación)
-- `atenciones`: fecha, médico, motivo, enfermedad actual, examen, diagnósticos CIE-10, plan y `origen` (GALENO o IMPORTADA).
-- `documentos_clinicos`: el PDF original en S3, inmutable y con hash.
-- Una nota importada o firmada no se edita (Res. 1995).
-- Conexión con la agenda: "Atender" una cita abre la atención.
+### Historia clínica, siguiente iteración
+- Tabla CIE-10 completa (MinSalud), PDF de la atención y de la fórmula con firma, reporte de auditoría para el administrador, y documentos en S3.
 
 ### Importación de historias desde otros sistemas
 El principio: primero las fuentes masivas, todas por el mismo flujo **extraer → revisar → confirmar**.

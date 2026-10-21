@@ -8,8 +8,23 @@ type Solicitud = Schemas["SolicitudApoyo"];
 
 const PROBABILIDAD_CLASE: Record<string, string> = { ALTA: "badge-danger", MEDIA: "badge-warn", BAJA: "" };
 
-export function ApoyoDiagnostico({ pacienteId }: { pacienteId: string }) {
-  const [form, setForm] = useState<Omit<Solicitud, "pacienteId">>({ motivoConsulta: "", enfermedadActual: "", signosVitales: "", examenFisico: "" });
+type Diferencial = Schemas["Diferencial"];
+
+interface Props {
+  pacienteId: string;
+  /** Datos de la atención en curso, para no volver a escribirlos. */
+  inicial?: Partial<Omit<Solicitud, "pacienteId">>;
+  /** Dentro de una atención: agrega el diferencial a los diagnósticos. */
+  onUsarDiagnostico?: (d: Diferencial) => void;
+}
+
+export function ApoyoDiagnostico({ pacienteId, inicial, onUsarDiagnostico }: Props) {
+  const [form, setForm] = useState<Omit<Solicitud, "pacienteId">>({
+    motivoConsulta: inicial?.motivoConsulta ?? "",
+    enfermedadActual: inicial?.enfermedadActual ?? "",
+    signosVitales: inicial?.signosVitales ?? "",
+    examenFisico: inicial?.examenFisico ?? "",
+  });
   const [jobId, setJobId] = useState<string>();
   const solicitar = useMutation({
     mutationFn: async () => unwrap(await api.POST("/api/v1/apoyo-diagnostico/sugerencias", { body: { pacienteId, ...form } })),
@@ -46,6 +61,7 @@ export function ApoyoDiagnostico({ pacienteId }: { pacienteId: string }) {
               <div className="row">
                 <strong>{d.codigoCie10}</strong> {d.descripcion}
                 <span className={`badge ${PROBABILIDAD_CLASE[d.probabilidad ?? ""] ?? ""}`}>{d.probabilidad}</span>
+                {onUsarDiagnostico && <button type="button" className="btn-link" onClick={() => onUsarDiagnostico(d)}>Agregar a la atención</button>}
               </div>
               <p className="muted small">{d.razonamiento}</p>
             </div>

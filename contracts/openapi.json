@@ -85,6 +85,98 @@
         }
       }
     },
+    "/api/v1/historia/atenciones/{id}": {
+      "get": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "obtener",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtencionVista"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "guardar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarAtencion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtencionVista"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "eliminarBorrador",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/v1/equipo/{membresiaId}": {
       "put": {
         "tags": [
@@ -443,6 +535,190 @@
         }
       }
     },
+    "/api/v1/historia/pacientes/{pacienteId}/documentos": {
+      "post": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "subirDocumento",
+        "parameters": [
+          {
+            "name": "pacienteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tipo",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "RESULTADO_LABORATORIO",
+                "IMAGEN_DIAGNOSTICA",
+                "HISTORIA_EXTERNA",
+                "CONSENTIMIENTO",
+                "REMISION",
+                "OTRO"
+              ]
+            }
+          },
+          {
+            "name": "descripcion",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "atencionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "archivo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentoVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/historia/atenciones": {
+      "post": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "crear",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevaAtencion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtencionVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/historia/atenciones/{id}/notas": {
+      "post": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "agregarNota",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevaNota"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtencionVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/historia/atenciones/{id}/firma": {
+      "post": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "firmar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AtencionVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/formulacion/formulas": {
       "get": {
         "tags": [
@@ -480,7 +756,7 @@
         "tags": [
           "formulacion-controller"
         ],
-        "operationId": "firmar",
+        "operationId": "firmar_1",
         "requestBody": {
           "content": {
             "application/json": {
@@ -699,6 +975,105 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CitaVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/historia/pacientes/{pacienteId}": {
+      "get": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "linea",
+        "parameters": [
+          {
+            "name": "pacienteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoHistoria"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/historia/documentos/{id}/archivo": {
+      "get": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "descargar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/historia/cie10": {
+      "get": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "cie10",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Cie10Vista"
+                  }
                 }
               }
             }
@@ -1089,6 +1464,338 @@
           }
         }
       },
+      "DiagnosticoRequest": {
+        "type": "object",
+        "properties": {
+          "codigoCie10": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 0
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 0
+          },
+          "principal": {
+            "type": "boolean"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "IMPRESION_DIAGNOSTICA",
+              "CONFIRMADO_NUEVO",
+              "CONFIRMADO_REPETIDO"
+            ]
+          }
+        },
+        "required": [
+          "codigoCie10",
+          "descripcion"
+        ]
+      },
+      "GuardarAtencion": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "motivoConsulta": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 0
+          },
+          "enfermedadActual": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 0
+          },
+          "antecedentes": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 0
+          },
+          "revisionSistemas": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 0
+          },
+          "taSistolica": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 300,
+            "minimum": 40
+          },
+          "taDiastolica": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 200,
+            "minimum": 20
+          },
+          "frecuenciaCardiaca": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 250,
+            "minimum": 20
+          },
+          "frecuenciaRespiratoria": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 80,
+            "minimum": 4
+          },
+          "temperatura": {
+            "type": "number",
+            "maximum": 45,
+            "minimum": 30
+          },
+          "saturacionO2": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 100,
+            "minimum": 40
+          },
+          "pesoKg": {
+            "type": "number",
+            "maximum": 400,
+            "minimum": 0.3
+          },
+          "tallaCm": {
+            "type": "number",
+            "maximum": 250,
+            "minimum": 20
+          },
+          "examenFisico": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 0
+          },
+          "analisis": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 0
+          },
+          "plan": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 0
+          },
+          "diagnosticos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticoRequest"
+            },
+            "maxItems": 20,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "diagnosticos"
+        ]
+      },
+      "AtencionVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "pacienteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "citaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "medicoNombre": {
+            "type": "string"
+          },
+          "registroMedico": {
+            "type": "string"
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "GALENO",
+              "IMPORTADA"
+            ]
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "BORRADOR",
+              "FIRMADA"
+            ]
+          },
+          "fechaAtencion": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "firmadaEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "propia": {
+            "type": "boolean"
+          },
+          "motivoConsulta": {
+            "type": "string"
+          },
+          "enfermedadActual": {
+            "type": "string"
+          },
+          "antecedentes": {
+            "type": "string"
+          },
+          "revisionSistemas": {
+            "type": "string"
+          },
+          "taSistolica": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taDiastolica": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "frecuenciaCardiaca": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "frecuenciaRespiratoria": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "temperatura": {
+            "type": "number"
+          },
+          "saturacionO2": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pesoKg": {
+            "type": "number"
+          },
+          "tallaCm": {
+            "type": "number"
+          },
+          "examenFisico": {
+            "type": "string"
+          },
+          "analisis": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string"
+          },
+          "diagnosticos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiagnosticoVista"
+            }
+          },
+          "notas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotaVista"
+            }
+          },
+          "documentos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentoVista"
+            }
+          }
+        }
+      },
+      "DiagnosticoVista": {
+        "type": "object",
+        "properties": {
+          "codigoCie10": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "principal": {
+            "type": "boolean"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "IMPRESION_DIAGNOSTICA",
+              "CONFIRMADO_NUEVO",
+              "CONFIRMADO_REPETIDO"
+            ]
+          }
+        }
+      },
+      "DocumentoVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "atencionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "RESULTADO_LABORATORIO",
+              "IMAGEN_DIAGNOSTICA",
+              "HISTORIA_EXTERNA",
+              "CONSENTIMIENTO",
+              "REMISION",
+              "OTRO"
+            ]
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "nombreArchivo": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "tamanoBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NotaVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "autorNombre": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "creadaEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "ActualizarMiembro": {
         "type": "object",
         "properties": {
@@ -1432,6 +2139,35 @@
           }
         }
       },
+      "NuevaAtencion": {
+        "type": "object",
+        "properties": {
+          "pacienteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "citaId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "pacienteId"
+        ]
+      },
+      "NuevaNota": {
+        "type": "object",
+        "properties": {
+          "texto": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "texto"
+        ]
+      },
       "FirmarFormula": {
         "type": "object",
         "properties": {
@@ -1440,6 +2176,10 @@
             "format": "uuid"
           },
           "aiJobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "atencionId": {
             "type": "string",
             "format": "uuid"
           },
@@ -1536,6 +2276,10 @@
             "type": "string"
           },
           "aiJobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "atencionId": {
             "type": "string",
             "format": "uuid"
           },
@@ -1781,6 +2525,49 @@
           }
         }
       },
+      "EventoHistoria": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "ATENCION",
+              "DOCUMENTO"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "detalle": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "autor": {
+            "type": "string"
+          }
+        }
+      },
+      "Cie10Vista": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string"
+          }
+        }
+      },
       "Miembro": {
         "type": "object",
         "properties": {
@@ -1911,6 +2698,7 @@
                 "EQUIPO_GESTIONAR",
                 "PACIENTE_GESTIONAR",
                 "HISTORIA_VER",
+                "HISTORIA_REGISTRAR",
                 "FORMULA_REDACTAR",
                 "FORMULA_FIRMAR",
                 "IA_DIAGNOSTICO",
@@ -1978,38 +2766,56 @@
           "float": {
             "type": "boolean"
           },
+          "number": {
+            "type": "boolean"
+          },
           "long": {
             "type": "boolean"
           },
           "boolean": {
             "type": "boolean"
           },
-          "object": {
-            "type": "boolean"
-          },
-          "binary": {
-            "type": "boolean"
+          "textual": {
+            "type": "boolean",
+            "deprecated": true
           },
           "int": {
+            "type": "boolean"
+          },
+          "pojo": {
             "type": "boolean"
           },
           "double": {
             "type": "boolean"
           },
-          "string": {
-            "type": "boolean"
-          },
-          "textual": {
-            "type": "boolean",
-            "deprecated": true
-          },
-          "pojo": {
-            "type": "boolean"
-          },
           "short": {
             "type": "boolean"
           },
+          "object": {
+            "type": "boolean"
+          },
+          "string": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          },
           "integralNumber": {
+            "type": "boolean"
+          },
+          "missingNode": {
+            "type": "boolean"
+          },
+          "valueNode": {
+            "type": "boolean"
+          },
+          "container": {
+            "type": "boolean"
+          },
+          "bigDecimal": {
+            "type": "boolean"
+          },
+          "bigInteger": {
             "type": "boolean"
           },
           "nodeType": {
@@ -2025,24 +2831,6 @@
               "POJO",
               "STRING"
             ]
-          },
-          "valueNode": {
-            "type": "boolean"
-          },
-          "missingNode": {
-            "type": "boolean"
-          },
-          "bigInteger": {
-            "type": "boolean"
-          },
-          "container": {
-            "type": "boolean"
-          },
-          "bigDecimal": {
-            "type": "boolean"
-          },
-          "number": {
-            "type": "boolean"
           },
           "floatingPointNumber": {
             "type": "boolean"
