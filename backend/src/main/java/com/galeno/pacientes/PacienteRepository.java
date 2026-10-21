@@ -13,11 +13,16 @@ interface PacienteRepository extends JpaRepository<Paciente, UUID> {
 
     java.util.Optional<Paciente> findByTipoDocumentoAndNumeroDocumento(String tipoDocumento, String numeroDocumento);
 
+    java.util.List<Paciente> findByNumeroDocumento(String numeroDocumento);
+
+    long countByDatosIncompletosTrue();
+
     @Query("""
             select p from Paciente p
-            where :q is null
+            where (:q is null
                or p.numeroDocumento like concat(:q, '%')
-               or lower(concat(p.nombres, ' ', p.apellidos)) like lower(concat('%', :q, '%'))
+               or lower(concat(p.nombres, ' ', p.apellidos)) like lower(concat('%', :q, '%')))
+              and (:incompletos = false or p.datosIncompletos = true)
             """)
-    Page<Paciente> search(String q, Pageable pageable);
+    Page<Paciente> search(String q, boolean incompletos, Pageable pageable);
 }

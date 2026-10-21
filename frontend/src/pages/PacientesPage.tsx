@@ -8,12 +8,20 @@ import { PacienteForm } from "../features/pacientes/PacienteForm";
 export function PacientesPage() {
   const [q, setQ] = useState("");
   const [creando, setCreando] = useState(false);
+  const [soloIncompletos, setSoloIncompletos] = useState(false);
   const navigate = useNavigate();
   const clinico = useAuth().puede("HISTORIA_VER");
 
   const pacientes = useQuery({
-    queryKey: ["pacientes", q],
-    queryFn: async () => unwrap(await api.GET("/api/v1/pacientes", { params: { query: { q: q || undefined, size: 50 } } })),
+    queryKey: ["pacientes", q, soloIncompletos],
+    queryFn: async () => unwrap(await api.GET("/api/v1/pacientes", {
+      params: { query: { q: q || undefined, incompletos: soloIncompletos || undefined, size: 50 } },
+    })),
+  });
+  // Cuántos pacientes importados sin nombre quedan por completar (para avisar aunque no esté el filtro puesto)
+  const incompletos = useQuery({
+    queryKey: ["pacientes", "incompletos"],
+    queryFn: async () => unwrap(await api.GET("/api/v1/pacientes", { params: { query: { incompletos: true, size: 1 } } })).total ?? 0,
   });
 
   return (
@@ -25,7 +33,15 @@ export function PacientesPage() {
 
       {creando && <PacienteForm onGuardado={(p) => navigate(`/pacientes/${p.id}`)} />}
 
-      <input className="search" placeholder="Buscar por nombre o documento…" value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="row">
+        <input className="search grow" placeholder="Buscar por nombre o documento…" value={q} onChange={(e) => setQ(e.target.value)} />
+        {(!!incompletos.data || soloIncompletos) && (
+          <label className="check">
+            <input type="checkbox" checked={soloIncompletos} onChange={(e) => setSoloIncompletos(e.target.checked)} />
+            Solo con datos incompletos <span className="badge badge-warn">{incompletos.data}</span>
+          </label>
+        )}
+      </div>
 
       <div className="card table-wrap">
         <table>
@@ -42,7 +58,7 @@ export function PacientesPage() {
               </tr>
             ))}
             {pacientes.data?.items?.length === 0 && (
-              <tr><td colSpan={clinico ? 4 : 3} className="muted center">No hay pacientes{q ? " con ese criterio" : " registrados"}.</td></tr>
+              <tr><td colSpan={clinico ? 4 : 3} className="muted center">No hay pacientes{q || soloIncompletos ? " con ese criterio" : " registrados"}.</td></tr>
             )}
           </tbody>
         </table>

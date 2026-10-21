@@ -244,6 +244,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/importaciones/pacientes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["subirListado"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/importaciones/pacientes/columnas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["columnasListado"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/historia/pacientes/{pacienteId}/documentos": {
         parameters: {
             query?: never;
@@ -719,7 +751,7 @@ export interface components {
             /** Format: uuid */
             id?: string;
             /** @enum {string} */
-            origen?: "RIPS_JSON";
+            origen?: "RIPS_JSON" | "PACIENTES_LISTADO";
             /** @enum {string} */
             estado?: "EN_REVISION" | "CONFIRMADO" | "DESHECHO" | "DESCARTADO";
             /** Format: int32 */
@@ -761,6 +793,8 @@ export interface components {
             pacientesEliminados?: number;
             /** Format: int32 */
             pacientesConservados?: number;
+            /** Format: int32 */
+            pacientesRestaurados?: number;
         };
         AtencionDatos: {
             clave?: string;
@@ -772,6 +806,20 @@ export interface components {
             profesional?: string;
             factura?: string;
             diagnosticos?: components["schemas"]["DxDatos"][];
+        };
+        Cambio: {
+            campo?: string;
+            antes?: string;
+            despues?: string;
+        };
+        DatosPersona: {
+            nombres?: string;
+            apellidos?: string;
+            /** Format: date */
+            fechaNacimiento?: string;
+            sexo?: string;
+            telefono?: string;
+            email?: string;
         };
         DxDatos: {
             codigo?: string;
@@ -803,6 +851,10 @@ export interface components {
             pacienteId?: string;
             nombreActual?: string;
             atenciones?: components["schemas"]["AtencionDatos"][];
+            /** Format: int32 */
+            fila?: number;
+            persona?: components["schemas"]["DatosPersona"];
+            cambios?: components["schemas"]["Cambio"][];
         };
         DiagnosticoRequest: {
             codigoCie10: string;
@@ -1007,6 +1059,26 @@ export interface components {
             expiresAt?: string;
             completa?: boolean;
             consultorios?: components["schemas"]["ConsultorioOpcion"][];
+        };
+        Asignacion: {
+            /** @enum {string} */
+            campo?: "TIPO_DOCUMENTO" | "NUMERO_DOCUMENTO" | "NOMBRES" | "APELLIDOS" | "PRIMER_NOMBRE" | "SEGUNDO_NOMBRE" | "PRIMER_APELLIDO" | "SEGUNDO_APELLIDO" | "NOMBRE_COMPLETO" | "FECHA_NACIMIENTO" | "SEXO" | "TELEFONO" | "EMAIL";
+            /** Format: int32 */
+            columna?: number;
+        };
+        MapeoColumnas: {
+            asignaciones?: components["schemas"]["Asignacion"][];
+            tipoDocumentoPorDefecto?: string;
+            /** @enum {string} */
+            ordenNombre?: "NOMBRES_APELLIDOS" | "APELLIDOS_NOMBRES";
+        };
+        Columnas: {
+            encabezados?: string[];
+            muestra?: string[][];
+            /** Format: int32 */
+            filas?: number;
+            sugerido?: components["schemas"]["MapeoColumnas"];
+            recordado?: boolean;
         };
         NuevaAtencion: {
             /** Format: uuid */
@@ -1224,26 +1296,26 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            number?: boolean;
-            int?: boolean;
-            string?: boolean;
-            object?: boolean;
-            pojo?: boolean;
-            short?: boolean;
-            boolean?: boolean;
-            long?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            double?: boolean;
-            binary?: boolean;
-            container?: boolean;
+            bigDecimal?: boolean;
+            integralNumber?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            missingNode?: boolean;
             bigInteger?: boolean;
-            integralNumber?: boolean;
+            object?: boolean;
+            pojo?: boolean;
+            boolean?: boolean;
+            long?: boolean;
+            double?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            int?: boolean;
+            short?: boolean;
+            string?: boolean;
+            binary?: boolean;
+            container?: boolean;
+            missingNode?: boolean;
             valueNode?: boolean;
-            bigDecimal?: boolean;
+            number?: boolean;
             floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
@@ -1616,6 +1688,7 @@ export interface operations {
         parameters: {
             query?: {
                 q?: string;
+                incompletos?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -1774,6 +1847,61 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["LoteVista"];
+                };
+            };
+        };
+    };
+    subirListado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archivo: string;
+                    mapeo: components["schemas"]["MapeoColumnas"];
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteVista"];
+                };
+            };
+        };
+    };
+    columnasListado: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archivo: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Columnas"];
                 };
             };
         };

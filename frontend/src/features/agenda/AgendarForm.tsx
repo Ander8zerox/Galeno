@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { api, unwrap } from "../../api/client";
 import { aIso, hora } from "./tiempo";
 
@@ -16,7 +17,7 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, onCerrar }: Props) 
   const queryClient = useQueryClient();
   const sobrecupo = !inicio;
   const [q, setQ] = useState("");
-  const [paciente, setPaciente] = useState<{ id: string; nombre: string } | null>(null);
+  const [paciente, setPaciente] = useState<{ id: string; nombre: string; incompleto: boolean } | null>(null);
   const [motivo, setMotivo] = useState("");
   const [horaManual, setHoraManual] = useState("07:00");
   const [duracion, setDuracion] = useState(20);
@@ -71,6 +72,11 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, onCerrar }: Props) 
         <div className="row">
           <span>Paciente: <strong>{paciente.nombre}</strong></span>
           <button type="button" className="btn-link" onClick={() => setPaciente(null)}>Cambiar</button>
+          {paciente.incompleto && (
+            <small className="badge badge-warn">
+              Importado sin nombre: <Link to={`/pacientes/${paciente.id}`}>complete sus datos</Link> antes de la cita
+            </small>
+          )}
         </div>
       ) : (
         <label>Paciente (nombre o documento)
@@ -79,8 +85,8 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, onCerrar }: Props) 
           {!!busqueda.data?.items?.length && (
             <div className="resultados">
               {busqueda.data.items.map((p) => (
-                <button type="button" key={p.id} className="opcion" onClick={() => setPaciente({ id: p.id!, nombre: `${p.nombres} ${p.apellidos}` })}>
-                  <strong>{p.nombres} {p.apellidos}</strong>
+                <button type="button" key={p.id} className="opcion" onClick={() => setPaciente({ id: p.id!, nombre: `${p.nombres} ${p.apellidos}`, incompleto: !!p.datosIncompletos })}>
+                  <strong>{p.nombres} {p.apellidos}</strong>{p.datosIncompletos && <span className="badge badge-warn">Datos incompletos</span>}
                   <span className="muted small">{p.tipoDocumento} {p.numeroDocumento}{p.telefono && ` · ${p.telefono}`}</span>
                 </button>
               ))}

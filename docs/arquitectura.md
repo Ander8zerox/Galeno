@@ -78,7 +78,7 @@ invitaciones (por consultorio, token de un solo uso, 7 días; solo se guarda su 
   - Cada impresión queda en la auditoría (`IMPRIMIR_FORMULA`, `IMPRIMIR_ATENCION`).
   - Endpoints: `GET /api/v1/formulacion/formulas/{id}/pdf` y `GET /api/v1/historia/atenciones/{id}/pdf`.
 
-## Importación de historias (RIPS)
+## Importación de historias (RIPS y listados)
 
 - **Fuente.** El JSON de RIPS que todo prestador genera con cada factura electrónica (un archivo por factura). Se suben varios a la vez o un ZIP (hasta 50 MB; el ZIP se corta a 5.000 archivos o 300 MB descomprimidos).
 - **Flujo.** Subir → lote `EN_REVISION` con un registro por paciente (todas sus atenciones de todos los archivos) → confirmar → opcionalmente deshacer. Nada llega a la historia antes de confirmar.
@@ -87,6 +87,14 @@ invitaciones (por consultorio, token de un solo uso, 7 días; solo se guarda su 
 - **Idempotencia.** Cada servicio tiene una `clave_importacion` (factura, usuario, tipo y consecutivo) única por consultorio: subir los mismos archivos otra vez no duplica nada.
 - **Deshacer.** Quita las atenciones del lote y los pacientes que creó, salvo los que ya tienen otra actividad (citas, fórmulas, documentos u otras atenciones). Se niega si alguien ya agregó notas aclaratorias o fórmulas a lo importado. La auditoría (`IMPORTAR_ATENCIONES`, `DESHACER_IMPORTACION`) no se borra.
 - **Permisos.** `IMPORTAR_HISTORIAS` (rol ADMIN). El detalle clínico de cada registro (atenciones y diagnósticos) solo se muestra a quien además tiene `HISTORIA_VER`.
+- **Listado de pacientes (Excel o CSV).** Completa lo que el RIPS no trae.
+  - **Lectura.** `.xlsx` (primera hoja, con StAX, sin DTD ni entidades externas y con límite de tamaño) o `.csv` (detecta UTF-8 o Windows-1252 y el separador `;`, `,` o tabulador). Máximo 50.000 filas.
+  - **Columnas.** Se reconocen por el encabezado ("Nro. Identificación", "Apellidos y nombres", "F. Nacimiento"…) y la persona ajusta el mapeo antes de revisar. El mapeo queda en `plantillas_importacion` por firma de encabezados: el siguiente archivo del mismo sistema llega ya mapeado.
+  - **Valores.** Tipos de documento escritos de cualquier forma (C.C., Cédula, PPT), números sin puntos, fechas de Excel (número de serie) o escritas (dd/mm/aaaa, aaaa-mm-dd, validadas estrictamente), nombres en mayúsculas pasados a nombre propio y separación de un nombre completo (las partículas "de la" van con el apellido; con 3 palabras se avisa).
+  - **Reglas.** Al paciente creado por el RIPS sin nombre se le pone el nombre y se le quita la marca; a uno completo solo se le llenan teléfono y correo vacíos, y las diferencias (otro nombre, otra fecha) se muestran pero no se aplican. Si el número existe con otro tipo (TI → CC) el registro queda fuera hasta que alguien lo revise. Para crear uno nuevo se exigen nombres, apellidos, fecha de nacimiento y sexo.
+  - **Deshacer.** Cada registro guarda los cambios aplicados (campo, antes, después). Al deshacer se restauran, salvo en los campos que alguien editó después de importar, y se borran los pacientes que creó el lote si no tienen actividad.
+  - **Endpoints.** `POST /api/v1/importaciones/pacientes/columnas` (multipart `archivo`: encabezados, muestra y mapeo sugerido) y `POST /api/v1/importaciones/pacientes` (`archivo` + `mapeo` en JSON). Revisar, confirmar y deshacer usan los mismos endpoints del lote.
+- **Pacientes con datos incompletos.** Filtro en la lista (`GET /api/v1/pacientes?incompletos=true`) y aviso al agendar.
 - **Endpoints.** `POST /api/v1/importaciones/rips` (multipart `archivos`), `GET /api/v1/importaciones`, `GET /api/v1/importaciones/{id}?estado=`, `PUT …/{id}/registros[/{registroId}]`, `POST …/{id}/confirmar`, `POST …/{id}/deshacer` y `DELETE …/{id}` (descartar).
 
 ## Flujo de IA

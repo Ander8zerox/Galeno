@@ -94,6 +94,11 @@ class RegistroImportacion {
         this.incluido = incluido && estado != Estado.ERROR;
     }
 
+    /** Al confirmar un listado se guarda lo que realmente cambió (para deshacerlo). */
+    void cambiarDatos(String datos) {
+        this.datos = datos;
+    }
+
     void importadoComo(UUID pacienteId) {
         this.pacienteId = pacienteId;
     }

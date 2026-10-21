@@ -3,6 +3,9 @@ package com.galeno.pacientes;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -12,6 +15,8 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.UuidGenerator;
+
+import com.galeno.pacientes.DatosPersona.Cambio;
 
 @Entity
 @Table(name = "pacientes")
@@ -89,6 +94,101 @@ public class Paciente {
         p.loteImportacionId = loteImportacionId;
         p.actualizadoEn = p.creadoEn;
         return p;
+    }
+
+    /** Paciente nuevo que llega en un listado de otro sistema (con nombre, a diferencia del RIPS). */
+    static Paciente desdeListado(String tipoDocumento, String numeroDocumento, DatosPersona d, UUID loteImportacionId) {
+        Paciente p = new Paciente(tipoDocumento, numeroDocumento);
+        p.nombres = d.nombres();
+        p.apellidos = d.apellidos();
+        p.fechaNacimiento = d.fechaNacimiento();
+        p.sexo = d.sexo();
+        p.telefono = d.telefono();
+        p.email = d.email();
+        p.loteImportacionId = loteImportacionId;
+        p.actualizadoEn = p.creadoEn;
+        return p;
+    }
+
+    /**
+     * Qué cambiaría un listado de otro sistema. Si el paciente tiene datos incompletos (vino del RIPS sin nombre),
+     * el listado pone el nombre; si no, solo llena teléfono y correo vacíos. Nunca reemplaza lo que alguien ya
+     * registró en Galeno: las diferencias se muestran en la revisión, no se aplican.
+     */
+    List<Cambio> cambiosDesde(DatosPersona d) {
+        List<Cambio> cambios = new ArrayList<>();
+        if (datosIncompletos && d.nombres() != null && d.apellidos() != null) {
+            cambios.add(new Cambio("nombres", nombres, d.nombres()));
+            cambios.add(new Cambio("apellidos", apellidos, d.apellidos()));
+            cambios.add(new Cambio("datosIncompletos", "true", "false"));
+        }
+        if (telefono == null && d.telefono() != null) {
+            cambios.add(new Cambio("telefono", null, d.telefono()));
+        }
+        if (email == null && d.email() != null) {
+            cambios.add(new Cambio("email", null, d.email()));
+        }
+        return cambios;
+    }
+
+    /** Diferencias con Galeno que el listado no va a aplicar (para avisar en la revisión). */
+    List<String> diferenciasCon(DatosPersona d) {
+        List<String> diferencias = new ArrayList<>();
+        if (!datosIncompletos && d.nombres() != null && d.apellidos() != null
+                && !(d.nombres() + " " + d.apellidos()).equalsIgnoreCase(nombres + " " + apellidos)) {
+            diferencias.add("El nombre en el listado es «" + d.nombres() + " " + d.apellidos() + "»; se conserva «"
+                    + nombres + " " + apellidos + "»");
+        }
+        if (d.fechaNacimiento() != null && !d.fechaNacimiento().equals(fechaNacimiento)) {
+            diferencias.add("La fecha de nacimiento en el listado es " + d.fechaNacimiento() + "; se conserva " + fechaNacimiento);
+        }
+        if (d.sexo() != null && !d.sexo().equals(sexo)) {
+            diferencias.add("El sexo en el listado es " + d.sexo() + "; se conserva " + sexo);
+        }
+        if (telefono != null && d.telefono() != null && !d.telefono().equals(telefono)) {
+            diferencias.add("El teléfono en el listado es " + d.telefono() + "; se conserva " + telefono);
+        }
+        if (email != null && d.email() != null && !d.email().equalsIgnoreCase(email)) {
+            diferencias.add("El correo en el listado es " + d.email() + "; se conserva " + email);
+        }
+        return diferencias;
+    }
+
+    void aplicar(List<Cambio> cambios) {
+        cambios.forEach(c -> poner(c.campo(), c.despues()));
+        this.actualizadoEn = Instant.now();
+    }
+
+    /** Deshace los cambios de una importación, salvo en los campos que alguien editó después. */
+    void revertir(List<Cambio> cambios) {
+        for (Cambio c : cambios) {
+            if (Objects.equals(valor(c.campo()), c.despues())) {
+                poner(c.campo(), c.antes());
+            }
+        }
+        this.actualizadoEn = Instant.now();
+    }
+
+    private String valor(String campo) {
+        return switch (campo) {
+            case "nombres" -> nombres;
+            case "apellidos" -> apellidos;
+            case "telefono" -> telefono;
+            case "email" -> email;
+            case "datosIncompletos" -> String.valueOf(datosIncompletos);
+            default -> throw new IllegalArgumentException(campo);
+        };
+    }
+
+    private void poner(String campo, String valor) {
+        switch (campo) {
+            case "nombres" -> nombres = valor;
+            case "apellidos" -> apellidos = valor;
+            case "telefono" -> telefono = valor;
+            case "email" -> email = valor;
+            case "datosIncompletos" -> datosIncompletos = Boolean.parseBoolean(valor);
+            default -> throw new IllegalArgumentException(campo);
+        }
     }
 
     void actualizarDemograficos(String nombres, String apellidos, LocalDate fechaNacimiento, String sexo,

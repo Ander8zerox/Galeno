@@ -30,6 +30,10 @@ import com.galeno.identidad.IdentidadService;
 import com.galeno.importacion.RipsParser.AtencionRips;
 import com.galeno.importacion.RipsParser.DxRips;
 import com.galeno.importacion.RipsParser.PacienteRips;
+import com.galeno.importacion.ImportacionListadoService.Columnas;
+import com.galeno.importacion.ImportacionListadoService.MapeoColumnas;
+import com.galeno.pacientes.DatosPersona;
+import com.galeno.pacientes.DatosPersona.Cambio;
 import com.galeno.pacientes.Paciente;
 import com.galeno.pacientes.PacienteService;
 import com.galeno.shared.security.AuthUser;
@@ -56,10 +60,13 @@ public class ImportacionService {
     private final IdentidadService identidad;
     private final JsonMapper mapper;
     private final RipsParser parser;
+    private final ImportacionListadoService listado;
 
     ImportacionService(LoteImportacionRepository lotes, RegistroImportacionRepository registros, CupsRepository cups,
                        PacienteService pacientes, HistoriaService historia, FormulasPublica formulas,
-                       AgendaPublica agenda, IdentidadService identidad, JsonMapper mapper) {
+                       AgendaPublica agenda, IdentidadService identidad, JsonMapper mapper,
+                       ImportacionListadoService listado) {
+        this.listado = listado;
         this.lotes = lotes;
         this.registros = registros;
         this.cups = cups;
@@ -93,8 +100,21 @@ public class ImportacionService {
     public record Mensaje(Nivel nivel, String texto) {
     }
 
+    /** Los datos de un registro de un listado de pacientes (en lugar de {@link DatosRegistro}). */
+    record DatosListado(int fila, DatosPersona persona, List<Cambio> cambios) {
+    }
+
+    /**
+     * @param pacientesRestaurados al deshacer un listado: pacientes que volvieron a sus datos anteriores. Es
+     *                             {@code Integer} porque los lotes guardados antes de que existiera no lo traen.
+     */
     record Resultado(int pacientesCreados, int pacientesActualizados, int atencionesCreadas, int atencionesYaImportadas,
-                     int atencionesEliminadas, int pacientesEliminados, int pacientesConservados) {
+                     int atencionesEliminadas, int pacientesEliminados, int pacientesConservados,
+                     Integer pacientesRestaurados) {
+
+        Resultado {
+            pacientesRestaurados = pacientesRestaurados == null ? 0 : pacientesRestaurados;
+        }
     }
 
     // --- vistas ---
@@ -109,7 +129,8 @@ public class ImportacionService {
     public record RegistroVista(UUID id, String tipoDocumento, String numeroDocumento, RegistroImportacion.Estado estado,
                                 boolean incluido, int totalAtenciones, LocalDate fechaNacimiento, String sexo,
                                 List<Mensaje> mensajes, UUID pacienteId, String nombreActual,
-                                List<AtencionDatos> atenciones) {
+                                List<AtencionDatos> atenciones, Integer fila, DatosPersona persona,
+                                List<Cambio> cambios) {
     }
 
     public record Pagina<T>(List<T> items, int page, int size, long total) {
@@ -228,6 +249,17 @@ public class ImportacionService {
         };
     }
 
+    /** Primer paso de un listado de pacientes: encabezados, muestra y mapeo propuesto. */
+    public Columnas columnasListado(ArchivoSubido archivo) {
+        return listado.analizar(archivo.nombre(), archivo.contenido());
+    }
+
+    /** Arma el lote en revisión de un listado de pacientes con el mapeo que eligió la persona. */
+    @Transactional
+    public LoteVista crearDesdeListado(ArchivoSubido archivo, MapeoColumnas mapeo) {
+        return vista(listado.crear(archivo.nombre(), archivo.contenido(), mapeo), List.of());
+    }
+
     @Transactional(readOnly = true)
     public Pagina<LoteVista> listar(Pageable pageable) {
         Page<LoteImportacion> page = lotes.findAllByOrderByCreadoEnDesc(pageable);
@@ -246,7 +278,7 @@ public class ImportacionService {
                         .map(RegistroImportacion::getPacienteId).filter(id -> id != null).toList()).entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().nombre()));
         List<RegistroVista> contenido = page.getContent().stream()
-                .map(r -> vista(r, nombres.get(r.getPacienteId()), clinico)).toList();
+                .map(r -> vista(r, lote.getOrigen(), nombres.get(r.getPacienteId()), clinico)).toList();
         return new LoteDetalle(vista(lote, List.of()),
                 new Pagina<>(contenido, page.getNumber(), page.getSize(), page.getTotalElements()));
     }
@@ -254,14 +286,15 @@ public class ImportacionService {
     /** Incluir o excluir un paciente del lote antes de confirmarlo. */
     @Transactional
     public RegistroVista incluir(UUID loteId, UUID registroId, boolean incluido) {
-        lote(loteId).exigir(LoteImportacion.Estado.EN_REVISION, "modificar");
+        LoteImportacion lote = lote(loteId);
+        lote.exigir(LoteImportacion.Estado.EN_REVISION, "modificar");
         RegistroImportacion r = registros.findByIdAndLoteId(registroId, loteId)
                 .orElseThrow(() -> ApiProblem.notFound("Registro no encontrado"));
         if (incluido && r.getEstado() == RegistroImportacion.Estado.ERROR) {
             throw ApiProblem.badRequest("Un registro con errores no se puede importar");
         }
         r.incluir(incluido);
-        return vista(r, null, AuthUser.current().puede(Permiso.HISTORIA_VER));
+        return vista(r, lote.getOrigen(), null, AuthUser.current().puede(Permiso.HISTORIA_VER));
     }
 
     @Transactional
@@ -277,6 +310,10 @@ public class ImportacionService {
     public LoteVista confirmar(UUID loteId) {
         LoteImportacion lote = lotes.paraProcesar(loteId).orElseThrow(() -> ApiProblem.notFound("Lote no encontrado"));
         lote.exigir(LoteImportacion.Estado.EN_REVISION, "confirmar");
+        if (lote.getOrigen() == LoteImportacion.Origen.PACIENTES_LISTADO) {
+            lote.confirmar(json(listado.confirmar(loteId)));
+            return vista(lote, List.of());
+        }
         ZoneId zona = identidad.zonaHoraria(AuthUser.current().tenantId());
 
         int creados = 0;
@@ -315,7 +352,7 @@ public class ImportacionService {
                 historia.registrarAcceso(paciente.getId(), Accion.IMPORTAR_ATENCIONES, loteId);
             }
         }
-        lote.confirmar(json(new Resultado(creados, actualizados, atencionesCreadas, yaImportadas, 0, 0, 0)));
+        lote.confirmar(json(new Resultado(creados, actualizados, atencionesCreadas, yaImportadas, 0, 0, 0, 0)));
         return vista(lote, List.of());
     }
 
@@ -327,6 +364,11 @@ public class ImportacionService {
     public LoteVista deshacer(UUID loteId) {
         LoteImportacion lote = lotes.paraProcesar(loteId).orElseThrow(() -> ApiProblem.notFound("Lote no encontrado"));
         lote.exigir(LoteImportacion.Estado.CONFIRMADO, "deshacer");
+        if (lote.getOrigen() == LoteImportacion.Origen.PACIENTES_LISTADO) {
+            Resultado antes = lote.getResultado() == null ? null : mapper.readValue(lote.getResultado(), Resultado.class);
+            lote.deshacer(json(listado.deshacer(loteId, antes)));
+            return vista(lote, List.of());
+        }
         List<UUID> atencionIds = historia.atencionesDelLote(loteId);
         if (historia.notasEnAtenciones(atencionIds) > 0 || formulas.ligadasA(atencionIds) > 0) {
             throw ApiProblem.conflict("Algunas atenciones importadas ya tienen notas aclaratorias o fórmulas; el lote no se puede deshacer");
@@ -358,7 +400,7 @@ public class ImportacionService {
         Resultado antes = lote.getResultado() == null ? null : mapper.readValue(lote.getResultado(), Resultado.class);
         lote.deshacer(json(new Resultado(antes == null ? 0 : antes.pacientesCreados(),
                 antes == null ? 0 : antes.pacientesActualizados(), antes == null ? 0 : antes.atencionesCreadas(),
-                antes == null ? 0 : antes.atencionesYaImportadas(), eliminadas, borrados, conservados)));
+                antes == null ? 0 : antes.atencionesYaImportadas(), eliminadas, borrados, conservados, 0)));
         return vista(lote, List.of());
     }
 
@@ -424,12 +466,18 @@ public class ImportacionService {
                 l.getCreadoEn(), l.getConfirmadoEn(), l.getDeshechoEn());
     }
 
-    private RegistroVista vista(RegistroImportacion r, String nombreActual, boolean clinico) {
-        DatosRegistro datos = mapper.readValue(r.getDatos(), DatosRegistro.class);
+    private RegistroVista vista(RegistroImportacion r, LoteImportacion.Origen origen, String nombreActual, boolean clinico) {
         List<Mensaje> mensajes = mapper.readValue(r.getMensajes(), new TypeReference<List<Mensaje>>() {
         });
+        if (origen == LoteImportacion.Origen.PACIENTES_LISTADO) {
+            DatosListado datos = mapper.readValue(r.getDatos(), DatosListado.class);
+            return new RegistroVista(r.getId(), r.getTipoDocumento(), r.getNumeroDocumento(), r.getEstado(),
+                    r.isIncluido(), 0, datos.persona().fechaNacimiento(), datos.persona().sexo(), mensajes,
+                    r.getPacienteId(), nombreActual, List.of(), datos.fila(), datos.persona(), datos.cambios());
+        }
+        DatosRegistro datos = mapper.readValue(r.getDatos(), DatosRegistro.class);
         return new RegistroVista(r.getId(), r.getTipoDocumento(), r.getNumeroDocumento(), r.getEstado(), r.isIncluido(),
                 r.getAtenciones(), datos.fechaNacimiento(), datos.sexo(), mensajes, r.getPacienteId(), nombreActual,
-                clinico ? datos.atenciones() : List.of());
+                clinico ? datos.atenciones() : List.of(), null, null, List.of());
     }
 }

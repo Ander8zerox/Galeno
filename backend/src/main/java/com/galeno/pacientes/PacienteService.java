@@ -55,6 +55,45 @@ public class PacienteService {
         return repository.save(Paciente.importado(tipoDocumento, numeroDocumento, fechaNacimiento, sexo, loteImportacionId));
     }
 
+    // --- listados de pacientes de otros sistemas (los usa el módulo de importación) ---
+
+    /** Pacientes con ese número de documento y cualquier tipo (para detectar un TI que ya es CC, p. ej.). */
+    @Transactional(readOnly = true)
+    public java.util.List<Paciente> porNumeroDocumento(String numeroDocumento) {
+        return repository.findByNumeroDocumento(numeroDocumento);
+    }
+
+    /** Lo que el listado cambiaría y lo que no va a cambiar pero difiere (para la revisión). */
+    @Transactional(readOnly = true)
+    public Comparacion compararConListado(UUID id, DatosPersona datos) {
+        Paciente p = get(id);
+        return new Comparacion(p.cambiosDesde(datos), p.diferenciasCon(datos));
+    }
+
+    public record Comparacion(java.util.List<DatosPersona.Cambio> cambios, java.util.List<String> diferencias) {
+    }
+
+    /** Aplica el listado sobre un paciente existente y devuelve lo que cambió (para poder deshacerlo). */
+    @Transactional
+    public java.util.List<DatosPersona.Cambio> completarDesdeListado(UUID id, DatosPersona datos) {
+        Paciente p = get(id);
+        java.util.List<DatosPersona.Cambio> cambios = p.cambiosDesde(datos);
+        if (!cambios.isEmpty()) {
+            p.aplicar(cambios);
+        }
+        return cambios;
+    }
+
+    @Transactional
+    public Paciente crearDesdeListado(String tipoDocumento, String numeroDocumento, DatosPersona datos, UUID loteId) {
+        return repository.save(Paciente.desdeListado(tipoDocumento, numeroDocumento, datos, loteId));
+    }
+
+    @Transactional
+    public void revertirCambios(UUID id, java.util.List<DatosPersona.Cambio> cambios) {
+        repository.findById(id).ifPresent(p -> p.revertir(cambios));
+    }
+
     /** Al deshacer una importación (quien llama verifica antes que el paciente no tenga otra actividad). */
     @Transactional
     public void eliminarImportado(UUID id, UUID loteImportacionId) {
@@ -64,8 +103,13 @@ public class PacienteService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Paciente> search(String q, Pageable pageable) {
-        return repository.search(q == null || q.isBlank() ? null : q.trim(), pageable);
+    public Page<Paciente> search(String q, boolean soloIncompletos, Pageable pageable) {
+        return repository.search(q == null || q.isBlank() ? null : q.trim(), soloIncompletos, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public long conDatosIncompletos() {
+        return repository.countByDatosIncompletosTrue();
     }
 
     /**

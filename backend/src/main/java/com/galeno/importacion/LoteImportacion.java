@@ -26,7 +26,9 @@ import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 class LoteImportacion {
 
     enum Origen {
-        RIPS_JSON
+        RIPS_JSON,
+        /** Excel o CSV con los datos de los pacientes (nombres y contacto). */
+        PACIENTES_LISTADO
     }
 
     enum Estado {
