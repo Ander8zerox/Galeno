@@ -31,7 +31,8 @@ import com.galeno.shared.tenancy.TenantFilter;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain api(HttpSecurity http, SesionVigenteFilter sesionVigenteFilter) throws Exception {
+    SecurityFilterChain api(HttpSecurity http, SesionVigenteFilter sesionVigenteFilter, SuscripcionFilter suscripcionFilter)
+            throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // API sin cookies: el token viaja en Authorization
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -41,8 +42,13 @@ public class SecurityConfig {
                         // El token de invitación viaja en el cuerpo, nunca en la URL (no queda en logs)
                         .requestMatchers(HttpMethod.POST, "/api/v1/invitaciones/consultar", "/api/v1/invitaciones/aceptar").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/registro", "/api/v1/registro/consultar", "/api/v1/registro/confirmar").permitAll()
+                        // Consola de la plataforma (operadores de Galeno): su propio login y su propio token
+                        .requestMatchers(HttpMethod.POST, "/api/v1/plataforma/login").permitAll()
+                        .requestMatchers("/api/v1/plataforma/**").hasAuthority(TokenService.PLATAFORMA)
                         // Buzón de desarrollo: el controlador solo existe con app.correo.proveedor=local
                         .requestMatchers(HttpMethod.GET, "/api/v1/dev/buzon").permitAll()
+                        // Solo existe con el perfil local
+                        .requestMatchers(HttpMethod.POST, "/api/v1/dev/suscripciones/avisos").permitAll()
                         .requestMatchers("/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // Cualquier token válido, incluido el de selección de consultorio
                         .requestMatchers("/api/v1/auth/consultorios", "/api/v1/auth/sesion").authenticated()
@@ -57,17 +63,33 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/historia/**").hasAuthority(Permiso.HISTORIA_REGISTRAR.name())
                         .requestMatchers("/api/v1/importaciones/**").hasAuthority(Permiso.IMPORTAR_HISTORIAS.name())
                         .requestMatchers("/api/v1/agenda/**").hasAuthority(Permiso.AGENDA_GESTIONAR.name())
+                        // El estado lo ve cualquier miembro (para el aviso); lo demás, quien administra la suscripción
+                        .requestMatchers(HttpMethod.GET, "/api/v1/suscripcion").hasAuthority(TokenService.MIEMBRO)
+                        .requestMatchers("/api/v1/suscripcion/**").hasAuthority(Permiso.SUSCRIPCION_GESTIONAR.name())
                         // El resto exige un token de sesión en un consultorio
                         .anyRequest().hasAuthority(TokenService.MIEMBRO))
                 .oauth2ResourceServer(rs -> rs.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .addFilterAfter(new TenantFilter(), BearerTokenAuthenticationFilter.class)
-                .addFilterAfter(sesionVigenteFilter, TenantFilter.class);
+                .addFilterAfter(sesionVigenteFilter, TenantFilter.class)
+                .addFilterAfter(suscripcionFilter, SesionVigenteFilter.class);
         return http.build();
     }
 
     @Bean
     SesionVigenteFilter sesionVigenteFilter(SesionVerifier verifier) {
         return new SesionVigenteFilter(verifier);
+    }
+
+    @Bean
+    SuscripcionFilter suscripcionFilter(EstadoSuscripcionVerifier verifier) {
+        return new SuscripcionFilter(verifier);
+    }
+
+    @Bean
+    FilterRegistrationBean<SuscripcionFilter> suscripcionFilterRegistration(SuscripcionFilter filter) {
+        FilterRegistrationBean<SuscripcionFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     /** Evita que Spring Boot registre el filtro también fuera de la cadena de seguridad. */

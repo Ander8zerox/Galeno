@@ -32,8 +32,11 @@ public class TokenService {
     /** Authority de todo token de sesión; los de selección no la tienen. */
     public static final String MIEMBRO = "MIEMBRO";
     public static final String SELECCION = "SELECCION_CONSULTORIO";
+    /** Operador de la plataforma (Galeno): consola de suscripciones y pagos. No da acceso a ningún consultorio. */
+    public static final String PLATAFORMA = "PLATAFORMA";
 
     private static final Duration TTL_SELECCION = Duration.ofMinutes(10);
+    private static final Duration TTL_PLATAFORMA = Duration.ofHours(4);
 
     private final JwtEncoder encoder;
     private final JwtProperties props;
@@ -45,6 +48,10 @@ public class TokenService {
 
     public IssuedToken issueSeleccion(UUID userId, String nombre, String email) {
         return issue(base(userId, nombre, email, TTL_SELECCION).claim(CLAIM_AUTHORITIES, List.of(SELECCION)), TTL_SELECCION);
+    }
+
+    public IssuedToken issuePlataforma(UUID userId, String nombre, String email) {
+        return issue(base(userId, nombre, email, TTL_PLATAFORMA).claim(CLAIM_AUTHORITIES, List.of(PLATAFORMA)), TTL_PLATAFORMA);
     }
 
     public IssuedToken issueSesion(UUID userId, String nombre, String email, UUID tenantId, UUID membresiaId,

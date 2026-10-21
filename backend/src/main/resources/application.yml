@@ -34,6 +34,8 @@ server:
 app:
   documentos:
     dir: ./data/documentos # en AWS: bucket S3 cifrado
+  plataforma:
+    operadores: "" # correos de las cuentas con acceso a la consola: APP_PLATAFORMA_OPERADORES (separados por coma)
   correo:
     proveedor: local # local (buzón de desarrollo en /api/v1/dev/buzon) | ses (en AWS)
   web:

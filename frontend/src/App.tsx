@@ -5,6 +5,8 @@ import { useAuth } from "./auth/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
 import { SeleccionConsultorioPage } from "./pages/SeleccionConsultorioPage";
 import { InvitacionPage } from "./pages/InvitacionPage";
+import { PlataformaApp } from "./pages/PlataformaApp";
+import { AvisoSuscripcion, SuscripcionPage } from "./pages/SuscripcionPage";
 import { BuzonDevPage, ConfirmarRegistroPage, PoliticaDatosPage, RegistroPage } from "./pages/RegistroPage";
 import { PacientesPage } from "./pages/PacientesPage";
 import { PacientePage } from "./pages/PacientePage";
@@ -19,6 +21,7 @@ export function App() {
 
   // Páginas públicas: quien las abre puede no tener cuenta todavía
   if (location.pathname === "/invitacion") return <InvitacionPage />;
+  if (location.pathname.startsWith("/plataforma")) return <PlataformaApp />;
   if (location.pathname === "/registro") return <RegistroPage />;
   if (location.pathname === "/registro/confirmar") return <ConfirmarRegistroPage />;
   if (location.pathname === "/politica-datos") return <PoliticaDatosPage />;
@@ -35,12 +38,14 @@ export function App() {
           <Link to="/pacientes">Pacientes</Link>
           {puede("EQUIPO_GESTIONAR") && <Link to="/equipo">Equipo</Link>}
           {puede("IMPORTAR_HISTORIAS") && <Link to="/importar">Importar</Link>}
+          {puede("SUSCRIPCION_GESTIONAR") && <Link to="/suscripcion">Suscripción</Link>}
         </nav>
         <span className="spacer" />
         <span>{me.nombre}</span>
         <button className="btn-link" onClick={logout}>Salir</button>
       </header>
       <main className="content">
+        <AvisoSuscripcion />
         <Routes>
           <Route path="/pacientes" element={<PacientesPage />} />
           <Route path="/pacientes/:id" element={<PacientePage />} />
@@ -48,6 +53,7 @@ export function App() {
           {puede("EQUIPO_GESTIONAR") && <Route path="/equipo" element={<EquipoPage />} />}
           {puede("IMPORTAR_HISTORIAS") && <Route path="/importar" element={<ImportarPage />} />}
           {puede("IMPORTAR_HISTORIAS") && <Route path="/importar/:id" element={<LoteImportacionPage />} />}
+          {puede("SUSCRIPCION_GESTIONAR") && <Route path="/suscripcion" element={<SuscripcionPage />} />}
           {puede("AGENDA_GESTIONAR") && <Route path="/agenda" element={<AgendaPage />} />}
           <Route path="*" element={<Navigate to={puede("AGENDA_GESTIONAR") ? "/agenda" : "/pacientes"} replace />} />
         </Routes>

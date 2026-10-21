@@ -26,10 +26,13 @@ import com.galeno.shared.tenancy.TenantContext;
  */
 @Component
 @Profile("local")
+@org.springframework.core.annotation.Order(0) // antes de marcar los operadores de la plataforma
 class DevDataSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DevDataSeeder.class);
     static final String SECRETARIO = "secretario@demo.local";
+    /** Operador de la plataforma (app.plataforma.operadores en application-local.yml). */
+    static final String PLATAFORMA = "plataforma@demo.local";
     static final String MEDICO_2 = "medico2@demo.local";
 
     private final ConsultorioRepository consultorios;
@@ -59,6 +62,7 @@ class DevDataSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        TenantContext.runAs(TenantContext.SYSTEM, () -> tx.executeWithoutResult(s -> usuario(PLATAFORMA, "Operador Galeno")));
         if (usuarios.existsByEmail(SECRETARIO)) {
             return;
         }

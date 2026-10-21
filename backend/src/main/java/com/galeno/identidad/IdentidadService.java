@@ -24,9 +24,12 @@ public class IdentidadService implements SesionVerifier {
     private final PerfilMedicoRepository perfiles;
     private final AsignacionSecretarioRepository asignaciones;
     private final ConsultorioRepository consultorios;
+    private final org.springframework.transaction.support.TransactionTemplate tx;
 
     IdentidadService(MembresiaRepository membresias, UsuarioRepository usuarios, PerfilMedicoRepository perfiles,
-                     AsignacionSecretarioRepository asignaciones, ConsultorioRepository consultorios) {
+                     AsignacionSecretarioRepository asignaciones, ConsultorioRepository consultorios,
+                     org.springframework.transaction.support.TransactionTemplate tx) {
+        this.tx = tx;
         this.membresias = membresias;
         this.usuarios = usuarios;
         this.perfiles = perfiles;
@@ -80,6 +83,34 @@ public class IdentidadService implements SesionVerifier {
         Optional<PerfilMedico> perfil = perfiles.findById(usuarioId);
         return new Profesional(u.getNombre(), perfil.map(PerfilMedico::getRegistroMedico).orElse(null),
                 perfil.map(PerfilMedico::getEspecialidad).orElse(null));
+    }
+
+    /** Correos de los administradores activos de un consultorio (para avisos de la suscripción). */
+    public List<String> correosAdministradores(UUID consultorioId) {
+        Set<UUID> ids = com.galeno.shared.tenancy.TenantContext.callAs(consultorioId, () -> tx.execute(s ->
+                membresias.findAll().stream().filter(m -> m.activa() && m.tiene(Rol.ADMIN))
+                        .map(Membresia::getUsuarioId).collect(java.util.stream.Collectors.toSet())));
+        return com.galeno.shared.tenancy.TenantContext.callAs(com.galeno.shared.tenancy.TenantContext.SYSTEM, () ->
+                tx.execute(s -> usuarios.findAllById(ids).stream().filter(Usuario::isActivo).map(Usuario::getEmail).sorted().toList()));
+    }
+
+    /** Todos los consultorios (consola de plataforma). */
+    public List<ConsultorioPlataforma> todosLosConsultorios() {
+        return com.galeno.shared.tenancy.TenantContext.callAs(com.galeno.shared.tenancy.TenantContext.SYSTEM, () ->
+                tx.execute(s -> consultorios.findAll().stream()
+                        .map(c -> new ConsultorioPlataforma(c.getId(), c.getNombre(), c.getNit(), c.getCreadoEn()))
+                        .toList()));
+    }
+
+    /** Ids de las cuentas activas con esos correos (para marcar operadores de plataforma). */
+    public java.util.Map<String, UUID> cuentasPorCorreo(java.util.Collection<String> correos) {
+        return com.galeno.shared.tenancy.TenantContext.callAs(com.galeno.shared.tenancy.TenantContext.SYSTEM, () ->
+                tx.execute(s -> correos.stream().map(c -> usuarios.findByEmail(c.strip().toLowerCase()))
+                        .flatMap(Optional::stream).filter(Usuario::isActivo)
+                        .collect(java.util.stream.Collectors.toMap(Usuario::getEmail, Usuario::getId))));
+    }
+
+    public record ConsultorioPlataforma(UUID id, String nombre, String nit, java.time.Instant creadoEn) {
     }
 
     public record MedicoResumen(UUID membresiaId, UUID usuarioId, String nombre) {

@@ -16,6 +16,94 @@
     }
   ],
   "paths": {
+    "/api/v1/plataforma/planes/{codigo}": {
+      "put": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "actualizarPlan",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioPlan"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/datos-pago": {
+      "get": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "datosPago",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatosPago"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "cambiarDatosPago",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosPago"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatosPago"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/pacientes/{id}": {
       "get": {
         "tags": [
@@ -489,6 +577,102 @@
         }
       }
     },
+    "/api/v1/suscripcion/pagos": {
+      "get": {
+        "tags": [
+          "suscripcion-controller"
+        ],
+        "operationId": "pagos",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PagoVista"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "suscripcion-controller"
+        ],
+        "operationId": "reportar",
+        "parameters": [
+          {
+            "name": "plan",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "monto",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "fechaPago",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "referencia",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "minLength": 0
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "comprobante": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/registro": {
       "post": {
         "tags": [
@@ -572,6 +756,262 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/SesionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/pagos/{id}/rechazar": {
+      "post": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "rechazar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Motivo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/pagos/{id}/aprobar": {
+      "post": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "aprobar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/login": {
+      "post": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginPlataforma"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SesionPlataforma"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/consultorios/{id}/suspender": {
+      "post": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "suspender",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Motivo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/consultorios/{id}/reactivar": {
+      "post": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "reactivar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/consultorios/{id}/pagos": {
+      "post": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "registrarPago",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PagoRecibido"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagoVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/consultorios/{id}/cortesia": {
+      "post": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "cortesia",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Cortesia"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoVista"
                 }
               }
             }
@@ -1236,6 +1676,26 @@
         }
       }
     },
+    "/api/v1/dev/suscripciones/avisos": {
+      "post": {
+        "tags": [
+          "dev-avisos-controller"
+        ],
+        "operationId": "avisos",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvisosEnviados"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/sesion": {
       "post": {
         "tags": [
@@ -1271,7 +1731,7 @@
         "tags": [
           "auth-controller"
         ],
-        "operationId": "login",
+        "operationId": "login_1",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1349,6 +1809,180 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/CitaVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/suscripcion": {
+      "get": {
+        "tags": [
+          "suscripcion-controller"
+        ],
+        "operationId": "estado",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/suscripcion/opciones": {
+      "get": {
+        "tags": [
+          "suscripcion-controller"
+        ],
+        "operationId": "opciones",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpcionesPago"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/planes": {
+      "get": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "planes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlanVista"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/pagos": {
+      "get": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "pagos_1",
+        "parameters": [
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PagoVista"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/pagos/{id}/comprobante": {
+      "get": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "comprobante",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/consultorios": {
+      "get": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "consultorios",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConsultorioVista"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/auditoria": {
+      "get": {
+        "tags": [
+          "plataforma-controller"
+        ],
+        "operationId": "auditoria",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EventoAuditoria"
+                  }
                 }
               }
             }
@@ -1724,7 +2358,7 @@
         "tags": [
           "auth-controller"
         ],
-        "operationId": "consultorios",
+        "operationId": "consultorios_1",
         "responses": {
           "200": {
             "description": "OK",
@@ -1952,6 +2586,62 @@
   },
   "components": {
     "schemas": {
+      "CambioPlan": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 0
+          },
+          "precio": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "nombre"
+        ]
+      },
+      "PlanVista": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "meses": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "precio": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DatosPago": {
+        "type": "object",
+        "properties": {
+          "texto": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "texto"
+        ]
+      },
       "PacienteRequest": {
         "type": "object",
         "properties": {
@@ -2920,6 +3610,70 @@
           "estado"
         ]
       },
+      "PagoVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consultorioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consultorioNombre": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string"
+          },
+          "meses": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monto": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "fechaPago": {
+            "type": "string",
+            "format": "date"
+          },
+          "referencia": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "REPORTADO",
+              "APROBADO",
+              "RECHAZADO"
+            ]
+          },
+          "motivoRechazo": {
+            "type": "string"
+          },
+          "tieneComprobante": {
+            "type": "boolean"
+          },
+          "reportadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revisadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodoDesde": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "periodoHasta": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "SolicitudRegistro": {
         "type": "object",
         "properties": {
@@ -3069,6 +3823,141 @@
             }
           }
         }
+      },
+      "Motivo": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "motivo"
+        ]
+      },
+      "LoginPlataforma": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 190,
+            "minLength": 0
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "SesionPlataforma": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "EstadoVista": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "PRUEBA",
+              "ACTIVA",
+              "VENCIDA",
+              "SUSPENDIDA"
+            ]
+          },
+          "venceEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "graciaHasta": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "diasRestantes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pagada": {
+            "type": "boolean"
+          },
+          "soloLectura": {
+            "type": "boolean"
+          },
+          "motivoSuspension": {
+            "type": "string"
+          },
+          "pagoEnRevision": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PagoRecibido": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string",
+            "minLength": 1
+          },
+          "monto": {
+            "type": "integer",
+            "format": "int64",
+            "exclusiveMinimum": 0
+          },
+          "fechaPago": {
+            "type": "string",
+            "format": "date"
+          },
+          "referencia": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "fechaPago",
+          "plan",
+          "referencia"
+        ]
+      },
+      "Cortesia": {
+        "type": "object",
+        "properties": {
+          "dias": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 366,
+            "minimum": 1
+          },
+          "motivo": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "motivo"
+        ]
       },
       "ConsultarInvitacion": {
         "type": "object",
@@ -3486,6 +4375,15 @@
           }
         }
       },
+      "AvisosEnviados": {
+        "type": "object",
+        "properties": {
+          "enviados": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ElegirConsultorio": {
         "type": "object",
         "properties": {
@@ -3585,6 +4483,66 @@
           "medicoId",
           "pacienteId"
         ]
+      },
+      "OpcionesPago": {
+        "type": "object",
+        "properties": {
+          "planes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlanVista"
+            }
+          },
+          "datosPago": {
+            "type": "string"
+          }
+        }
+      },
+      "ConsultorioVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "nit": {
+            "type": "string"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "suscripcion": {
+            "$ref": "#/components/schemas/EstadoVista"
+          },
+          "administradores": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "EventoAuditoria": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "accion": {
+            "type": "string"
+          },
+          "consultorio": {
+            "type": "string"
+          },
+          "detalle": {
+            "type": "string"
+          }
+        }
       },
       "PacientePage": {
         "type": "object",
@@ -3876,7 +4834,8 @@
                 "FORMULA_FIRMAR",
                 "IA_DIAGNOSTICO",
                 "AGENDA_GESTIONAR",
-                "IMPORTAR_HISTORIAS"
+                "IMPORTAR_HISTORIAS",
+                "SUSCRIPCION_GESTIONAR"
               ]
             }
           },
@@ -3928,37 +4887,6 @@
       "JsonNode": {
         "type": "object",
         "properties": {
-          "pojo": {
-            "type": "boolean"
-          },
-          "short": {
-            "type": "boolean"
-          },
-          "int": {
-            "type": "boolean"
-          },
-          "long": {
-            "type": "boolean"
-          },
-          "object": {
-            "type": "boolean"
-          },
-          "boolean": {
-            "type": "boolean"
-          },
-          "textual": {
-            "type": "boolean",
-            "deprecated": true
-          },
-          "double": {
-            "type": "boolean"
-          },
-          "binary": {
-            "type": "boolean"
-          },
-          "string": {
-            "type": "boolean"
-          },
           "array": {
             "type": "boolean"
           },
@@ -3971,19 +4899,16 @@
           "float": {
             "type": "boolean"
           },
-          "floatingPointNumber": {
-            "type": "boolean"
-          },
-          "number": {
-            "type": "boolean"
-          },
-          "integralNumber": {
+          "container": {
             "type": "boolean"
           },
           "valueNode": {
             "type": "boolean"
           },
-          "container": {
+          "missingNode": {
+            "type": "boolean"
+          },
+          "bigInteger": {
             "type": "boolean"
           },
           "nodeType": {
@@ -4000,13 +4925,47 @@
               "STRING"
             ]
           },
-          "missingNode": {
-            "type": "boolean"
-          },
           "bigDecimal": {
             "type": "boolean"
           },
-          "bigInteger": {
+          "integralNumber": {
+            "type": "boolean"
+          },
+          "double": {
+            "type": "boolean"
+          },
+          "int": {
+            "type": "boolean"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          },
+          "pojo": {
+            "type": "boolean"
+          },
+          "long": {
+            "type": "boolean"
+          },
+          "short": {
+            "type": "boolean"
+          },
+          "textual": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "string": {
+            "type": "boolean"
+          },
+          "floatingPointNumber": {
+            "type": "boolean"
+          },
+          "number": {
+            "type": "boolean"
+          },
+          "object": {
             "type": "boolean"
           },
           "embeddedValue": {

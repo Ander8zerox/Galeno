@@ -55,6 +55,25 @@ registros_consultorio (solicitudes de registro sin verificar, 24 horas; solo se 
   - **Límites** (`LimiteIntentos`, en memoria): por IP (`app.registro.solicitudes-por-ip-hora`, 5 en producción) antes de validar, y 3 solicitudes válidas por correo por hora. En AWS la IP real llega en `X-Forwarded-For` desde el balanceador: hay que activar `server.forward-headers-strategy` y aceptar ese encabezado solo del ALB.
 - **Correo.** Va detrás de la interfaz `EnvioCorreo`. Con `app.correo.proveedor=local` (el valor por defecto) los correos quedan en un buzón en memoria, visible en `GET /api/v1/dev/buzon` y en la página `/dev/buzon` del front (solo en desarrollo). En AWS se usará SES, también para las invitaciones.
 
+## Suscripciones y consola de la plataforma
+
+```
+PRUEBA (30 días) ─┐
+                  ├─ vence ─> VENCIDA (5 días de gracia, con aviso) ─> SUSPENDIDA (solo lectura)
+ACTIVA (pagada) ──┘                         └─────────── pago aprobado ───────────┘
+```
+
+- **Estado calculado.** `suscripciones` guarda fechas (`prueba_hasta`, `pagada_hasta`) y la suspensión manual; el estado se calcula con ellas (`Suscripcion.estado`), así nunca queda desactualizado porque un proceso no corrió.
+- **Prueba.** Un consultorio registrado por la web recibe 30 días (evento `ConsultorioRegistrado`). Los consultorios anteriores empezaron su prueba con la migración V11, y si alguno no tiene suscripción se le abre al consultarla.
+- **Pagos.** El ADMIN (permiso `SUSCRIPCION_GESTIONAR`) ve los planes y los datos bancarios, paga por transferencia o consignación y reporta el pago con referencia y comprobante (PDF, PNG o JPG de hasta 5 MB, reconocido por su contenido; va en `comprobantes_pago`, aparte, para que listar no cargue archivos). Solo puede haber un pago en revisión a la vez.
+- **Extensión.** Al aprobar, se suman los meses del plan desde el vencimiento (si paga antes, no pierde días) o desde hoy si ya estaba vencida (no se cobra el tiempo vencido). Con bloqueo de fila: dos aprobaciones no pisan la fecha.
+- **Solo lectura.** `SuscripcionFilter` responde 402 a todo lo que no sea GET en un consultorio suspendido, salvo la sesión y la suscripción (para poder pagar). No se bloquea el acceso completo: el consultorio debe poder consultar y entregar sus historias (Res. 1995). Caché de 60 s que se invalida con el evento `SuscripcionCambiada`.
+- **Avisos** (`AvisosSuscripcion`, todos los días a las 8 a. m. hora Colombia): 7, 3 y 1 día antes, al vencer y al quedar en solo lectura. Cada uno sale una vez por fecha de vencimiento (`avisos_suscripcion`). En local, `POST /api/v1/dev/suscripciones/avisos` lo corre de inmediato.
+- **Consola de la plataforma** (`/plataforma` en el front, `/api/v1/plataforma/**` en la API). La usan los operadores de Galeno, no los consultorios.
+  - Login propio que entrega un token con la authority `PLATAFORMA`, sin consultorio ni permisos de consultorio, y que se verifica en cada llamada.
+  - Los operadores son cuentas de Galeno marcadas por configuración (`app.plataforma.operadores`); nadie puede volverse operador desde la web.
+  - Permite revisar pagos (ver el comprobante, aprobar, rechazar con motivo), registrar un pago recibido sin reporte, regalar días, suspender y reactivar, cambiar precios y datos de pago. Cada acción queda en `auditoria_plataforma`.
+
 ## Agenda
 
 - **Quién ve qué.** El administrador ve todas las agendas, el médico la suya y el secretario las de sus médicos asignados (o todas, si no tiene asignaciones). Los roles se suman. El horario solo lo cambian el propio médico o un administrador.
@@ -134,7 +153,8 @@ Front ──GET /ai-jobs/{id} cada 1,5 s──► API
 
 - Catálogo de medicamentos (CUM/INVIMA) y rangos de dosis en `ValidadorFormula`.
 - Cifrado de campos sensibles (alergias, antecedentes).
-- Recuperación de contraseña, envío de correos con SES (registro e invitaciones) y MFA para médicos.
+- Recuperación de contraseña, envío de correos con SES (registro, invitaciones y avisos) y MFA para médicos y operadores de la plataforma.
+- Factura electrónica de Galeno por cada pago de suscripción (DIAN).
 - Revisión legal de los términos y de la política de datos antes de abrir el registro al público.
 - Imagen de la firma del médico en los PDF.
 - Pruebas de integración con Testcontainers (multi-tenant, worker de IA).
