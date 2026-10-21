@@ -69,7 +69,14 @@ invitaciones (por consultorio, token de un solo uso, 7 días; solo se guarda su 
   - Con el apoyo diagnóstico: usa los datos de la atención y sus diferenciales se agregan como diagnósticos.
 - **Documentos.** PDF, PNG o JPG de hasta 20 MB. El tipo se valida por el contenido del archivo, no por la extensión. El archivo es inmutable y se guarda su SHA-256. Hoy va a disco local (`app.documentos.dir`); en AWS irá a S3 cifrado con la misma interfaz `AlmacenDocumentos`.
 - **Auditoría.** Cada vista de historia o atención, cada firma, nota, carga o descarga queda en `accesos_historia` (quién, qué y cuándo).
-- **CIE-10.** El catálogo (`cie10`) trae una semilla de diagnósticos frecuentes. **Pendiente:** cargar la tabla completa de MinSalud.
+- **CIE-10.** Es la tabla oficial de MinSalud (SISPRO, 12.634 códigos) con restricciones de sexo y edad. El buscador avisa cuando un código no aplica al paciente, porque RIPS lo rechazaría.
+  - La migración se genera con `tools/cie10/generar-migracion.js` a partir del Excel oficial; el Excel no se guarda en el repositorio.
+  - Para actualizarla cuando MinSalud publique una versión nueva, se genera otra migración con el mismo script.
+- **PDF.** Fórmula médica y atención en tamaño carta, con encabezado del consultorio, paciente, firma electrónica con registro médico y numeración de páginas.
+  - Se hacen con XHTML + CSS (OpenHTMLtoPDF), y todo el texto del usuario se escapa.
+  - El PDF de un borrador lleva la marca de agua BORRADOR.
+  - Cada impresión queda en la auditoría (`IMPRIMIR_FORMULA`, `IMPRIMIR_ATENCION`).
+  - Endpoints: `GET /api/v1/formulacion/formulas/{id}/pdf` y `GET /api/v1/historia/atenciones/{id}/pdf`.
 
 ## Flujo de IA
 

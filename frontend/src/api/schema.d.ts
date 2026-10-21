@@ -388,6 +388,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/historia/atenciones/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/formulacion/formulas/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pdf_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/equipo": {
         parameters: {
             query?: never;
@@ -898,6 +930,12 @@ export interface components {
         Cie10Vista: {
             codigo?: string;
             descripcion?: string;
+            sexo?: string;
+            /** Format: int32 */
+            edadMin?: number;
+            /** Format: int32 */
+            edadMax?: number;
+            capitulo?: string;
         };
         Miembro: {
             /** Format: uuid */
@@ -960,25 +998,25 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            long?: boolean;
-            boolean?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            int?: boolean;
-            pojo?: boolean;
-            double?: boolean;
-            short?: boolean;
-            object?: boolean;
-            string?: boolean;
-            binary?: boolean;
-            integralNumber?: boolean;
             missingNode?: boolean;
-            valueNode?: boolean;
-            container?: boolean;
-            bigDecimal?: boolean;
             bigInteger?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            bigDecimal?: boolean;
+            integralNumber?: boolean;
+            container?: boolean;
+            valueNode?: boolean;
+            object?: boolean;
+            double?: boolean;
+            int?: boolean;
+            binary?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            long?: boolean;
+            boolean?: boolean;
+            pojo?: boolean;
+            string?: boolean;
+            short?: boolean;
             floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
@@ -1767,6 +1805,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Cie10Vista"][];
+                };
+            };
+        };
+    };
+    pdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    pdf_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

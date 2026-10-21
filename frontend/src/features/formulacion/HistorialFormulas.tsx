@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api, unwrap } from "../../api/client";
+import { BotonArchivo } from "../historia/Documentos";
 
 const fecha = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium", timeStyle: "short" });
 
@@ -19,7 +20,10 @@ export function HistorialFormulas({ pacienteId }: { pacienteId: string }) {
         <div key={f.id} className="card">
           <div className="row between">
             <strong>Fórmula del {f.firmadaEn ? fecha.format(new Date(f.firmadaEn)) : ""}</strong>
-            {f.aiJobId && <span className="badge">Redactada con apoyo de IA</span>}
+            <span className="row">
+              {f.aiJobId && <span className="badge">Redactada con apoyo de IA</span>}
+              <BotonArchivo ruta={`/api/v1/formulacion/formulas/${f.id}/pdf`} nombre={`formula-${f.id!.slice(0, 8)}.pdf`} className="btn btn-secondary">PDF para imprimir</BotonArchivo>
+            </span>
           </div>
           <ol>
             {f.items?.map((i, idx) => (

@@ -6,11 +6,12 @@
 - Equipo del consultorio: membresías con varios roles, permisos, selector de consultorio e invitaciones.
 - Agenda por médico: horario semanal, cupos, citas, sobrecupos, estados y vista para secretarios.
 - Historia clínica: atenciones con firma e inmutabilidad, notas aclaratorias, documentos, CIE-10, auditoría y conexión con agenda, fórmulas y apoyo diagnóstico.
+- CIE-10 oficial de MinSalud (con avisos de sexo y edad) y PDF de la fórmula y de la atención.
 
 ## Siguiente
 
 ### Historia clínica, siguiente iteración
-- Tabla CIE-10 completa (MinSalud), PDF de la atención y de la fórmula con firma, reporte de auditoría para el administrador, y documentos en S3.
+- Imagen de la firma del médico y código QR de verificación en los PDF, reporte de auditoría para el administrador, y documentos en S3.
 
 ### Importación de historias desde otros sistemas
 El principio: primero las fuentes masivas, todas por el mismo flujo **extraer → revisar → confirmar**.
@@ -35,7 +36,6 @@ El principio: primero las fuentes masivas, todas por el mismo flujo **extraer �
 
 ### Otros pendientes
 - Portal del paciente: cuenta separada que ve sus citas y fórmulas.
-- PDF de la fórmula con firma del médico.
 - Registro de consultorios nuevos, recuperación de contraseña, invitaciones por correo (SES) y MFA.
 - Catálogo CUM/INVIMA y rangos de dosis en `ValidadorFormula`.
 - Cifrado de campos sensibles y log de acceso a historias.

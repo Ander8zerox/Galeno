@@ -19,12 +19,21 @@ export function tamano(bytes = 0): string {
 }
 
 export function BotonDescargar({ id, nombre, children }: { id: string; nombre: string; children?: React.ReactNode }) {
+  return <BotonArchivo ruta={`/api/v1/historia/documentos/${id}/archivo`} nombre={nombre}>{children ?? "Descargar"}</BotonArchivo>;
+}
+
+/** Descarga un archivo de la API con el token de la sesión (PDF de fórmula, atención, documento). */
+export function BotonArchivo({ ruta, nombre, children, className = "btn-link" }: { ruta: string; nombre: string; children: React.ReactNode; className?: string }) {
   const [error, setError] = useState<string | null>(null);
+  const [bajando, setBajando] = useState(false);
   return (
     <>
-      <button type="button" className="btn-link" onClick={() =>
-        descargarArchivo(`/api/v1/historia/documentos/${id}/archivo`, nombre).catch((e: Error) => setError(e.message))}>
-        {children ?? "Descargar"}
+      <button type="button" className={className} disabled={bajando} onClick={() => {
+        setBajando(true);
+        setError(null);
+        descargarArchivo(ruta, nombre).catch((e: Error) => setError(e.message)).finally(() => setBajando(false));
+      }}>
+        {bajando ? "Generando…" : children}
       </button>
       {error && <small className="field-error">{error}</small>}
     </>

@@ -10,9 +10,14 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,12 +25,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.galeno.historia.AccesoHistoria;
+import com.galeno.historia.HistoriaService;
+import com.galeno.identidad.IdentidadService;
+import com.galeno.pacientes.Paciente;
 import com.galeno.pacientes.PacienteService;
 import com.galeno.shared.ai.jobs.AiJobController.AiJobAccepted;
 import com.galeno.shared.ai.jobs.AiJobService;
 import com.galeno.shared.ai.jobs.AiJobType;
-import com.galeno.historia.HistoriaService;
-import com.galeno.identidad.IdentidadService;
+import com.galeno.shared.pdf.PdfRenderer;
 import com.galeno.shared.security.AuthUser;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
@@ -38,14 +46,16 @@ public class FormulacionController {
     private final FormulaRepository formulas;
     private final IdentidadService identidad;
     private final HistoriaService historia;
+    private final PdfRenderer pdf;
 
     FormulacionController(AiJobService jobs, PacienteService pacientes, FormulaRepository formulas,
-                          IdentidadService identidad, HistoriaService historia) {
+                          IdentidadService identidad, HistoriaService historia, PdfRenderer pdf) {
         this.jobs = jobs;
         this.pacientes = pacientes;
         this.formulas = formulas;
         this.identidad = identidad;
         this.historia = historia;
+        this.pdf = pdf;
     }
 
     /** Encola la redacción con IA; el resultado se consulta en {@code GET /api/v1/ai-jobs/{jobId}}. */
@@ -77,6 +87,22 @@ public class FormulacionController {
         Formula formula = formulas.save(new Formula(request.pacienteId(), medico.id(), registroMedico, request.aiJobId(), request.atencionId(),
                 request.observaciones(), items));
         return FormulaResponse.of(formula);
+    }
+
+    /** Fórmula impresa para entregar al paciente. Queda en la auditoría de la historia. */
+    @GetMapping(value = "/formulas/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Transactional
+    public ResponseEntity<byte[]> pdf(@PathVariable UUID id) {
+        Formula f = formulas.findById(id).orElseThrow(() -> ApiProblem.notFound("Fórmula no encontrada"));
+        Paciente paciente = pacientes.get(f.getPacienteId());
+        String diagnostico = f.getAtencionId() == null ? null : historia.diagnosticoPrincipal(f.getAtencionId()).orElse(null);
+        byte[] contenido = pdf.render(FormulaPdf.html(f, paciente, identidad.consultorio(AuthUser.current().tenantId()),
+                identidad.profesional(f.getMedicoId()), diagnostico));
+        historia.registrarAcceso(f.getPacienteId(), AccesoHistoria.Accion.IMPRIMIR_FORMULA, id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename("formula-" + id + ".pdf").build().toString())
+                .body(contenido);
     }
 
     @GetMapping("/formulas")

@@ -28,7 +28,7 @@ class AtencionTest {
     @Test
     void firmaConMotivoYUnDiagnosticoPrincipal() {
         Atencion a = borrador();
-        a.actualizar(contenido("Dolor de garganta", List.of(dx("J029", true), dx("R50X", false))));
+        a.actualizar(contenido("Dolor de garganta", List.of(dx("J029", true), dx("R509", false))));
 
         a.firmar("RM-1");
 

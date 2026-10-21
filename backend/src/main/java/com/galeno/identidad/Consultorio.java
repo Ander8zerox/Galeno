@@ -45,6 +45,10 @@ public class Consultorio {
         return id;
     }
 
+    public String getNit() {
+        return nit;
+    }
+
     public String getZonaHoraria() {
         return zonaHoraria;
     }

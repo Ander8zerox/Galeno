@@ -6,7 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import { ApoyoDiagnostico } from "../features/apoyo/ApoyoDiagnostico";
 import { RedactorFormula } from "../features/formulacion/RedactorFormula";
 import { DiagnosticosEditor, TIPO_DX, type DiagnosticoForm } from "../features/historia/DiagnosticosEditor";
-import { BotonDescargar, SubirDocumento, TIPO_DOCUMENTO, tamano } from "../features/historia/Documentos";
+import { BotonArchivo, BotonDescargar, SubirDocumento, TIPO_DOCUMENTO, tamano } from "../features/historia/Documentos";
 import { fechaHoraCorta } from "../features/agenda/tiempo";
 
 type Atencion = Schemas["AtencionVista"];
@@ -74,13 +74,13 @@ export function AtencionPage() {
         </div>
       )}
       {a.estado === "BORRADOR" && a.propia
-        ? <EditorAtencion atencion={a} />
+        ? <EditorAtencion atencion={a} paciente={p} />
         : <LecturaAtencion atencion={a} />}
     </section>
   );
 }
 
-function EditorAtencion({ atencion }: { atencion: Atencion }) {
+function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?: { sexo?: string; edad?: number } }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [form, setForm] = useState<Form>(() => aForm(atencion));
@@ -184,7 +184,7 @@ function EditorAtencion({ atencion }: { atencion: Atencion }) {
       <div className="card stack">
         <label>Examen físico<textarea rows={4} value={form.examenFisico} onChange={set("examenFisico")} /></label>
         <h3>Diagnósticos</h3>
-        <DiagnosticosEditor value={dx} onChange={setDx} />
+        <DiagnosticosEditor value={dx} onChange={setDx} paciente={paciente} />
         <label>Análisis<textarea rows={3} value={form.analisis} onChange={set("analisis")} /></label>
         <label>Plan<textarea rows={3} value={form.plan} onChange={set("plan")} /></label>
       </div>
@@ -262,6 +262,7 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
     <div className="stack">
       <div className="row between">
         <h1>Atención {a.estado === "FIRMADA" ? <span className="badge badge-ok">Firmada</span> : <span className="badge badge-warn">Borrador</span>}</h1>
+        <BotonArchivo ruta={`/api/v1/historia/atenciones/${a.id}/pdf`} nombre={`atencion-${a.id!.slice(0, 8)}.pdf`} className="btn btn-secondary">Descargar PDF</BotonArchivo>
         <span className="muted small">
           {a.medicoNombre}{a.registroMedico && ` · Reg. médico ${a.registroMedico}`} · {fechaHoraCorta(a.fechaAtencion!, zona)}
           {a.firmadaEn && ` · firmada ${fechaHoraCorta(a.firmadaEn, zona)}`}
@@ -291,7 +292,12 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
       {!!ligadas.length && (
         <div className="card">
           <h3>Fórmulas de esta atención</h3>
-          <ul>{ligadas.map((f) => <li key={f.id}>{f.items?.map((i) => `${i.medicamento} ${i.concentracion ?? ""} — ${i.dosis} ${i.frecuencia} por ${i.duracion}`).join("; ")}</li>)}</ul>
+          <ul>{ligadas.map((f) => (
+            <li key={f.id}>
+              {f.items?.map((i) => `${i.medicamento} ${i.concentracion ?? ""} — ${i.dosis} ${i.frecuencia} por ${i.duracion}`).join("; ")}{" "}
+              <BotonArchivo ruta={`/api/v1/formulacion/formulas/${f.id}/pdf`} nombre={`formula-${f.id!.slice(0, 8)}.pdf`}>PDF</BotonArchivo>
+            </li>
+          ))}</ul>
         </div>
       )}
 

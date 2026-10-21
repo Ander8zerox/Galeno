@@ -66,7 +66,29 @@ public class IdentidadService implements SesionVerifier {
         return consultorios.findById(consultorioId).map(c -> ZoneId.of(c.getZonaHoraria())).orElse(ZoneId.of("America/Bogota"));
     }
 
+    @Transactional(readOnly = true)
+    public ConsultorioResumen consultorio(UUID consultorioId) {
+        return consultorios.findById(consultorioId)
+                .map(c -> new ConsultorioResumen(c.getId(), c.getNombre(), c.getNit(), ZoneId.of(c.getZonaHoraria())))
+                .orElseThrow();
+    }
+
+    /** Datos del profesional para documentos (fórmulas, atenciones). */
+    @Transactional(readOnly = true)
+    public Profesional profesional(UUID usuarioId) {
+        Usuario u = usuarios.findById(usuarioId).orElseThrow();
+        Optional<PerfilMedico> perfil = perfiles.findById(usuarioId);
+        return new Profesional(u.getNombre(), perfil.map(PerfilMedico::getRegistroMedico).orElse(null),
+                perfil.map(PerfilMedico::getEspecialidad).orElse(null));
+    }
+
     public record MedicoResumen(UUID membresiaId, UUID usuarioId, String nombre) {
+    }
+
+    public record ConsultorioResumen(UUID id, String nombre, String nit, ZoneId zona) {
+    }
+
+    public record Profesional(String nombre, String registroMedico, String especialidad) {
     }
 
     /** Se consulta con el tenant de la petición: una membresía de otro consultorio no se encuentra. */
