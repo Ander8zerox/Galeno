@@ -10,6 +10,7 @@
 - Importación de RIPS JSON (varios archivos o ZIP) con revisión, confirmación y deshacer; catálogo CUPS; completar datos de pacientes importados.
 - Importación de listados de pacientes (Excel o CSV) con mapeo de columnas recordado por sistema de origen; filtro y avisos de datos incompletos.
 - Registro de consultorios desde la web con verificación del correo, NIT con dígito de verificación, aceptación de términos y política de datos, y límite de intentos.
+- Recuperación de contraseña por correo (enlace de un solo uso) que cierra todas las sesiones abiertas.
 - Suscripciones: prueba de 30 días, planes mensual y anual, pago por transferencia o consignación reportado por el consultorio y aprobado en la consola de la plataforma, gracia de 5 días, solo lectura y avisos por correo.
 
 ## Siguiente
@@ -22,7 +23,7 @@
 
 ### Otros pendientes
 - Portal del paciente: cuenta separada que ve sus citas y fórmulas.
-- Recuperación de contraseña, envío real de correos con SES (registro, invitaciones y avisos de suscripción) y MFA (sobre todo para los operadores de la plataforma).
+- Envío real de correos con SES (registro, invitaciones, recuperación y avisos de suscripción) y MFA (sobre todo para los operadores de la plataforma).
 - Suscripciones, siguiente iteración: pasarela de pagos (Wompi, PayU…) cuyo webhook haga lo mismo que "Aprobar"; factura electrónica de Galeno por cada pago (obligatoria ante la DIAN); renovación automática.
 - Revisión legal de los términos y de la política de datos (hoy un borrador en `/politica-datos`) antes de abrir el registro al público.
 - Catálogo CUM/INVIMA y rangos de dosis en `ValidadorFormula`.

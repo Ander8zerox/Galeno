@@ -1726,6 +1726,82 @@
         }
       }
     },
+    "/api/v1/auth/restablecer": {
+      "post": {
+        "tags": [
+          "recuperacion-controller"
+        ],
+        "operationId": "restablecer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevaContrasena"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/restablecer/consultar": {
+      "post": {
+        "tags": [
+          "recuperacion-controller"
+        ],
+        "operationId": "consultar_2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRecuperacion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecuperacionPublica"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/recuperar": {
+      "post": {
+        "tags": [
+          "recuperacion-controller"
+        ],
+        "operationId": "solicitar_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolicitudRecuperacion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          }
+        }
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "tags": [
@@ -1761,7 +1837,7 @@
         "tags": [
           "apoyo-diagnostico-controller"
         ],
-        "operationId": "solicitar_1",
+        "operationId": "solicitar_2",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4396,6 +4472,60 @@
           "consultorioId"
         ]
       },
+      "NuevaContrasena": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "password",
+          "token"
+        ]
+      },
+      "TokenRecuperacion": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "RecuperacionPublica": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "SolicitudRecuperacion": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 190,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
       "LoginRequest": {
         "type": "object",
         "properties": {
@@ -4887,28 +5017,41 @@
       "JsonNode": {
         "type": "object",
         "properties": {
-          "array": {
+          "double": {
             "type": "boolean"
           },
-          "empty": {
+          "string": {
             "type": "boolean"
           },
-          "null": {
+          "textual": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "boolean": {
             "type": "boolean"
           },
-          "float": {
+          "pojo": {
             "type": "boolean"
           },
-          "container": {
+          "short": {
             "type": "boolean"
           },
-          "valueNode": {
+          "long": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "boolean"
+          },
+          "int": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          },
+          "floatingPointNumber": {
             "type": "boolean"
           },
           "missingNode": {
-            "type": "boolean"
-          },
-          "bigInteger": {
             "type": "boolean"
           },
           "nodeType": {
@@ -4925,47 +5068,34 @@
               "STRING"
             ]
           },
+          "valueNode": {
+            "type": "boolean"
+          },
           "bigDecimal": {
             "type": "boolean"
           },
           "integralNumber": {
             "type": "boolean"
           },
-          "double": {
+          "container": {
             "type": "boolean"
           },
-          "int": {
-            "type": "boolean"
-          },
-          "boolean": {
-            "type": "boolean"
-          },
-          "binary": {
-            "type": "boolean"
-          },
-          "pojo": {
-            "type": "boolean"
-          },
-          "long": {
-            "type": "boolean"
-          },
-          "short": {
-            "type": "boolean"
-          },
-          "textual": {
-            "type": "boolean",
-            "deprecated": true
-          },
-          "string": {
-            "type": "boolean"
-          },
-          "floatingPointNumber": {
+          "bigInteger": {
             "type": "boolean"
           },
           "number": {
             "type": "boolean"
           },
-          "object": {
+          "array": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          },
+          "null": {
+            "type": "boolean"
+          },
+          "float": {
             "type": "boolean"
           },
           "embeddedValue": {

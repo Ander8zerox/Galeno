@@ -3,6 +3,7 @@ package com.galeno.shared.security;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.context.event.EventListener;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -31,6 +33,7 @@ public class SesionVigenteFilter extends OncePerRequestFilter {
 
     private final SesionVerifier verifier;
     private final Map<UUID, Entry> cache = new ConcurrentHashMap<>();
+    private final Map<UUID, Credenciales> credenciales = new ConcurrentHashMap<>();
 
     public SesionVigenteFilter(SesionVerifier verifier) {
         this.verifier = verifier;
@@ -39,6 +42,12 @@ public class SesionVigenteFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+        // Cualquier token (sesión, selección, plataforma) emitido antes del último cambio de contraseña
+        if (SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken jwt
+                && emitidoAntesDelCambio(jwt)) {
+            rechazar(response, "Su contraseña cambió. Ingrese de nuevo.");
+            return;
+        }
         if (SecurityContextHolder.getContext().getAuthentication() instanceof JwtAuthenticationToken jwt
                 && jwt.getToken().hasClaim(TokenService.CLAIM_MEMBRESIA)) {
             UUID membresiaId = UUID.fromString(jwt.getToken().getClaimAsString(TokenService.CLAIM_MEMBRESIA));
@@ -46,11 +55,31 @@ public class SesionVigenteFilter extends OncePerRequestFilter {
                     .filter(PERMISOS::contains).collect(Collectors.toSet());
             Set<String> vigentes = vigentes(membresiaId);
             if (vigentes == null || !vigentes.containsAll(enToken)) {
-                rechazar(response);
+                rechazar(response, "Su acceso en este consultorio cambió. Ingrese de nuevo.");
                 return;
             }
         }
         chain.doFilter(request, response);
+    }
+
+    private boolean emitidoAntesDelCambio(JwtAuthenticationToken jwt) {
+        Instant emitido = jwt.getToken().getIssuedAt();
+        if (emitido == null || jwt.getToken().getSubject() == null) {
+            return false;
+        }
+        UUID usuarioId = UUID.fromString(jwt.getToken().getSubject());
+        Credenciales c = credenciales.get(usuarioId);
+        if (c == null || c.expira().isBefore(Instant.now())) {
+            c = new Credenciales(verifier.credencialesCambiadasEn(usuarioId), Instant.now().plus(CACHE_TTL));
+            credenciales.put(usuarioId, c);
+        }
+        // El iat del JWT va en segundos: un token emitido en el mismo segundo del cambio se acepta
+        return c.cambiadasEn() != null && emitido.isBefore(c.cambiadasEn().truncatedTo(ChronoUnit.SECONDS));
+    }
+
+    @EventListener
+    public void alCambiarCredenciales(CredencialesCambiadas evento) {
+        credenciales.remove(evento.usuarioId());
     }
 
     /** Para que un cambio hecho por el administrador aplique sin esperar a que venza la caché. */
@@ -69,14 +98,17 @@ public class SesionVigenteFilter extends OncePerRequestFilter {
         return entry.permisos();
     }
 
-    private static void rechazar(HttpServletResponse response) throws IOException {
+    private static void rechazar(HttpServletResponse response, String detalle) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/problem+json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("""
-                {"title":"Unauthorized","status":401,"detail":"Su acceso en este consultorio cambió. Ingrese de nuevo."}""");
+                {"title":"Unauthorized","status":401,"detail":"%s"}""".formatted(detalle));
     }
 
     private record Entry(Set<String> permisos, Instant expira) {
+    }
+
+    private record Credenciales(Instant cambiadasEn, Instant expira) {
     }
 }

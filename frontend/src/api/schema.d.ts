@@ -628,6 +628,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/restablecer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restablecer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/restablecer/consultar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["consultar_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/recuperar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["solicitar_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -653,7 +701,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["solicitar_1"];
+        post: operations["solicitar_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1627,6 +1675,20 @@ export interface components {
             /** Format: uuid */
             consultorioId: string;
         };
+        NuevaContrasena: {
+            token: string;
+            password: string;
+        };
+        TokenRecuperacion: {
+            token: string;
+        };
+        RecuperacionPublica: {
+            email?: string;
+        };
+        SolicitudRecuperacion: {
+            /** Format: email */
+            email: string;
+        };
         LoginRequest: {
             /** Format: email */
             email: string;
@@ -1789,31 +1851,31 @@ export interface components {
             finalizadoEn?: string;
         };
         JsonNode: {
+            double?: boolean;
+            string?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            boolean?: boolean;
+            pojo?: boolean;
+            short?: boolean;
+            long?: boolean;
+            object?: boolean;
+            int?: boolean;
+            binary?: boolean;
+            floatingPointNumber?: boolean;
+            missingNode?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            valueNode?: boolean;
+            bigDecimal?: boolean;
+            integralNumber?: boolean;
+            container?: boolean;
+            bigInteger?: boolean;
+            number?: boolean;
             array?: boolean;
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            container?: boolean;
-            valueNode?: boolean;
-            missingNode?: boolean;
-            bigInteger?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            bigDecimal?: boolean;
-            integralNumber?: boolean;
-            double?: boolean;
-            int?: boolean;
-            boolean?: boolean;
-            binary?: boolean;
-            pojo?: boolean;
-            long?: boolean;
-            short?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            string?: boolean;
-            floatingPointNumber?: boolean;
-            number?: boolean;
-            object?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -3032,6 +3094,74 @@ export interface operations {
             };
         };
     };
+    restablecer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NuevaContrasena"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    consultar_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenRecuperacion"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecuperacionPublica"];
+                };
+            };
+        };
+    };
+    solicitar_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SolicitudRecuperacion"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     login_1: {
         parameters: {
             query?: never;
@@ -3056,7 +3186,7 @@ export interface operations {
             };
         };
     };
-    solicitar_1: {
+    solicitar_2: {
         parameters: {
             query?: never;
             header?: never;
