@@ -35,6 +35,7 @@ export function LoginPage() {
           <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </label>
         {error && <p className="alert alert-error">{error}</p>}
+        <a href="/recuperar" className="btn-link small">¿Olvidó su contraseña?</a>
         <button className="btn" disabled={enviando}>{enviando ? "Ingresando…" : "Ingresar"}</button>
         <p className="muted small center">¿Su consultorio aún no usa Galeno? <a href="/registro">Regístrelo aquí</a></p>
       </form>

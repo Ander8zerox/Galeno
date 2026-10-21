@@ -53,6 +53,7 @@ registros_consultorio (solicitudes de registro sin verificar, 24 horas; solo se 
   - `POST /api/v1/registro/consultar` y `/confirmar` crean el consultorio con la constancia de los términos (versión, fecha y quién), la cuenta y el perfil médico, y la membresía ADMIN (más MEDICO si aplica). Dejan a la persona con sesión iniciada. Si el correo ya tenía cuenta, se pide la contraseña actual y la cuenta no cambia.
   - El enlace vence en 24 horas y se usa una sola vez; la confirmación bloquea la solicitud para que dos clics no creen dos consultorios. Las solicitudes vencidas se borran.
   - **Límites** (`LimiteIntentos`, en memoria): por IP (`app.registro.solicitudes-por-ip-hora`, 5 en producción) antes de validar, y 3 solicitudes válidas por correo por hora. En AWS la IP real llega en `X-Forwarded-For` desde el balanceador: hay que activar `server.forward-headers-strategy` y aceptar ese encabezado solo del ALB.
+- **Recuperación de contraseña.** `POST /api/v1/auth/recuperar` responde 202 exista o no la cuenta. Si existe, envía un enlace de un solo uso que vence en 1 hora (`recuperaciones_contrasena`; token en el `#`, solo se guarda su hash), y pedir otro anula el anterior. `/auth/restablecer` cambia la contraseña y pone `usuarios.credenciales_cambiadas_en`. `SesionVigenteFilter` rechaza cualquier token emitido antes de esa fecha (sesión, selección o plataforma), así que cambiar la contraseña cierra todas las sesiones abiertas. También avisa por correo del cambio. Hay límites por IP y 3 solicitudes por correo por hora, exista o no la cuenta, para que el 429 no revele cuáles existen.
 - **Correo.** Va detrás de la interfaz `EnvioCorreo`. Con `app.correo.proveedor=local` (el valor por defecto) los correos quedan en un buzón en memoria, visible en `GET /api/v1/dev/buzon` y en la página `/dev/buzon` del front (solo en desarrollo). En AWS se usará SES, también para las invitaciones.
 
 ## Suscripciones y consola de la plataforma
@@ -153,7 +154,7 @@ Front ──GET /ai-jobs/{id} cada 1,5 s──► API
 
 - Catálogo de medicamentos (CUM/INVIMA) y rangos de dosis en `ValidadorFormula`.
 - Cifrado de campos sensibles (alergias, antecedentes).
-- Recuperación de contraseña, envío de correos con SES (registro, invitaciones y avisos) y MFA para médicos y operadores de la plataforma.
+- Envío de correos con SES (registro, invitaciones, recuperación y avisos) y MFA para médicos y operadores de la plataforma.
 - Factura electrónica de Galeno por cada pago de suscripción (DIAN).
 - Revisión legal de los términos y de la política de datos antes de abrir el registro al público.
 - Imagen de la firma del médico en los PDF.

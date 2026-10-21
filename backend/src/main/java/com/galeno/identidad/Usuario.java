@@ -37,6 +37,10 @@ public class Usuario {
     @Column(name = "creado_en", nullable = false)
     private Instant creadoEn;
 
+    /** Los tokens emitidos antes de esta fecha ya no sirven (ver {@code SesionVigenteFilter}). */
+    @Column(name = "credenciales_cambiadas_en")
+    private Instant credencialesCambiadasEn;
+
     protected Usuario() {
     }
 
@@ -46,6 +50,15 @@ public class Usuario {
         this.nombre = nombre;
         this.activo = true;
         this.creadoEn = Instant.now();
+    }
+
+    void cambiarPassword(String passwordHash) {
+        this.passwordHash = passwordHash;
+        this.credencialesCambiadasEn = Instant.now();
+    }
+
+    public Instant getCredencialesCambiadasEn() {
+        return credencialesCambiadasEn;
     }
 
     public UUID getId() {

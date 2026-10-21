@@ -122,6 +122,13 @@ public class IdentidadService implements SesionVerifier {
     public record Profesional(String nombre, String registroMedico, String especialidad) {
     }
 
+    /** Las cuentas no son de ningún consultorio: se encuentran con cualquier tenant. */
+    @Override
+    @Transactional(readOnly = true)
+    public java.time.Instant credencialesCambiadasEn(UUID usuarioId) {
+        return usuarios.findById(usuarioId).map(Usuario::getCredencialesCambiadasEn).orElse(null);
+    }
+
     /** Se consulta con el tenant de la petición: una membresía de otro consultorio no se encuentra. */
     @Override
     @Transactional(readOnly = true)

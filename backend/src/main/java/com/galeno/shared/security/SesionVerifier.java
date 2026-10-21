@@ -8,4 +8,7 @@ public interface SesionVerifier {
 
     /** Permisos actuales de la membresía, o {@code null} si está suspendida o ya no existe. */
     Set<Permiso> permisosVigentes(UUID membresiaId);
+
+    /** Cuándo cambió la contraseña por última vez ({@code null} si nunca): los tokens anteriores no sirven. */
+    java.time.Instant credencialesCambiadasEn(UUID usuarioId);
 }
