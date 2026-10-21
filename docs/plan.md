@@ -7,6 +7,7 @@
 - Agenda por médico: horario semanal, cupos, citas, sobrecupos, estados y vista para secretarios.
 - Historia clínica: atenciones con firma e inmutabilidad, notas aclaratorias, documentos, CIE-10, auditoría y conexión con agenda, fórmulas y apoyo diagnóstico.
 - CIE-10 oficial de MinSalud (con avisos de sexo y edad) y PDF de la fórmula y de la atención.
+- Importación de RIPS JSON (varios archivos o ZIP) con revisión, confirmación y deshacer; catálogo CUPS; completar datos de pacientes importados.
 
 ## Siguiente
 
@@ -18,13 +19,14 @@ El principio: primero las fuentes masivas, todas por el mismo flujo **extraer �
 
 | Prioridad | Fuente | Cómo se procesa |
 |---|---|---|
-| 1 | Excel o CSV de pacientes | Mapeo de columnas, guardado como plantilla por sistema de origen |
-| 2 | **RIPS** (JSON de la Res. 2275/2023 o TXT antiguos) | Parser determinista: pacientes, atenciones, CIE-10 y medicamentos |
+| ✔ | **RIPS JSON** (Res. 2275/2023; según Medifolios la reemplazó la 948/2026, sin verificar en la fuente oficial) | Hecho: pacientes por documento y atenciones con CUPS y CIE-10. Faltan medicamentos y otros servicios |
+| 1 | Excel o CSV con nombres y contactos | Completa los pacientes que el RIPS dejó sin nombre; mapeo de columnas con ayuda de IA, guardado como plantilla por sistema de origen |
+| 2 | RIPS TXT antiguos (AF, US, AC, AP…) | Solo si los clientes los tienen; mismo lote y revisión que el JSON |
 | 3 | PDF en lote (ZIP, digitales o escaneados) | IA con salida estructurada, un trabajo por archivo en `ai_jobs`; procesamiento por lotes de Bedrock para migraciones grandes |
 | 4 | Texto pegado (un paciente) | El mismo extractor de IA de los PDF |
 | 5 | FHIR / RDA (Res. 866/2021) | Cuando un cliente lo pida |
 
-- **Zona de revisión.** Un `lote_importacion` guarda cada registro con su estado (listo, revisar, duplicado, error), su origen (archivo y página) y la confianza. Nada entra a la historia sin aprobación. Se puede aprobar en bloque y el lote se puede deshacer completo.
+- **Zona de revisión.** Hecha para RIPS (ver arquitectura). Para PDF faltan el origen (archivo y página) y la confianza por registro.
 - **Deduplicación.** Primero por tipo y número de documento; si no coincide, por parecido de nombre y fecha de nacimiento.
 - **Original.** El PDF queda en S3 como documento soporte del paciente.
 - **Antes de construir el punto 3:** un piloto con 20 historias reales para medir calidad, tokens y costo.

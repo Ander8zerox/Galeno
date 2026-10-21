@@ -55,10 +55,11 @@ public class Atencion {
     @Column(name = "paciente_id", nullable = false, updatable = false)
     private UUID pacienteId;
 
-    @Column(name = "medico_membresia_id", nullable = false, updatable = false)
+    /** Vacío en las atenciones importadas: no las registró un médico de Galeno. */
+    @Column(name = "medico_membresia_id", updatable = false)
     private UUID medicoMembresiaId;
 
-    @Column(name = "medico_usuario_id", nullable = false, updatable = false)
+    @Column(name = "medico_usuario_id", updatable = false)
     private UUID medicoUsuarioId;
 
     @Column(name = "medico_nombre", nullable = false, updatable = false, length = 200)
@@ -134,6 +135,13 @@ public class Atencion {
     @OrderColumn(name = "orden")
     private List<Diagnostico> diagnosticos = new ArrayList<>();
 
+    @Column(name = "lote_importacion_id", updatable = false)
+    private UUID loteImportacionId;
+
+    /** Identifica el servicio de origen (factura, usuario, servicio) para no importarlo dos veces. */
+    @Column(name = "clave_importacion", updatable = false, length = 160)
+    private String claveImportacion;
+
     /** Bloqueo optimista: dos pestañas no pueden pisarse el borrador. */
     @Version
     private long version;
@@ -164,6 +172,25 @@ public class Atencion {
         a.antecedentes = antecedentesPaciente;
         a.creadaEn = a.fechaAtencion;
         a.actualizadaEn = a.fechaAtencion;
+        return a;
+    }
+
+    /** Atención que viene de otro sistema (p. ej. RIPS): queda cerrada e inmutable desde que se importa. */
+    static Atencion importada(UUID pacienteId, Instant fecha, String descripcion, String profesional,
+                              List<Diagnostico> diagnosticos, String claveImportacion, UUID loteImportacionId) {
+        Atencion a = new Atencion();
+        a.pacienteId = pacienteId;
+        a.medicoNombre = profesional;
+        a.origen = Origen.IMPORTADA;
+        a.estado = Estado.FIRMADA;
+        a.fechaAtencion = fecha;
+        a.motivoConsulta = descripcion;
+        a.diagnosticos.addAll(diagnosticos);
+        a.claveImportacion = claveImportacion;
+        a.loteImportacionId = loteImportacionId;
+        a.creadaEn = Instant.now();
+        a.actualizadaEn = a.creadaEn;
+        a.firmadaEn = a.creadaEn;
         return a;
     }
 
@@ -327,6 +354,10 @@ public class Atencion {
 
     public List<Diagnostico> getDiagnosticos() {
         return diagnosticos;
+    }
+
+    public UUID getLoteImportacionId() {
+        return loteImportacionId;
     }
 
     public long getVersion() {

@@ -61,6 +61,13 @@ public class Paciente {
     @Column(name = "actualizado_en", nullable = false)
     private Instant actualizadoEn;
 
+    /** Creado por una importación sin nombre (el RIPS no lo trae): hay que completar sus datos. */
+    @Column(name = "datos_incompletos", nullable = false)
+    private boolean datosIncompletos;
+
+    @Column(name = "lote_importacion_id")
+    private UUID loteImportacionId;
+
     protected Paciente() {
     }
 
@@ -68,6 +75,20 @@ public class Paciente {
         this.tipoDocumento = tipoDocumento;
         this.numeroDocumento = numeroDocumento;
         this.creadoEn = Instant.now();
+    }
+
+    /** Paciente creado desde una importación: se identifica por documento hasta que alguien complete el nombre. */
+    static Paciente importado(String tipoDocumento, String numeroDocumento, LocalDate fechaNacimiento, String sexo,
+                              UUID loteImportacionId) {
+        Paciente p = new Paciente(tipoDocumento, numeroDocumento);
+        p.nombres = "Paciente";
+        p.apellidos = tipoDocumento + " " + numeroDocumento;
+        p.fechaNacimiento = fechaNacimiento;
+        p.sexo = sexo;
+        p.datosIncompletos = true;
+        p.loteImportacionId = loteImportacionId;
+        p.actualizadoEn = p.creadoEn;
+        return p;
     }
 
     void actualizarDemograficos(String nombres, String apellidos, LocalDate fechaNacimiento, String sexo,
@@ -78,6 +99,7 @@ public class Paciente {
         this.sexo = sexo;
         this.telefono = telefono;
         this.email = email;
+        this.datosIncompletos = false;
         this.actualizadoEn = Instant.now();
     }
 
@@ -145,6 +167,14 @@ public class Paciente {
 
     public String getAlergias() {
         return alergias;
+    }
+
+    public boolean isDatosIncompletos() {
+        return datosIncompletos;
+    }
+
+    public UUID getLoteImportacionId() {
+        return loteImportacionId;
     }
 
     public String getAntecedentes() {

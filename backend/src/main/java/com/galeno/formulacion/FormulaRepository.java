@@ -8,4 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 interface FormulaRepository extends JpaRepository<Formula, UUID> {
 
     List<Formula> findByPacienteIdOrderByFirmadaEnDesc(UUID pacienteId);
+
+    long countByPacienteId(UUID pacienteId);
+
+    long countByAtencionIdIn(java.util.Collection<UUID> atencionIds);
 }

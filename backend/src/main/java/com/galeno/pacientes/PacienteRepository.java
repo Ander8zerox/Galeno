@@ -11,6 +11,8 @@ interface PacienteRepository extends JpaRepository<Paciente, UUID> {
 
     boolean existsByTipoDocumentoAndNumeroDocumento(String tipoDocumento, String numeroDocumento);
 
+    java.util.Optional<Paciente> findByTipoDocumentoAndNumeroDocumento(String tipoDocumento, String numeroDocumento);
+
     @Query("""
             select p from Paciente p
             where :q is null

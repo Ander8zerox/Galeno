@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/pacientes/**").hasAuthority(Permiso.PACIENTE_GESTIONAR.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/historia/**").hasAuthority(Permiso.HISTORIA_VER.name())
                         .requestMatchers("/api/v1/historia/**").hasAuthority(Permiso.HISTORIA_REGISTRAR.name())
+                        .requestMatchers("/api/v1/importaciones/**").hasAuthority(Permiso.IMPORTAR_HISTORIAS.name())
                         .requestMatchers("/api/v1/agenda/**").hasAuthority(Permiso.AGENDA_GESTIONAR.name())
                         // El resto exige un token de sesión en un consultorio
                         .anyRequest().hasAuthority(TokenService.MIEMBRO))

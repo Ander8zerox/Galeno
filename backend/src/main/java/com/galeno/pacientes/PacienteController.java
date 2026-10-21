@@ -66,12 +66,13 @@ public class PacienteController {
     /** {@code alergias} y {@code antecedentes} van en null para quien no tiene permiso de historia clínica. */
     public record PacienteResponse(UUID id, String tipoDocumento, String numeroDocumento, String nombres,
                                    String apellidos, LocalDate fechaNacimiento, int edad, String sexo,
-                                   String telefono, String email, String alergias, String antecedentes) {
+                                   String telefono, String email, String alergias, String antecedentes,
+                                   boolean datosIncompletos) {
 
         static PacienteResponse of(Paciente p, boolean clinicos) {
             return new PacienteResponse(p.getId(), p.getTipoDocumento(), p.getNumeroDocumento(), p.getNombres(),
                     p.getApellidos(), p.getFechaNacimiento(), p.edad(), p.getSexo(), p.getTelefono(), p.getEmail(),
-                    clinicos ? p.getAlergias() : null, clinicos ? p.getAntecedentes() : null);
+                    clinicos ? p.getAlergias() : null, clinicos ? p.getAntecedentes() : null, p.isDatosIncompletos());
         }
     }
 

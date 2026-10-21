@@ -12,6 +12,8 @@ import org.springframework.data.jpa.repository.Query;
 
 interface CitaRepository extends JpaRepository<Cita, UUID> {
 
+    long countByPacienteId(UUID pacienteId);
+
     @Query("""
             select c from Cita c
             where c.medicoMembresiaId = :medicoId and c.inicio >= :desde and c.inicio < :hasta

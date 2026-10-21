@@ -46,6 +46,7 @@ export function LineaHistoria({ pacienteId }: { pacienteId: string }) {
               <div className="row">
                 <strong>{e.titulo}</strong>
                 {e.estado === "BORRADOR" && <span className="badge badge-warn">Borrador</span>}
+                {e.estado === "IMPORTADA" && <span className="badge">Importada</span>}
               </div>
               <div className="muted small">{[e.detalle, e.autor].filter(Boolean).join(" · ")}</div>
             </div>

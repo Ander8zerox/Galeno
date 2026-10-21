@@ -29,7 +29,9 @@ public class AccesoHistoria {
         SUBIR_DOCUMENTO,
         DESCARGAR_DOCUMENTO,
         IMPRIMIR_ATENCION,
-        IMPRIMIR_FORMULA
+        IMPRIMIR_FORMULA,
+        IMPORTAR_ATENCIONES,
+        DESHACER_IMPORTACION
     }
 
     @Id

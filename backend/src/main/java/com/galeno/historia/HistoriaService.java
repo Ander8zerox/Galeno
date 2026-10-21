@@ -174,6 +174,51 @@ public class HistoriaService {
                 .findFirst();
     }
 
+    // --- importación (la usa el módulo de importación) ---
+
+    /** Crea una atención importada si esa clave no se había importado antes. Devuelve si la creó. */
+    @Transactional
+    public boolean importarAtencion(UUID pacienteId, java.time.Instant fecha, String descripcion, String profesional,
+                                    List<Diagnostico> diagnosticos, String clave, UUID loteId) {
+        if (atenciones.existsByClaveImportacion(clave)) {
+            return false;
+        }
+        atenciones.save(Atencion.importada(pacienteId, fecha, descripcion, profesional, diagnosticos, clave, loteId));
+        return true;
+    }
+
+    /** Descripción CIE-10 de cada código conocido (los desconocidos no aparecen en el mapa). */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, String> nombresCie10(java.util.Collection<String> codigos) {
+        return cie10.findAllById(codigos).stream()
+                .collect(java.util.stream.Collectors.toMap(Cie10::getCodigo, Cie10::getDescripcion));
+    }
+
+    /** Ids de las atenciones creadas por un lote. */
+    @Transactional(readOnly = true)
+    public List<UUID> atencionesDelLote(UUID loteId) {
+        return atenciones.findByLoteImportacionId(loteId).stream().map(Atencion::getId).toList();
+    }
+
+    /** ¿Alguien agregó notas aclaratorias a las atenciones del lote? Entonces no se puede deshacer sin perderlas. */
+    @Transactional(readOnly = true)
+    public long notasEnAtenciones(java.util.Collection<UUID> atencionIds) {
+        return atencionIds.isEmpty() ? 0 : notas.countByAtencionIdIn(atencionIds);
+    }
+
+    @Transactional
+    public int eliminarAtencionesDelLote(UUID loteId) {
+        List<Atencion> delLote = atenciones.findByLoteImportacionId(loteId);
+        atenciones.deleteAll(delLote);
+        return delLote.size();
+    }
+
+    /** Actividad clínica del paciente en Galeno (para saber si un paciente importado se puede borrar). */
+    @Transactional(readOnly = true)
+    public long actividadClinica(UUID pacienteId) {
+        return atenciones.countByPacienteId(pacienteId) + documentos.countByPacienteId(pacienteId);
+    }
+
     /** Para otros módulos que también deben quedar en la auditoría de la historia. */
     @Transactional
     public void registrarAcceso(UUID pacienteId, Accion accion, UUID recursoId) {
@@ -237,7 +282,7 @@ public class HistoriaService {
     /** Firmadas: cualquier médico del consultorio. Borradores: solo su autor. */
     private Atencion visible(UUID atencionId) {
         Atencion a = atenciones.findById(atencionId).orElseThrow(() -> ApiProblem.notFound("Atención no encontrada"));
-        if (!a.firmada() && !a.getMedicoUsuarioId().equals(AuthUser.current().id())) {
+        if (!a.firmada() && !java.util.Objects.equals(a.getMedicoUsuarioId(), AuthUser.current().id())) {
             throw ApiProblem.notFound("Atención no encontrada");
         }
         return a;
@@ -245,7 +290,7 @@ public class HistoriaService {
 
     private Atencion propia(UUID atencionId) {
         Atencion a = visible(atencionId);
-        if (!a.getMedicoUsuarioId().equals(AuthUser.current().id())) {
+        if (!java.util.Objects.equals(a.getMedicoUsuarioId(), AuthUser.current().id())) {
             throw ApiProblem.forbidden("Solo el médico que la registró puede modificarla");
         }
         return a;
@@ -260,7 +305,7 @@ public class HistoriaService {
                 .map(n -> new NotaVista(n.getId(), n.getAutorNombre(), n.getTexto(), n.getCreadaEn())).toList();
         List<DocumentoVista> docs = documentos.findByPacienteIdOrderByCreadoEnDesc(a.getPacienteId()).stream()
                 .filter(d -> a.getId().equals(d.getAtencionId())).map(DocumentoVista::de).toList();
-        return AtencionVista.de(a, a.getMedicoUsuarioId().equals(AuthUser.current().id()), notasVista, docs);
+        return AtencionVista.de(a, java.util.Objects.equals(a.getMedicoUsuarioId(), AuthUser.current().id()), notasVista, docs);
     }
 
     /** El tipo se decide por el contenido (firma del archivo), no por lo que diga el navegador. */
@@ -358,7 +403,8 @@ public class HistoriaService {
                     .map(d -> d.getCodigoCie10() + " " + d.getDescripcion()).orElse(null);
             return new EventoHistoria(TipoEvento.ATENCION, a.getId(), a.getFechaAtencion(),
                     a.getMotivoConsulta() == null || a.getMotivoConsulta().isBlank() ? "Atención sin motivo registrado"
-                            : a.getMotivoConsulta(), dx, a.getEstado().name(), a.getMedicoNombre());
+                            : a.getMotivoConsulta(), dx,
+                    a.getOrigen() == Atencion.Origen.IMPORTADA ? "IMPORTADA" : a.getEstado().name(), a.getMedicoNombre());
         }
 
         static EventoHistoria de(DocumentoClinico d) {

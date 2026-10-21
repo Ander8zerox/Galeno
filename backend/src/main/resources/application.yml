@@ -20,8 +20,8 @@ spring:
       enabled: true
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 21MB
+      max-file-size: 50MB # documentos clínicos: 20 MB (lo valida HistoriaService); RIPS en ZIP: 50 MB
+      max-request-size: 60MB
   web:
     locale: es
     locale-resolver: fixed # mensajes de validación siempre en español
