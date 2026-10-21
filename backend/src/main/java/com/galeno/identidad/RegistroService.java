@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,13 +57,16 @@ class RegistroService {
     private final String baseUrl;
     private final int limitePorIp;
     private final ApplicationEventPublisher eventos;
+    private final ObjectProvider<CodigosReferido> codigos;
 
     RegistroService(RegistroPendienteRepository pendientes, UsuarioRepository usuarios, ConsultorioRepository consultorios,
                     MembresiaRepository membresias, PerfilMedicoRepository perfiles, PasswordEncoder passwordEncoder,
                     SesionService sesiones, EnvioCorreo correo, LimiteIntentos limites, TransactionTemplate tx,
                     @Value("${app.web.base-url}") String baseUrl,
-                    @Value("${app.registro.solicitudes-por-ip-hora:5}") int limitePorIp, ApplicationEventPublisher eventos) {
+                    @Value("${app.registro.solicitudes-por-ip-hora:5}") int limitePorIp, ApplicationEventPublisher eventos,
+                    ObjectProvider<CodigosReferido> codigos) {
         this.eventos = eventos;
+        this.codigos = codigos;
         this.limitePorIp = limitePorIp;
         this.pendientes = pendientes;
         this.usuarios = usuarios;
@@ -78,7 +82,7 @@ class RegistroService {
     }
 
     record Solicitud(String consultorioNombre, String nit, String nombre, String email, String password, boolean esMedico,
-                     String registroMedico, String especialidad, boolean aceptaTerminos) {
+                     String registroMedico, String especialidad, boolean aceptaTerminos, String codigoPartner) {
     }
 
     /** Guarda la solicitud y envía el enlace de verificación. */
@@ -105,6 +109,10 @@ class RegistroService {
                 errores.add(e.getMessage());
             }
         }
+        String codigo = blankToNull(s.codigoPartner()) == null ? null : s.codigoPartner().strip().toUpperCase(Locale.ROOT);
+        if (codigo != null && codigos.getIfAvailable() != null && codigos.getIfAvailable().partnerActivo(codigo).isEmpty()) {
+            errores.add("El código de partner " + codigo + " no existe o no está activo");
+        }
         if (!errores.isEmpty()) {
             throw ApiProblem.badRequest(String.join(". ", errores));
         }
@@ -120,7 +128,7 @@ class RegistroService {
             return pendientes.save(new RegistroPendiente(InvitacionService.hash(token), email, s.nombre().strip(),
                     passwordEncoder.encode(s.password()), s.consultorioNombre().strip(), nitFinal, s.esMedico(),
                     s.esMedico() ? blankToNull(s.registroMedico()) : null, s.esMedico() ? blankToNull(s.especialidad()) : null,
-                    TERMINOS_VERSION, ip));
+                    TERMINOS_VERSION, ip, codigo));
         }));
         correo.enviar(new Correo(email, "Active su consultorio en Galeno", """
                 Hola %s:
@@ -151,7 +159,7 @@ class RegistroService {
      * (p. ej. un médico que ya trabaja en otro consultorio), exige su contraseña actual.
      */
     public SesionResponse confirmar(String token, String passwordActual) {
-        record Creado(UUID usuarioId, UUID consultorioId, boolean esMedico) {
+        record Creado(UUID usuarioId, UUID consultorioId, boolean esMedico, String codigoPartner, String nit) {
         }
         Creado creado = TenantContext.callAs(TenantContext.SYSTEM, () -> tx.execute(t -> {
             RegistroPendiente r = vigente(pendientes.paraConfirmar(InvitacionService.hash(token)));
@@ -169,7 +177,7 @@ class RegistroService {
                 perfiles.save(new PerfilMedico(usuario.getId(), r.getRegistroMedico(), r.getEspecialidad()));
             }
             r.confirmar(consultorio.getId());
-            return new Creado(usuario.getId(), consultorio.getId(), r.isEsMedico());
+            return new Creado(usuario.getId(), consultorio.getId(), r.isEsMedico(), r.getCodigoPartner(), r.getNit());
         }));
 
         // La membresía es del consultorio nuevo: va en otra transacción para que Hibernate le asigne ese tenant
@@ -178,7 +186,8 @@ class RegistroService {
         TenantContext.runAs(creado.consultorioId(), () -> tx.executeWithoutResult(t ->
                 membresias.save(new Membresia(creado.usuarioId(), roles))));
         log.info("Consultorio {} registrado", creado.consultorioId());
-        eventos.publishEvent(new ConsultorioRegistrado(creado.consultorioId()));
+        eventos.publishEvent(new ConsultorioRegistrado(creado.consultorioId(), creado.usuarioId(), creado.codigoPartner(),
+                creado.nit()));
         return sesiones.elegir(creado.usuarioId(), creado.consultorioId());
     }
 

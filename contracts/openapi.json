@@ -104,6 +104,77 @@
         }
       }
     },
+    "/api/v1/plataforma/consultorios/{id}/partner": {
+      "put": {
+        "tags": [
+          "partners-plataforma-controller"
+        ],
+        "operationId": "asignar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsignacionPartner"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferidoVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/partners/yo/datos-pago": {
+      "put": {
+        "tags": [
+          "partner-controller"
+        ],
+        "operationId": "datosPago_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatosPagoPartner"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/pacientes/{id}": {
       "get": {
         "tags": [
@@ -763,12 +834,166 @@
         }
       }
     },
+    "/api/v1/plataforma/partners/{id}/suspender": {
+      "post": {
+        "tags": [
+          "partners-plataforma-controller"
+        ],
+        "operationId": "suspender",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MotivoPartner"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/partners/{id}/rechazar": {
+      "post": {
+        "tags": [
+          "partners-plataforma-controller"
+        ],
+        "operationId": "rechazar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MotivoPartner"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/partners/{id}/liquidaciones": {
+      "post": {
+        "tags": [
+          "partners-plataforma-controller"
+        ],
+        "operationId": "liquidar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PagoPartner"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiquidacionVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/partners/{id}/aprobar": {
+      "post": {
+        "tags": [
+          "partners-plataforma-controller"
+        ],
+        "operationId": "aprobar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/plataforma/pagos/{id}/rechazar": {
       "post": {
         "tags": [
           "plataforma-controller"
         ],
-        "operationId": "rechazar",
+        "operationId": "rechazar_1",
         "parameters": [
           {
             "name": "id",
@@ -809,7 +1034,7 @@
         "tags": [
           "plataforma-controller"
         ],
-        "operationId": "aprobar",
+        "operationId": "aprobar_1",
         "parameters": [
           {
             "name": "id",
@@ -870,7 +1095,7 @@
         "tags": [
           "plataforma-controller"
         ],
-        "operationId": "suspender",
+        "operationId": "suspender_1",
         "parameters": [
           {
             "name": "id",
@@ -1019,6 +1244,160 @@
         }
       }
     },
+    "/api/v1/plataforma/comisiones/{id}/anular": {
+      "post": {
+        "tags": [
+          "partners-plataforma-controller"
+        ],
+        "operationId": "anular",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MotivoPartner"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComisionVista"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/partners/login": {
+      "post": {
+        "tags": [
+          "partner-controller"
+        ],
+        "operationId": "login_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginPartner"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SesionPartner"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/partners/inscripcion": {
+      "post": {
+        "tags": [
+          "partner-controller"
+        ],
+        "operationId": "inscribir",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InscripcionPartnerSolicitud"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          }
+        }
+      }
+    },
+    "/api/v1/partners/inscripcion/consultar": {
+      "post": {
+        "tags": [
+          "partner-controller"
+        ],
+        "operationId": "consultar_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenInscripcion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InscripcionPublica"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/partners/inscripcion/confirmar": {
+      "post": {
+        "tags": [
+          "partner-controller"
+        ],
+        "operationId": "confirmar_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmacionInscripcion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SesionPartner"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/pacientes": {
       "get": {
         "tags": [
@@ -1111,7 +1490,7 @@
         "tags": [
           "invitacion-controller"
         ],
-        "operationId": "consultar_1",
+        "operationId": "consultar_2",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1202,7 +1581,7 @@
         "tags": [
           "importacion-controller"
         ],
-        "operationId": "confirmar_1",
+        "operationId": "confirmar_2",
         "parameters": [
           {
             "name": "id",
@@ -1754,7 +2133,7 @@
         "tags": [
           "recuperacion-controller"
         ],
-        "operationId": "consultar_2",
+        "operationId": "consultar_3",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1807,7 +2186,7 @@
         "tags": [
           "auth-controller"
         ],
-        "operationId": "login_1",
+        "operationId": "login_2",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1955,6 +2334,60 @@
         }
       }
     },
+    "/api/v1/plataforma/partners": {
+      "get": {
+        "tags": [
+          "partners-plataforma-controller"
+        ],
+        "operationId": "partners",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PartnerVista"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plataforma/partners/{id}": {
+      "get": {
+        "tags": [
+          "partners-plataforma-controller"
+        ],
+        "operationId": "detalle",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Panel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/plataforma/pagos": {
       "get": {
         "tags": [
@@ -2059,6 +2492,56 @@
                   "items": {
                     "$ref": "#/components/schemas/EventoAuditoria"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/partners/yo": {
+      "get": {
+        "tags": [
+          "partner-controller"
+        ],
+        "operationId": "panel",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Panel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/partners/codigos/{codigo}": {
+      "get": {
+        "tags": [
+          "partner-controller"
+        ],
+        "operationId": "codigo",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodigoPublico"
                 }
               }
             }
@@ -2717,6 +3200,163 @@
         "required": [
           "texto"
         ]
+      },
+      "AsignacionPartner": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "codigo"
+        ]
+      },
+      "ReferidoVista": {
+        "type": "object",
+        "properties": {
+          "consultorioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consultorio": {
+            "type": "string"
+          },
+          "desde": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "origen": {
+            "type": "string",
+            "enum": [
+              "REGISTRO",
+              "PLATAFORMA"
+            ]
+          },
+          "estadoSuscripcion": {
+            "type": "string"
+          }
+        }
+      },
+      "DatosPagoPartner": {
+        "type": "object",
+        "properties": {
+          "banco": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "tipoCuenta": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 0
+          },
+          "numeroCuenta": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "telefono": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "telefono"
+        ]
+      },
+      "PartnerVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "tipoPersona": {
+            "type": "string",
+            "enum": [
+              "NATURAL",
+              "JURIDICA"
+            ]
+          },
+          "tipoDocumento": {
+            "type": "string"
+          },
+          "numeroDocumento": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "telefono": {
+            "type": "string"
+          },
+          "banco": {
+            "type": "string"
+          },
+          "tipoCuenta": {
+            "type": "string"
+          },
+          "numeroCuenta": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "PENDIENTE",
+              "ACTIVO",
+              "SUSPENDIDO",
+              "RECHAZADO"
+            ]
+          },
+          "motivo": {
+            "type": "string"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "enlace": {
+            "type": "string"
+          },
+          "creadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "aprobadoEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "referidos": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "saldo": {
+            "$ref": "#/components/schemas/Saldo"
+          }
+        }
+      },
+      "Saldo": {
+        "type": "object",
+        "properties": {
+          "retenido": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "disponible": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pagado": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
       },
       "PacienteRequest": {
         "type": "object",
@@ -3794,6 +4434,11 @@
           },
           "aceptaTerminos": {
             "type": "boolean"
+          },
+          "codigoPartner": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 0
           }
         },
         "required": [
@@ -3900,6 +4545,65 @@
           }
         }
       },
+      "MotivoPartner": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "motivo"
+        ]
+      },
+      "PagoPartner": {
+        "type": "object",
+        "properties": {
+          "referencia": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "fechaPago": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "fechaPago",
+          "referencia"
+        ]
+      },
+      "LiquidacionVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "comisiones": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "referencia": {
+            "type": "string"
+          },
+          "fechaPago": {
+            "type": "string",
+            "format": "date"
+          },
+          "creadaEn": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "Motivo": {
         "type": "object",
         "properties": {
@@ -3985,6 +4689,10 @@
           },
           "pagoEnRevision": {
             "type": "boolean"
+          },
+          "descuentoPorcentaje": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -4033,6 +4741,212 @@
         },
         "required": [
           "motivo"
+        ]
+      },
+      "ComisionVista": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "partnerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consultorio": {
+            "type": "string"
+          },
+          "base": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "porcentaje": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "valor": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "RETENIDA",
+              "DISPONIBLE",
+              "PAGADA",
+              "ANULADA"
+            ]
+          },
+          "creadaEn": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "disponibleDesde": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "motivoAnulacion": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginPartner": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 190,
+            "minLength": 0
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "SesionPartner": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "InscripcionPartnerSolicitud": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 190,
+            "minLength": 0
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "nombreCuenta": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "tipoPersona": {
+            "type": "string",
+            "enum": [
+              "NATURAL",
+              "JURIDICA"
+            ]
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "tipoDocumento": {
+            "type": "string",
+            "maxLength": 5,
+            "minLength": 0
+          },
+          "numeroDocumento": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 0
+          },
+          "telefono": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 0
+          },
+          "banco": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 0
+          },
+          "tipoCuenta": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 0
+          },
+          "numeroCuenta": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "aceptaTerminos": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "nombre",
+          "nombreCuenta",
+          "numeroDocumento",
+          "password",
+          "telefono",
+          "tipoDocumento",
+          "tipoPersona"
+        ]
+      },
+      "TokenInscripcion": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "InscripcionPublica": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "cuentaExistente": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ConfirmacionInscripcion": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "token"
         ]
       },
       "ConsultarInvitacion": {
@@ -4620,11 +5534,79 @@
           "planes": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PlanVista"
+              "$ref": "#/components/schemas/PlanPrecio"
             }
           },
           "datosPago": {
             "type": "string"
+          },
+          "descuentoPorcentaje": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PlanPrecio": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "meses": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "precio": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "precioConDescuento": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "Panel": {
+        "type": "object",
+        "properties": {
+          "partner": {
+            "$ref": "#/components/schemas/PartnerVista"
+          },
+          "comisionPorcentaje": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "descuentoPorcentaje": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minimoLiquidacion": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "puedeLiquidar": {
+            "type": "boolean"
+          },
+          "referidos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReferidoVista"
+            }
+          },
+          "comisiones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComisionVista"
+            }
+          },
+          "liquidaciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LiquidacionVista"
+            }
           }
         }
       },
@@ -4671,6 +5653,21 @@
           },
           "detalle": {
             "type": "string"
+          }
+        }
+      },
+      "CodigoPublico": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "partner": {
+            "type": "string"
+          },
+          "descuentoPorcentaje": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -5017,41 +6014,65 @@
       "JsonNode": {
         "type": "object",
         "properties": {
-          "double": {
+          "array": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          },
+          "null": {
+            "type": "boolean"
+          },
+          "float": {
+            "type": "boolean"
+          },
+          "pojo": {
             "type": "boolean"
           },
           "string": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "boolean"
+          },
+          "short": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          },
+          "int": {
+            "type": "boolean"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "long": {
             "type": "boolean"
           },
           "textual": {
             "type": "boolean",
             "deprecated": true
           },
-          "boolean": {
+          "double": {
             "type": "boolean"
           },
-          "pojo": {
-            "type": "boolean"
-          },
-          "short": {
-            "type": "boolean"
-          },
-          "long": {
-            "type": "boolean"
-          },
-          "object": {
-            "type": "boolean"
-          },
-          "int": {
-            "type": "boolean"
-          },
-          "binary": {
+          "number": {
             "type": "boolean"
           },
           "floatingPointNumber": {
             "type": "boolean"
           },
+          "valueNode": {
+            "type": "boolean"
+          },
+          "container": {
+            "type": "boolean"
+          },
           "missingNode": {
+            "type": "boolean"
+          },
+          "bigInteger": {
             "type": "boolean"
           },
           "nodeType": {
@@ -5068,34 +6089,10 @@
               "STRING"
             ]
           },
-          "valueNode": {
-            "type": "boolean"
-          },
           "bigDecimal": {
             "type": "boolean"
           },
           "integralNumber": {
-            "type": "boolean"
-          },
-          "container": {
-            "type": "boolean"
-          },
-          "bigInteger": {
-            "type": "boolean"
-          },
-          "number": {
-            "type": "boolean"
-          },
-          "array": {
-            "type": "boolean"
-          },
-          "empty": {
-            "type": "boolean"
-          },
-          "null": {
-            "type": "boolean"
-          },
-          "float": {
             "type": "boolean"
           },
           "embeddedValue": {

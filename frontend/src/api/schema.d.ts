@@ -36,6 +36,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plataforma/consultorios/{id}/partner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["asignar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/yo/datos-pago": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["datosPago_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pacientes/{id}": {
         parameters: {
             query?: never;
@@ -244,7 +276,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/plataforma/pagos/{id}/rechazar": {
+    "/api/v1/plataforma/partners/{id}/suspender": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["suspender"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/partners/{id}/rechazar": {
         parameters: {
             query?: never;
             header?: never;
@@ -260,7 +308,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/plataforma/pagos/{id}/aprobar": {
+    "/api/v1/plataforma/partners/{id}/liquidaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["liquidar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/partners/{id}/aprobar": {
         parameters: {
             query?: never;
             header?: never;
@@ -270,6 +334,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["aprobar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/pagos/{id}/rechazar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rechazar_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/pagos/{id}/aprobar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["aprobar_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -301,7 +397,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["suspender"];
+        post: operations["suspender_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -356,6 +452,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plataforma/comisiones/{id}/anular": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["login_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/inscripcion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["inscribir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/inscripcion/consultar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["consultar_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/inscripcion/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmar_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pacientes": {
         parameters: {
             query?: never;
@@ -381,7 +557,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["consultar_1"];
+        post: operations["consultar_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -429,7 +605,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["confirmar_1"];
+        post: operations["confirmar_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -653,7 +829,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["consultar_2"];
+        post: operations["consultar_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -685,7 +861,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["login_1"];
+        post: operations["login_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -772,6 +948,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plataforma/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["partners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/partners/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["detalle"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plataforma/pagos": {
         parameters: {
             query?: never;
@@ -828,6 +1036,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["auditoria"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/yo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["panel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/codigos/{codigo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["codigo"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1129,6 +1369,59 @@ export interface components {
         };
         DatosPago: {
             texto: string;
+        };
+        AsignacionPartner: {
+            codigo: string;
+        };
+        ReferidoVista: {
+            /** Format: uuid */
+            consultorioId?: string;
+            consultorio?: string;
+            /** Format: date-time */
+            desde?: string;
+            /** @enum {string} */
+            origen?: "REGISTRO" | "PLATAFORMA";
+            estadoSuscripcion?: string;
+        };
+        DatosPagoPartner: {
+            banco?: string;
+            tipoCuenta?: string;
+            numeroCuenta?: string;
+            telefono: string;
+        };
+        PartnerVista: {
+            /** Format: uuid */
+            id?: string;
+            nombre?: string;
+            /** @enum {string} */
+            tipoPersona?: "NATURAL" | "JURIDICA";
+            tipoDocumento?: string;
+            numeroDocumento?: string;
+            email?: string;
+            telefono?: string;
+            banco?: string;
+            tipoCuenta?: string;
+            numeroCuenta?: string;
+            /** @enum {string} */
+            estado?: "PENDIENTE" | "ACTIVO" | "SUSPENDIDO" | "RECHAZADO";
+            motivo?: string;
+            codigo?: string;
+            enlace?: string;
+            /** Format: date-time */
+            creadoEn?: string;
+            /** Format: date-time */
+            aprobadoEn?: string;
+            /** Format: int64 */
+            referidos?: number;
+            saldo?: components["schemas"]["Saldo"];
+        };
+        Saldo: {
+            /** Format: int64 */
+            retenido?: number;
+            /** Format: int64 */
+            disponible?: number;
+            /** Format: int64 */
+            pagado?: number;
         };
         PacienteRequest: {
             tipoDocumento: string;
@@ -1486,6 +1779,7 @@ export interface components {
             registroMedico?: string;
             especialidad?: string;
             aceptaTerminos?: boolean;
+            codigoPartner?: string;
         };
         RegistroSolicitado: {
             email?: string;
@@ -1515,6 +1809,27 @@ export interface components {
             completa?: boolean;
             consultorios?: components["schemas"]["ConsultorioOpcion"][];
         };
+        MotivoPartner: {
+            motivo: string;
+        };
+        PagoPartner: {
+            referencia: string;
+            /** Format: date */
+            fechaPago: string;
+        };
+        LiquidacionVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int64 */
+            total?: number;
+            /** Format: int32 */
+            comisiones?: number;
+            referencia?: string;
+            /** Format: date */
+            fechaPago?: string;
+            /** Format: date-time */
+            creadaEn?: string;
+        };
         Motivo: {
             motivo: string;
         };
@@ -1542,6 +1857,8 @@ export interface components {
             soloLectura?: boolean;
             motivoSuspension?: string;
             pagoEnRevision?: boolean;
+            /** Format: int32 */
+            descuentoPorcentaje?: number;
         };
         PagoRecibido: {
             plan: string;
@@ -1555,6 +1872,65 @@ export interface components {
             /** Format: int32 */
             dias?: number;
             motivo: string;
+        };
+        ComisionVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            partnerId?: string;
+            consultorio?: string;
+            /** Format: int64 */
+            base?: number;
+            /** Format: int32 */
+            porcentaje?: number;
+            /** Format: int64 */
+            valor?: number;
+            /** @enum {string} */
+            estado?: "RETENIDA" | "DISPONIBLE" | "PAGADA" | "ANULADA";
+            /** Format: date-time */
+            creadaEn?: string;
+            /** Format: date-time */
+            disponibleDesde?: string;
+            motivoAnulacion?: string;
+        };
+        LoginPartner: {
+            email: string;
+            password: string;
+        };
+        SesionPartner: {
+            accessToken?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            nombre?: string;
+            email?: string;
+        };
+        InscripcionPartnerSolicitud: {
+            /** Format: email */
+            email: string;
+            password: string;
+            nombreCuenta: string;
+            /** @enum {string} */
+            tipoPersona: "NATURAL" | "JURIDICA";
+            nombre: string;
+            tipoDocumento: string;
+            numeroDocumento: string;
+            telefono: string;
+            banco?: string;
+            tipoCuenta?: string;
+            numeroCuenta?: string;
+            aceptaTerminos?: boolean;
+        };
+        TokenInscripcion: {
+            token: string;
+        };
+        InscripcionPublica: {
+            email?: string;
+            nombre?: string;
+            cuentaExistente?: boolean;
+        };
+        ConfirmacionInscripcion: {
+            token: string;
+            password?: string;
         };
         ConsultarInvitacion: {
             token: string;
@@ -1715,8 +2091,33 @@ export interface components {
             sobrecupo?: boolean;
         };
         OpcionesPago: {
-            planes?: components["schemas"]["PlanVista"][];
+            planes?: components["schemas"]["PlanPrecio"][];
             datosPago?: string;
+            /** Format: int32 */
+            descuentoPorcentaje?: number;
+        };
+        PlanPrecio: {
+            codigo?: string;
+            nombre?: string;
+            /** Format: int32 */
+            meses?: number;
+            /** Format: int64 */
+            precio?: number;
+            /** Format: int64 */
+            precioConDescuento?: number;
+        };
+        Panel: {
+            partner?: components["schemas"]["PartnerVista"];
+            /** Format: int32 */
+            comisionPorcentaje?: number;
+            /** Format: int32 */
+            descuentoPorcentaje?: number;
+            /** Format: int64 */
+            minimoLiquidacion?: number;
+            puedeLiquidar?: boolean;
+            referidos?: components["schemas"]["ReferidoVista"][];
+            comisiones?: components["schemas"]["ComisionVista"][];
+            liquidaciones?: components["schemas"]["LiquidacionVista"][];
         };
         ConsultorioVista: {
             /** Format: uuid */
@@ -1734,6 +2135,12 @@ export interface components {
             accion?: string;
             consultorio?: string;
             detalle?: string;
+        };
+        CodigoPublico: {
+            codigo?: string;
+            partner?: string;
+            /** Format: int32 */
+            descuentoPorcentaje?: number;
         };
         PacientePage: {
             items?: components["schemas"]["PacienteResponse"][];
@@ -1851,31 +2258,31 @@ export interface components {
             finalizadoEn?: string;
         };
         JsonNode: {
-            double?: boolean;
-            string?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            boolean?: boolean;
-            pojo?: boolean;
-            short?: boolean;
-            long?: boolean;
-            object?: boolean;
-            int?: boolean;
-            binary?: boolean;
-            floatingPointNumber?: boolean;
-            missingNode?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            valueNode?: boolean;
-            bigDecimal?: boolean;
-            integralNumber?: boolean;
-            container?: boolean;
-            bigInteger?: boolean;
-            number?: boolean;
             array?: boolean;
             empty?: boolean;
             null?: boolean;
             float?: boolean;
+            pojo?: boolean;
+            string?: boolean;
+            object?: boolean;
+            short?: boolean;
+            binary?: boolean;
+            int?: boolean;
+            boolean?: boolean;
+            long?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            double?: boolean;
+            number?: boolean;
+            floatingPointNumber?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
+            missingNode?: boolean;
+            bigInteger?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            bigDecimal?: boolean;
+            integralNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -1992,6 +2399,56 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["DatosPago"];
+                };
+            };
+        };
+    };
+    asignar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AsignacionPartner"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReferidoVista"];
+                };
+            };
+        };
+    };
+    datosPago_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatosPagoPartner"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PartnerVista"];
                 };
             };
         };
@@ -2437,7 +2894,107 @@ export interface operations {
             };
         };
     };
+    suspender: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotivoPartner"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PartnerVista"];
+                };
+            };
+        };
+    };
     rechazar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotivoPartner"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PartnerVista"];
+                };
+            };
+        };
+    };
+    liquidar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PagoPartner"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LiquidacionVista"];
+                };
+            };
+        };
+    };
+    aprobar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PartnerVista"];
+                };
+            };
+        };
+    };
+    rechazar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2463,7 +3020,7 @@ export interface operations {
             };
         };
     };
-    aprobar: {
+    aprobar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2509,7 +3066,7 @@ export interface operations {
             };
         };
     };
-    suspender: {
+    suspender_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2609,6 +3166,126 @@ export interface operations {
             };
         };
     };
+    anular: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotivoPartner"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ComisionVista"];
+                };
+            };
+        };
+    };
+    login_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginPartner"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SesionPartner"];
+                };
+            };
+        };
+    };
+    inscribir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InscripcionPartnerSolicitud"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    consultar_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenInscripcion"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InscripcionPublica"];
+                };
+            };
+        };
+    };
+    confirmar_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmacionInscripcion"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SesionPartner"];
+                };
+            };
+        };
+    };
     list: {
         parameters: {
             query?: {
@@ -2658,7 +3335,7 @@ export interface operations {
             };
         };
     };
-    consultar_1: {
+    consultar_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -2728,7 +3405,7 @@ export interface operations {
             };
         };
     };
-    confirmar_1: {
+    confirmar_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -3116,7 +3793,7 @@ export interface operations {
             };
         };
     };
-    consultar_2: {
+    consultar_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -3162,7 +3839,7 @@ export interface operations {
             };
         };
     };
-    login_1: {
+    login_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -3294,6 +3971,48 @@ export interface operations {
             };
         };
     };
+    partners: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PartnerVista"][];
+                };
+            };
+        };
+    };
+    detalle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Panel"];
+                };
+            };
+        };
+    };
     pagos_1: {
         parameters: {
             query?: {
@@ -3374,6 +4093,48 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["EventoAuditoria"][];
+                };
+            };
+        };
+    };
+    panel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Panel"];
+                };
+            };
+        };
+    };
+    codigo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CodigoPublico"];
                 };
             };
         };

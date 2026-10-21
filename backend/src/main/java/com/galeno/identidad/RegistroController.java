@@ -31,7 +31,7 @@ public class RegistroController {
                                     @NotBlank @Size(max = 200) String nombre, @NotBlank @Email @Size(max = 190) String email,
                                     @NotBlank @Size(max = 200) String password, boolean esMedico,
                                     @Size(max = 50) String registroMedico, @Size(max = 120) String especialidad,
-                                    boolean aceptaTerminos) {
+                                    boolean aceptaTerminos, @Size(max = 20) String codigoPartner) {
     }
 
     public record RegistroSolicitado(String email) {
@@ -42,7 +42,8 @@ public class RegistroController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public RegistroSolicitado solicitar(@Valid @RequestBody SolicitudRegistro r, HttpServletRequest request) {
         registro.solicitar(new RegistroService.Solicitud(r.consultorioNombre(), r.nit(), r.nombre(), r.email(),
-                r.password(), r.esMedico(), r.registroMedico(), r.especialidad(), r.aceptaTerminos()), request.getRemoteAddr());
+                r.password(), r.esMedico(), r.registroMedico(), r.especialidad(), r.aceptaTerminos(), r.codigoPartner()),
+                request.getRemoteAddr());
         return new RegistroSolicitado(r.email().strip().toLowerCase());
     }
 

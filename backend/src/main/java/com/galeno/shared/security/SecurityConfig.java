@@ -46,6 +46,11 @@ public class SecurityConfig {
                         // Consola de la plataforma (operadores de Galeno): su propio login y su propio token
                         .requestMatchers(HttpMethod.POST, "/api/v1/plataforma/login").permitAll()
                         .requestMatchers("/api/v1/plataforma/**").hasAuthority(TokenService.PLATAFORMA)
+                        // Portal de partners: inscripción, login y validación de códigos son públicos
+                        .requestMatchers(HttpMethod.POST, "/api/v1/partners/inscripcion", "/api/v1/partners/inscripcion/consultar",
+                                "/api/v1/partners/inscripcion/confirmar", "/api/v1/partners/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/partners/codigos/*").permitAll()
+                        .requestMatchers("/api/v1/partners/**").hasAuthority(TokenService.PARTNER)
                         // Buzón de desarrollo: el controlador solo existe con app.correo.proveedor=local
                         .requestMatchers(HttpMethod.GET, "/api/v1/dev/buzon").permitAll()
                         // Solo existe con el perfil local

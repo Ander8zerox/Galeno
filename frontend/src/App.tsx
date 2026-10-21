@@ -6,6 +6,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { SeleccionConsultorioPage } from "./pages/SeleccionConsultorioPage";
 import { InvitacionPage } from "./pages/InvitacionPage";
 import { PlataformaApp } from "./pages/PlataformaApp";
+import { PartnerApp } from "./pages/PartnerApp";
 import { RecuperarPage, RestablecerPage } from "./pages/RecuperarPage";
 import { AvisoSuscripcion, SuscripcionPage } from "./pages/SuscripcionPage";
 import { BuzonDevPage, ConfirmarRegistroPage, PoliticaDatosPage, RegistroPage } from "./pages/RegistroPage";
@@ -23,6 +24,7 @@ export function App() {
   // Páginas públicas: quien las abre puede no tener cuenta todavía
   if (location.pathname === "/invitacion") return <InvitacionPage />;
   if (location.pathname.startsWith("/plataforma")) return <PlataformaApp />;
+  if (location.pathname.startsWith("/partner")) return <PartnerApp />;
   if (location.pathname === "/registro") return <RegistroPage />;
   if (location.pathname === "/recuperar") return <RecuperarPage />;
   if (location.pathname === "/restablecer") return <RestablecerPage />;

@@ -67,12 +67,16 @@ class RegistroPendiente {
     @Column(name = "consultorio_id")
     private UUID consultorioId;
 
+    @Column(name = "codigo_partner", updatable = false, length = 20)
+    private String codigoPartner;
+
     protected RegistroPendiente() {
     }
 
     RegistroPendiente(String tokenHash, String email, String nombre, String passwordHash, String consultorioNombre,
                       String nit, boolean esMedico, String registroMedico, String especialidad, String terminosVersion,
-                      String ip) {
+                      String ip, String codigoPartner) {
+        this.codigoPartner = codigoPartner;
         this.tokenHash = tokenHash;
         this.email = email;
         this.nombre = nombre;
@@ -131,6 +135,10 @@ class RegistroPendiente {
 
     String getTerminosVersion() {
         return terminosVersion;
+    }
+
+    String getCodigoPartner() {
+        return codigoPartner;
     }
 
     Instant getExpiraEn() {

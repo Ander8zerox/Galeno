@@ -212,6 +212,22 @@ public class PlataformaService {
     // --- apoyo ---
 
     /** El operador de la sesión, verificado en cada llamada (si se le quita el acceso, deja de servir su token). */
+    /** Para otros módulos (partners): avisar por correo a los operadores. */
+    public void notificarOperadores(String asunto, String texto) {
+        for (String para : correosOperadores) {
+            correo.enviar(new Correo(para, asunto, texto));
+        }
+    }
+
+    /** Para otros módulos con endpoints de consola (partners): el operador de la sesión, verificado. */
+    public UUID operadorActual() {
+        return operador();
+    }
+
+    public void auditar(String accion, UUID consultorioId, String detalle) {
+        registrar(operador(), accion, consultorioId, detalle);
+    }
+
     private UUID operador() {
         UUID id = AuthUser.current().id();
         if (!comoSistema(() -> operadores.existsById(id))) {
