@@ -31,6 +31,16 @@ public class Consultorio {
     @Column(name = "creado_en", nullable = false)
     private Instant creadoEn;
 
+    /** Versión de los términos y de la política de datos que aceptó quien registró el consultorio (Ley 1581). */
+    @Column(name = "terminos_version", length = 20)
+    private String terminosVersion;
+
+    @Column(name = "terminos_aceptados_en")
+    private Instant terminosAceptadosEn;
+
+    @Column(name = "terminos_aceptados_por")
+    private UUID terminosAceptadosPor;
+
     protected Consultorio() {
     }
 
@@ -39,6 +49,12 @@ public class Consultorio {
         this.nit = nit;
         this.zonaHoraria = "America/Bogota";
         this.creadoEn = Instant.now();
+    }
+
+    void aceptarTerminos(String version, Instant aceptadosEn, UUID usuarioId) {
+        this.terminosVersion = version;
+        this.terminosAceptadosEn = aceptadosEn;
+        this.terminosAceptadosPor = usuarioId;
     }
 
     public UUID getId() {

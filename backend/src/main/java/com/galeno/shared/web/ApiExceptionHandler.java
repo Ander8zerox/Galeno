@@ -69,5 +69,9 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         public static ApiProblem badRequest(String message) {
             return new ApiProblem(HttpStatus.BAD_REQUEST, message);
         }
+
+        public static ApiProblem tooManyRequests(String message) {
+            return new ApiProblem(HttpStatus.TOO_MANY_REQUESTS, message);
+        }
     }
 }

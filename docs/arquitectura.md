@@ -28,6 +28,7 @@
 usuarios (persona, global) ──< membresias (usuario × consultorio, varios roles, ACTIVA|SUSPENDIDA) >── consultorios
      └── perfiles_medicos (registro ReTHUS, especialidad)      └── asignaciones_secretario (secretario → médicos)
 invitaciones (por consultorio, token de un solo uso, 7 días; solo se guarda su SHA-256)
+registros_consultorio (solicitudes de registro sin verificar, 24 horas; solo se guarda el SHA-256 del token)
 ```
 
 - **Una persona, una cuenta.** Un médico que atiende en dos consultorios usa la misma cuenta; en cada uno tiene sus propios roles.
@@ -47,6 +48,12 @@ invitaciones (por consultorio, token de un solo uso, 7 días; solo se guarda su 
 - **Firma.** Exige un perfil médico y guarda en la fórmula el registro médico vigente.
 - **Invitaciones.** El administrador crea la invitación y comparte el enlace (más adelante se enviará por correo con SES). El token va en el fragmento `#`, así que no llega a los logs del servidor ni de CloudFront. Si el correo ya tiene cuenta, se pide su contraseña actual y se le agrega el consultorio.
 - **Asignación secretario → médicos.** Define qué agendas maneja cada secretario.
+- **Registro de consultorios.** Es público y tiene dos pasos (`RegistroService`).
+  - `POST /api/v1/registro` valida los datos y guarda la solicitud. Exige contraseña de al menos 10 caracteres, registro médico si la persona es médico, aceptación de términos y NIT con el dígito de verificación de la DIAN (si no lo trae, se calcula). Luego envía al correo un enlace con el token en el fragmento `#`. Responde 202 exista o no una cuenta con ese correo, para no revelar qué correos usan Galeno.
+  - `POST /api/v1/registro/consultar` y `/confirmar` crean el consultorio con la constancia de los términos (versión, fecha y quién), la cuenta y el perfil médico, y la membresía ADMIN (más MEDICO si aplica). Dejan a la persona con sesión iniciada. Si el correo ya tenía cuenta, se pide la contraseña actual y la cuenta no cambia.
+  - El enlace vence en 24 horas y se usa una sola vez; la confirmación bloquea la solicitud para que dos clics no creen dos consultorios. Las solicitudes vencidas se borran.
+  - **Límites** (`LimiteIntentos`, en memoria): por IP (`app.registro.solicitudes-por-ip-hora`, 5 en producción) antes de validar, y 3 solicitudes válidas por correo por hora. En AWS la IP real llega en `X-Forwarded-For` desde el balanceador: hay que activar `server.forward-headers-strategy` y aceptar ese encabezado solo del ALB.
+- **Correo.** Va detrás de la interfaz `EnvioCorreo`. Con `app.correo.proveedor=local` (el valor por defecto) los correos quedan en un buzón en memoria, visible en `GET /api/v1/dev/buzon` y en la página `/dev/buzon` del front (solo en desarrollo). En AWS se usará SES, también para las invitaciones.
 
 ## Agenda
 
@@ -126,12 +133,10 @@ Front ──GET /ai-jobs/{id} cada 1,5 s──► API
 ## Pendientes conocidos antes de producción
 
 - Catálogo de medicamentos (CUM/INVIMA) y rangos de dosis en `ValidadorFormula`.
-- Cifrado de campos sensibles (alergias, antecedentes) y log de acceso a historias clínicas.
-- Alta de consultorios nuevos (registro del cliente) y recuperación de contraseña.
-- Envío de invitaciones por correo (SES) y MFA para médicos.
-- Agenda por médico, que usará las asignaciones de los secretarios.
-- Edición de datos del paciente desde el front (la API ya la permite).
-- Generación del PDF de la fórmula y firma del médico.
+- Cifrado de campos sensibles (alergias, antecedentes).
+- Recuperación de contraseña, envío de correos con SES (registro e invitaciones) y MFA para médicos.
+- Revisión legal de los términos y de la política de datos antes de abrir el registro al público.
+- Imagen de la firma del médico en los PDF.
 - Pruebas de integración con Testcontainers (multi-tenant, worker de IA).
 - Evaluación de los prompts con casos clínicos reales, revisados por médicos.
 - Regulación (Colombia): Res. 1995/1999 (historia clínica), Ley 1581/2012 (datos personales y transferencia a AWS/IA), Res. 866/2021 (interoperabilidad), RIPS y facturación electrónica.

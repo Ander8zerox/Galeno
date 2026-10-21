@@ -36,6 +36,7 @@ export function LoginPage() {
         </label>
         {error && <p className="alert alert-error">{error}</p>}
         <button className="btn" disabled={enviando}>{enviando ? "Ingresando…" : "Ingresar"}</button>
+        <p className="muted small center">¿Su consultorio aún no usa Galeno? <a href="/registro">Regístrelo aquí</a></p>
       </form>
     </div>
   );

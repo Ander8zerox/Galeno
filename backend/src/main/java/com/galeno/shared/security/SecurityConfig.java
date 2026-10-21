@@ -40,6 +40,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         // El token de invitación viaja en el cuerpo, nunca en la URL (no queda en logs)
                         .requestMatchers(HttpMethod.POST, "/api/v1/invitaciones/consultar", "/api/v1/invitaciones/aceptar").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/registro", "/api/v1/registro/consultar", "/api/v1/registro/confirmar").permitAll()
+                        // Buzón de desarrollo: el controlador solo existe con app.correo.proveedor=local
+                        .requestMatchers(HttpMethod.GET, "/api/v1/dev/buzon").permitAll()
                         .requestMatchers("/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         // Cualquier token válido, incluido el de selección de consultorio
                         .requestMatchers("/api/v1/auth/consultorios", "/api/v1/auth/sesion").authenticated()

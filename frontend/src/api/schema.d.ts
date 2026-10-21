@@ -148,6 +148,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/registro": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["solicitar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/registro/consultar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["consultar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/registro/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pacientes": {
         parameters: {
             query?: never;
@@ -173,7 +221,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["consultar"];
+        post: operations["consultar_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -221,7 +269,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["confirmar"];
+        post: operations["confirmar_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -429,7 +477,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["solicitar"];
+        post: operations["solicitar_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -572,6 +620,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["listar_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dev/buzon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recientes"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1030,6 +1094,46 @@ export interface components {
             estado: "PROGRAMADA" | "CONFIRMADA" | "ATENDIDA" | "NO_ASISTIO" | "CANCELADA";
             motivoCancelacion?: string;
         };
+        SolicitudRegistro: {
+            consultorioNombre: string;
+            nit?: string;
+            nombre: string;
+            /** Format: email */
+            email: string;
+            password: string;
+            esMedico?: boolean;
+            registroMedico?: string;
+            especialidad?: string;
+            aceptaTerminos?: boolean;
+        };
+        RegistroSolicitado: {
+            email?: string;
+        };
+        TokenRegistro: {
+            token: string;
+        };
+        RegistroPublico: {
+            email?: string;
+            consultorioNombre?: string;
+            cuentaExistente?: boolean;
+        };
+        ConfirmarRegistro: {
+            token: string;
+            password?: string;
+        };
+        ConsultorioOpcion: {
+            /** Format: uuid */
+            consultorioId?: string;
+            nombre?: string;
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
+        };
+        SesionResponse: {
+            accessToken?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            completa?: boolean;
+            consultorios?: components["schemas"]["ConsultorioOpcion"][];
+        };
         ConsultarInvitacion: {
             token: string;
         };
@@ -1046,19 +1150,6 @@ export interface components {
             password: string;
             registroMedico?: string;
             especialidad?: string;
-        };
-        ConsultorioOpcion: {
-            /** Format: uuid */
-            consultorioId?: string;
-            nombre?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
-        };
-        SesionResponse: {
-            accessToken?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            completa?: boolean;
-            consultorios?: components["schemas"]["ConsultorioOpcion"][];
         };
         Asignacion: {
             /** @enum {string} */
@@ -1259,6 +1350,13 @@ export interface components {
             /** Format: date-time */
             creadoEn?: string;
         };
+        Enviado: {
+            para?: string;
+            asunto?: string;
+            texto?: string;
+            /** Format: date-time */
+            enviadoEn?: string;
+        };
         MeResponse: {
             /** Format: uuid */
             id?: string;
@@ -1292,31 +1390,31 @@ export interface components {
             finalizadoEn?: string;
         };
         JsonNode: {
+            pojo?: boolean;
+            short?: boolean;
+            int?: boolean;
+            long?: boolean;
+            object?: boolean;
+            boolean?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            double?: boolean;
+            binary?: boolean;
+            string?: boolean;
             array?: boolean;
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            bigDecimal?: boolean;
+            floatingPointNumber?: boolean;
+            number?: boolean;
             integralNumber?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            bigInteger?: boolean;
-            object?: boolean;
-            pojo?: boolean;
-            boolean?: boolean;
-            long?: boolean;
-            double?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            int?: boolean;
-            short?: boolean;
-            string?: boolean;
-            binary?: boolean;
-            container?: boolean;
             missingNode?: boolean;
-            valueNode?: boolean;
-            number?: boolean;
-            floatingPointNumber?: boolean;
+            bigDecimal?: boolean;
+            bigInteger?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -1684,6 +1782,78 @@ export interface operations {
             };
         };
     };
+    solicitar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SolicitudRegistro"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistroSolicitado"];
+                };
+            };
+        };
+    };
+    consultar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenRegistro"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RegistroPublico"];
+                };
+            };
+        };
+    };
+    confirmar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmarRegistro"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SesionResponse"];
+                };
+            };
+        };
+    };
     list: {
         parameters: {
             query?: {
@@ -1733,7 +1903,7 @@ export interface operations {
             };
         };
     };
-    consultar: {
+    consultar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -1803,7 +1973,7 @@ export interface operations {
             };
         };
     };
-    confirmar: {
+    confirmar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2173,7 +2343,7 @@ export interface operations {
             };
         };
     };
-    solicitar: {
+    solicitar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2416,6 +2586,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Miembro"][];
+                };
+            };
+        };
+    };
+    recientes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Enviado"][];
                 };
             };
         };
