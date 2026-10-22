@@ -12,9 +12,9 @@ const fechaCorta = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" });
 export const pesos = (v?: number) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(v ?? 0);
 
 export const ESTADO_SUSCRIPCION: Record<NonNullable<Estado["estado"]>, [string, string]> = {
-  PRUEBA: ["Prueba gratis", "badge-warn"],
+  PRUEBA: ["Prueba gratis", "badge-info"],
   ACTIVA: ["Activa", "badge-ok"],
-  VENCIDA: ["Vencida (en gracia)", "badge-danger"],
+  VENCIDA: ["Vencida (en gracia)", "badge-warn"],
   SUSPENDIDA: ["Solo lectura", "badge-danger"],
 };
 
@@ -111,17 +111,17 @@ export function SuscripcionPage() {
           <h3>Cómo pagar</h3>
           <div className="row">
             {opciones.data.planes?.map((p) => (
-              <div key={p.codigo} className="card" style={{ minWidth: "12rem" }}>
+              <div key={p.codigo} className="card min-12">
                 <strong>{p.nombre}</strong>
                 {!!opciones.data?.descuentoPorcentaje && !!p.precio && <s className="muted small">{pesos(p.precio)}</s>}
-                <div style={{ fontSize: "1.4rem" }}>{p.precio ? pesos(p.precioConDescuento) : "Precio por definir"}</div>
+                <div className="precio">{p.precio ? pesos(p.precioConDescuento) : "Precio por definir"}</div>
                 <small className="muted">{p.meses === 1 ? "por mes" : `por ${p.meses} meses`}</small>
               </div>
             ))}
           </div>
           {!!opciones.data.descuentoPorcentaje && <p className="badge badge-ok">Tiene {opciones.data.descuentoPorcentaje} % de descuento por venir recomendado por un partner de Galeno.</p>}
           <p className="muted small">Pague por transferencia o consignación y luego repórtelo aquí con la referencia y el comprobante:</p>
-          <pre className="card" style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "inherit" }}>{opciones.data.datosPago}</pre>
+          <pre className="card texto-libre">{opciones.data.datosPago}</pre>
           <ReportarPago planes={opciones.data.planes ?? []} bloqueado={!!s?.pagoEnRevision} />
         </div>
       )}

@@ -5,6 +5,8 @@ import { ApiError, expectOk, unwrap, type Schemas } from "../api/client";
 import type { paths } from "../api/schema";
 import { ESTADO_SUSCRIPCION, pesos } from "./SuscripcionPage";
 import { ESTADO_PARTNER, TablaComisiones } from "./PartnerApp";
+import { Building, Handshake, MailX, Receipt, ScrollText, Settings2 } from "lucide-react";
+import { Shell } from "../components/Shell";
 
 type Pago = Schemas["PagoVista"];
 type Consultorio = Schemas["ConsultorioVista"];
@@ -97,30 +99,22 @@ function Consola({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
     queryFn: async () => unwrap(await api.GET("/api/v1/plataforma/pagos", { params: { query: { estado: "REPORTADO" } } })),
     refetchInterval: 60_000,
   });
+  const secciones = ([
+    ["pagos", "Pagos por revisar", Receipt], ["consultorios", "Consultorios", Building], ["partners", "Partners", Handshake],
+    ["configuracion", "Planes y datos de pago", Settings2], ["correos", "Correos bloqueados", MailX], ["auditoria", "Auditoría", ScrollText],
+  ] as const).map(([p, etiqueta, icono]) => ({
+    etiqueta, icono, activo: pestana === p, onClick: () => setPestana(p),
+    contador: p === "pagos" ? pendientes.data?.length : undefined,
+  }));
   return (
-    <div className="layout">
-      <header className="topbar">
-        <span className="brand">Galeno · Plataforma</span>
-        <nav className="topnav">
-          {([["pagos", "Pagos por revisar"], ["consultorios", "Consultorios"], ["partners", "Partners"], ["configuracion", "Planes y datos de pago"], ["correos", "Correos bloqueados"], ["auditoria", "Auditoría"]] as const).map(([p, t]) => (
-            <a key={p} href="#" className={pestana === p ? "active" : ""} onClick={(e) => { e.preventDefault(); setPestana(p); }}>
-              {t}{p === "pagos" && !!pendientes.data?.length && <> <span className="badge badge-warn">{pendientes.data.length}</span></>}
-            </a>
-          ))}
-        </nav>
-        <span className="spacer" />
-        <span>{sesion.nombre}</span>
-        <button className="btn-link" onClick={onSalir}>Salir</button>
-      </header>
-      <main className="content">
+    <Shell marca="Plataforma" items={secciones} usuario={sesion.nombre ?? ""} onSalir={onSalir}>
         {pestana === "pagos" && <PagosPorRevisar pagos={pendientes.data} cargando={pendientes.isLoading} />}
         {pestana === "consultorios" && <Consultorios />}
         {pestana === "partners" && <Partners />}
         {pestana === "configuracion" && <Configuracion />}
         {pestana === "correos" && <CorreosSuprimidos />}
         {pestana === "auditoria" && <Auditoria />}
-      </main>
-    </div>
+    </Shell>
   );
 }
 
@@ -265,11 +259,11 @@ function FilaConsultorio({ consultorio: c }: { consultorio: Consultorio }) {
       {accion ? (
         <form className="row" onSubmit={(e) => { e.preventDefault(); ejecutar.mutate(); }}>
           {accion === "partner" && <label>Código del partner<input value={codigoPartner} onChange={(e) => setCodigoPartner(e.target.value.toUpperCase())} required maxLength={20} /></label>}
-          {accion === "cortesia" && <label>Días<input type="number" min={1} max={366} value={dias} onChange={(e) => setDias(e.target.value)} required style={{ width: "6rem" }} /></label>}
+          {accion === "cortesia" && <label>Días<input type="number" min={1} max={366} value={dias} onChange={(e) => setDias(e.target.value)} required className="campo-corto" /></label>}
           {accion === "pago" && (
             <>
               <label>Plan<select value={plan} onChange={(e) => setPlan(e.target.value)}><option value="MENSUAL">Mensual</option><option value="ANUAL">Anual</option></select></label>
-              <label>Valor<input type="number" min={1} value={monto} onChange={(e) => setMonto(e.target.value)} required style={{ width: "9rem" }} /></label>
+              <label>Valor<input type="number" min={1} value={monto} onChange={(e) => setMonto(e.target.value)} required className="campo-medio" /></label>
               <label>Fecha<input type="date" value={fechaPago} onChange={(e) => setFechaPago(e.target.value)} required /></label>
               <label>Referencia<input value={referencia} onChange={(e) => setReferencia(e.target.value)} required maxLength={100} /></label>
             </>
@@ -315,7 +309,7 @@ function Partners() {
           </div>
           <div className="muted small">{p.tipoDocumento} {p.numeroDocumento} · {p.email} · {p.telefono} · inscrito el {fecha.format(new Date(p.creadoEn!))}{p.motivo && ` · ${p.motivo}`}</div>
           <AccionesPartner partner={p} />
-          <button className="btn-link small" style={{ alignSelf: "flex-start" }} onClick={() => setAbierto(abierto === p.id ? null : p.id!)}>
+          <button className="btn-link small self-start" onClick={() => setAbierto(abierto === p.id ? null : p.id!)}>
             {abierto === p.id ? "Ocultar detalle" : "Ver referidos, comisiones y pagos"}
           </button>
           {abierto === p.id && <DetallePartner id={p.id!} />}
@@ -445,8 +439,8 @@ function EditarPlan({ plan }: { plan: Schemas["PlanVista"] }) {
   const cambio = Number(precio) !== plan.precio || activo !== plan.activo;
   return (
     <form className="row" onSubmit={(e) => { e.preventDefault(); guardar.mutate(); }}>
-      <strong style={{ minWidth: "6rem" }}>{plan.nombre}</strong>
-      <label>Precio (COP)<input type="number" min={0} value={precio} onChange={(e) => setPrecio(e.target.value)} style={{ width: "10rem" }} /></label>
+      <strong className="min-6">{plan.nombre}</strong>
+      <label>Precio (COP)<input type="number" min={0} value={precio} onChange={(e) => setPrecio(e.target.value)} className="campo-medio" /></label>
       <span className="muted small">{pesos(Number(precio))} por {plan.meses === 1 ? "mes" : `${plan.meses} meses`}</span>
       <label className="check"><input type="checkbox" checked={activo} onChange={(e) => setActivo(e.target.checked)} />Disponible</label>
       <button className="btn btn-secondary" disabled={!cambio || guardar.isPending}>Guardar</button>
