@@ -25,4 +25,12 @@ interface AtencionRepository extends JpaRepository<Atencion, UUID> {
             order by a.fechaAtencion desc
             """)
     List<Atencion> visibles(UUID pacienteId, UUID usuarioId);
+
+    /** Para la historia completa impresa: solo lo firmado (o importado), de la más antigua a la más reciente. */
+    @Query("""
+            select a from Atencion a
+            where a.pacienteId = :pacienteId and a.estado = com.galeno.historia.Atencion.Estado.FIRMADA
+            order by a.fechaAtencion
+            """)
+    List<Atencion> firmadas(UUID pacienteId);
 }

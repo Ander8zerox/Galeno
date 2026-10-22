@@ -1124,6 +1124,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/historia/pacientes/{pacienteId}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pdfHistoria"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/historia/documentos/{id}/archivo": {
         parameters: {
             query?: never;
@@ -2262,27 +2278,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            pojo?: boolean;
-            string?: boolean;
-            object?: boolean;
-            short?: boolean;
-            binary?: boolean;
-            int?: boolean;
-            boolean?: boolean;
-            long?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            double?: boolean;
             number?: boolean;
-            floatingPointNumber?: boolean;
-            valueNode?: boolean;
-            container?: boolean;
-            missingNode?: boolean;
+            integralNumber?: boolean;
+            bigDecimal?: boolean;
             bigInteger?: boolean;
+            missingNode?: boolean;
+            valueNode?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            bigDecimal?: boolean;
-            integralNumber?: boolean;
+            container?: boolean;
+            int?: boolean;
+            long?: boolean;
+            double?: boolean;
+            object?: boolean;
+            pojo?: boolean;
+            short?: boolean;
+            string?: boolean;
+            boolean?: boolean;
+            binary?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -4226,6 +4242,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["EventoHistoria"][];
+                };
+            };
+        };
+    };
+    pdfHistoria: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

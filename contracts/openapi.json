@@ -2717,6 +2717,38 @@
         }
       }
     },
+    "/api/v1/historia/pacientes/{pacienteId}/pdf": {
+      "get": {
+        "tags": [
+          "historia-controller"
+        ],
+        "operationId": "pdfHistoria",
+        "parameters": [
+          {
+            "name": "pacienteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/historia/documentos/{id}/archivo": {
       "get": {
         "tags": [
@@ -6026,53 +6058,22 @@
           "float": {
             "type": "boolean"
           },
-          "pojo": {
-            "type": "boolean"
-          },
-          "string": {
-            "type": "boolean"
-          },
-          "object": {
-            "type": "boolean"
-          },
-          "short": {
-            "type": "boolean"
-          },
-          "binary": {
-            "type": "boolean"
-          },
-          "int": {
-            "type": "boolean"
-          },
-          "boolean": {
-            "type": "boolean"
-          },
-          "long": {
-            "type": "boolean"
-          },
-          "textual": {
-            "type": "boolean",
-            "deprecated": true
-          },
-          "double": {
-            "type": "boolean"
-          },
           "number": {
             "type": "boolean"
           },
-          "floatingPointNumber": {
+          "integralNumber": {
             "type": "boolean"
           },
-          "valueNode": {
+          "bigDecimal": {
             "type": "boolean"
           },
-          "container": {
+          "bigInteger": {
             "type": "boolean"
           },
           "missingNode": {
             "type": "boolean"
           },
-          "bigInteger": {
+          "valueNode": {
             "type": "boolean"
           },
           "nodeType": {
@@ -6089,10 +6090,41 @@
               "STRING"
             ]
           },
-          "bigDecimal": {
+          "container": {
             "type": "boolean"
           },
-          "integralNumber": {
+          "int": {
+            "type": "boolean"
+          },
+          "long": {
+            "type": "boolean"
+          },
+          "double": {
+            "type": "boolean"
+          },
+          "object": {
+            "type": "boolean"
+          },
+          "pojo": {
+            "type": "boolean"
+          },
+          "short": {
+            "type": "boolean"
+          },
+          "string": {
+            "type": "boolean"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "binary": {
+            "type": "boolean"
+          },
+          "textual": {
+            "type": "boolean",
+            "deprecated": true
+          },
+          "floatingPointNumber": {
             "type": "boolean"
           },
           "embeddedValue": {

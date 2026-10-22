@@ -43,6 +43,12 @@ public class PdfRenderer {
             .firma { margin-top: 28px; width: 60%; }
             .firma .linea { border-top: 1px solid #1f2933; padding-top: 4px; }
             .texto { white-space: pre-wrap; }
+            h3 { font-size: 10.5pt; margin: 0 0 4px; color: #1f2933; }
+            h2, h3 { page-break-after: avoid; }
+            tr, .caja, .firma { page-break-inside: avoid; }
+            /* Historia completa: atenciones seguidas, separadas por una línea, como un documento corrido (no una por
+               hoja); los títulos nunca quedan solos al final de una hoja */
+            .atencion { border-top: 2px solid #0f6e8c; margin-top: 14px; padding-top: 8px; }
             .marca-agua { position: fixed; top: 40%; left: 10%; font-size: 60pt; color: #f3d9a4; transform: rotate(-30deg); }
             """;
 

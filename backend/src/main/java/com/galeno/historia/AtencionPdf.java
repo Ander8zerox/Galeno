@@ -24,7 +24,14 @@ final class AtencionPdf {
         b.append(EncabezadoPdf.html(consultorio, "HISTORIA CLÍNICA · ATENCIÓN",
                 "Fecha: " + fechaHora(a.getFechaAtencion(), consultorio.zona())));
         b.append(EncabezadoPdf.paciente(p));
+        cuerpo(b, a, consultorio, notas);
+        b.append("<p class=\"small muted\">Atención ").append(esc(a.getId())).append(" · origen ").append(esc(a.getOrigen()))
+                .append(". Documento generado por Galeno; la historia clínica original reposa en el sistema.</p>");
+        return PdfRenderer.documento("Atención " + p.getNombres() + " " + p.getApellidos(), b.toString());
+    }
 
+    /** Todo lo de la atención salvo el encabezado y los datos del paciente (también lo usa {@link HistoriaPdf}). */
+    static void cuerpo(StringBuilder b, Atencion a, ConsultorioResumen consultorio, List<NotaAclaratoria> notas) {
         seccion(b, "Motivo de consulta", a.getMotivoConsulta());
         seccion(b, "Enfermedad actual", a.getEnfermedadActual());
         seccion(b, "Antecedentes", a.getAntecedentes());
@@ -84,9 +91,6 @@ final class AtencionPdf {
                         .append(esc(n.getTexto())).append("</div></div>");
             }
         }
-        b.append("<p class=\"small muted\">Atención ").append(esc(a.getId())).append(" · origen ").append(esc(a.getOrigen()))
-                .append(". Documento generado por Galeno; la historia clínica original reposa en el sistema.</p>");
-        return PdfRenderer.documento("Atención " + p.getNombres() + " " + p.getApellidos(), b.toString());
     }
 
     private static void seccion(StringBuilder b, String titulo, String texto) {
@@ -101,7 +105,7 @@ final class AtencionPdf {
         }
     }
 
-    private static String tipo(Diagnostico.Tipo t) {
+    static String tipo(Diagnostico.Tipo t) {
         return switch (t) {
             case IMPRESION_DIAGNOSTICA -> "Impresión diagnóstica";
             case CONFIRMADO_NUEVO -> "Confirmado nuevo";

@@ -164,6 +164,23 @@ public class HistoriaService {
         return pdf.render(AtencionPdf.html(a, p, consultorio, notas.findByAtencionIdOrderByCreadaEn(atencionId)));
     }
 
+    /**
+     * Historia clínica completa del paciente en un solo PDF: todas las atenciones firmadas (o importadas) en orden,
+     * con sus notas aclaratorias, y la lista de documentos adjuntos. Los borradores no salen: no son registro clínico.
+     */
+    @Transactional
+    public byte[] pdfHistoria(UUID pacienteId) {
+        Paciente p = pacientes.get(pacienteId);
+        AuthUser yo = AuthUser.current();
+        var consultorio = identidad.consultorio(yo.tenantId());
+        List<HistoriaPdf.AtencionImpresa> lista = atenciones.firmadas(pacienteId).stream()
+                .map(a -> new HistoriaPdf.AtencionImpresa(a, notas.findByAtencionIdOrderByCreadaEn(a.getId())))
+                .toList();
+        auditar(pacienteId, Accion.IMPRIMIR_HISTORIA, null);
+        return pdf.render(HistoriaPdf.html(p, consultorio, lista, documentos.findByPacienteIdOrderByCreadoEnDesc(pacienteId),
+                yo.nombre()));
+    }
+
     /** Para la fórmula impresa: el diagnóstico principal de la atención en la que se emitió. */
     @Transactional(readOnly = true)
     public Optional<String> diagnosticoPrincipal(UUID atencionId) {

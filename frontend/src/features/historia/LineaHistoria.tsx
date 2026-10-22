@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api, unwrap } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 import { fechaHoraCorta } from "../agenda/tiempo";
-import { BotonDescargar, SubirDocumento, TIPO_DOCUMENTO } from "./Documentos";
+import { BotonArchivo, BotonDescargar, SubirDocumento, TIPO_DOCUMENTO } from "./Documentos";
 
 /** Historia clínica del paciente: atenciones y documentos, del más reciente al más antiguo. */
 export function LineaHistoria({ pacienteId }: { pacienteId: string }) {
@@ -25,12 +25,19 @@ export function LineaHistoria({ pacienteId }: { pacienteId: string }) {
 
   return (
     <div className="stack">
-      {puede("HISTORIA_REGISTRAR") && (
-        <div className="row">
-          <button className="btn" disabled={nueva.isPending} onClick={() => nueva.mutate()}>Nueva atención</button>
-          <button className="btn btn-secondary" onClick={() => setSubiendo((v) => !v)}>{subiendo ? "Cerrar" : "Subir documento"}</button>
-        </div>
-      )}
+      <div className="row">
+        {puede("HISTORIA_REGISTRAR") && (
+          <>
+            <button className="btn" disabled={nueva.isPending} onClick={() => nueva.mutate()}>Nueva atención</button>
+            <button className="btn btn-secondary" onClick={() => setSubiendo((v) => !v)}>{subiendo ? "Cerrar" : "Subir documento"}</button>
+          </>
+        )}
+        <span className="spacer" />
+        {/* Copia para el paciente o para un traslado: solo lo firmado, con notas y la lista de documentos */}
+        <BotonArchivo ruta={`/api/v1/historia/pacientes/${pacienteId}/pdf`} nombre="historia-clinica.pdf" className="btn btn-secondary">
+          Descargar historia completa (PDF)
+        </BotonArchivo>
+      </div>
       {nueva.error && <p className="alert alert-error">{nueva.error.message}</p>}
       {subiendo && <div className="card"><SubirDocumento pacienteId={pacienteId} /></div>}
 

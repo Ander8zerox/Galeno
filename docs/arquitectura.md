@@ -121,6 +121,7 @@ partner se inscribe → la plataforma lo aprueba (código) → consultorio se re
   - El PDF de un borrador lleva la marca de agua BORRADOR.
   - Cada impresión queda en la auditoría (`IMPRIMIR_FORMULA`, `IMPRIMIR_ATENCION`).
   - Endpoints: `GET /api/v1/formulacion/formulas/{id}/pdf` y `GET /api/v1/historia/atenciones/{id}/pdf`.
+  - **Historia completa** (`GET /api/v1/historia/pacientes/{id}/pdf`, botón "Descargar historia completa"): índice y una página por cada atención firmada o importada, de la más antigua a la más reciente, con sus notas aclaratorias, más la lista de documentos adjuntos (sin los archivos). Los borradores no salen. Queda en la auditoría como `IMPRIMIR_HISTORIA`. Es la copia que se entrega al paciente o en un traslado.
 
 ## Importación de historias (RIPS y listados)
 
