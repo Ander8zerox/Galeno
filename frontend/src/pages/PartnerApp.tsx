@@ -4,6 +4,8 @@ import createClient, { type Middleware } from "openapi-fetch";
 import { expectOk, unwrap, type Schemas } from "../api/client";
 import type { paths } from "../api/schema";
 import { pesos } from "./SuscripcionPage";
+import { Wallet } from "lucide-react";
+import { Shell } from "../components/Shell";
 
 /**
  * Portal de los partners (quienes venden Galeno): inscripción, su código, sus referidos y sus comisiones.
@@ -42,7 +44,7 @@ api.use(auth);
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 export const ESTADO_COMISION: Record<NonNullable<Comision["estado"]>, [string, string]> = {
-  RETENIDA: ["Retenida", "badge-warn"],
+  RETENIDA: ["Retenida", "badge-info"],
   DISPONIBLE: ["Disponible", "badge-ok"],
   PAGADA: ["Pagada", ""],
   ANULADA: ["Anulada", "badge-danger"],
@@ -140,7 +142,7 @@ function Inscripcion() {
   }
   return (
     <div className="login">
-      <form className="card login-card stack" style={{ width: "min(560px, 100%)" }} onSubmit={onSubmit}>
+      <form className="card login-card ancho stack" onSubmit={onSubmit}>
         <h1>Inscríbase como partner</h1>
         <p className="muted">Recomiende Galeno con su código: el consultorio recibe un descuento y usted una comisión por cada pago mientras siga usándolo.</p>
         <h3>Su cuenta</h3>
@@ -227,14 +229,8 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
   const [texto, clase] = ESTADO_PARTNER[p.estado!];
 
   return (
-    <div className="layout">
-      <header className="topbar">
-        <span className="brand">Galeno · Partners</span>
-        <span className="spacer" />
-        <span>{sesion.nombre}</span>
-        <button className="btn-link" onClick={onSalir}>Salir</button>
-      </header>
-      <main className="content stack">
+    <Shell marca="Partners" items={[{ etiqueta: "Mi panel", icono: Wallet, activo: true }]} usuario={sesion.nombre ?? ""} onSalir={onSalir}>
+      <div className="stack">
         <div className="page-header between"><h1>{p.nombre}</h1><span className={`badge ${clase}`}>{texto}</span></div>
 
         {p.estado === "PENDIENTE" && <p className="alert">Estamos revisando su inscripción. Le avisaremos por correo cuando quede aprobada, con su código.</p>}
@@ -244,7 +240,7 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
           <div className="card stack">
             <h3>Su código</h3>
             <div className="row">
-              <strong style={{ fontSize: "1.6rem", letterSpacing: ".1em" }}>{p.codigo}</strong>
+              <strong className="cifra-grande">{p.codigo}</strong>
               <input readOnly value={p.enlace} className="grow" onFocus={(e) => e.target.select()} />
               <button className="btn btn-secondary" onClick={() => navigator.clipboard.writeText(p.enlace!).then(() => setCopiado(true))}>{copiado ? "Copiado" : "Copiar enlace"}</button>
             </div>
@@ -292,8 +288,8 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
         )}
 
         <DatosPago partner={p} />
-      </main>
-    </div>
+      </div>
+    </Shell>
   );
 }
 
@@ -362,7 +358,7 @@ function DatosPago({ partner: p }: { partner: Schemas["PartnerVista"] }) {
 function Condiciones() {
   return (
     <div className="login">
-      <div className="card stack" style={{ width: "min(720px, 100%)" }}>
+      <div className="card muy-ancho stack">
         <h1>Condiciones del programa de partners</h1>
         <p className="alert">Borrador en revisión legal · versión 2026-10.</p>
         <p>El partner recomienda Galeno a consultorios con su código o enlace. Un consultorio queda asociado al partner cuando se registra con ese código; cada consultorio tiene un solo partner, que no cambia salvo decisión de Galeno.</p>
@@ -376,7 +372,7 @@ function Condiciones() {
 }
 
 function Cifra({ valor, texto }: { valor: string; texto: string }) {
-  return <div className="card" style={{ minWidth: "10rem" }}><strong style={{ fontSize: "1.3rem" }}>{valor}</strong><div className="muted small">{texto}</div></div>;
+  return <div className="card cifra"><strong>{valor}</strong><div className="muted small">{texto}</div></div>;
 }
 
 function Mensaje({ texto }: { texto: string }) {

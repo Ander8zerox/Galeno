@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { CalendarDays, CreditCard, FileUp, Users, UsersRound } from "lucide-react";
+import { Shell, type ItemMenu } from "./components/Shell";
 import { api, unwrap } from "./api/client";
 import { useAuth } from "./auth/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
@@ -33,23 +35,16 @@ export function App() {
   if (import.meta.env.DEV && location.pathname === "/dev/buzon") return <BuzonDevPage />;
   if (!me) return seleccion ? <SeleccionConsultorioPage opciones={seleccion} /> : <LoginPage />;
 
+  const menu: ItemMenu[] = [
+    ...(puede("AGENDA_GESTIONAR") ? [{ etiqueta: "Agenda", icono: CalendarDays, to: "/agenda" }] : []),
+    { etiqueta: "Pacientes", icono: Users, to: "/pacientes" },
+    ...(puede("EQUIPO_GESTIONAR") ? [{ etiqueta: "Equipo", icono: UsersRound, to: "/equipo" }] : []),
+    ...(puede("IMPORTAR_HISTORIAS") ? [{ etiqueta: "Importar", icono: FileUp, to: "/importar" }] : []),
+    ...(puede("SUSCRIPCION_GESTIONAR") ? [{ etiqueta: "Suscripción", icono: CreditCard, to: "/suscripcion" }] : []),
+  ];
+
   return (
-    <div className="layout">
-      <header className="topbar">
-        <Link to="/" className="brand">Galeno</Link>
-        <SelectorConsultorio />
-        <nav className="topnav">
-          {puede("AGENDA_GESTIONAR") && <Link to="/agenda">Agenda</Link>}
-          <Link to="/pacientes">Pacientes</Link>
-          {puede("EQUIPO_GESTIONAR") && <Link to="/equipo">Equipo</Link>}
-          {puede("IMPORTAR_HISTORIAS") && <Link to="/importar">Importar</Link>}
-          {puede("SUSCRIPCION_GESTIONAR") && <Link to="/suscripcion">Suscripción</Link>}
-        </nav>
-        <span className="spacer" />
-        <span>{me.nombre}</span>
-        <button className="btn-link" onClick={logout}>Salir</button>
-      </header>
-      <main className="content">
+    <Shell marca="Galeno" items={menu} arriba={<SelectorConsultorio />} usuario={me.nombre ?? ""} onSalir={logout}>
         <AvisoSuscripcion />
         <Routes>
           <Route path="/pacientes" element={<PacientesPage />} />
@@ -62,8 +57,7 @@ export function App() {
           {puede("AGENDA_GESTIONAR") && <Route path="/agenda" element={<AgendaPage />} />}
           <Route path="*" element={<Navigate to={puede("AGENDA_GESTIONAR") ? "/agenda" : "/pacientes"} replace />} />
         </Routes>
-      </main>
-    </div>
+    </Shell>
   );
 }
 
@@ -78,7 +72,7 @@ function SelectorConsultorio() {
     queryFn: async () => unwrap(await api.GET("/api/v1/auth/consultorios")),
   });
 
-  if (!varios || !opciones.data) return <span className="muted">{me?.consultorioNombre}</span>;
+  if (!varios || !opciones.data) return <span className="consultorio-actual">{me?.consultorioNombre}</span>;
   return (
     <select
       className="consultorio-select"

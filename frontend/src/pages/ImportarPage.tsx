@@ -292,7 +292,7 @@ export function LoteImportacionPage() {
 }
 
 function Cifra({ valor, texto }: { valor?: number; texto: string }) {
-  return <div className="stack" style={{ gap: 0, minWidth: "6rem" }}><strong style={{ fontSize: "1.4rem" }}>{valor ?? 0}</strong><small className="muted">{texto}</small></div>;
+  return <div className="cifra"><strong>{valor ?? 0}</strong><small className="muted">{texto}</small></div>;
 }
 
 function Resultado({ lote }: { lote: Lote }) {
@@ -420,7 +420,7 @@ function FilaRegistro({ loteId, registro: r, editable, onCambio }: { loteId: str
       {abierta && (
         <tr>
           <td colSpan={columnas}>
-            <ul className="stack" style={{ gap: ".3rem", margin: 0 }}>
+            <ul className="stack lista-compacta">
               {r.atenciones?.map((a) => (
                 <li key={a.clave}>
                   <strong>{a.fecha?.replace("T", " ").slice(0, 16)}</strong> · {TIPO_SERVICIO[a.tipo!] ?? a.tipo}

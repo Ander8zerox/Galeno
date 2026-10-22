@@ -14,7 +14,7 @@ export const ESTADO_NOMBRE: Record<Estado, string> = {
   PROGRAMADA: "Programada", CONFIRMADA: "Confirmada", ATENDIDA: "Atendida", NO_ASISTIO: "No asistió", CANCELADA: "Cancelada",
 };
 const ESTADO_CLASE: Record<Estado, string> = {
-  PROGRAMADA: "", CONFIRMADA: "badge-ok", ATENDIDA: "badge-ok", NO_ASISTIO: "badge-warn", CANCELADA: "badge-danger",
+  PROGRAMADA: "badge-info", CONFIRMADA: "badge-primary", ATENDIDA: "badge-ok", NO_ASISTIO: "badge-warn", CANCELADA: "",
 };
 
 /** Un día de agenda: cupos libres y citas en una sola línea de tiempo. */
@@ -95,7 +95,7 @@ function CitaFila({ cita, zona }: { cita: Cita; zona: string }) {
   });
 
   return (
-    <div className={`cita ${cita.estado === "CANCELADA" ? "cita-cancelada" : ""}`}>
+    <div className={`cita cita-${cita.estado!.toLowerCase()}`}>
       <span className="slot-hora">{hora(cita.inicio!, zona)}</span>
       <div className="grow">
         <div className="row">

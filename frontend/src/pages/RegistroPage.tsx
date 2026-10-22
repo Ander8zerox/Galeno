@@ -84,7 +84,7 @@ export function RegistroPage() {
 
   return (
     <div className="login">
-      <form className="card login-card stack" style={{ width: "min(520px, 100%)" }} onSubmit={onSubmit}>
+      <form className="card login-card ancho stack" onSubmit={onSubmit}>
         <h1>Registre su consultorio</h1>
         <p className="muted">Cree la cuenta de su consultorio en Galeno. Usted quedará como administrador y podrá invitar a su equipo.</p>
 
@@ -213,7 +213,7 @@ export function ConfirmarRegistroPage() {
 export function PoliticaDatosPage() {
   return (
     <div className="login">
-      <div className="card stack" style={{ width: "min(720px, 100%)" }}>
+      <div className="card muy-ancho stack">
         <h1>Política de tratamiento de datos personales</h1>
         <p className="alert">Borrador en revisión legal · versión 2026-10.</p>
         <p>
@@ -258,7 +258,7 @@ export function BuzonDevPage() {
   });
   return (
     <div className="login">
-      <div className="card stack" style={{ width: "min(720px, 100%)" }}>
+      <div className="card muy-ancho stack">
         <h1>Buzón de desarrollo</h1>
         <p className="muted small">Los correos no salen del servidor local: aquí se ven los últimos 50.</p>
         {buzon.error && <p className="alert alert-error">{buzon.error.message}</p>}
@@ -266,7 +266,7 @@ export function BuzonDevPage() {
         {buzon.data?.map((c, i) => (
           <div key={i} className="card stack">
             <div className="row"><strong>{c.asunto}</strong><span className="spacer" /><span className="muted small">{c.para}</span></div>
-            <pre style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "inherit" }}>
+            <pre className="texto-libre">
               {c.texto?.split(/(https?:\/\/\S+)/).map((parte, j) =>
                 /^https?:\/\//.test(parte) ? <a key={j} href={parte}>{parte}</a> : parte)}
             </pre>
