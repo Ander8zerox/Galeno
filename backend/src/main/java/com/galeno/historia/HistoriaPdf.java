@@ -67,14 +67,17 @@ final class HistoriaPdf {
             b.append("</table>");
         }
 
+        // Seguidas, como un documento corrido: no una por hoja (ver .atencion en PdfRenderer)
+        if (!atenciones.isEmpty()) {
+            b.append("<h2>Detalle de las atenciones</h2>");
+        }
         int i = 1;
         for (AtencionImpresa ai : atenciones) {
             Atencion a = ai.atencion();
-            b.append("<div class=\"salto\"></div><div class=\"caja\"><h3>Atención ").append(i++).append(" de ").append(atenciones.size())
-                    .append(" · ").append(esc(fechaHora(a.getFechaAtencion(), consultorio.zona()))).append("</h3><span class=\"small muted\">")
-                    .append(esc(p.getNombres() + " " + p.getApellidos())).append(" · ")
-                    .append(esc(p.getTipoDocumento() + " " + p.getNumeroDocumento())).append("</span></div>");
+            b.append("<div class=\"atencion\"><h3>Atención ").append(i++).append(" de ").append(atenciones.size())
+                    .append(" · ").append(esc(fechaHora(a.getFechaAtencion(), consultorio.zona()))).append("</h3>");
             AtencionPdf.cuerpo(b, a, consultorio, ai.notas());
+            b.append("</div>");
         }
 
         b.append("<p class=\"small muted\">Copia generada por ").append(esc(generadoPor)).append(" en Galeno. Incluye solo atenciones ")
