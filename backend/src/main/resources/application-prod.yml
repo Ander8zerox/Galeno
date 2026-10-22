@@ -1,0 +1,40 @@
+# Perfil de producción en AWS (SPRING_PROFILES_ACTIVE=prod). Aquí solo va lo que es fijo en producción. Lo que cambia
+# por entorno llega por variables (Terraform; los secretos, desde SSM Parameter Store) y Spring las mapea solas:
+# APP_DOCUMENTOS_BUCKET -> app.documentos.bucket. shared.ConfiguracionProduccion no deja arrancar la API si falta
+# alguna. La región de Bedrock es AWS_REGION=us-east-2 (o la de la instancia, por sus metadatos).
+# Sin el perfil local no hay seed (DevDataSeeder, DevPartnerSeeder) ni avisos de suscripción de prueba.
+app:
+  documentos:
+    almacen: s3
+  correo:
+    proveedor: ses # sin buzón de desarrollo: ese controlador solo existe con proveedor local
+  ai:
+    provider: bedrock
+
+# La documentación de la API no se publica en producción
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health # nada más: ni env, ni metrics, ni heapdump
+  endpoint:
+    health:
+      show-details: never
+  info:
+    env:
+      enabled: false
+
+logging:
+  structured:
+    format:
+      console: ecs # una línea JSON por evento: CloudWatch Logs Insights la filtra por campo
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    org.springframework.security: WARN

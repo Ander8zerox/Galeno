@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.galeno.identidad.RegistroService.RegistroPublico;
 import com.galeno.identidad.SesionService.SesionResponse;
+import com.galeno.shared.web.IpCliente;
 
 /** Endpoints públicos del registro de consultorios. El token viaja en el cuerpo, nunca en la URL. */
 @RestController
@@ -22,9 +23,11 @@ import com.galeno.identidad.SesionService.SesionResponse;
 public class RegistroController {
 
     private final RegistroService registro;
+    private final IpCliente ipCliente;
 
-    RegistroController(RegistroService registro) {
+    RegistroController(RegistroService registro, IpCliente ipCliente) {
         this.registro = registro;
+        this.ipCliente = ipCliente;
     }
 
     public record SolicitudRegistro(@NotBlank @Size(max = 200) String consultorioNombre, @Size(max = 30) String nit,
@@ -43,7 +46,7 @@ public class RegistroController {
     public RegistroSolicitado solicitar(@Valid @RequestBody SolicitudRegistro r, HttpServletRequest request) {
         registro.solicitar(new RegistroService.Solicitud(r.consultorioNombre(), r.nit(), r.nombre(), r.email(),
                 r.password(), r.esMedico(), r.registroMedico(), r.especialidad(), r.aceptaTerminos(), r.codigoPartner()),
-                request.getRemoteAddr());
+                ipCliente.de(request));
         return new RegistroSolicitado(r.email().strip().toLowerCase());
     }
 

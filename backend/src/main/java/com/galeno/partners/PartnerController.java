@@ -22,6 +22,7 @@ import com.galeno.partners.PartnerService.InscripcionPublica;
 import com.galeno.partners.PartnerService.Panel;
 import com.galeno.partners.PartnerService.PartnerVista;
 import com.galeno.partners.PartnerService.SesionPartner;
+import com.galeno.shared.web.IpCliente;
 
 /** Portal de partners. Públicos: inscripción, login y consulta de códigos; lo demás exige el token PARTNER. */
 @RestController
@@ -29,9 +30,11 @@ import com.galeno.partners.PartnerService.SesionPartner;
 public class PartnerController {
 
     private final PartnerService partners;
+    private final IpCliente ipCliente;
 
-    PartnerController(PartnerService partners) {
+    PartnerController(PartnerService partners, IpCliente ipCliente) {
         this.partners = partners;
+        this.ipCliente = ipCliente;
     }
 
     /** Para el registro de consultorios: a quién corresponde el código y qué descuento da. */
@@ -54,7 +57,7 @@ public class PartnerController {
     public void inscribir(@Valid @RequestBody InscripcionPartnerSolicitud r, HttpServletRequest request) {
         partners.inscribir(new PartnerService.SolicitudInscripcion(r.email(), r.password(),
                 new DatosPartner(r.nombreCuenta(), r.tipoPersona(), r.nombre(), r.tipoDocumento(), r.numeroDocumento(),
-                        r.telefono(), r.banco(), r.tipoCuenta(), r.numeroCuenta()), r.aceptaTerminos()), request.getRemoteAddr());
+                        r.telefono(), r.banco(), r.tipoCuenta(), r.numeroCuenta()), r.aceptaTerminos()), ipCliente.de(request));
     }
 
     public record TokenInscripcion(@NotBlank @Size(max = 100) String token) {

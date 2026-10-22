@@ -83,7 +83,7 @@ interface AlmacenDocumentos {
         private final String bucket;
 
         EnS3(@Value("${app.documentos.bucket:}") String bucket,
-             @Value("${app.documentos.region:us-east-1}") String region,
+             @Value("${app.documentos.region:us-east-2}") String region,
              @Value("${app.documentos.endpoint:}") String endpoint) {
             if (bucket.isBlank()) {
                 throw new IllegalStateException("Falta app.documentos.bucket (APP_DOCUMENTOS_BUCKET) para guardar en S3");

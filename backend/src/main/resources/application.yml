@@ -29,14 +29,15 @@ spring:
 server:
   port: 8090
   shutdown: graceful
-  forward-headers-strategy: framework # detrás de CloudFront/ALB
+  # Sin forward-headers-strategy: Spring creería el X-Forwarded-For de cualquiera. La IP real la resuelve
+  # shared.web.IpCliente, solo para peticiones que traen el secreto de origen de CloudFront.
 
 app:
   documentos:
     almacen: disco         # disco (desarrollo) | s3 (AWS): APP_DOCUMENTOS_ALMACEN
     dir: ./data/documentos # solo con disco
     bucket: ""             # solo con s3: APP_DOCUMENTOS_BUCKET (lo crea Terraform)
-    region: us-east-1
+    region: us-east-2 # la región del proyecto de AWS (nueva experiencia): todo recurso regional va aquí
     endpoint: ""           # vacío en AWS; solo para probar en local con MinIO
   plataforma:
     operadores: "" # correos de las cuentas con acceso a la consola: APP_PLATAFORMA_OPERADORES (separados por coma)
@@ -51,9 +52,10 @@ app:
     remitente: ""          # APP_CORREO_REMITENTE, p. ej. "Galeno <no-responder@galeno.com.co>"
     configuration-set: ""  # APP_CORREO_CONFIGURATION_SET: publica rebotes y quejas en SNS
     cola-eventos: ""       # APP_CORREO_COLA_EVENTOS: URL de la cola SQS suscrita a ese SNS
-    region: us-east-1
+    region: us-east-2 # la región del proyecto de AWS (nueva experiencia): todo recurso regional va aquí
   web:
     base-url: http://localhost:5180 # para los enlaces de invitación; en AWS, el dominio de CloudFront
+    origen-secreto: ""  # APP_WEB_ORIGEN_SECRETO: el encabezado X-Origen-Galeno que agrega CloudFront (vacío = sin CloudFront)
   security:
     jwt:
       secret: "" # obligatorio: APP_SECURITY_JWT_SECRET (mínimo 32 bytes)
