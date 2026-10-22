@@ -12,6 +12,7 @@
 - Registro de consultorios desde la web con verificación del correo, NIT con dígito de verificación, aceptación de términos y política de datos, y límite de intentos.
 - Recuperación de contraseña por correo (enlace de un solo uso) que cierra todas las sesiones abiertas.
 - Programa de partners: inscripción con aprobación de la plataforma, código y enlace de referido, 10 % de descuento para el consultorio referido, comisión recurrente del 20 % sobre cada pago, retención de 30 días y liquidación desde $190.000.
+- Envío de correos con Amazon SES, con rebotes y quejas leídos de una cola SQS y lista de correos bloqueados en la consola de la plataforma (falta verificar el dominio y salir del sandbox).
 - Suscripciones: prueba de 30 días, planes mensual y anual, pago por transferencia o consignación reportado por el consultorio y aprobado en la consola de la plataforma, gracia de 5 días, solo lectura y avisos por correo.
 
 ## Siguiente
@@ -24,7 +25,7 @@
 
 ### Otros pendientes
 - Portal del paciente: cuenta separada que ve sus citas y fórmulas.
-- Envío real de correos con SES (registro, invitaciones, recuperación y avisos de suscripción) y MFA (sobre todo para los operadores de la plataforma).
+- Invitaciones por correo (hoy se comparte el enlace) y MFA (sobre todo para los operadores de la plataforma).
 - Suscripciones, siguiente iteración: pasarela de pagos (Wompi, PayU…) cuyo webhook haga lo mismo que "Aprobar"; factura electrónica de Galeno por cada pago (obligatoria ante la DIAN); renovación automática.
 - Partners, antes de lanzar: revisión legal y contable de las condiciones (contrato de prestación de servicios, retención en la fuente y ReteICA sobre comisiones, cuenta de cobro o factura del partner) y reportes de comisiones para contabilidad.
 - Revisión legal de los términos y de la política de datos (hoy un borrador en `/politica-datos`) antes de abrir el registro al público.

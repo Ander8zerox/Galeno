@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Para desarrollo: no envía nada, guarda los últimos correos en memoria (los muestra {@link BuzonController})
- * y deja una línea en el log. Solo existe con {@code app.correo.proveedor=local}.
+ * y deja una línea en el log. Como SES, no escribe a direcciones suprimidas. Solo existe con {@code app.correo.proveedor=local}.
  */
 @Component
 @ConditionalOnProperty(name = "app.correo.proveedor", havingValue = "local", matchIfMissing = true)
@@ -25,9 +25,18 @@ public class BuzonLocal implements EnvioCorreo {
     }
 
     private final Deque<Enviado> enviados = new ArrayDeque<>();
+    private final SupresionCorreos supresion;
+
+    BuzonLocal(SupresionCorreos supresion) {
+        this.supresion = supresion;
+    }
 
     @Override
     public synchronized void enviar(Correo correo) {
+        if (supresion.suprimido(correo.para())) {
+            log.warn("No se envía \"{}\" a {}: la dirección rebotó o se quejó antes", correo.asunto(), correo.para());
+            return;
+        }
         enviados.addFirst(new Enviado(correo.para(), correo.asunto(), correo.texto(), Instant.now()));
         while (enviados.size() > MAX) {
             enviados.removeLast();

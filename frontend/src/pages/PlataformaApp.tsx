@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import createClient, { type Middleware } from "openapi-fetch";
-import { ApiError, unwrap, type Schemas } from "../api/client";
+import { ApiError, expectOk, unwrap, type Schemas } from "../api/client";
 import type { paths } from "../api/schema";
 import { ESTADO_SUSCRIPCION, pesos } from "./SuscripcionPage";
 import { ESTADO_PARTNER, TablaComisiones } from "./PartnerApp";
@@ -88,7 +88,7 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
   );
 }
 
-type Pestana = "pagos" | "consultorios" | "partners" | "configuracion" | "auditoria";
+type Pestana = "pagos" | "consultorios" | "partners" | "configuracion" | "correos" | "auditoria";
 
 function Consola({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
   const [pestana, setPestana] = useState<Pestana>("pagos");
@@ -102,7 +102,7 @@ function Consola({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
       <header className="topbar">
         <span className="brand">Galeno · Plataforma</span>
         <nav className="topnav">
-          {([["pagos", "Pagos por revisar"], ["consultorios", "Consultorios"], ["partners", "Partners"], ["configuracion", "Planes y datos de pago"], ["auditoria", "Auditoría"]] as const).map(([p, t]) => (
+          {([["pagos", "Pagos por revisar"], ["consultorios", "Consultorios"], ["partners", "Partners"], ["configuracion", "Planes y datos de pago"], ["correos", "Correos bloqueados"], ["auditoria", "Auditoría"]] as const).map(([p, t]) => (
             <a key={p} href="#" className={pestana === p ? "active" : ""} onClick={(e) => { e.preventDefault(); setPestana(p); }}>
               {t}{p === "pagos" && !!pendientes.data?.length && <> <span className="badge badge-warn">{pendientes.data.length}</span></>}
             </a>
@@ -117,6 +117,7 @@ function Consola({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
         {pestana === "consultorios" && <Consultorios />}
         {pestana === "partners" && <Partners />}
         {pestana === "configuracion" && <Configuracion />}
+        {pestana === "correos" && <CorreosSuprimidos />}
         {pestana === "auditoria" && <Auditoria />}
       </main>
     </div>
@@ -458,7 +459,55 @@ const ACCION: Record<string, string> = {
   INGRESO: "Ingresó", APROBAR_PAGO: "Aprobó un pago", RECHAZAR_PAGO: "Rechazó un pago", REGISTRAR_PAGO: "Registró un pago",
   VER_COMPROBANTE: "Vio un comprobante", REGALAR_DIAS: "Regaló días", SUSPENDER: "Suspendió", REACTIVAR: "Reactivó",
   CAMBIAR_PLAN: "Cambió un plan", CAMBIAR_DATOS_PAGO: "Cambió los datos de pago",
+  QUITAR_CORREO_SUPRIMIDO: "Desbloqueó un correo",
 };
+
+/**
+ * Direcciones a las que Galeno ya no escribe: rebotaron (no existen) o el destinatario marcó un correo como spam.
+ * Escribirles de nuevo daña la reputación del dominio, por eso solo se desbloquea si el usuario lo pide.
+ */
+function CorreosSuprimidos() {
+  const queryClient = useQueryClient();
+  const lista = useQuery({ queryKey: ["plataforma", "correos-suprimidos"], queryFn: async () => unwrap(await api.GET("/api/v1/plataforma/correos-suprimidos")) });
+  const quitar = useMutation({
+    mutationFn: async (email: string) => expectOk(await api.POST("/api/v1/plataforma/correos-suprimidos/quitar", { body: { email } })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plataforma"] }),
+  });
+  return (
+    <section className="stack">
+      <div className="page-header"><h1>Correos bloqueados</h1></div>
+      <p className="muted">
+        Galeno no les envía correos (ni verificación, ni recuperación de contraseña, ni avisos) porque rebotaron o el
+        destinatario los marcó como spam. Desbloquee una dirección solo si el usuario confirmó que ya funciona.
+      </p>
+      {lista.error && <p className="alert alert-error">{lista.error.message}</p>}
+      {quitar.error && <p className="alert alert-error">{quitar.error.message}</p>}
+      {lista.data?.length === 0 && <p className="muted">No hay correos bloqueados.</p>}
+      {!!lista.data?.length && (
+        <div className="card table-wrap">
+          <table>
+            <thead><tr><th>Correo</th><th>Motivo</th><th>Detalle</th><th>Último evento</th><th></th></tr></thead>
+            <tbody>
+              {lista.data.map((c) => (
+                <tr key={c.email}>
+                  <td>{c.email}</td>
+                  <td><span className={`badge ${c.motivo === "QUEJA" ? "badge-danger" : "badge-warn"}`}>{c.motivo === "QUEJA" ? "Marcó como spam" : "Rebotó"}</span></td>
+                  <td className="small muted">{c.detalle}{(c.eventos ?? 1) > 1 && ` (${c.eventos} veces)`}</td>
+                  <td className="small">{fechaHora.format(new Date(c.ultimoEn!))}</td>
+                  <td>
+                    <button className="btn-link" disabled={quitar.isPending} onClick={() => {
+                      if (confirm(`¿Volver a enviarle correos a ${c.email}?`)) quitar.mutate(c.email!);
+                    }}>Desbloquear</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
 
 function Auditoria() {
   const eventos = useQuery({ queryKey: ["plataforma", "auditoria"], queryFn: async () => unwrap(await api.GET("/api/v1/plataforma/auditoria")) });

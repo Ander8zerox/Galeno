@@ -19,6 +19,8 @@ import com.galeno.identidad.IdentidadService.ConsultorioPlataforma;
 import com.galeno.identidad.SesionService;
 import com.galeno.shared.correo.Correo;
 import com.galeno.shared.correo.EnvioCorreo;
+import com.galeno.shared.correo.SupresionCorreos;
+import com.galeno.shared.correo.SupresionCorreos.Suprimido;
 import com.galeno.shared.security.AuthUser;
 import com.galeno.shared.security.TokenService;
 import com.galeno.shared.security.TokenService.IssuedToken;
@@ -51,12 +53,13 @@ public class PlataformaService {
     private final SuscripcionService suscripciones;
     private final TokenService tokens;
     private final EnvioCorreo correo;
+    private final SupresionCorreos supresion;
     private final TransactionTemplate tx;
     private final List<String> correosOperadores;
 
     PlataformaService(OperadorPlataformaRepository operadores, AuditoriaPlataformaRepository auditoria,
                       SesionService sesiones, IdentidadService identidad, SuscripcionService suscripciones,
-                      TokenService tokens, EnvioCorreo correo, TransactionTemplate tx,
+                      TokenService tokens, EnvioCorreo correo, SupresionCorreos supresion, TransactionTemplate tx,
                       @Value("${app.plataforma.operadores:}") List<String> correosOperadores) {
         this.operadores = operadores;
         this.auditoria = auditoria;
@@ -65,6 +68,7 @@ public class PlataformaService {
         this.suscripciones = suscripciones;
         this.tokens = tokens;
         this.correo = correo;
+        this.supresion = supresion;
         this.tx = tx;
         this.correosOperadores = correosOperadores.stream().map(String::strip).filter(c -> !c.isEmpty()).toList();
     }
@@ -182,6 +186,21 @@ public class PlataformaService {
                 .map(a -> new EventoAuditoria(a.getCreadoEn(), a.getAccion(),
                         a.getConsultorioId() == null ? null : nombres.getOrDefault(a.getConsultorioId(), "?"), a.getDetalle()))
                 .toList());
+    }
+
+    // --- correos suprimidos (rebotes permanentes y quejas de SES) ---
+
+    public List<Suprimido> correosSuprimidos() {
+        operador();
+        return supresion.listar();
+    }
+
+    public void quitarSuprimido(String email) {
+        UUID yo = operador();
+        if (!supresion.quitar(email)) {
+            throw ApiProblem.notFound("Esa dirección no está en la lista de correos suprimidos");
+        }
+        registrar(yo, "QUITAR_CORREO_SUPRIMIDO", null, email.trim().toLowerCase());
     }
 
     // --- avisos a los operadores ---
