@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,9 +18,20 @@ import com.galeno.shared.correo.BuzonLocal.Enviado;
 public class BuzonController {
 
     private final BuzonLocal buzon;
+    private final EventosSes eventos;
 
-    BuzonController(BuzonLocal buzon) {
+    BuzonController(BuzonLocal buzon, EventosSes eventos) {
         this.buzon = buzon;
+        this.eventos = eventos;
+    }
+
+    public record EventoProcesado(int suprimidos) {
+    }
+
+    /** Simular un rebote o una queja con el mismo JSON que SES deja en la cola (ver EventosSesTest). */
+    @PostMapping("/evento-ses")
+    public EventoProcesado eventoSes(@RequestBody String evento) {
+        return new EventoProcesado(eventos.procesar(evento));
     }
 
     @GetMapping

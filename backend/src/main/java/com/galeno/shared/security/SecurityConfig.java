@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/partners/**").hasAuthority(TokenService.PARTNER)
                         // Buzón de desarrollo: el controlador solo existe con app.correo.proveedor=local
                         .requestMatchers(HttpMethod.GET, "/api/v1/dev/buzon").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/dev/buzon/evento-ses").permitAll()
                         // Solo existe con el perfil local
                         .requestMatchers(HttpMethod.POST, "/api/v1/dev/suscripciones/avisos").permitAll()
                         .requestMatchers("/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

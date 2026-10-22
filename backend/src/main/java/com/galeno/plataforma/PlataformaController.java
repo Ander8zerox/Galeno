@@ -17,6 +17,7 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.galeno.plataforma.PlataformaService.EventoAuditoria;
 import com.galeno.plataforma.PlataformaService.SesionPlataforma;
+import com.galeno.shared.correo.SupresionCorreos.Suprimido;
 import com.galeno.suscripciones.SuscripcionService.Archivo;
 import com.galeno.suscripciones.SuscripcionService.ConsultorioVista;
 import com.galeno.suscripciones.SuscripcionService.EstadoVista;
@@ -150,5 +152,22 @@ public class PlataformaController {
     @GetMapping("/auditoria")
     public List<EventoAuditoria> auditoria() {
         return plataforma.auditoria();
+    }
+
+    // --- correos que rebotaron o se quejaron ---
+
+    @GetMapping("/correos-suprimidos")
+    public List<Suprimido> correosSuprimidos() {
+        return plataforma.correosSuprimidos();
+    }
+
+    public record DireccionCorreo(@NotBlank @Size(max = 190) String email) {
+    }
+
+    /** Volver a enviarle a una dirección (el usuario corrigió su buzón). El correo va en el cuerpo, no en la URL. */
+    @PostMapping("/correos-suprimidos/quitar")
+    public ResponseEntity<Void> quitarSuprimido(@Valid @RequestBody DireccionCorreo r) {
+        plataforma.quitarSuprimido(r.email());
+        return ResponseEntity.noContent().build();
     }
 }

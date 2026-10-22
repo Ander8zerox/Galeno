@@ -43,6 +43,11 @@ app:
     retencion-dias: 30           # una comisión se puede pagar 30 días después del pago (por si se reversa)
   correo:
     proveedor: local # local (buzón de desarrollo en /api/v1/dev/buzon) | ses (en AWS)
+    # Solo con ses (los valores reales los pone Terraform en el entorno):
+    remitente: ""          # APP_CORREO_REMITENTE, p. ej. "Galeno <no-responder@galeno.com.co>"
+    configuration-set: ""  # APP_CORREO_CONFIGURATION_SET: publica rebotes y quejas en SNS
+    cola-eventos: ""       # APP_CORREO_COLA_EVENTOS: URL de la cola SQS suscrita a ese SNS
+    region: us-east-1
   web:
     base-url: http://localhost:5180 # para los enlaces de invitación; en AWS, el dominio de CloudFront
   security:

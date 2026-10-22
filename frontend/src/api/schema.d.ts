@@ -388,6 +388,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plataforma/correos-suprimidos/quitar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["quitarSuprimido"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plataforma/consultorios/{id}/suspender": {
         parameters: {
             query?: never;
@@ -788,6 +804,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dev/buzon/evento-ses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["eventoSes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/sesion": {
         parameters: {
             query?: never;
@@ -1004,6 +1036,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["comprobante"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/correos-suprimidos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["correosSuprimidos"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1860,6 +1908,9 @@ export interface components {
             nombre?: string;
             email?: string;
         };
+        DireccionCorreo: {
+            email: string;
+        };
         EstadoVista: {
             /** @enum {string} */
             estado?: "PRUEBA" | "ACTIVA" | "VENCIDA" | "SUSPENDIDA";
@@ -2063,6 +2114,10 @@ export interface components {
             /** Format: int32 */
             enviados?: number;
         };
+        EventoProcesado: {
+            /** Format: int32 */
+            suprimidos?: number;
+        };
         ElegirConsultorio: {
             /** Format: uuid */
             consultorioId: string;
@@ -2134,6 +2189,18 @@ export interface components {
             referidos?: components["schemas"]["ReferidoVista"][];
             comisiones?: components["schemas"]["ComisionVista"][];
             liquidaciones?: components["schemas"]["LiquidacionVista"][];
+        };
+        Suprimido: {
+            email?: string;
+            /** @enum {string} */
+            motivo?: "REBOTE" | "QUEJA";
+            detalle?: string;
+            /** Format: int32 */
+            eventos?: number;
+            /** Format: date-time */
+            creadoEn?: string;
+            /** Format: date-time */
+            ultimoEn?: string;
         };
         ConsultorioVista: {
             /** Format: uuid */
@@ -2274,31 +2341,31 @@ export interface components {
             finalizadoEn?: string;
         };
         JsonNode: {
+            binary?: boolean;
+            int?: boolean;
+            pojo?: boolean;
+            double?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            boolean?: boolean;
+            string?: boolean;
+            short?: boolean;
+            long?: boolean;
+            object?: boolean;
             array?: boolean;
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            number?: boolean;
-            integralNumber?: boolean;
-            bigDecimal?: boolean;
-            bigInteger?: boolean;
-            missingNode?: boolean;
+            floatingPointNumber?: boolean;
             valueNode?: boolean;
+            missingNode?: boolean;
+            bigInteger?: boolean;
+            container?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            container?: boolean;
-            int?: boolean;
-            long?: boolean;
-            double?: boolean;
-            object?: boolean;
-            pojo?: boolean;
-            short?: boolean;
-            string?: boolean;
-            boolean?: boolean;
-            binary?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            floatingPointNumber?: boolean;
+            bigDecimal?: boolean;
+            integralNumber?: boolean;
+            number?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -3082,6 +3149,28 @@ export interface operations {
             };
         };
     };
+    quitarSuprimido: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DireccionCorreo"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     suspender_1: {
         parameters: {
             query?: never;
@@ -3763,6 +3852,30 @@ export interface operations {
             };
         };
     };
+    eventoSes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": string;
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EventoProcesado"];
+                };
+            };
+        };
+    };
     sesion: {
         parameters: {
             query?: never;
@@ -4069,6 +4182,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
+                };
+            };
+        };
+    };
+    correosSuprimidos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Suprimido"][];
                 };
             };
         };

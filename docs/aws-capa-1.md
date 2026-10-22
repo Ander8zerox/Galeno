@@ -36,13 +36,21 @@ Costo aproximado: 35–50 USD al mes, más el consumo de Bedrock. Confírmalo en
 
 > La imagen se construye en GitHub Actions (x86). Para una EC2 ARM (t4g), usa `docker buildx build --platform linux/arm64`, o una instancia `t3.small`.
 
-### 4. Frontend y CDN
+### 4. Correo (SES)
+- [ ] Identidad de dominio en SES con DKIM (3 registros CNAME en Route 53), *custom MAIL FROM* (`correo.<dominio>`, registros MX y SPF) y un registro DMARC (`_dmarc`, empezar con `p=none`)
+- [ ] Configuration set `galeno` con un destino de eventos para `BOUNCE` y `COMPLAINT` hacia el tema SNS `galeno-correo-eventos`
+- [ ] Cola SQS `galeno-correo-eventos` suscrita al tema (con su DLQ, 5 intentos) y supresión a nivel de cuenta activada para rebotes y quejas
+- [ ] Rol de la instancia: `ses:SendEmail` solo sobre la identidad y el configuration set, y `sqs:ReceiveMessage` / `sqs:DeleteMessage` sobre la cola
+- [ ] Variables: `APP_CORREO_PROVEEDOR=ses`, `APP_CORREO_REMITENTE="Galeno <no-responder@<dominio>>"`, `APP_CORREO_CONFIGURATION_SET=galeno`, `APP_CORREO_COLA_EVENTOS=<URL de la cola>`, `APP_CORREO_REGION=us-east-1`
+- [ ] Salir del *sandbox* de SES (en la consola, "Request production access"): mientras tanto solo se puede escribir a direcciones verificadas
+
+### 5. Frontend y CDN
 - [ ] Bucket S3 privado para `frontend/dist`
 - [ ] CloudFront con dos orígenes: S3 (OAC) por defecto y la EC2 para `/api/*` (sin caché, reenviando el header `Authorization`)
 - [ ] Respuestas 403 y 404 de S3 → `/index.html` (rutas del SPA)
 - [ ] Certificado ACM (en `us-east-1`) y registro en Route 53
 
-### 5. CI/CD
+### 6. CI/CD
 - [ ] Proveedor OIDC de GitHub en IAM, con un rol para `.github/workflows/deploy.yml`
 - [ ] Variables del repositorio: `AWS_REGION`, `AWS_DEPLOY_ROLE_ARN`, `ECR_REPOSITORY`, `EC2_INSTANCE_ID`, `WEB_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`
 
