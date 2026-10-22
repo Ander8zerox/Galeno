@@ -9,7 +9,8 @@ public interface LlmClient {
     /** Genera una respuesta estructurada que cumple el esquema JSON derivado de {@code outputType}. */
     <T> LlmResult<T> generate(LlmRequest request, Class<T> outputType);
 
-    record LlmRequest(String systemPrompt, String userContent) {
+    /** @param tarea para qué es la respuesta: decide el modelo (ver {@code AiProperties#modeloPara}) */
+    record LlmRequest(com.galeno.shared.ai.jobs.AiJobType tarea, String systemPrompt, String userContent) {
     }
 
     record LlmResult<T>(T output, String model, long inputTokens, long outputTokens) {

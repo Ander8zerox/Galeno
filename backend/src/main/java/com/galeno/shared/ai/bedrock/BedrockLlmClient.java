@@ -38,7 +38,7 @@ public class BedrockLlmClient implements LlmClient {
     @Override
     public <T> LlmResult<T> generate(LlmRequest request, Class<T> outputType) {
         StructuredMessageCreateParams<T> params = MessageCreateParams.builder()
-                .model(props.model())
+                .model(props.modeloPara(request.tarea()))
                 .maxTokens(props.maxTokens())
                 .system(request.systemPrompt())
                 .outputConfig(StructuredOutputConfig.<T>builder()

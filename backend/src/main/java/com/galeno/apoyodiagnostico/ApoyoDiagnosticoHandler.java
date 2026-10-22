@@ -51,7 +51,7 @@ class ApoyoDiagnosticoHandler implements AiJobHandler {
                 Examen físico: %s
                 </caso>""".formatted(paciente.resumenAnonimizado(), e.motivoConsulta(), e.enfermedadActual(),
                 orNone(e.signosVitales()), orNone(e.examenFisico()));
-        return llm.generate(new LlmRequest(prompts.get(PROMPT), contenido), SugerenciasDiagnosticas.class);
+        return llm.generate(new LlmRequest(AiJobType.APOYO_DIAGNOSTICO, prompts.get(PROMPT), contenido), SugerenciasDiagnosticas.class);
     }
 
     private static String orNone(String s) {
