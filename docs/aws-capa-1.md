@@ -16,7 +16,7 @@ Costo aproximado: 35–50 USD al mes, más el consumo de Bedrock. Confírmalo en
 - [ ] MFA en root; usuarios con IAM Identity Center
 - [ ] AWS Budgets con alertas (p. ej. 30 y 60 USD)
 - [ ] CloudTrail activado; región `us-east-1`
-- [ ] En Bedrock, verificar el acceso al modelo `anthropic.claude-opus-5-5` (o el que configures en `APP_AI_MODEL`)
+- [ ] En Bedrock, verificar el acceso al modelo `anthropic.claude-haiku-5-5` (o los que configures en `APP_AI_MODEL_FORMULA` / `APP_AI_MODEL_DIAGNOSTICO`)
 
 ### 1. Red y base de datos
 - [ ] VPC con 2 subredes públicas (EC2) y 2 privadas (RDS)

@@ -52,7 +52,10 @@ app:
       ttl: 8h
   ai:
     provider: fake            # fake | bedrock
-    model: anthropic.claude-opus-5-5
+    # Un modelo por función. Haiku 5.5 es el más económico (unas 40 veces menos que Opus); si la calidad del apoyo
+    # diagnóstico no alcanza, se sube solo ese a Sonnet: APP_AI_MODEL_DIAGNOSTICO=anthropic.claude-sonnet-5-5
+    model-formula: anthropic.claude-haiku-5-5
+    model-diagnostico: anthropic.claude-haiku-5-5
     max-tokens: 8000
     effort: medium
     worker-concurrency: 4

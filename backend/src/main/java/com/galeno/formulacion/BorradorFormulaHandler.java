@@ -53,7 +53,7 @@ class BorradorFormulaHandler implements AiJobHandler {
                 entrada.diagnostico() == null || entrada.diagnostico().isBlank() ? "no especificado" : entrada.diagnostico(),
                 entrada.texto());
 
-        LlmResult<BorradorFormula> result = llm.generate(new LlmRequest(prompts.get(PROMPT), contenido), BorradorFormula.class);
+        LlmResult<BorradorFormula> result = llm.generate(new LlmRequest(AiJobType.BORRADOR_FORMULA, prompts.get(PROMPT), contenido), BorradorFormula.class);
         BorradorFormula revisado = result.output()
                 .conAdvertencias(ValidadorFormula.revisar(result.output(), paciente.getAlergias()));
         return new LlmResult<>(revisado, result.model(), result.inputTokens(), result.outputTokens());
