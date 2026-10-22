@@ -32,7 +32,7 @@ services:
       SPRING_PROFILES_ACTIVE: local
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/galeno?useUnicode=true&characterEncoding=utf8&connectionTimeZone=UTC
       APP_AI_PROVIDER: ${APP_AI_PROVIDER:-fake}
-      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_REGION: ${AWS_REGION:-us-east-2}
     ports:
       - "8090:8090"
 

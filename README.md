@@ -40,7 +40,7 @@ Swagger UI: http://localhost:8090/swagger-ui.html
 Por defecto `APP_AI_PROVIDER=fake` devuelve respuestas simuladas sin costo. Para usar Claude:
 
 ```bash
-export APP_AI_PROVIDER=bedrock AWS_REGION=us-east-1 AWS_PROFILE=<tu-perfil>
+export APP_AI_PROVIDER=bedrock AWS_REGION=us-east-2 AWS_PROFILE=<tu-perfil>
 ```
 
 Cada función tiene su modelo: `APP_AI_MODEL_FORMULA` y `APP_AI_MODEL_DIAGNOSTICO` (ambos por defecto `anthropic.claude-haiku-5-5`, el más económico; si el apoyo diagnóstico necesita más calidad, se sube solo ese a `anthropic.claude-sonnet-5-5`) y la profundidad con `APP_AI_EFFORT` (`low`…`max`, por defecto `medium`).
@@ -60,6 +60,6 @@ El CI falla si el contrato y los tipos generados no coinciden.
 | `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` | RDS MySQL |
 | `APP_SECURITY_JWT_SECRET` | Secreto de firma de JWT (≥ 32 bytes), desde SSM Parameter Store |
 | `APP_AI_PROVIDER` | `bedrock` |
-| `AWS_REGION` | Región de Bedrock (`us-east-1`) |
+| `AWS_REGION` | Región de Bedrock (`us-east-2`, la del proyecto de AWS) |
 
 Ver [docs/arquitectura.md](docs/arquitectura.md) y [docs/aws-capa-1.md](docs/aws-capa-1.md).

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.galeno.identidad.RecuperacionService.RecuperacionPublica;
+import com.galeno.shared.web.IpCliente;
 
 /** "Olvidé mi contraseña": endpoints públicos. El token viaja en el cuerpo, nunca en la URL. */
 @RestController
@@ -21,9 +22,11 @@ import com.galeno.identidad.RecuperacionService.RecuperacionPublica;
 public class RecuperacionController {
 
     private final RecuperacionService recuperacion;
+    private final IpCliente ipCliente;
 
-    RecuperacionController(RecuperacionService recuperacion) {
+    RecuperacionController(RecuperacionService recuperacion, IpCliente ipCliente) {
         this.recuperacion = recuperacion;
+        this.ipCliente = ipCliente;
     }
 
     public record SolicitudRecuperacion(@NotBlank @Email @Size(max = 190) String email) {
@@ -33,7 +36,7 @@ public class RecuperacionController {
     @PostMapping("/recuperar")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void solicitar(@Valid @RequestBody SolicitudRecuperacion r, HttpServletRequest request) {
-        recuperacion.solicitar(r.email(), request.getRemoteAddr());
+        recuperacion.solicitar(r.email(), ipCliente.de(request));
     }
 
     public record TokenRecuperacion(@NotBlank @Size(max = 100) String token) {

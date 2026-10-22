@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param remitente        p. ej. {@code Galeno <no-responder@galeno.com.co>}; el dominio debe estar verificado en SES
  * @param configurationSet configuration set de SES que publica rebotes y quejas en SNS (lo crea Terraform)
  * @param colaEventos      URL de la cola SQS suscrita a ese tema SNS; vacía, no se leen eventos
- * @param region           región de SES y SQS (la misma de la cuenta), p. ej. {@code us-east-1}
+ * @param region           región de SES y SQS (la del proyecto de AWS), p. ej. {@code us-east-2}
  */
 @ConfigurationProperties("app.correo")
 public record CorreoProperties(String proveedor, String remitente, String configurationSet, String colaEventos,
