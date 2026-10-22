@@ -113,7 +113,7 @@ partner se inscribe → la plataforma lo aprueba (código) → consultorio se re
   - Con la agenda: "Atender" crea o reabre la atención de la cita, y al firmarla la cita queda ATENDIDA.
   - Con la fórmula: puede quedar ligada a la atención (`formulas.atencion_id`).
   - Con el apoyo diagnóstico: usa los datos de la atención y sus diferenciales se agregan como diagnósticos.
-- **Documentos.** PDF, PNG o JPG de hasta 20 MB. El tipo se valida por el contenido del archivo, no por la extensión. El archivo es inmutable y se guarda su SHA-256. Hoy va a disco local (`app.documentos.dir`); en AWS irá a S3 cifrado con la misma interfaz `AlmacenDocumentos`.
+- **Documentos.** PDF, PNG o JPG de hasta 20 MB. El tipo se valida por el contenido del archivo, no por la extensión. El archivo es inmutable y se guarda su SHA-256. Va detrás de la interfaz `AlmacenDocumentos` con la clave `consultorio/paciente/uuid`. Con `app.documentos.almacen=disco` (desarrollo) queda en `app.documentos.dir`; con `s3`, en el bucket `app.documentos.bucket`. El bucket es privado, versionado y cifrado con KMS, y la escritura lleva `If-None-Match: *`, así que S3 rechaza escribir sobre una clave existente (como `CREATE_NEW` en disco). Los comprobantes de pago de las suscripciones siguen en la base de datos.
 - **Auditoría.** Cada vista de historia o atención, cada firma, nota, carga o descarga queda en `accesos_historia` (quién, qué y cuándo).
 - **CIE-10.** Es la tabla oficial de MinSalud (SISPRO, 12.634 códigos) con restricciones de sexo y edad. El buscador avisa cuando un código no aplica al paciente, porque RIPS lo rechazaría.
   - La migración se genera con `tools/cie10/generar-migracion.js` a partir del Excel oficial; el Excel no se guarda en el repositorio.
@@ -123,7 +123,7 @@ partner se inscribe → la plataforma lo aprueba (código) → consultorio se re
   - El PDF de un borrador lleva la marca de agua BORRADOR.
   - Cada impresión queda en la auditoría (`IMPRIMIR_FORMULA`, `IMPRIMIR_ATENCION`).
   - Endpoints: `GET /api/v1/formulacion/formulas/{id}/pdf` y `GET /api/v1/historia/atenciones/{id}/pdf`.
-  - **Historia completa** (`GET /api/v1/historia/pacientes/{id}/pdf`, botón "Descargar historia completa"): índice y una página por cada atención firmada o importada, de la más antigua a la más reciente, con sus notas aclaratorias, más la lista de documentos adjuntos (sin los archivos). Los borradores no salen. Queda en la auditoría como `IMPRIMIR_HISTORIA`. Es la copia que se entrega al paciente o en un traslado.
+  - **Historia completa** (`GET /api/v1/historia/pacientes/{id}/pdf`, botón "Descargar historia completa"): índice y todas las atenciones firmadas o importadas seguidas, de la más antigua a la más reciente (sin forzar una página por atención), con sus notas aclaratorias, más la lista de documentos adjuntos (sin los archivos). Los borradores no salen. Queda en la auditoría como `IMPRIMIR_HISTORIA`. Es la copia que se entrega al paciente o en un traslado.
 
 ## Importación de historias (RIPS y listados)
 

@@ -30,11 +30,18 @@ Costo aproximado: 35–50 USD al mes, más el consumo de Bedrock. Confírmalo en
 ### 3. Cómputo
 - [ ] Repositorio ECR `galeno-api`
 - [ ] EC2 `t4g.small` (Amazon Linux 2023, ARM) con Docker, **sin puerto 22 abierto**: el acceso es por SSM Session Manager
-- [ ] Rol de la instancia con `AmazonSSMManagedInstanceCore`, lectura de ECR, `ssm:GetParameters` sobre `/galeno/prod/*` y `bedrock:InvokeModel*`
+- [ ] Rol de la instancia con `AmazonSSMManagedInstanceCore`, lectura de ECR, `ssm:GetParameters` sobre `/galeno/prod/*`, `bedrock:InvokeModel*`, y `s3:PutObject` / `s3:GetObject` solo sobre el bucket de documentos (sin `DeleteObject`)
 - [ ] El security group solo acepta el puerto 8090 desde el *prefix list* gestionado de CloudFront (`com.amazonaws.global.cloudfront.origin-facing`)
 - [ ] `/opt/galeno/docker-compose.yml` con la imagen de ECR y estas variables: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `APP_AI_PROVIDER=bedrock`, `AWS_REGION`, y los secretos leídos de SSM al arrancar
 
 > La imagen se construye en GitHub Actions (x86). Para una EC2 ARM (t4g), usa `docker buildx build --platform linux/arm64`, o una instancia `t3.small`.
+
+### 3b. Documentos de la historia clínica (S3)
+- [ ] Bucket `galeno-prod-documentos-<cuenta>` con *Block Public Access* completo, *Object Ownership* = bucket owner enforced (sin ACL), versionado y cifrado por defecto SSE-KMS con *bucket key*
+- [ ] Política del bucket que rechaza peticiones sin TLS (`aws:SecureTransport = false`) y cualquier principal distinto del rol de la instancia
+- [ ] Sin reglas de borrado: la historia clínica se conserva al menos 15 años (Res. 1995 de 1999 y 839 de 2017); más adelante, una transición a S3 Glacier Instant Retrieval para lo antiguo
+- [ ] Variables: `APP_DOCUMENTOS_ALMACEN=s3`, `APP_DOCUMENTOS_BUCKET=<nombre>`, `APP_DOCUMENTOS_REGION=us-east-1`
+- [ ] Antes de cambiar a S3 en un ambiente con datos, copiar `data/documentos/` al bucket con las mismas claves (`aws s3 sync data/documentos s3://<bucket>/`)
 
 ### 4. Correo (SES)
 - [ ] Identidad de dominio en SES con DKIM (3 registros CNAME en Route 53), *custom MAIL FROM* (`correo.<dominio>`, registros MX y SPF) y un registro DMARC (`_dmarc`, empezar con `p=none`)
