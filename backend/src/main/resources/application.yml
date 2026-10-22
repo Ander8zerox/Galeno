@@ -33,7 +33,11 @@ server:
 
 app:
   documentos:
-    dir: ./data/documentos # en AWS: bucket S3 cifrado
+    almacen: disco         # disco (desarrollo) | s3 (AWS): APP_DOCUMENTOS_ALMACEN
+    dir: ./data/documentos # solo con disco
+    bucket: ""             # solo con s3: APP_DOCUMENTOS_BUCKET (lo crea Terraform)
+    region: us-east-1
+    endpoint: ""           # vacío en AWS; solo para probar en local con MinIO
   plataforma:
     operadores: "" # correos de las cuentas con acceso a la consola: APP_PLATAFORMA_OPERADORES (separados por coma)
   partners:

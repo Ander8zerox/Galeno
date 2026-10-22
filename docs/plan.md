@@ -17,6 +17,19 @@
 
 ## Siguiente
 
+### Formatos clínicos por especialidad (después de salir a AWS)
+La competencia ofrece decenas de formatos (historias por especialidad, exámenes, escalas, terapias, formatos administrativos) que el consultorio activa sin costo adicional. Hoy todo especialista llena la misma atención de medicina general.
+- **Motor de formatos**, no un formato programado a mano por cada especialidad: un formato son datos versionados (secciones; campos de texto, número, selección, casillas, tablas y escalas con puntaje; reglas de obligatoriedad). El consultorio activa los suyos. Lo diligenciado queda dentro de la atención firmada (inmutable), en el PDF de la historia y disponible para la IA.
+- **Primera especialidad: odontología** (es el mercado inicial):
+  - Odontograma interactivo por diente y superficie (caries, obturación, ausente, corona, endodoncia, extracción indicada…), con el inicial y los de evolución. Necesita un componente gráfico propio.
+  - Periodontograma (profundidad de sondaje, sangrado, movilidad).
+  - Historia odontológica (antecedentes médicos y odontológicos, examen estomatológico, higiene oral, índice de placa).
+  - Plan de tratamiento por fases con presupuesto, y su aceptación por el paciente.
+  - Evolución por sesión ligada al plan, y consentimientos informados odontológicos (exodoncia, endodoncia, anestesia local).
+  - Procedimientos con CUPS de odontología para los RIPS.
+- **Formatos transversales** para cualquier especialidad: incapacidad, remisión y contrarreferencia, consentimiento informado firmado por el paciente.
+- Fuera por ahora: los que dependen de equipos (examen con cámara, videoquimografía, estroboscopia).
+
 ### Historia clínica, siguiente iteración
 - Imagen de la firma del médico y código QR de verificación en los PDF, reporte de auditoría para el administrador, y documentos en S3.
 
