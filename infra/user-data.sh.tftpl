@@ -1,0 +1,55 @@
+#!/bin/bash
+# Arranque de la EC2 de la API (corre una sola vez). No levanta la API: la primera imagen llega con el deploy de
+# GitHub Actions, que llama a /opt/galeno/desplegar.sh por SSM.
+set -euxo pipefail
+
+dnf install -y docker amazon-ecr-credential-helper
+systemctl enable --now docker
+
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -fsSL --retry 5 -o /usr/local/lib/docker/cli-plugins/docker-compose \
+  "https://github.com/docker/compose/releases/download/${version_compose}/docker-compose-linux-aarch64"
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+# docker pull desde ECR con el rol de la instancia, sin docker login
+mkdir -p /root/.docker
+cat > /root/.docker/config.json <<'EOF'
+{ "credHelpers": { "${registro}": "ecr-login" } }
+EOF
+
+mkdir -p /opt/galeno
+cat > /opt/galeno/docker-compose.yml <<'EOF'
+# Lo escribe el arranque de la instancia (infra/user-data.sh.tftpl). La configuración está en galeno.env,
+# que desplegar.sh arma con los parámetros de SSM /galeno/prod/*.
+name: galeno
+
+services:
+  api:
+    image: ${imagen}:latest
+    restart: unless-stopped
+    env_file: galeno.env
+    ports:
+      - "8090:8090"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ${region}
+        awslogs-group: ${grupo_logs}
+        awslogs-stream: api
+EOF
+
+cat > /opt/galeno/desplegar.sh <<'EOF'
+#!/bin/bash
+# Lee la configuración de SSM y levanta la última imagen. Lo llama el deploy de GitHub Actions.
+set -euo pipefail
+cd /opt/galeno
+umask 077
+aws ssm get-parameters-by-path --region ${region} --path /galeno/prod/ --with-decryption \
+  --query 'Parameters[].[Name,Value]' --output text \
+  | awk -F'\t' '{ n = $1; sub(".*/", "", n); print n "=" $2 }' > galeno.env.nuevo
+mv galeno.env.nuevo galeno.env
+docker compose pull
+docker compose up -d --remove-orphans
+docker image prune -f
+EOF
+chmod 700 /opt/galeno/desplegar.sh
