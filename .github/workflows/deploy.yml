@@ -1,5 +1,5 @@
-# Despliegue de la Capa 1 (EC2 + S3/CloudFront). Plantilla: requiere crear la infraestructura
-# (ver docs/aws-capa-1.md) y definir estas variables en GitHub > Settings > Variables:
+# Despliegue de la Capa 1 (EC2 + S3/CloudFront). La infraestructura la crea infra/ (Terraform) y estas variables de
+# GitHub > Settings > Variables salen de `terraform output variables_github`:
 #   AWS_REGION, AWS_DEPLOY_ROLE_ARN, ECR_REPOSITORY, EC2_INSTANCE_ID, WEB_BUCKET, CLOUDFRONT_DISTRIBUTION_ID
 name: Deploy
 
@@ -25,12 +25,16 @@ jobs:
       - id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      # La EC2 es ARM (t4g): la imagen se construye para linux/arm64 con QEMU
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
       - name: Imagen del backend -> ECR
         env:
           IMAGE: ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}
         run: |
-          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" backend
-          docker push --all-tags "$IMAGE"
+          docker buildx build --platform linux/arm64 --push \
+            -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" backend
 
       - name: Front -> S3 + invalidación de CloudFront
         working-directory: frontend
@@ -39,10 +43,11 @@ jobs:
           aws s3 sync dist "s3://${{ vars.WEB_BUCKET }}" --delete
           aws cloudfront create-invalidation --distribution-id "${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}" --paths "/index.html"
 
+      # desplegar.sh (lo deja el arranque de la instancia) lee la configuración de SSM y levanta la imagen nueva
       - name: Actualizar la API en EC2 (SSM, sin SSH)
         run: |
           aws ssm send-command \
             --instance-ids "${{ vars.EC2_INSTANCE_ID }}" \
             --document-name AWS-RunShellScript \
-            --parameters 'commands=["cd /opt/galeno && docker compose pull && docker compose up -d"]' \
+            --parameters 'commands=["/opt/galeno/desplegar.sh"]' \
             --comment "deploy ${{ github.sha }}"

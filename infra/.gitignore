@@ -1,0 +1,7 @@
+# El estado tiene secretos (el encabezado de origen de CloudFront): nunca a git
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+*.tfvars

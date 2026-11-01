@@ -11,6 +11,50 @@ Usuario ─► Route 53 ─► CloudFront (TLS con ACM en us-east-1)
 
 Costo aproximado: 35–50 USD al mes, más el consumo de Bedrock. Confírmalo en la calculadora de AWS.
 
+| Recurso | USD al mes (aprox., us-east-2) |
+|---|---|
+| EC2 `t4g.small` + disco gp3 de 20 GB | 14 |
+| RDS `db.t4g.micro` + 20 GB gp3 + backups de 7 días | 15 |
+| IPv4 pública (la IP elástica de la EC2) | 3,6 |
+| KMS (la llave de los documentos) | 1 |
+| Route 53 (la zona) | 0,5 |
+| CloudFront, S3, SES, SNS, SQS, ECR, CloudWatch Logs | centavos con poco uso |
+
+Lo que **no** se usa a propósito, por costo: NAT Gateway (~33 USD), balanceador (~18 USD), Secrets Manager (se usa
+Parameter Store, gratis), Performance Insights, monitoreo detallado de EC2 y créditos `unlimited` de la t4g.
+
+## Infraestructura como código (`infra/`)
+
+Todo lo de esta página está en Terraform, en `infra/`. Terraform es gratis: lo que se cobra son los recursos que crea,
+igual que si se crearan a mano. A cambio, `plan` muestra todo antes de crear nada y `destroy` no deja nada olvidado.
+
+```bash
+cd infra
+terraform init
+terraform plan -out capa1.tfplan   # solo lee: muestra qué se crearía
+terraform apply capa1.tfplan       # paso 10: crea (y empieza a cobrar)
+terraform output variables_github  # paso 11: variables de GitHub para deploy.yml
+```
+
+- Usa el perfil `galeno` de `aws login` (variable `perfil_aws`). El estado queda en `infra/terraform.tfstate`, fuera
+  de git: guárdalo, porque tiene el secreto de origen de CloudFront.
+- La zona de Route 53 se creó a mano para cambiar los nameservers en el registrador; el bloque `import` de `dns.tf` la
+  adopta sin crear otra.
+- Las claves de la base de datos y del JWT se generan como valores efímeros y se escriben con argumentos *write-only*:
+  no quedan ni en el plan ni en el estado. Para rotarlas, sube `version_clave_bd` o `version_jwt` en `secretos.tf`.
+- La configuración de la API (variables de entorno) está en SSM bajo `/galeno/prod/`. Al desplegar, la EC2 la lee con
+  `/opt/galeno/desplegar.sh`: cambiar un valor es aplicar Terraform y volver a desplegar.
+- `aws_acm_certificate_validation` espera a que ACM emita el certificado, y eso solo pasa cuando el dominio ya responde
+  con los nameservers de Route 53. Antes de aplicar, confirma `nslookup -type=NS galenum.com.co 8.8.8.8`.
+- Protegidos contra borrado: la zona y el bucket de documentos (`prevent_destroy`) y RDS (`deletion_protection`, con
+  instantánea final).
+
+### Origen de la API: HTTP entre CloudFront y la EC2
+El navegador habla con CloudFront por HTTPS, pero CloudFront llega a la EC2 por HTTP en el 8090: la EC2 no tiene
+certificado propio. Es el compromiso de la Capa 1 (sin balanceador). Antes de cargar pacientes reales hay que cerrarlo,
+por ejemplo con un *VPC origin* de CloudFront (sin costo, pero la EC2 tendría que ir en subred privada con salida a
+internet) o con un certificado en la instancia (Caddy + Let's Encrypt en un subdominio de origen).
+
 ## Región: us-east-2
 
 El proyecto de AWS es de la *nueva experiencia* de AWS. Cada proyecto tiene **una sola región**, que AWS asigna según
@@ -120,7 +164,7 @@ localhost), `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `APP_SEC
 (con `https://`), `APP_WEB_ORIGEN_SECRETO`, `APP_DOCUMENTOS_BUCKET`, `APP_CORREO_REMITENTE`,
 `APP_CORREO_CONFIGURATION_SET` y `APP_CORREO_COLA_EVENTOS`.
 
-> La imagen se construye en GitHub Actions (x86). Para una EC2 ARM (t4g), usa `docker buildx build --platform linux/arm64`, o una instancia `t3.small`.
+> La EC2 es ARM (t4g): `deploy.yml` construye la imagen con `docker buildx build --platform linux/arm64` (QEMU), que es más lento que un build nativo.
 
 ### 3a. IP real del cliente detrás de CloudFront
 Detrás de CloudFront, la IP que ve la API es la de un nodo de CloudFront. Si no se resuelve la del visitante, los
@@ -156,7 +200,7 @@ límites por IP (registro, recuperación de contraseña, partners) contarían a 
 ### 5. Frontend y CDN
 - [ ] Bucket S3 privado para `frontend/dist` (us-east-2)
 - [ ] CloudFront con dos orígenes: S3 (OAC) por defecto y la EC2 para `/api/*` (sin caché; ver 3a para encabezados)
-- [ ] Respuestas 403 y 404 de S3 → `/index.html` (rutas del SPA)
+- [ ] Rutas del SPA → `/index.html` con una CloudFront Function (`infra/funcion-spa.js`), que además redirige `www` al dominio raíz. No con respuestas de error de la distribución: esas aplican también a `/api/*`
 - [ ] Certificado ACM **en us-east-1** (lo exige CloudFront; ver "Región") y registro en Route 53
 
 ### 6. CI/CD
