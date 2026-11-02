@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,13 +45,15 @@ class AgendaService {
     private final CitaRepository citas;
     private final IdentidadService identidad;
     private final PacienteService pacientes;
+    private final ObjectProvider<AtencionesDeCitas> atenciones;
 
     AgendaService(AgendaMedicoRepository agendas, CitaRepository citas, IdentidadService identidad,
-                  PacienteService pacientes) {
+                  PacienteService pacientes, ObjectProvider<AtencionesDeCitas> atenciones) {
         this.agendas = agendas;
         this.citas = citas;
         this.identidad = identidad;
         this.pacientes = pacientes;
+        this.atenciones = atenciones;
     }
 
     @Transactional(readOnly = true)
@@ -134,6 +137,13 @@ class AgendaService {
             AuthUser yo = AuthUser.current();
             if (!yo.puede(Permiso.HISTORIA_VER) || !cita.getMedicoMembresiaId().equals(yo.membresiaId())) {
                 throw ApiProblem.forbidden("Solo el médico de la cita la marca como atendida");
+            }
+        }
+        if (estado == Cita.Estado.NO_ASISTIO || estado == Cita.Estado.CANCELADA) {
+            AtencionesDeCitas a = atenciones.getIfAvailable();
+            if (a != null && a.tieneAtencion(citaId)) {
+                throw ApiProblem.conflict("Esta cita tiene una atención en curso. Fírmela o elimine el borrador antes de "
+                        + (estado == Cita.Estado.CANCELADA ? "cancelar la cita." : "marcar la inasistencia."));
             }
         }
         cita.cambiarEstado(estado, motivoCancelacion);
