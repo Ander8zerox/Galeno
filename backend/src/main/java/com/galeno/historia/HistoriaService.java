@@ -432,8 +432,9 @@ public class HistoriaService {
         DOCUMENTO
     }
 
+    /** @param anulacion motivo, si es un documento anulado */
     public record EventoHistoria(TipoEvento tipo, UUID id, Instant fecha, String titulo, String detalle,
-                                 String estado, String autor) {
+                                 String estado, String autor, String anulacion) {
 
         static EventoHistoria de(Atencion a) {
             String dx = a.getDiagnosticos().stream().filter(Diagnostico::isPrincipal).findFirst()
@@ -441,13 +442,14 @@ public class HistoriaService {
             return new EventoHistoria(TipoEvento.ATENCION, a.getId(), a.getFechaAtencion(),
                     a.getMotivoConsulta() == null || a.getMotivoConsulta().isBlank() ? "Atención sin motivo registrado"
                             : a.getMotivoConsulta(), dx,
-                    a.getOrigen() == Atencion.Origen.IMPORTADA ? "IMPORTADA" : a.getEstado().name(), a.getMedicoNombre());
+                    a.getOrigen() == Atencion.Origen.IMPORTADA ? "IMPORTADA" : a.getEstado().name(), a.getMedicoNombre(),
+                    null);
         }
 
         static EventoHistoria de(DocumentoClinico d) {
             return new EventoHistoria(TipoEvento.DOCUMENTO, d.getId(), d.getCreadoEn(),
-                    d.getDescripcion() != null ? d.getDescripcion() : d.getNombreArchivo(),
-                    d.anulado() ? "Anulado: " + d.getMotivoAnulacion() : d.getNombreArchivo(), d.getTipo().name(), null);
+                    d.getDescripcion() != null ? d.getDescripcion() : d.getNombreArchivo(), d.getNombreArchivo(),
+                    d.getTipo().name(), null, d.getMotivoAnulacion());
         }
     }
 }

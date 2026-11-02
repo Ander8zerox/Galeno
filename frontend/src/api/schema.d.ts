@@ -2308,6 +2308,7 @@ export interface components {
             detalle?: string;
             estado?: string;
             autor?: string;
+            anulacion?: string;
         };
         Cie10Vista: {
             codigo?: string;
@@ -2386,27 +2387,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            double?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            object?: boolean;
-            pojo?: boolean;
-            long?: boolean;
-            string?: boolean;
-            int?: boolean;
-            boolean?: boolean;
-            short?: boolean;
-            binary?: boolean;
             number?: boolean;
             floatingPointNumber?: boolean;
+            missingNode?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            valueNode?: boolean;
             integralNumber?: boolean;
-            bigDecimal?: boolean;
-            missingNode?: boolean;
+            valueNode?: boolean;
             container?: boolean;
             bigInteger?: boolean;
+            bigDecimal?: boolean;
+            int?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            boolean?: boolean;
+            binary?: boolean;
+            string?: boolean;
+            double?: boolean;
+            short?: boolean;
+            long?: boolean;
+            pojo?: boolean;
+            object?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {

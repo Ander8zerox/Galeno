@@ -137,6 +137,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 /* Una tarjeta dentro de otra no lleva sombra: la profundidad es solo para el primer nivel */
 .card .card { box-shadow: none; background: var(--surface-muted); }
 .stack { display: flex; flex-direction: column; gap: 1rem; }
+.stack-sm { display: flex; flex-direction: column; gap: .3rem; }
+.documento-anulado strong, .documento-anulado .stack-sm > span:first-child { text-decoration: line-through; color: var(--muted); }
 .row { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
 .between { justify-content: space-between; }
 .muted { color: var(--muted); }
