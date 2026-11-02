@@ -27,4 +27,8 @@ class OperadorPlataforma {
         this.usuarioId = usuarioId;
         this.creadoEn = Instant.now();
     }
+
+    UUID getUsuarioId() {
+        return usuarioId;
+    }
 }

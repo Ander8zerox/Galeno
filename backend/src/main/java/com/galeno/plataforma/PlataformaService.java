@@ -219,7 +219,7 @@ public class PlataformaService {
     /**
      * Al arrancar, marca como operadores las cuentas de {@code app.plataforma.operadores}. A un correo sin cuenta se
      * le crea una (sin consultorio) y le llega un enlace para elegir la contraseña: así se crea el primer operador de
-     * un ambiente nuevo sin que la contraseña pase por la configuración.
+     * un ambiente nuevo sin que la contraseña pase por la configuración. Quien ya no está en la lista pierde el acceso.
      */
     void marcarOperadores() {
         Map<String, UUID> cuentas = new java.util.HashMap<>(identidad.cuentasPorCorreo(correosOperadores));
@@ -230,12 +230,23 @@ public class PlataformaService {
             }
             identidad.crearCuentaOperador(email).ifPresentOrElse(id -> {
                 cuentas.put(email, id);
-                log.info("app.plataforma.operadores: se creó la cuenta de {} y se le envió el enlace para la contraseña", email);
-            }, () -> log.warn("app.plataforma.operadores: la cuenta de {} está desactivada; no se marca como operador", email));
+                log.info("app.plataforma.operadores: se creó la cuenta de {}; el enlace para la contraseña va por correo (si SES lo rechaza, queda un ERROR de SesEnvioCorreo)", email);
+            }, () -> log.warn("app.plataforma.operadores: la cuenta de {} está desactivada; no es operador", email));
         }
+        // La lista manda: quien sale de ella (o tiene la cuenta desactivada) deja de ser operador en este arranque, y
+        // su token deja de servir en la siguiente llamada (ver operador()).
+        java.util.Set<UUID> vigentes = java.util.Set.copyOf(cuentas.values());
         comoSistema(() -> {
-            cuentas.values().stream().filter(id -> !operadores.existsById(id))
-                    .forEach(id -> operadores.save(new OperadorPlataforma(id)));
+            vigentes.stream().filter(id -> !operadores.existsById(id)).forEach(id -> {
+                operadores.save(new OperadorPlataforma(id));
+                auditoria.save(new AuditoriaPlataforma(id, "ACCESO_OTORGADO", null, "app.plataforma.operadores"));
+            });
+            operadores.findAll().stream().map(OperadorPlataforma::getUsuarioId).filter(id -> !vigentes.contains(id))
+                    .forEach(id -> {
+                        operadores.deleteById(id);
+                        auditoria.save(new AuditoriaPlataforma(id, "ACCESO_RETIRADO", null, "app.plataforma.operadores"));
+                        log.warn("app.plataforma.operadores: la cuenta {} ya no está en la lista; se le retiró el acceso", id);
+                    });
             return null;
         });
     }
