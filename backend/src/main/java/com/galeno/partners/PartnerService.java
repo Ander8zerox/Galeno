@@ -61,7 +61,7 @@ import com.galeno.suscripciones.SuscripcionService.PagoAprobado;
 @Service
 class PartnerService implements CodigosReferido {
 
-    static final String TERMINOS_VERSION = "2026-10";
+    static final String TERMINOS_VERSION = "2026-11"; // 2026-11: comisión del 30 % y liquidación desde $30.000
     private static final Logger log = LoggerFactory.getLogger(PartnerService.class);
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final Set<String> DOCUMENTOS = Set.of("CC", "CE", "PA", "PT", "NIT");
@@ -95,9 +95,9 @@ class PartnerService implements CodigosReferido {
                    PlataformaService plataforma, TokenService tokens, PasswordEncoder passwordEncoder, EnvioCorreo correo,
                    LimiteIntentos limites, JsonMapper mapper, TransactionTemplate tx,
                    @Value("${app.web.base-url}") String baseUrl,
-                   @Value("${app.partners.comision-porcentaje:20}") int comisionPorcentaje,
+                   @Value("${app.partners.comision-porcentaje:30}") int comisionPorcentaje,
                    @Value("${app.partners.descuento-porcentaje:10}") int descuentoPorcentaje,
-                   @Value("${app.partners.minimo-liquidacion:190000}") long minimoLiquidacion,
+                   @Value("${app.partners.minimo-liquidacion:30000}") long minimoLiquidacion,
                    @Value("${app.partners.retencion-dias:30}") int retencionDias,
                    @Value("${app.registro.solicitudes-por-ip-hora:5}") int limitePorIp) {
         this.partners = partners;
@@ -321,11 +321,13 @@ class PartnerService implements CodigosReferido {
 
                         %s
 
-                        Los consultorios que se registren con su código reciben %d%% de descuento, y usted recibe el %d%%
-                        de cada pago que hagan mientras sigan usando Galeno. Vea sus referidos y comisiones en %s.
+                        Usted gana el %d%% de cada pago de los consultorios que se registren con su código, mientras sigan
+                        usando Galeno; ellos reciben %d%% de descuento. Cada comisión queda disponible %d días después del
+                        pago, y se la transferimos cuando su disponible llegue a %s. Vea sus referidos y comisiones en %s.
 
-                        Galeno""".formatted(p.getNombre(), p.getCodigo(), enlace(p.getCodigo()), descuentoPorcentaje,
-                        comisionPorcentaje, baseUrl + "/partner"))));
+                        Galeno""".formatted(p.getNombre(), p.getCodigo(), enlace(p.getCodigo()), comisionPorcentaje,
+                        descuentoPorcentaje, retencion.toDays(), SuscripcionService.pesos(minimoLiquidacion),
+                        baseUrl + "/partner"))));
         return panel(partnerId).partner();
     }
 

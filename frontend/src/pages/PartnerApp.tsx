@@ -245,8 +245,9 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
               <button className="btn btn-secondary" onClick={() => navigator.clipboard.writeText(p.enlace!).then(() => setCopiado(true))}>{copiado ? "Copiado" : "Copiar enlace"}</button>
             </div>
             <p className="muted small">
-              El consultorio que se registre con su enlace o código recibe {d.descuentoPorcentaje} % de descuento, y usted el {d.comisionPorcentaje} % de cada
-              pago que haga mientras siga usando Galeno. Las comisiones se pagan 30 días después de cada pago, cuando su disponible llegue a {pesos(d.minimoLiquidacion)}.
+              Usted gana el <strong>{d.comisionPorcentaje} % de cada pago</strong> de los consultorios que se registren con su enlace o código, mientras
+              sigan usando Galeno; ellos reciben {d.descuentoPorcentaje} % de descuento. Cada comisión queda disponible 30 días después del pago, y se la
+              transferimos cuando su disponible llegue a {pesos(d.minimoLiquidacion)}.
             </p>
           </div>
         )}
@@ -360,7 +361,7 @@ function Condiciones() {
     <div className="login">
       <div className="card muy-ancho stack">
         <h1>Condiciones del programa de partners</h1>
-        <p className="alert">Borrador en revisión legal · versión 2026-10.</p>
+        <p className="alert">Borrador en revisión legal · versión 2026-11.</p>
         <p>El partner recomienda Galeno a consultorios con su código o enlace. Un consultorio queda asociado al partner cuando se registra con ese código; cada consultorio tiene un solo partner, que no cambia salvo decisión de Galeno.</p>
         <p>El partner recibe una comisión sobre cada pago de suscripción aprobado de sus consultorios mientras sigan pagando y el partner esté activo. La prueba gratis no genera comisión. No hay comisión por consultorios propios (cuando el partner es su administrador o tiene su mismo NIT).</p>
         <p>Cada comisión queda retenida 30 días después del pago y luego disponible. Galeno paga las disponibles cuando suman el mínimo, por transferencia a la cuenta registrada, contra la cuenta de cobro o factura del partner y con las retenciones de ley.</p>

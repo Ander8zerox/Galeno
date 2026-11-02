@@ -83,7 +83,7 @@ ACTIVA (pagada) ──┘                         └─────────
 
 ```
 partner se inscribe → la plataforma lo aprueba (código) → consultorio se registra con el código (atribuido, 10 % de descuento)
-    → cada pago aprobado → comisión del 20 % (retenida 30 días → disponible) → liquidación cuando suma $190.000
+    → cada pago aprobado → comisión del 30 % (retenida 30 días → disponible) → liquidación cuando suma $30.000
 ```
 
 - **Módulo `partners`.** Depende de identidad, suscripciones y plataforma; ninguno de ellos depende de partners. Se engancha por eventos:
@@ -94,7 +94,7 @@ partner se inscribe → la plataforma lo aprueba (código) → consultorio se re
 - **Comisiones** (`comisiones_partner`). Hay una por pago aprobado, con el porcentaje vigente guardado. La prueba gratis no genera nada, y no hay comisión si el partner es el mismo administrador del consultorio o tiene su NIT. El estado se calcula: RETENIDA (30 días), DISPONIBLE, PAGADA (en una liquidación) o ANULADA (un operador la anula, por ejemplo por un pago reversado).
 - **Liquidación** (`liquidaciones_partner`). El operador transfiere y registra la referencia. Entran todas las comisiones disponibles, que deben sumar al menos el mínimo, y se toman con bloqueo para no pagar dos veces la misma.
 - **Portal `/partner`.** Login propio (authority `PARTNER`, sin consultorio). Muestra el código, el enlace, el saldo (retenido, disponible, pagado), los referidos (solo el nombre del consultorio y el estado de su suscripción, nunca datos de pacientes), las comisiones, los pagos recibidos y los datos de pago.
-- **Parámetros** (`app.partners.*`): `comision-porcentaje` 20, `descuento-porcentaje` 10, `minimo-liquidacion` 190000, `retencion-dias` 30.
+- **Parámetros** (`app.partners.*`): `comision-porcentaje` 30, `descuento-porcentaje` 10, `minimo-liquidacion` 30000, `retencion-dias` 30.
 
 ## Agenda
 
