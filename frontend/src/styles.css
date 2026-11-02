@@ -124,6 +124,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 .sidebar-pie { margin-top: auto; display: flex; align-items: center; gap: .6rem; padding: .85rem .5rem 0; border-top: 1px solid var(--nav-line); }
 .sidebar-iniciales { width: 2rem; height: 2rem; flex: none; border-radius: 50%; display: grid; place-items: center; background: rgba(95, 212, 200, .16); color: var(--nav-accent); font-size: var(--fs-xs); font-weight: 700; }
 .sidebar-usuario { color: var(--nav-text-strong); font-size: var(--fs-sm); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-legal { margin: .6rem 0 0; padding: 0 .5rem; font-size: var(--fs-xs); color: var(--nav-text); }
+.sidebar-legal a { color: inherit; }
+.sidebar-legal a:hover { color: var(--nav-text-strong); }
 .sidebar-salir { background: none; border: 0; color: var(--nav-text); cursor: pointer; padding: .4rem; border-radius: 6px; display: grid; place-items: center; transition: color var(--t), background-color var(--t); }
 .sidebar-salir:hover { color: var(--nav-text-strong); background: var(--nav-hover); }
 
@@ -144,6 +147,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 .muted { color: var(--muted); }
 .small { font-size: var(--fs-sm); }
 .center { text-align: center; }
+.enlaces-legales { margin: 0; text-align: center; font-size: var(--fs-xs); color: var(--muted); }
+.enlaces-legales a { color: inherit; }
 .grow { flex: 1; min-width: 0; }
 
 /* --- Campos --- */

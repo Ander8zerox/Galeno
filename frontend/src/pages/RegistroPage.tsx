@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { api, ApiError, unwrap, type Schemas } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { marcarBienvenida } from "../components/Bienvenida";
+import { EnlacesLegales } from "../components/EnlacesLegales";
 
 type Solicitud = Schemas["SolicitudRegistro"];
 
@@ -142,6 +143,7 @@ export function RegistroPage() {
         {(errorLocal || enviar.error) && <p className="alert alert-error">{errorLocal ?? enviar.error?.message}</p>}
         <button className="btn" disabled={enviar.isPending}>{enviar.isPending ? "Enviando…" : "Registrar consultorio"}</button>
         <a href="/" className="btn-link center">Ya tengo cuenta: iniciar sesión</a>
+        <EnlacesLegales />
       </form>
     </div>
   );
@@ -245,7 +247,7 @@ export function PoliticaDatosPage() {
           Los titulares pueden conocer, actualizar, rectificar y solicitar la supresión de sus datos (cuando la ley lo
           permita) y revocar la autorización, a través de su consultorio o escribiendo a Galenum.
         </p>
-        <a href="/registro" className="btn-link">Volver al registro</a>
+        <a href="/" className="btn-link">Ir al inicio</a>
       </div>
     </div>
   );
@@ -305,7 +307,7 @@ export function TerminosPage() {
           Si estos términos cambian, se avisará a los consultorios antes de que rijan. Se rigen por las leyes de la
           República de Colombia.
         </p>
-        <a href="/registro" className="btn-link">Volver al registro</a>
+        <a href="/" className="btn-link">Ir al inicio</a>
       </div>
     </div>
   );
