@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import com.openhtmltopdf.util.XRLog;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,6 +18,10 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class PdfRenderer {
+
+    static {
+        XRLog.setLoggerImpl(new XrLogSlf4j()); // antes de generar el primer PDF
+    }
 
     private static final DateTimeFormatter FECHA_HORA =
             DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy, HH:mm", Locale.forLanguageTag("es-CO"));

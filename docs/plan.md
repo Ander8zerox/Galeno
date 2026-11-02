@@ -53,7 +53,7 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
   (`PlataformaService.cambiarDatosPago`): debe guardar el texto anterior y el nuevo, porque cambiar la cuenta bancaria
   es la acción más sensible de la consola. (2) La tabla no muestra qué operador hizo cada acción; el dato ya está en
   `auditoria_plataforma`, falta exponerlo en `EventoAuditoria` y en la pantalla.
-- **Precios de los planes sin validación (baja prioridad).** Se pudo guardar el mensual en $1.118.700 y el anual en
+- **Precios de los planes sin validación (baja prioridad).** ✅ Corregido (aviso, no bloqueo). Se pudo guardar el mensual en $1.118.700 y el anual en
   $1.052.522 (error de digitación). Advertir antes de guardar si el anual cuesta más que 12 mensualidades, o si un precio
   cambia más de, digamos, 50 %.
 - **Condiciones de partners (decidido el 2 de noviembre de 2026).** ✅ Corregido. Comisión del **30 %** (antes 20 %), retención de
@@ -68,7 +68,7 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
   cualquier lunes, también en la agenda pública. Calcular los festivos de Colombia en Galeno (fijos, trasladados al
   lunes por la Ley 51 de 1983 y los que dependen de la Pascua), mostrarlos con su nombre, sin disponibilidad por
   defecto, y una opción por médico "Atiendo festivos". Después, días cerrados propios del consultorio (vacaciones).
-- **TA diastólica desalineada (baja prioridad).** En `.signos` (`styles.css`), el título largo ocupa dos líneas y baja su
+- **TA diastólica desalineada (baja prioridad).** ✅ Corregido. En `.signos` (`styles.css`), el título largo ocupa dos líneas y baja su
   campo. Alinear los campos abajo (`.signos input { margin-top: auto; }`).
 - **Poco espacio para la firma en los PDF (prioridad media).** ✅ Corregido (22 mm). `.firma { margin-top: 28px }` en `PdfRenderer.java`
   (fórmula e historia) deja unos 7 mm para firmar a mano. Subir a unos 75 px (2 cm).
@@ -95,7 +95,7 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
   consultorios), pero Galenum no tiene correo de soporte (galenum.com.co no tiene MX; no-responder@ no recibe). Crear
   `soporte@galenum.com.co` (Google Workspace, Zoho o reenvío) o un WhatsApp, y ponerlo en esos mensajes, en el pie de
   los correos y en el sitio.
-- **Logs del PDF (baja prioridad).** Cada vez que se genera un PDF, PDFBox escribe 13 WARN de "Using fallback font
+- **Logs del PDF (baja prioridad).** ✅ Corregido. Cada vez que se genera un PDF, PDFBox escribe 13 WARN de "Using fallback font
   LiberationSans" (el contenedor no trae las fuentes estándar de PDF; el PDF sale bien), y openhtmltopdf escribe con su
   propio logger, fuera del JSON de CloudWatch. Bajar `org.apache.pdfbox.pdmodel.font` a ERROR y mandar openhtmltopdf a
   SLF4J.

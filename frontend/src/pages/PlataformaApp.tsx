@@ -413,7 +413,7 @@ function Configuracion() {
       <div className="page-header"><h1>Planes y datos de pago</h1></div>
       <div className="card stack">
         <h3>Planes</h3>
-        {planes.data?.map((p) => <EditarPlan key={p.codigo} plan={p} />)}
+        {planes.data?.map((p) => <EditarPlan key={p.codigo} plan={p} todos={planes.data ?? []} />)}
       </div>
       <div className="card stack">
         <h3>Datos para pagar</h3>
@@ -426,7 +426,31 @@ function Configuracion() {
   );
 }
 
-function EditarPlan({ plan }: { plan: Schemas["PlanVista"] }) {
+type Plan = Schemas["PlanVista"];
+
+/**
+ * Señales de un error de digitación en un precio (no lo impiden: una promoción puede explicarlas). En pruebas se guardó
+ * el mensual en $1.118.700 y el anual en $1.052.522.
+ */
+function advertenciasPrecio(plan: Plan, nuevo: number, todos: Plan[]): string[] {
+  const avisos: string[] = [];
+  const actual = plan.precio ?? 0;
+  if (actual > 0 && nuevo > 0 && Math.abs(nuevo - actual) / actual > 0.5) {
+    avisos.push(`El precio cambia más del 50 %: de ${pesos(actual)} a ${pesos(nuevo)}.`);
+  }
+  const meses = plan.meses ?? 1;
+  const mensual = meses === 1 ? nuevo : todos.find((p) => p.meses === 1)?.precio ?? 0;
+  for (const largo of todos.filter((p) => (p.meses ?? 1) > 1)) {
+    const precioLargo = largo.codigo === plan.codigo ? nuevo : largo.precio ?? 0;
+    const mesAMes = mensual * (largo.meses ?? 1);
+    if (mensual > 0 && precioLargo > 0 && precioLargo > mesAMes) {
+      avisos.push(`El plan ${largo.nombre?.toLowerCase()} (${pesos(precioLargo)}) cuesta más que pagar ${largo.meses} meses del mensual (${pesos(mesAMes)}).`);
+    }
+  }
+  return avisos;
+}
+
+function EditarPlan({ plan, todos }: { plan: Plan; todos: Plan[] }) {
   const queryClient = useQueryClient();
   const [precio, setPrecio] = useState(String(plan.precio ?? 0));
   const [activo, setActivo] = useState(!!plan.activo);
@@ -437,14 +461,20 @@ function EditarPlan({ plan }: { plan: Schemas["PlanVista"] }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["plataforma", "planes"] }),
   });
   const cambio = Number(precio) !== plan.precio || activo !== plan.activo;
+  const avisos = Number(precio) !== plan.precio ? advertenciasPrecio(plan, Number(precio), todos) : [];
   return (
-    <form className="row" onSubmit={(e) => { e.preventDefault(); guardar.mutate(); }}>
+    <form className="row" onSubmit={(e) => {
+      e.preventDefault();
+      if (avisos.length && !confirm(`${avisos.join("\n")}\n\n¿Guardar de todos modos?`)) return;
+      guardar.mutate();
+    }}>
       <strong className="min-6">{plan.nombre}</strong>
       <label>Precio (COP)<input type="number" min={0} value={precio} onChange={(e) => setPrecio(e.target.value)} className="campo-medio" /></label>
       <span className="muted small">{pesos(Number(precio))} por {plan.meses === 1 ? "mes" : `${plan.meses} meses`}</span>
       <label className="check"><input type="checkbox" checked={activo} onChange={(e) => setActivo(e.target.checked)} />Disponible</label>
       <button className="btn btn-secondary" disabled={!cambio || guardar.isPending}>Guardar</button>
       {guardar.error && <span className="field-error">{guardar.error.message}</span>}
+      {avisos.map((a) => <span key={a} className="small aviso-precio">⚠ {a}</span>)}
     </form>
   );
 }

@@ -204,6 +204,7 @@ input::placeholder, textarea::placeholder { color: #667180; }
 .badge-primary { background: var(--primary-soft); color: var(--primary-hover); }
 .badge-ok { background: var(--ok-bg); color: var(--ok); }
 .badge-warn { background: var(--warn-bg); color: var(--warn); }
+.aviso-precio { flex-basis: 100%; color: var(--warn); }
 .badge-danger { background: var(--danger-bg); color: var(--danger); }
 
 /* --- Login y páginas públicas --- */
@@ -301,6 +302,7 @@ a.evento:hover { background: var(--primary-soft); box-shadow: var(--shadow-md); 
 .evento-documento { border-left-color: var(--neutral-line); }
 .evento-fecha { font-variant-numeric: tabular-nums; color: var(--muted); font-size: var(--fs-sm); min-width: 9rem; }
 .signos { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: .75rem; }
+.signos input { margin-top: auto; } /* alineados aunque un título ocupe dos líneas ("TA diastólica (mmHg)") */
 .dx-fila { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; padding: .5rem .75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-muted); }
 .acciones-atencion { position: sticky; bottom: .75rem; z-index: 1; box-shadow: var(--shadow-md); }
 .confirmar { background: var(--warn-bg); padding: .5rem .75rem; border-radius: var(--radius-sm); }
