@@ -336,8 +336,8 @@ galeno-api-1`. Para el día a día bastan los logs de CloudWatch.
 
 ### Antes de recibir pacientes reales
 
-- **HTTPS entre CloudFront y el servidor** (Caddy + Let's Encrypt) y `X-Forwarded-Proto` en la API: hechos; falta
-  activarlos en producción en las dos fases de "Origen HTTPS (Caddy)" (sección 2).
+- ~~**HTTPS entre CloudFront y el servidor** (Caddy + Let's Encrypt) y `X-Forwarded-Proto` en la API.~~ Activos en
+  producción desde el 2 de noviembre de 2026 (sección 2, "Origen HTTPS (Caddy)").
 - **MFA** para los operadores de la plataforma, y después para los consultorios.
 - **Revisión legal** de los términos y de la política de datos (hoy un borrador en `/politica-datos`). En partners,
   también la revisión contable de las condiciones.
