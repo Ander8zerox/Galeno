@@ -146,6 +146,12 @@ la API quedaría caída.
 4. Comprobar: `curl -sD - -o /dev/null https://galenum.com.co/api/v1/auth/me` debe mostrar
    `resource_metadata="https://…"` (antes decía `http://`).
 
+**Rotar el secreto de origen** (`X-Origen-Galeno`, con el que la API reconoce a CloudFront) si se expone: sube
+`version_origen` en `infra/secretos.tf`, `terraform plan`/`apply` y `tools/desplegar.sh --solo-api`. Entre el `apply` y
+el final del despliegue (y mientras CloudFront propaga, unos minutos) la API rechaza las peticiones. Para hacerlo sin
+corte, ver "3a" en [aws-capa-1.md](aws-capa-1.md). Se rotó el 2 de noviembre de 2026, porque el log de Caddy lo
+guardaba en claro.
+
 **Volver atrás** (si el origen HTTPS falla): `origen_https = false` en `terraform.tfvars`, `terraform plan`/`apply` y
 `tools/desplegar.sh --solo-api`. CloudFront vuelve a la API por HTTP en el 8090.
 

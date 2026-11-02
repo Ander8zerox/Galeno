@@ -6,7 +6,7 @@ locals {
   # Súbelas para rotar el secreto (la API lo toma en el siguiente despliegue)
   version_clave_bd = 1
   version_jwt      = 1
-  version_origen   = 1
+  version_origen   = 2 # 2: el log de acceso de Caddy lo guardó en claro el 2 de noviembre de 2026
 
   entorno_api = merge(
     {
