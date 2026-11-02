@@ -146,6 +146,12 @@ la API quedaría caída.
 4. Comprobar: `curl -sD - -o /dev/null https://galenum.com.co/api/v1/auth/me` debe mostrar
    `resource_metadata="https://…"` (antes decía `http://`).
 
+**Rotar el secreto de origen** (`X-Origen-Galeno`, con el que la API reconoce a CloudFront) si se expone: sube
+`version_origen` en `infra/secretos.tf`, `terraform plan`/`apply` y `tools/desplegar.sh --solo-api`. Entre el `apply` y
+el final del despliegue (y mientras CloudFront propaga, unos minutos) la API rechaza las peticiones. Para hacerlo sin
+corte, ver "3a" en [aws-capa-1.md](aws-capa-1.md). Se rotó el 2 de noviembre de 2026, porque el log de Caddy lo
+guardaba en claro.
+
 **Volver atrás** (si el origen HTTPS falla): `origen_https = false` en `terraform.tfvars`, `terraform plan`/`apply` y
 `tools/desplegar.sh --solo-api`. CloudFront vuelve a la API por HTTP en el 8090.
 
@@ -330,8 +336,8 @@ galeno-api-1`. Para el día a día bastan los logs de CloudWatch.
 
 ### Antes de recibir pacientes reales
 
-- **HTTPS entre CloudFront y el servidor** (Caddy + Let's Encrypt) y `X-Forwarded-Proto` en la API: hechos; falta
-  activarlos en producción en las dos fases de "Origen HTTPS (Caddy)" (sección 2).
+- ~~**HTTPS entre CloudFront y el servidor** (Caddy + Let's Encrypt) y `X-Forwarded-Proto` en la API.~~ Activos en
+  producción desde el 2 de noviembre de 2026 (sección 2, "Origen HTTPS (Caddy)").
 - **MFA** para los operadores de la plataforma, y después para los consultorios.
 - **Revisión legal** de los términos y de la política de datos (hoy un borrador en `/politica-datos`). En partners,
   también la revisión contable de las condiciones.
