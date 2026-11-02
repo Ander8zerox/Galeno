@@ -76,6 +76,7 @@ ACTIVA (pagada) ──┘                         └─────────
   - Login propio que entrega un token con la authority `PLATAFORMA`, sin consultorio ni permisos de consultorio, y que se verifica en cada llamada.
   - Los operadores son cuentas de Galeno marcadas por configuración (`app.plataforma.operadores`); nadie puede volverse operador desde la web.
   - Si un correo de la lista no tiene cuenta, la API la crea al arrancar (sin consultorio) y le envía un enlace para elegir la contraseña. Así se crea el primer operador de un ambiente nuevo sin que la contraseña pase por la configuración. Pasa una sola vez: en los siguientes arranques la cuenta ya existe y solo se marca.
+  - La lista manda: al arrancar, la cuenta que ya no está en ella (o está desactivada) deja de ser operador y su token deja de servir en la siguiente llamada. Cada alta y retiro queda en `auditoria_plataforma` (`ACCESO_OTORGADO`, `ACCESO_RETIRADO`).
   - Permite revisar pagos (ver el comprobante, aprobar, rechazar con motivo), registrar un pago recibido sin reporte, regalar días, suspender y reactivar, cambiar precios y datos de pago. Cada acción queda en `auditoria_plataforma`.
 
 ## Programa de partners

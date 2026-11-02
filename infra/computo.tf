@@ -91,9 +91,19 @@ data "aws_iam_policy_document" "api" {
     resources = [aws_kms_key.documentos.arn]
   }
   statement {
-    sid       = "Correo"
-    actions   = ["ses:SendEmail", "ses:SendRawEmail"]
-    resources = [aws_sesv2_email_identity.dominio.arn, aws_sesv2_configuration_set.galeno.arn]
+    sid     = "Correo"
+    actions = ["ses:SendEmail", "ses:SendRawEmail"]
+    # SES también autoriza contra la identidad del destinatario cuando está verificada (en el sandbox lo están
+    # todos), así que el recurso es identity/*; lo que se limita es el remitente: solo no-responder@ del dominio.
+    resources = [
+      "arn:aws:ses:${var.region}:${local.cuenta}:identity/*",
+      aws_sesv2_configuration_set.galeno.arn,
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "ses:FromAddress"
+      values   = ["no-responder@${var.dominio}"]
+    }
   }
   statement {
     sid       = "RebotesYQuejas"
