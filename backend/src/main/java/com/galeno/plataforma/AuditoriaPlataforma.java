@@ -28,7 +28,7 @@ class AuditoriaPlataforma {
     @Column(name = "consultorio_id", updatable = false)
     private UUID consultorioId;
 
-    @Column(updatable = false, length = 500)
+    @Column(updatable = false, columnDefinition = "TEXT")
     private String detalle;
 
     @Column(name = "creado_en", nullable = false, updatable = false)
@@ -41,7 +41,7 @@ class AuditoriaPlataforma {
         this.operadorId = operadorId;
         this.accion = accion;
         this.consultorioId = consultorioId;
-        this.detalle = detalle != null && detalle.length() > 500 ? detalle.substring(0, 500) : detalle;
+        this.detalle = detalle != null && detalle.length() > 5000 ? detalle.substring(0, 5000) : detalle;
         this.creadoEn = Instant.now();
     }
 
