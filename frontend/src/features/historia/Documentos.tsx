@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { descargarArchivo, subirArchivo, type Schemas } from "../../api/client";
+import { api, descargarArchivo, subirArchivo, unwrap, type Schemas } from "../../api/client";
 
 type Documento = Schemas["DocumentoVista"];
 type TipoDocumento = NonNullable<Documento["tipo"]>;
@@ -52,6 +52,43 @@ export function BotonArchivo({ ruta, nombre, children, className = "btn-link" }:
       {error && <small className="field-error">{error}</small>}
     </>
   );
+}
+
+/**
+ * Anular un documento subido por error: pide el motivo. El documento no se borra: sigue en la historia, marcado como
+ * anulado.
+ */
+export function AnularDocumento({ id, pacienteId }: { id: string; pacienteId: string }) {
+  const queryClient = useQueryClient();
+  const [abierto, setAbierto] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const anular = useMutation({
+    mutationFn: async () =>
+      unwrap(await api.POST("/api/v1/historia/documentos/{id}/anulacion", { params: { path: { id } }, body: { motivo } })),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["historia", pacienteId] });
+      queryClient.invalidateQueries({ queryKey: ["atencion"] });
+      setAbierto(false);
+    },
+  });
+  if (!abierto) return <button type="button" className="btn-link danger" onClick={() => setAbierto(true)}>Anular</button>;
+  return (
+    <div className="row confirmar">
+      <input className="grow" value={motivo} onChange={(e) => setMotivo(e.target.value)} maxLength={300} autoFocus
+             placeholder="Motivo: p. ej., se subió al paciente equivocado" aria-label="Motivo de la anulación" />
+      <button type="button" className="btn btn-secondary" disabled={!motivo.trim() || anular.isPending} onClick={() => anular.mutate()}>
+        {anular.isPending ? "Anulando…" : "Anular documento"}
+      </button>
+      <button type="button" className="btn-link" onClick={() => setAbierto(false)}>Cancelar</button>
+      {anular.error && <small className="field-error">{anular.error.message}</small>}
+    </div>
+  );
+}
+
+/** Marca de un documento anulado: sigue en la historia con el motivo. */
+export function MarcaAnulado({ motivo }: { motivo?: string | null }) {
+  if (!motivo) return null;
+  return <span className="small"><span className="badge badge-danger">Anulado</span> <span className="muted">{motivo}</span></span>;
 }
 
 /** Subir un PDF o imagen a la historia del paciente (opcionalmente ligado a una atención). */

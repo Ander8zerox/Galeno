@@ -139,6 +139,14 @@ public class HistoriaService {
         if (atencion.firmada()) {
             throw ApiProblem.conflict("Una atención firmada no se elimina");
         }
+        // Los documentos clínicos no se borran (ni en S3 ni aquí): con documentos vigentes, el borrador tampoco. Los
+        // anulados se desligan y quedan en la historia del paciente.
+        if (documentos.existsByAtencionIdAndAnuladoEnIsNull(atencionId)) {
+            throw ApiProblem.conflict("Este borrador tiene documentos adjuntos y no se puede eliminar. Anule los documentos "
+                    + "subidos por error, o firme la atención.");
+        }
+        documentos.findByAtencionId(atencionId).forEach(DocumentoClinico::desligarDeAtencion);
+        documentos.flush();
         atenciones.delete(atencion);
     }
 
@@ -230,7 +238,7 @@ public class HistoriaService {
         return delLote.size();
     }
 
-    /** Actividad clínica del paciente en Galeno (para saber si un paciente importado se puede borrar). */
+    /** Actividad clínica del paciente en Galenum (para saber si un paciente importado se puede borrar). */
     @Transactional(readOnly = true)
     public long actividadClinica(UUID pacienteId) {
         return atenciones.countByPacienteId(pacienteId) + documentos.countByPacienteId(pacienteId);
@@ -270,6 +278,15 @@ public class HistoriaService {
                 descripcion == null || descripcion.isBlank() ? null : descripcion.strip(), nombre, contentType,
                 contenido.length, sha256(contenido), clave, AuthUser.current().id()));
         auditar(pacienteId, Accion.SUBIR_DOCUMENTO, doc.getId());
+        return DocumentoVista.de(doc);
+    }
+
+    @Transactional
+    public DocumentoVista anularDocumento(UUID documentoId, String motivo) {
+        DocumentoClinico doc = documentos.findById(documentoId)
+                .orElseThrow(() -> ApiProblem.notFound("Documento no encontrado"));
+        doc.anular(AuthUser.current().id(), motivo);
+        auditar(doc.getPacienteId(), Accion.ANULAR_DOCUMENTO, documentoId);
         return DocumentoVista.de(doc);
     }
 
@@ -374,12 +391,15 @@ public class HistoriaService {
     public record DiagnosticoVista(String codigoCie10, String descripcion, boolean principal, Diagnostico.Tipo tipo) {
     }
 
+    /** @param anuladoEn si se subió por error (sigue en la historia, con {@code motivoAnulacion}) */
     public record DocumentoVista(UUID id, UUID atencionId, DocumentoClinico.Tipo tipo, String descripcion,
-                                 String nombreArchivo, String contentType, long tamanoBytes, Instant creadoEn) {
+                                 String nombreArchivo, String contentType, long tamanoBytes, Instant creadoEn,
+                                 Instant anuladoEn, String motivoAnulacion) {
 
         static DocumentoVista de(DocumentoClinico d) {
             return new DocumentoVista(d.getId(), d.getAtencionId(), d.getTipo(), d.getDescripcion(),
-                    d.getNombreArchivo(), d.getContentType(), d.getTamanoBytes(), d.getCreadoEn());
+                    d.getNombreArchivo(), d.getContentType(), d.getTamanoBytes(), d.getCreadoEn(), d.getAnuladoEn(),
+                    d.getMotivoAnulacion());
         }
     }
 
@@ -412,8 +432,9 @@ public class HistoriaService {
         DOCUMENTO
     }
 
+    /** @param anulacion motivo, si es un documento anulado */
     public record EventoHistoria(TipoEvento tipo, UUID id, Instant fecha, String titulo, String detalle,
-                                 String estado, String autor) {
+                                 String estado, String autor, String anulacion) {
 
         static EventoHistoria de(Atencion a) {
             String dx = a.getDiagnosticos().stream().filter(Diagnostico::isPrincipal).findFirst()
@@ -421,13 +442,14 @@ public class HistoriaService {
             return new EventoHistoria(TipoEvento.ATENCION, a.getId(), a.getFechaAtencion(),
                     a.getMotivoConsulta() == null || a.getMotivoConsulta().isBlank() ? "Atención sin motivo registrado"
                             : a.getMotivoConsulta(), dx,
-                    a.getOrigen() == Atencion.Origen.IMPORTADA ? "IMPORTADA" : a.getEstado().name(), a.getMedicoNombre());
+                    a.getOrigen() == Atencion.Origen.IMPORTADA ? "IMPORTADA" : a.getEstado().name(), a.getMedicoNombre(),
+                    null);
         }
 
         static EventoHistoria de(DocumentoClinico d) {
             return new EventoHistoria(TipoEvento.DOCUMENTO, d.getId(), d.getCreadoEn(),
                     d.getDescripcion() != null ? d.getDescripcion() : d.getNombreArchivo(), d.getNombreArchivo(),
-                    d.getTipo().name(), null);
+                    d.getTipo().name(), null, d.getMotivoAnulacion());
         }
     }
 }

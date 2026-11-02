@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api, unwrap } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 import { fechaHoraCorta } from "../agenda/tiempo";
-import { BotonArchivo, BotonDescargar, SubirDocumento, TIPO_DOCUMENTO } from "./Documentos";
+import { AnularDocumento, BotonArchivo, BotonDescargar, MarcaAnulado, SubirDocumento, TIPO_DOCUMENTO } from "./Documentos";
 
 /** Historia clínica del paciente: atenciones y documentos, del más reciente al más antiguo. */
 export function LineaHistoria({ pacienteId }: { pacienteId: string }) {
@@ -59,11 +59,13 @@ export function LineaHistoria({ pacienteId }: { pacienteId: string }) {
             </div>
           </Link>
         ) : (
-          <div key={e.id} className="evento evento-documento">
+          <div key={e.id} className={`evento evento-documento ${e.anulacion ? "documento-anulado" : ""}`}>
             <span className="evento-fecha">{fechaHoraCorta(e.fecha!, zona)}</span>
-            <div className="grow">
+            <div className="grow stack-sm">
               <div className="row"><strong>{e.titulo}</strong><span className="badge">{TIPO_DOCUMENTO[e.estado as keyof typeof TIPO_DOCUMENTO] ?? "Documento"}</span></div>
               <div className="muted small">{e.detalle}</div>
+              <MarcaAnulado motivo={e.anulacion} />
+              {!e.anulacion && puede("HISTORIA_REGISTRAR") && <AnularDocumento id={e.id!} pacienteId={pacienteId} />}
             </div>
             <BotonDescargar id={e.id!} nombre={e.detalle ?? "documento"} />
           </div>

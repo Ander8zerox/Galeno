@@ -68,7 +68,7 @@ public class PartnerController {
         return partners.consultarInscripcion(r.token());
     }
 
-    /** {@code password} solo si el correo ya tenía cuenta en Galeno (su contraseña actual). */
+    /** {@code password} solo si el correo ya tenía cuenta en Galenum (su contraseña actual). */
     public record ConfirmacionInscripcion(@NotBlank @Size(max = 100) String token, @Size(max = 200) String password) {
     }
 

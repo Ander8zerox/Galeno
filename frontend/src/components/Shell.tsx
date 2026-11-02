@@ -63,7 +63,7 @@ export function Shell({ marca, items, arriba, usuario, onSalir, children }: {
         <div className="sidebar-pie">
           <span className="sidebar-iniciales" aria-hidden="true">{iniciales(usuario)}</span>
           <span className="grow sidebar-usuario">{usuario}</span>
-          <button className="sidebar-salir" onClick={onSalir} aria-label="Salir" title="Salir"><LogOut size={18} /></button>
+          <button className="sidebar-salir" onClick={() => confirm("¿Cerrar sesión?") && onSalir()} aria-label="Salir" title="Salir"><LogOut size={18} /></button>
         </div>
       </aside>
       {abierto && <div className="sidebar-fondo" onClick={() => setAbierto(false)} />}

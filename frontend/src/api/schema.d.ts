@@ -692,6 +692,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/historia/documentos/{id}/anulacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["anularDocumento"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/historia/atenciones": {
         parameters: {
             query?: never;
@@ -1396,6 +1412,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agenda/festivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["festivos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/equipo/invitaciones/{id}": {
         parameters: {
             query?: never;
@@ -1728,6 +1760,9 @@ export interface components {
             tamanoBytes?: number;
             /** Format: date-time */
             creadoEn?: string;
+            /** Format: date-time */
+            anuladoEn?: string;
+            motivoAnulacion?: string;
         };
         NotaVista: {
             /** Format: uuid */
@@ -1750,6 +1785,7 @@ export interface components {
             /** Format: int32 */
             duracionMinutos?: number;
             bloques: components["schemas"]["BloqueRequest"][];
+            atiendeFestivos?: boolean;
         };
         BloqueRequest: {
             /** Format: int32 */
@@ -1773,6 +1809,7 @@ export interface components {
             /** Format: int32 */
             duracionMinutos?: number;
             bloques?: components["schemas"]["BloqueVista"][];
+            atiendeFestivos?: boolean;
         };
         Reprogramar: {
             /** Format: date-time */
@@ -2036,6 +2073,9 @@ export interface components {
             sugerido?: components["schemas"]["MapeoColumnas"];
             recordado?: boolean;
         };
+        AnularDocumento: {
+            motivo: string;
+        };
         NuevaAtencion: {
             /** Format: uuid */
             pacienteId: string;
@@ -2215,6 +2255,7 @@ export interface components {
         EventoAuditoria: {
             /** Format: date-time */
             fecha?: string;
+            operador?: string;
             accion?: string;
             consultorio?: string;
             detalle?: string;
@@ -2267,6 +2308,7 @@ export interface components {
             detalle?: string;
             estado?: string;
             autor?: string;
+            anulacion?: string;
         };
         Cie10Vista: {
             codigo?: string;
@@ -2341,31 +2383,31 @@ export interface components {
             finalizadoEn?: string;
         };
         JsonNode: {
-            binary?: boolean;
-            int?: boolean;
-            pojo?: boolean;
-            double?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            boolean?: boolean;
-            string?: boolean;
-            short?: boolean;
-            long?: boolean;
-            object?: boolean;
             array?: boolean;
             empty?: boolean;
             null?: boolean;
             float?: boolean;
+            number?: boolean;
             floatingPointNumber?: boolean;
-            valueNode?: boolean;
             missingNode?: boolean;
-            bigInteger?: boolean;
-            container?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            bigDecimal?: boolean;
             integralNumber?: boolean;
-            number?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
+            bigInteger?: boolean;
+            bigDecimal?: boolean;
+            int?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            boolean?: boolean;
+            binary?: boolean;
+            string?: boolean;
+            double?: boolean;
+            short?: boolean;
+            long?: boolean;
+            pojo?: boolean;
+            object?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -2379,6 +2421,11 @@ export interface components {
             inicio?: string;
             /** Format: date-time */
             fin?: string;
+        };
+        Festivo: {
+            /** Format: date */
+            fecha?: string;
+            nombre?: string;
         };
         BorradorFormula: {
             items?: components["schemas"]["ItemPropuesto"][];
@@ -3646,6 +3693,32 @@ export interface operations {
             };
         };
     };
+    anularDocumento: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnularDocumento"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentoVista"];
+                };
+            };
+        };
+    };
     crear: {
         parameters: {
             query?: never;
@@ -4678,6 +4751,29 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CitaVista"][];
+                };
+            };
+        };
+    };
+    festivos: {
+        parameters: {
+            query: {
+                desde: string;
+                hasta: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Festivo"][];
                 };
             };
         };

@@ -119,7 +119,7 @@ export function SuscripcionPage() {
               </div>
             ))}
           </div>
-          {!!opciones.data.descuentoPorcentaje && <p className="badge badge-ok">Tiene {opciones.data.descuentoPorcentaje} % de descuento por venir recomendado por un partner de Galeno.</p>}
+          {!!opciones.data.descuentoPorcentaje && <p className="badge badge-ok">Tiene {opciones.data.descuentoPorcentaje} % de descuento por venir recomendado por un partner de Galenum.</p>}
           <p className="muted small">Pague por transferencia o consignación y luego repórtelo aquí con la referencia y el comprobante:</p>
           <pre className="card texto-libre">{opciones.data.datosPago}</pre>
           <ReportarPago planes={opciones.data.planes ?? []} bloqueado={!!s?.pagoEnRevision} />

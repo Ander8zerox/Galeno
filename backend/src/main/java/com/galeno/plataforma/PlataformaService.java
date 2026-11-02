@@ -35,10 +35,10 @@ import com.galeno.suscripciones.SuscripcionService.PagoVista;
 import com.galeno.suscripciones.SuscripcionService.PlanVista;
 
 /**
- * Consola de la plataforma: la usan los operadores de Galeno (no los consultorios) para revisar pagos y
+ * Consola de la plataforma: la usan los operadores de Galenum (no los consultorios) para revisar pagos y
  * administrar suscripciones. Cada acción que cambia algo queda en {@code auditoria_plataforma}.
  *
- * <p>Los operadores son cuentas normales de Galeno marcadas por configuración ({@code app.plataforma.operadores});
+ * <p>Los operadores son cuentas normales de Galenum marcadas por configuración ({@code app.plataforma.operadores});
  * no hay forma de volverse operador desde la web.
  */
 @Service
@@ -170,22 +170,28 @@ public class PlataformaService {
 
     public String cambiarDatosPago(String valor) {
         UUID yo = operador();
+        String antes = suscripciones.datosPago();
         String v = suscripciones.cambiarDatosPago(valor);
-        registrar(yo, "CAMBIAR_DATOS_PAGO", null, null);
+        // Con el texto completo: cambiar la cuenta a la que pagan los consultorios es lo más sensible de la consola
+        registrar(yo, "CAMBIAR_DATOS_PAGO", null, "Antes:\n" + antes + "\n\nAhora:\n" + v);
         return v;
     }
 
-    public record EventoAuditoria(Instant fecha, String accion, String consultorio, String detalle) {
+    /** @param operador correo de quien hizo la acción */
+    public record EventoAuditoria(Instant fecha, String operador, String accion, String consultorio, String detalle) {
     }
 
     public List<EventoAuditoria> auditoria() {
         operador();
         Map<UUID, String> nombres = identidad.todosLosConsultorios().stream()
                 .collect(Collectors.toMap(ConsultorioPlataforma::id, ConsultorioPlataforma::nombre));
-        return comoSistema(() -> auditoria.findTop100ByOrderByCreadoEnDesc().stream()
-                .map(a -> new EventoAuditoria(a.getCreadoEn(), a.getAccion(),
+        List<AuditoriaPlataforma> eventos = comoSistema(auditoria::findTop100ByOrderByCreadoEnDesc);
+        Map<UUID, String> correos = identidad.correosDeCuentas(
+                eventos.stream().map(AuditoriaPlataforma::getOperadorId).collect(Collectors.toSet()));
+        return eventos.stream()
+                .map(a -> new EventoAuditoria(a.getCreadoEn(), correos.getOrDefault(a.getOperadorId(), "?"), a.getAccion(),
                         a.getConsultorioId() == null ? null : nombres.getOrDefault(a.getConsultorioId(), "?"), a.getDetalle()))
-                .toList());
+                .toList();
     }
 
     // --- correos suprimidos (rebotes permanentes y quejas de SES) ---

@@ -13,10 +13,12 @@ export function HorarioEditor({ medicoId, onGuardado }: { medicoId: string; onGu
   });
   const [duracion, setDuracion] = useState(20);
   const [franjas, setFranjas] = useState<Franja[]>([]);
+  const [atiendeFestivos, setAtiendeFestivos] = useState(false);
 
   useEffect(() => {
     if (!horario.data) return;
     setDuracion(horario.data.duracionMinutos ?? 20);
+    setAtiendeFestivos(!!horario.data.atiendeFestivos);
     setFranjas((horario.data.bloques ?? []).map((b) => ({ diaSemana: b.diaSemana!, horaInicio: hhmm(b.horaInicio), horaFin: hhmm(b.horaFin) })));
   }, [horario.data]);
 
@@ -24,7 +26,7 @@ export function HorarioEditor({ medicoId, onGuardado }: { medicoId: string; onGu
     mutationFn: async () =>
       unwrap(await api.PUT("/api/v1/agenda/medicos/{medicoId}/horario", {
         params: { path: { medicoId } },
-        body: { duracionMinutos: duracion, bloques: franjas },
+        body: { duracionMinutos: duracion, bloques: franjas, atiendeFestivos },
       })),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["horario", medicoId] });
@@ -68,6 +70,10 @@ export function HorarioEditor({ medicoId, onGuardado }: { medicoId: string; onGu
           );
         })}
       </div>
+      <label className="row">
+        <input type="checkbox" checked={atiendeFestivos} onChange={(e) => setAtiendeFestivos(e.target.checked)} />
+        Atiendo festivos (si no, los festivos de Colombia no tienen cupos)
+      </label>
       {guardar.error && <p className="alert alert-error">{guardar.error.message}</p>}
       <div><button className="btn" disabled={guardar.isPending} onClick={() => guardar.mutate()}>Guardar horario</button></div>
     </div>

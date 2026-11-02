@@ -1,6 +1,7 @@
 package com.galeno.identidad;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,6 +20,13 @@ interface RegistroPendienteRepository extends JpaRepository<RegistroPendiente, U
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from RegistroPendiente r where r.tokenHash = :tokenHash")
     Optional<RegistroPendiente> paraConfirmar(String tokenHash);
+
+    /** Consultorios creados desde una IP: cuenta solo lo confirmado (las solicitudes vencidas se borran). */
+    long countByIpAndConfirmadoEnAfter(String ip, Instant desde);
+
+    /** Correos con los que se crearon consultorios desde una fecha (se comparan por buzón, ver ControlRegistro). */
+    @Query("select r.email from RegistroPendiente r where r.confirmadoEn > :desde")
+    List<String> correosConfirmadosDesde(Instant desde);
 
     /** Las solicitudes vencidas sin confirmar no sirven para nada y tienen datos personales: se borran. */
     @Modifying

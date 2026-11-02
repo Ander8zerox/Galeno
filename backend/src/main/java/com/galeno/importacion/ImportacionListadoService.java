@@ -39,7 +39,7 @@ import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
 /**
  * Importa un listado de pacientes (Excel o CSV) de otro sistema. Su uso principal es completar los pacientes que
- * el RIPS dejó sin nombre, pero también crea los que no existen. Nunca reemplaza datos ya registrados en Galeno:
+ * el RIPS dejó sin nombre, pero también crea los que no existen. Nunca reemplaza datos ya registrados en Galenum:
  * solo llena lo que falta, y las diferencias se muestran en la revisión.
  */
 @Service
@@ -198,7 +198,7 @@ class ImportacionListadoService {
             Paciente otro = mismoNumero.getFirst();
             p.mensajes.add(new Mensaje(Nivel.ADVERTENCIA, "Ya existe " + otro.getNombres() + " " + otro.getApellidos()
                     + " con " + otro.getTipoDocumento() + " " + otro.getNumeroDocumento()
-                    + ": si es la misma persona, no lo importe y corrija el documento en Galeno"));
+                    + ": si es la misma persona, no lo importe y corrija el documento en Galenum"));
             p.incluir = false;
         }
         if (!fp.datos().completaParaCrear()) {
@@ -207,7 +207,7 @@ class ImportacionListadoService {
             if (fp.datos().apellidos() == null) faltan.add("apellidos");
             if (fp.datos().fechaNacimiento() == null) faltan.add("fecha de nacimiento");
             if (fp.datos().sexo() == null) faltan.add("sexo");
-            p.mensajes.add(new Mensaje(Nivel.ERROR, "No existe en Galeno y para crearlo faltan: " + String.join(", ", faltan)));
+            p.mensajes.add(new Mensaje(Nivel.ERROR, "No existe en Galenum y para crearlo faltan: " + String.join(", ", faltan)));
             p.estado = RegistroImportacion.Estado.ERROR;
             return p;
         }
@@ -245,7 +245,7 @@ class ImportacionListadoService {
     }
 
     /**
-     * Borra los pacientes que creó el lote (si no tienen actividad en Galeno) y devuelve los demás a como estaban,
+     * Borra los pacientes que creó el lote (si no tienen actividad en Galenum) y devuelve los demás a como estaban,
      * salvo los campos que alguien editó después de importar.
      */
     @Transactional

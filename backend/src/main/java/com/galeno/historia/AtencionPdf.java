@@ -26,7 +26,7 @@ final class AtencionPdf {
         b.append(EncabezadoPdf.paciente(p));
         cuerpo(b, a, consultorio, notas);
         b.append("<p class=\"small muted\">Atención ").append(esc(a.getId())).append(" · origen ").append(esc(a.getOrigen()))
-                .append(". Documento generado por Galeno; la historia clínica original reposa en el sistema.</p>");
+                .append(". Documento generado por Galenum; la historia clínica original reposa en el sistema.</p>");
         return PdfRenderer.documento("Atención " + p.getNombres() + " " + p.getApellidos(), b.toString());
     }
 
@@ -75,10 +75,10 @@ final class AtencionPdf {
         if (a.getOrigen() == Atencion.Origen.IMPORTADA) {
             b.append("<span class=\"small muted\">Registro importado de otro sistema el ")
                     .append(esc(fechaHora(a.getFirmadaEn(), consultorio.zona())))
-                    .append(". No corresponde a una firma en Galeno.</span>");
+                    .append(". No corresponde a una firma en Galenum.</span>");
         } else {
             b.append(a.firmada()
-                    ? "<span class=\"small muted\">Firmada electrónicamente en Galeno el " + esc(fechaHora(a.getFirmadaEn(), consultorio.zona())) + "</span>"
+                    ? "<span class=\"small muted\">Firmada electrónicamente en Galenum el " + esc(fechaHora(a.getFirmadaEn(), consultorio.zona())) + "</span>"
                     : "<span class=\"small muted\">Borrador sin firmar: sin validez como registro clínico</span>");
         }
         b.append("</div></div>");

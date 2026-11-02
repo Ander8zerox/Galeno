@@ -24,7 +24,7 @@ public class PdfRenderer {
     /** Estilos comunes. Las fuentes base del PDF (Helvetica) cubren el español, incluidas tildes y ñ. */
     public static final String ESTILOS = """
             @page { size: letter; margin: 16mm 16mm 20mm 16mm;
-                    @bottom-center { content: "Galeno · página " counter(page) " de " counter(pages);
+                    @bottom-center { content: "Galenum · página " counter(page) " de " counter(pages);
                                      font-family: Helvetica, sans-serif; font-size: 8pt; color: #637083; } }
             body { font-family: Helvetica, sans-serif; font-size: 10pt; color: #1f2933; }
             h1 { font-size: 15pt; margin: 0; color: #0f6e8c; }
@@ -40,7 +40,7 @@ public class PdfRenderer {
             table.grilla { width: 100%; border-collapse: collapse; margin-top: 4px; }
             table.grilla th { background: #eef5f8; text-align: left; font-size: 8.5pt; padding: 4px; border: 1px solid #dde3ea; }
             table.grilla td { padding: 4px; border: 1px solid #dde3ea; vertical-align: top; }
-            .firma { margin-top: 28px; width: 60%; }
+            .firma { margin-top: 22mm; width: 60%; } /* espacio para firmar a mano sobre la línea */
             .firma .linea { border-top: 1px solid #1f2933; padding-top: 4px; }
             .texto { white-space: pre-wrap; }
             h3 { font-size: 10.5pt; margin: 0 0 4px; color: #1f2933; }

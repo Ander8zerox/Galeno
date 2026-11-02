@@ -8,7 +8,7 @@ import { Wallet } from "lucide-react";
 import { Shell } from "../components/Shell";
 
 /**
- * Portal de los partners (quienes venden Galeno): inscripción, su código, sus referidos y sus comisiones.
+ * Portal de los partners (quienes venden Galenum): inscripción, su código, sus referidos y sus comisiones.
  * Tiene su propio token, guardado aparte de la sesión de un consultorio y de la consola de plataforma.
  */
 const CLAVE = "galeno.partner";
@@ -91,8 +91,8 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
   return (
     <div className="login">
       <form className="card login-card stack" onSubmit={(e: FormEvent) => { e.preventDefault(); entrar.mutate(); }}>
-        <h1>Partners de Galeno</h1>
-        <p className="muted">Recomiende Galeno a consultorios y reciba una comisión mensual mientras sigan usándolo.</p>
+        <h1>Partners de Galenum</h1>
+        <p className="muted">Recomiende Galenum a consultorios y reciba una comisión mensual mientras sigan usándolo.</p>
         <label>Correo<input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
         <label>Contraseña<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
         {entrar.error && <p className="alert alert-error">{entrar.error.message}</p>}
@@ -144,7 +144,7 @@ function Inscripcion() {
     <div className="login">
       <form className="card login-card ancho stack" onSubmit={onSubmit}>
         <h1>Inscríbase como partner</h1>
-        <p className="muted">Recomiende Galeno con su código: el consultorio recibe un descuento y usted una comisión por cada pago mientras siga usándolo.</p>
+        <p className="muted">Recomiende Galenum con su código: el consultorio recibe un descuento y usted una comisión por cada pago mientras siga usándolo.</p>
         <h3>Su cuenta</h3>
         <label>Su nombre<input value={f.nombreCuenta} onChange={set("nombreCuenta")} required maxLength={200} autoComplete="name" /></label>
         <label>Correo<input type="email" value={f.email} onChange={set("email")} required maxLength={190} autoComplete="email" /></label>
@@ -207,7 +207,7 @@ function Confirmar({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
         <p className="muted">{info.data.nombre} · {info.data.email}</p>
         {info.data.cuentaExistente && (
           <>
-            <p className="alert">Ya tiene una cuenta en Galeno con este correo. Confirme con su contraseña actual.</p>
+            <p className="alert">Ya tiene una cuenta en Galenum con este correo. Confirme con su contraseña actual.</p>
             <label>Contraseña actual<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
           </>
         )}
@@ -245,8 +245,9 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
               <button className="btn btn-secondary" onClick={() => navigator.clipboard.writeText(p.enlace!).then(() => setCopiado(true))}>{copiado ? "Copiado" : "Copiar enlace"}</button>
             </div>
             <p className="muted small">
-              El consultorio que se registre con su enlace o código recibe {d.descuentoPorcentaje} % de descuento, y usted el {d.comisionPorcentaje} % de cada
-              pago que haga mientras siga usando Galeno. Las comisiones se pagan 30 días después de cada pago, cuando su disponible llegue a {pesos(d.minimoLiquidacion)}.
+              Usted gana el <strong>{d.comisionPorcentaje} % de cada pago</strong> de los consultorios que se registren con su enlace o código, mientras
+              sigan usando Galenum; ellos reciben {d.descuentoPorcentaje} % de descuento. Cada comisión queda disponible 30 días después del pago, y se la
+              transferimos cuando su disponible llegue a {pesos(d.minimoLiquidacion)}.
             </p>
           </div>
         )}
@@ -360,11 +361,11 @@ function Condiciones() {
     <div className="login">
       <div className="card muy-ancho stack">
         <h1>Condiciones del programa de partners</h1>
-        <p className="alert">Borrador en revisión legal · versión 2026-10.</p>
-        <p>El partner recomienda Galeno a consultorios con su código o enlace. Un consultorio queda asociado al partner cuando se registra con ese código; cada consultorio tiene un solo partner, que no cambia salvo decisión de Galeno.</p>
+        <p className="alert">Borrador en revisión legal · versión 2026-11.</p>
+        <p>El partner recomienda Galenum a consultorios con su código o enlace. Un consultorio queda asociado al partner cuando se registra con ese código; cada consultorio tiene un solo partner, que no cambia salvo decisión de Galenum.</p>
         <p>El partner recibe una comisión sobre cada pago de suscripción aprobado de sus consultorios mientras sigan pagando y el partner esté activo. La prueba gratis no genera comisión. No hay comisión por consultorios propios (cuando el partner es su administrador o tiene su mismo NIT).</p>
-        <p>Cada comisión queda retenida 30 días después del pago y luego disponible. Galeno paga las disponibles cuando suman el mínimo, por transferencia a la cuenta registrada, contra la cuenta de cobro o factura del partner y con las retenciones de ley.</p>
-        <p>El partner es independiente: no es empleado ni representante de Galeno, no puede ofrecer condiciones distintas a las publicadas y no recibe datos de los consultorios ni de sus pacientes, salvo el nombre del consultorio y el estado de su suscripción. Galeno puede suspender al partner ante prácticas engañosas; las comisiones de pagos reversados se anulan.</p>
+        <p>Cada comisión queda retenida 30 días después del pago y luego disponible. Galenum paga las disponibles cuando suman el mínimo, por transferencia a la cuenta registrada, contra la cuenta de cobro o factura del partner y con las retenciones de ley.</p>
+        <p>El partner es independiente: no es empleado ni representante de Galenum, no puede ofrecer condiciones distintas a las publicadas y no recibe datos de los consultorios ni de sus pacientes, salvo el nombre del consultorio y el estado de su suscripción. Galenum puede suspender al partner ante prácticas engañosas; las comisiones de pagos reversados se anulan.</p>
         <a href="/partner/inscripcion" className="btn-link">Volver a la inscripción</a>
       </div>
     </div>
@@ -376,6 +377,6 @@ function Cifra({ valor, texto }: { valor: string; texto: string }) {
 }
 
 function Mensaje({ texto }: { texto: string }) {
-  return <div className="login"><div className="card login-card"><h1>Galeno · Partners</h1><p>{texto}</p></div></div>;
+  return <div className="login"><div className="card login-card"><h1>Galenum · Partners</h1><p>{texto}</p></div></div>;
 }
 

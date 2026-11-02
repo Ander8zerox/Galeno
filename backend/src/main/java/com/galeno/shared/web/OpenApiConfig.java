@@ -23,7 +23,7 @@ public class OpenApiConfig {
     @Bean
     OpenAPI openApi() {
         return new OpenAPI()
-                .info(new Info().title("Galeno API").version("v1"))
+                .info(new Info().title("Galenum API").version("v1"))
                 .components(new Components().addSecuritySchemes("bearer",
                         new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
                 .addSecurityItem(new SecurityRequirement().addList("bearer"));

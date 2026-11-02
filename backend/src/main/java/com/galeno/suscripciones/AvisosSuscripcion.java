@@ -101,10 +101,10 @@ class AvisosSuscripcion {
 
     private void enviarCorreo(Suscripcion s, Tipo tipo) {
         String consultorio = suscripciones.nombreConsultorio(s.getTenantId());
-        String que = s.getPagadaHasta() == null ? "La prueba gratis de Galeno" : "La suscripción a Galeno";
+        String que = s.getPagadaHasta() == null ? "La prueba gratis de Galenum" : "La suscripción a Galenum";
         String vence = suscripciones.fecha(s.vence(), s.getTenantId());
         String finGracia = suscripciones.fecha(s.vence().plus(Suscripcion.GRACIA), s.getTenantId());
-        String pagar = "Para renovar, entre a Galeno con una cuenta de administrador, abra Suscripción y reporte su pago.";
+        String pagar = "Para renovar, entre a Galenum con una cuenta de administrador, abra Suscripción y reporte su pago.";
         String asunto;
         String texto;
         switch (tipo) {
@@ -119,7 +119,7 @@ class AvisosSuscripcion {
                         .formatted(que, consultorio, vence, finGracia, pagar);
             }
             default -> {
-                asunto = consultorio + " quedó en solo lectura en Galeno";
+                asunto = consultorio + " quedó en solo lectura en Galenum";
                 texto = ("«%s» quedó en solo lectura porque la suscripción venció el %s. Sus datos y sus historias "
                         + "clínicas siguen ahí: puede consultarlas y descargarlas. En cuanto aprobemos su pago, todo "
                         + "vuelve a funcionar.\n\n%s").formatted(consultorio, vence, pagar);

@@ -137,6 +137,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 /* Una tarjeta dentro de otra no lleva sombra: la profundidad es solo para el primer nivel */
 .card .card { box-shadow: none; background: var(--surface-muted); }
 .stack { display: flex; flex-direction: column; gap: 1rem; }
+.stack-sm { display: flex; flex-direction: column; gap: .3rem; }
+.documento-anulado strong, .documento-anulado .stack-sm > span:first-child { text-decoration: line-through; color: var(--muted); }
 .row { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
 .between { justify-content: space-between; }
 .muted { color: var(--muted); }
@@ -307,6 +309,8 @@ a.evento:hover { background: var(--primary-soft); box-shadow: var(--shadow-md); 
 .nota { border-left: 3px solid var(--warn-line); padding-left: .9rem; }
 .nota p { margin: .2rem 0 0; white-space: pre-wrap; }
 .aviso-suscripcion { margin-bottom: 1.25rem; }
+.bienvenida { margin-bottom: 1.25rem; border-left: 4px solid var(--primary); }
+.bienvenida ol { margin: 0; padding-left: 1.25rem; line-height: 1.8; }
 
 /* --- Cifras destacadas (importación, partners, planes) --- */
 .cifra { display: flex; flex-direction: column; min-width: 6rem; }

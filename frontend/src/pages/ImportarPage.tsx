@@ -331,7 +331,7 @@ function Resultado({ lote }: { lote: Lote }) {
   );
 }
 
-/** Un paciente de un listado: lo que trae el archivo y qué cambiaría en Galeno. */
+/** Un paciente de un listado: lo que trae el archivo y qué cambiaría en Galenum. */
 function FilaListado({ loteId, registro: r, editable, onCambio }: { loteId: string; registro: Registro; editable: boolean; onCambio: () => void }) {
   const incluir = useMutation({
     mutationFn: async (incluido: boolean) => unwrap(await api.PUT("/api/v1/importaciones/{id}/registros/{registroId}", {

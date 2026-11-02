@@ -23,4 +23,12 @@ public interface LlmClient {
             super(message);
         }
     }
+
+    /** El modelo rechazó la solicitud por sus políticas: reintentar no sirve. */
+    class LlmRechazoException extends LlmException {
+
+        public LlmRechazoException() {
+            super("El modelo rechazó la solicitud por sus políticas de seguridad");
+        }
+    }
 }

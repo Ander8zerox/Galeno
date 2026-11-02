@@ -127,7 +127,7 @@ public class IdentidadService implements SesionVerifier {
      * enlace para elegir su contraseña. Vacío si el correo ya tiene cuenta.
      */
     public Optional<UUID> crearCuentaOperador(String email) {
-        return recuperacion.crearCuentaConEnlace(email, "Operador de Galeno", "/plataforma");
+        return recuperacion.crearCuentaConEnlace(email, "Operador de Galenum", "/plataforma");
     }
 
     /** Correo de cada cuenta (para avisos a partners y operadores). */

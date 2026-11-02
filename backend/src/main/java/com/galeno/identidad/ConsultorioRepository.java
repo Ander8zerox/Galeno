@@ -5,4 +5,6 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 interface ConsultorioRepository extends JpaRepository<Consultorio, UUID> {
+
+    boolean existsByNit(String nit);
 }

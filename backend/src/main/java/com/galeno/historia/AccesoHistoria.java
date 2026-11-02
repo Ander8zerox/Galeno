@@ -28,6 +28,7 @@ public class AccesoHistoria {
         NOTA_ACLARATORIA,
         SUBIR_DOCUMENTO,
         DESCARGAR_DOCUMENTO,
+        ANULAR_DOCUMENTO,
         IMPRIMIR_ATENCION,
         IMPRIMIR_HISTORIA,
         IMPRIMIR_FORMULA,

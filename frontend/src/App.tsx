@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { CalendarDays, CreditCard, FileUp, Users, UsersRound } from "lucide-react";
 import { Shell, type ItemMenu } from "./components/Shell";
+import { Bienvenida } from "./components/Bienvenida";
 import { api, unwrap } from "./api/client";
 import { useAuth } from "./auth/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
@@ -11,7 +12,7 @@ import { PlataformaApp } from "./pages/PlataformaApp";
 import { PartnerApp } from "./pages/PartnerApp";
 import { RecuperarPage, RestablecerPage } from "./pages/RecuperarPage";
 import { AvisoSuscripcion, SuscripcionPage } from "./pages/SuscripcionPage";
-import { BuzonDevPage, ConfirmarRegistroPage, PoliticaDatosPage, RegistroPage } from "./pages/RegistroPage";
+import { BuzonDevPage, ConfirmarRegistroPage, PoliticaDatosPage, RegistroPage, TerminosPage } from "./pages/RegistroPage";
 import { PacientesPage } from "./pages/PacientesPage";
 import { PacientePage } from "./pages/PacientePage";
 import { EquipoPage } from "./pages/EquipoPage";
@@ -32,6 +33,7 @@ export function App() {
   if (location.pathname === "/restablecer") return <RestablecerPage />;
   if (location.pathname === "/registro/confirmar") return <ConfirmarRegistroPage />;
   if (location.pathname === "/politica-datos") return <PoliticaDatosPage />;
+  if (location.pathname === "/terminos") return <TerminosPage />;
   if (import.meta.env.DEV && location.pathname === "/dev/buzon") return <BuzonDevPage />;
   if (!me) return seleccion ? <SeleccionConsultorioPage opciones={seleccion} /> : <LoginPage />;
 
@@ -44,8 +46,9 @@ export function App() {
   ];
 
   return (
-    <Shell marca="Galeno" items={menu} arriba={<SelectorConsultorio />} usuario={me.nombre ?? ""} onSalir={logout}>
+    <Shell marca="Galenum" items={menu} arriba={<SelectorConsultorio />} usuario={me.nombre ?? ""} onSalir={logout}>
         <AvisoSuscripcion />
+        <Bienvenida />
         <Routes>
           <Route path="/pacientes" element={<PacientesPage />} />
           <Route path="/pacientes/:id" element={<PacientePage />} />

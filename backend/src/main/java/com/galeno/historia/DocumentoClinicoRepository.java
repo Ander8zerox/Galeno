@@ -10,4 +10,8 @@ interface DocumentoClinicoRepository extends JpaRepository<DocumentoClinico, UUI
     List<DocumentoClinico> findByPacienteIdOrderByCreadoEnDesc(UUID pacienteId);
 
     long countByPacienteId(UUID pacienteId);
+
+    boolean existsByAtencionIdAndAnuladoEnIsNull(UUID atencionId);
+
+    List<DocumentoClinico> findByAtencionId(UUID atencionId);
 }

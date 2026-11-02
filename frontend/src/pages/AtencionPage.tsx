@@ -6,7 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import { ApoyoDiagnostico } from "../features/apoyo/ApoyoDiagnostico";
 import { RedactorFormula } from "../features/formulacion/RedactorFormula";
 import { DiagnosticosEditor, TIPO_DX, type DiagnosticoForm } from "../features/historia/DiagnosticosEditor";
-import { BotonArchivo, BotonDescargar, SubirDocumento, TIPO_DOCUMENTO, tamano } from "../features/historia/Documentos";
+import { AnularDocumento, BotonArchivo, BotonDescargar, MarcaAnulado, SubirDocumento, TIPO_DOCUMENTO, tamano } from "../features/historia/Documentos";
 import { fechaHoraCorta } from "../features/agenda/tiempo";
 
 type Atencion = Schemas["AtencionVista"];
@@ -209,7 +209,7 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
       <nav className="tabs">
         <button className={panel === "ia" ? "active" : ""} onClick={() => setPanel(panel === "ia" ? null : "ia")}>Apoyo diagnóstico con IA</button>
         <button className={panel === "formula" ? "active" : ""} onClick={() => setPanel(panel === "formula" ? null : "formula")}>Fórmula</button>
-        <button className={panel === "documentos" ? "active" : ""} onClick={() => setPanel(panel === "documentos" ? null : "documentos")}>Documentos ({atencion.documentos?.length ?? 0})</button>
+        <button className={panel === "documentos" ? "active" : ""} onClick={() => setPanel(panel === "documentos" ? null : "documentos")}>Documentos ({atencion.documentos?.filter((d) => !d.motivoAnulacion).length ?? 0})</button>
       </nav>
       {panel === "ia" && (
         <ApoyoDiagnostico
@@ -344,8 +344,12 @@ function DocumentosAtencion({ atencion, editable }: { atencion: Atencion; editab
     <div className="card stack">
       <h3>Documentos de la atención</h3>
       {docs.map((d) => (
-        <div key={d.id} className="row between">
-          <span>{d.descripcion ?? d.nombreArchivo} <span className="muted small">· {TIPO_DOCUMENTO[d.tipo!]} · {tamano(d.tamanoBytes)}</span></span>
+        <div key={d.id} className={`row between ${d.motivoAnulacion ? "documento-anulado" : ""}`}>
+          <div className="stack-sm">
+            <span>{d.descripcion ?? d.nombreArchivo} <span className="muted small">· {TIPO_DOCUMENTO[d.tipo!]} · {tamano(d.tamanoBytes)}</span></span>
+            <MarcaAnulado motivo={d.motivoAnulacion} />
+            {editable && !d.motivoAnulacion && <AnularDocumento id={d.id!} pacienteId={atencion.pacienteId!} />}
+          </div>
           <BotonDescargar id={d.id!} nombre={d.nombreArchivo!} />
         </div>
       ))}

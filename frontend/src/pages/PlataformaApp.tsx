@@ -12,7 +12,7 @@ type Pago = Schemas["PagoVista"];
 type Consultorio = Schemas["ConsultorioVista"];
 
 /**
- * Consola de los operadores de Galeno (no de los consultorios): revisar pagos y administrar suscripciones.
+ * Consola de los operadores de Galenum (no de los consultorios): revisar pagos y administrar suscripciones.
  * Tiene su propio token, guardado aparte de la sesión del consultorio.
  */
 const CLAVE = "galeno.plataforma";
@@ -79,8 +79,8 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
   return (
     <div className="login">
       <form className="card login-card" onSubmit={(e: FormEvent) => { e.preventDefault(); entrar.mutate(); }}>
-        <h1>Galeno · Plataforma</h1>
-        <p className="muted">Consola para los operadores de Galeno.</p>
+        <h1>Galenum · Plataforma</h1>
+        <p className="muted">Consola para los operadores de Galenum.</p>
         <label>Correo<input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
         <label>Contraseña<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
         {entrar.error && <p className="alert alert-error">{entrar.error.message}</p>}
@@ -457,7 +457,7 @@ const ACCION: Record<string, string> = {
 };
 
 /**
- * Direcciones a las que Galeno ya no escribe: rebotaron (no existen) o el destinatario marcó un correo como spam.
+ * Direcciones a las que Galenum ya no escribe: rebotaron (no existen) o el destinatario marcó un correo como spam.
  * Escribirles de nuevo daña la reputación del dominio, por eso solo se desbloquea si el usuario lo pide.
  */
 function CorreosSuprimidos() {
@@ -471,7 +471,7 @@ function CorreosSuprimidos() {
     <section className="stack">
       <div className="page-header"><h1>Correos bloqueados</h1></div>
       <p className="muted">
-        Galeno no les envía correos (ni verificación, ni recuperación de contraseña, ni avisos) porque rebotaron o el
+        Galenum no les envía correos (ni verificación, ni recuperación de contraseña, ni avisos) porque rebotaron o el
         destinatario los marcó como spam. Desbloquee una dirección solo si el usuario confirmó que ya funciona.
       </p>
       {lista.error && <p className="alert alert-error">{lista.error.message}</p>}
@@ -510,14 +510,15 @@ function Auditoria() {
       <div className="page-header"><h1>Auditoría</h1><span className="muted">últimos 100</span></div>
       <div className="card table-wrap">
         <table>
-          <thead><tr><th>Fecha</th><th>Acción</th><th>Consultorio</th><th>Detalle</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Operador</th><th>Acción</th><th>Consultorio</th><th>Detalle</th></tr></thead>
           <tbody>
             {eventos.data?.map((e, i) => (
               <tr key={i}>
                 <td className="small">{fechaHora.format(new Date(e.fecha!))}</td>
+                <td className="small">{e.operador}</td>
                 <td>{ACCION[e.accion!] ?? e.accion}</td>
                 <td>{e.consultorio ?? "—"}</td>
-                <td className="small muted">{e.detalle}</td>
+                <td className="small muted texto-libre">{e.detalle}</td>
               </tr>
             ))}
           </tbody>

@@ -86,9 +86,29 @@ export function AgendaPage() {
         : (
           <>
             <h2 className="dia-titulo">{fechaLarga(fecha)}</h2>
+            <AvisoFestivo fecha={fecha} />
             <AgendaDia medicoId={medico.membresiaId} fecha={fecha} zona={zona} />
           </>
         ))}
     </section>
+  );
+}
+
+/** Si el día es festivo en Colombia: la agenda no ofrece cupos, salvo al médico que marcó "Atiendo festivos". */
+function AvisoFestivo({ fecha }: { fecha: string }) {
+  const anio = fecha.slice(0, 4);
+  const festivos = useQuery({
+    queryKey: ["festivos", anio],
+    staleTime: Infinity, // los festivos de un año no cambian
+    queryFn: async () =>
+      unwrap(await api.GET("/api/v1/agenda/festivos", { params: { query: { desde: `${anio}-01-01`, hasta: `${anio}-12-31` } } })),
+  });
+  const festivo = festivos.data?.find((f) => f.fecha === fecha);
+  if (!festivo) return null;
+  return (
+    <p className="alert">
+      <strong>Festivo: {festivo.nombre}.</strong> No hay cupos este día, salvo si el médico marcó "Atiendo festivos" en su
+      horario. Para atender igual, agende con sobrecupo.
+    </p>
   );
 }

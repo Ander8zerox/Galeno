@@ -43,7 +43,7 @@ import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 /**
  * Importa historias de otro sistema en dos pasos: el lote se arma y se revisa sin tocar la historia; al
  * confirmarlo se crean los pacientes que faltan y las atenciones (FIRMADAS, origen IMPORTADA, sin médico de
- * Galeno). Volver a subir los mismos archivos no duplica nada: cada servicio tiene una clave única.
+ * Galenum). Volver a subir los mismos archivos no duplica nada: cada servicio tiene una clave única.
  */
 @Service
 public class ImportacionService {
@@ -203,7 +203,7 @@ public class ImportacionService {
                     if (!p.fechaNacimiento.equals(existente.get().getFechaNacimiento())
                             || !p.sexo.equals(existente.get().getSexo())) {
                         mensajes.add(new Mensaje(Nivel.ADVERTENCIA,
-                                "La fecha de nacimiento o el sexo no coinciden con los de Galeno; se conservan los de Galeno"));
+                                "La fecha de nacimiento o el sexo no coinciden con los de Galenum; se conservan los de Galenum"));
                     }
                 } else {
                     estado = RegistroImportacion.Estado.NUEVO;
@@ -358,7 +358,7 @@ public class ImportacionService {
 
     /**
      * Quita lo que creó el lote. Se niega si alguna atención importada ya tiene notas aclaratorias o fórmulas.
-     * Los pacientes creados por el lote se borran solo si no tienen ninguna otra actividad en Galeno.
+     * Los pacientes creados por el lote se borran solo si no tienen ninguna otra actividad en Galenum.
      */
     @Transactional
     public LoteVista deshacer(UUID loteId) {

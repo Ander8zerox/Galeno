@@ -24,7 +24,7 @@ export function LoginPage() {
   return (
     <div className="login">
       <form className="card login-card" onSubmit={onSubmit}>
-        <h1>Galeno</h1>
+        <h1>Galenum</h1>
         <p className="muted">Ingrese con su cuenta del consultorio</p>
         <label>
           Correo
@@ -37,7 +37,7 @@ export function LoginPage() {
         {error && <p className="alert alert-error">{error}</p>}
         <a href="/recuperar" className="btn-link small">¿Olvidó su contraseña?</a>
         <button className="btn" disabled={enviando}>{enviando ? "Ingresando…" : "Ingresar"}</button>
-        <p className="muted small center">¿Su consultorio aún no usa Galeno? <a href="/registro">Regístrelo aquí</a></p>
+        <p className="muted small center">¿Su consultorio aún no usa Galenum? <a href="/registro">Regístrelo aquí</a></p>
       </form>
     </div>
   );

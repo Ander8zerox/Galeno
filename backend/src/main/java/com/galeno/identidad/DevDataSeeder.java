@@ -62,7 +62,7 @@ class DevDataSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        TenantContext.runAs(TenantContext.SYSTEM, () -> tx.executeWithoutResult(s -> usuario(PLATAFORMA, "Operador Galeno")));
+        TenantContext.runAs(TenantContext.SYSTEM, () -> tx.executeWithoutResult(s -> usuario(PLATAFORMA, "Operador Galenum")));
         if (usuarios.existsByEmail(SECRETARIO)) {
             return;
         }

@@ -32,13 +32,13 @@ import com.galeno.shared.web.LimiteIntentos;
  * ADMIN (y MÉDICO si la persona es médico). Así nadie crea un consultorio con un correo que no es suyo.
  *
  * <p>La respuesta de la solicitud es la misma exista o no una cuenta con ese correo: el formulario público no
- * revela qué correos usan Galeno. Eso se sabe solo al abrir el enlace, cuando ya se probó que el correo es suyo.
+ * revela qué correos usan Galenum. Eso se sabe solo al abrir el enlace, cuando ya se probó que el correo es suyo.
  */
 @Service
 class RegistroService {
 
     /** Cambiarla cuando cambien los términos o la política de datos (y pedir una nueva aceptación). */
-    static final String TERMINOS_VERSION = "2026-10";
+    static final String TERMINOS_VERSION = "2026-11"; // 2026-11: primera versión de los términos de uso (/terminos)
 
     private static final Logger log = LoggerFactory.getLogger(RegistroService.class);
     private static final DateTimeFormatter VENCE = DateTimeFormatter.ofPattern("d 'de' MMMM 'a las' h:mm a", Locale.forLanguageTag("es-CO"))
@@ -56,6 +56,8 @@ class RegistroService {
     private final TransactionTemplate tx;
     private final String baseUrl;
     private final int limitePorIp;
+    private final int consultoriosPorIp;
+    private final int consultoriosPorCorreo;
     private final ApplicationEventPublisher eventos;
     private final ObjectProvider<CodigosReferido> codigos;
 
@@ -63,11 +65,15 @@ class RegistroService {
                     MembresiaRepository membresias, PerfilMedicoRepository perfiles, PasswordEncoder passwordEncoder,
                     SesionService sesiones, EnvioCorreo correo, LimiteIntentos limites, TransactionTemplate tx,
                     @Value("${app.web.base-url}") String baseUrl,
-                    @Value("${app.registro.solicitudes-por-ip-hora:5}") int limitePorIp, ApplicationEventPublisher eventos,
-                    ObjectProvider<CodigosReferido> codigos) {
+                    @Value("${app.registro.solicitudes-por-ip-hora:5}") int limitePorIp,
+                    @Value("${app.registro.consultorios-por-ip-30-dias:3}") int consultoriosPorIp,
+                    @Value("${app.registro.consultorios-por-correo-30-dias:2}") int consultoriosPorCorreo,
+                    ApplicationEventPublisher eventos, ObjectProvider<CodigosReferido> codigos) {
         this.eventos = eventos;
         this.codigos = codigos;
         this.limitePorIp = limitePorIp;
+        this.consultoriosPorIp = consultoriosPorIp;
+        this.consultoriosPorCorreo = consultoriosPorCorreo;
         this.pendientes = pendientes;
         this.usuarios = usuarios;
         this.consultorios = consultorios;
@@ -113,11 +119,17 @@ class RegistroService {
         if (codigo != null && codigos.getIfAvailable() != null && codigos.getIfAvailable().partnerActivo(codigo).isEmpty()) {
             errores.add("El código de partner " + codigo + " no existe o no está activo");
         }
+        if (ControlRegistro.desechable(email)) {
+            errores.add("Use un correo permanente: no se aceptan correos temporales");
+        }
         if (!errores.isEmpty()) {
             throw ApiProblem.badRequest(String.join(". ", errores));
         }
+        String buzon = ControlRegistro.buzon(email);
+        String nitUnico = nit;
+        TenantContext.runAs(TenantContext.SYSTEM, () -> tx.executeWithoutResult(t -> limitarPruebas(nitUnico, buzon, ip)));
         // Por correo cuentan solo las solicitudes válidas: el límite es para no inundar un buzón con enlaces
-        if (!limites.permitir("registro-email:" + email, 3, Duration.ofHours(1))) {
+        if (!limites.permitir("registro-email:" + buzon, 3, Duration.ofHours(1))) {
             throw ApiProblem.tooManyRequests("Ya enviamos varios enlaces a este correo. Revise su bandeja o intente en una hora.");
         }
 
@@ -130,16 +142,16 @@ class RegistroService {
                     s.esMedico() ? blankToNull(s.registroMedico()) : null, s.esMedico() ? blankToNull(s.especialidad()) : null,
                     TERMINOS_VERSION, ip, codigo));
         }));
-        correo.enviar(new Correo(email, "Active su consultorio en Galeno", """
+        correo.enviar(new Correo(email, "Active su consultorio en Galenum", """
                 Hola %s:
 
-                Recibimos la solicitud para registrar «%s» en Galeno. Para activarlo, abra este enlace:
+                Recibimos la solicitud para registrar «%s» en Galenum. Para activarlo, abra este enlace:
 
                 %s
 
                 El enlace vence el %s. Si usted no hizo esta solicitud, ignore este correo: no se creará nada.
 
-                Galeno""".formatted(pendiente.getNombre(), pendiente.getConsultorioNombre(),
+                Galenum""".formatted(pendiente.getNombre(), pendiente.getConsultorioNombre(),
                 baseUrl + "/registro/confirmar#" + token, VENCE.format(pendiente.getExpiraEn()))));
         log.info("Registro de consultorio solicitado desde {}", ip);
     }
@@ -155,7 +167,7 @@ class RegistroService {
     }
 
     /**
-     * Crea el consultorio y deja a la persona con sesión iniciada en él. Si el correo ya tenía cuenta en Galeno
+     * Crea el consultorio y deja a la persona con sesión iniciada en él. Si el correo ya tenía cuenta en Galenum
      * (p. ej. un médico que ya trabaja en otro consultorio), exige su contraseña actual.
      */
     public SesionResponse confirmar(String token, String passwordActual) {
@@ -166,7 +178,7 @@ class RegistroService {
             Usuario usuario = usuarios.findByEmail(r.getEmail()).map(existente -> {
                 if (!existente.isActivo() || passwordActual == null
                         || !passwordEncoder.matches(passwordActual, existente.getPasswordHash())) {
-                    throw ApiProblem.unauthorized("Ya tiene una cuenta en Galeno con este correo: ingrese su contraseña actual");
+                    throw ApiProblem.unauthorized("Ya tiene una cuenta en Galenum con este correo: ingrese su contraseña actual");
                 }
                 return existente;
             }).orElseGet(() -> usuarios.save(new Usuario(r.getEmail(), r.getPasswordHash(), r.getNombre())));
@@ -194,6 +206,30 @@ class RegistroService {
     private static RegistroPendiente vigente(Optional<RegistroPendiente> r) {
         return r.filter(RegistroPendiente::vigente)
                 .orElseThrow(() -> ApiProblem.notFound("El enlace no es válido, ya se usó o venció. Puede registrarse de nuevo."));
+    }
+
+    /**
+     * Contra el abuso de la prueba gratis: un consultorio por NIT, y pocos consultorios nuevos por IP y por buzón en 30
+     * días (cuentan los confirmados, que se conservan). Un médico puede tener dos consultorios; para más, que escriba.
+     */
+    private void limitarPruebas(String nit, String buzon, String ip) {
+        if (nit != null && consultorios.existsByNit(nit)) {
+            throw ApiProblem.conflict("Ya hay un consultorio registrado en Galenum con este NIT. Si es otra sede, "
+                    + "escríbanos para habilitarla.");
+        }
+        Instant desde = Instant.now().minus(Duration.ofDays(30));
+        if (pendientes.countByIpAndConfirmadoEnAfter(ip, desde) >= consultoriosPorIp) {
+            log.warn("Registro bloqueado: {} consultorios creados desde {} en 30 días", consultoriosPorIp, ip);
+            throw ApiProblem.tooManyRequests("Desde esta conexión ya se crearon varios consultorios este mes. "
+                    + "Escríbanos si necesita otro.");
+        }
+        long delBuzon = pendientes.correosConfirmadosDesde(desde).stream().map(ControlRegistro::buzon)
+                .filter(buzon::equals).count();
+        if (delBuzon >= consultoriosPorCorreo) {
+            log.warn("Registro bloqueado: el buzón {} ya creó {} consultorios en 30 días", buzon, delBuzon);
+            throw ApiProblem.tooManyRequests("Con este correo ya se crearon varios consultorios este mes. "
+                    + "Escríbanos si necesita otro.");
+        }
     }
 
     private static String blankToNull(String s) {
