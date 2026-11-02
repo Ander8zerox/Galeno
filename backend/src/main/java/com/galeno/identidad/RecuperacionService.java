@@ -3,6 +3,7 @@ package com.galeno.identidad;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +88,41 @@ class RecuperacionService {
                 contraseña sigue siendo la misma.
 
                 Galeno""".formatted(usuario.get().getNombre(), baseUrl + "/restablecer#" + token)));
+    }
+
+    /**
+     * Crea una cuenta con una contraseña que nadie conoce y envía un enlace para que la persona elija la suya, con el
+     * mismo flujo de restablecer (si el enlace vence, sirve "¿Olvidó su contraseña?"). Vacío si el correo ya tiene
+     * cuenta, activa o no: no se toca.
+     */
+    Optional<UUID> crearCuentaConEnlace(String emailCrudo, String nombre, String ingreso) {
+        String email = emailCrudo.strip().toLowerCase(Locale.ROOT);
+        String token = InvitacionService.nuevoToken();
+        Optional<Usuario> creado = TenantContext.callAs(TenantContext.SYSTEM, () -> tx.execute(t -> {
+            if (usuarios.existsByEmail(email)) {
+                return Optional.<Usuario>empty();
+            }
+            Usuario u = usuarios.save(new Usuario(email, passwordEncoder.encode(InvitacionService.nuevoToken()), nombre));
+            recuperaciones.save(new RecuperacionContrasena(u.getId(), InvitacionService.hash(token), null));
+            return Optional.of(u);
+        }));
+        creado.ifPresent(u -> enviarEnlaceInicial(u, token, ingreso));
+        return creado.map(Usuario::getId);
+    }
+
+    private void enviarEnlaceInicial(Usuario usuario, String token, String ingreso) {
+        correo.enviar(new Correo(usuario.getEmail(), "Defina su contraseña de Galeno", """
+                Hola:
+
+                Se creó su cuenta en Galeno. Para elegir su contraseña, abra este enlace:
+
+                %s
+
+                El enlace sirve una sola vez y vence en una hora; si vence, pida otro con "¿Olvidó su contraseña?".
+                Después ingrese en %s
+
+                Galeno""".formatted(baseUrl + "/restablecer#" + token, baseUrl + ingreso)));
+        log.info("Enlace inicial de contraseña enviado a la cuenta {}", usuario.getId());
     }
 
     public record RecuperacionPublica(String email) {

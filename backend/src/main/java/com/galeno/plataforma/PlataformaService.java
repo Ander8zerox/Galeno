@@ -216,16 +216,28 @@ public class PlataformaService {
         }
     }
 
-    /** Al arrancar, marca como operadores las cuentas de {@code app.plataforma.operadores} que existan. */
+    /**
+     * Al arrancar, marca como operadores las cuentas de {@code app.plataforma.operadores}. A un correo sin cuenta se
+     * le crea una (sin consultorio) y le llega un enlace para elegir la contraseña: así se crea el primer operador de
+     * un ambiente nuevo sin que la contraseña pase por la configuración.
+     */
     void marcarOperadores() {
-        Map<String, UUID> cuentas = identidad.cuentasPorCorreo(correosOperadores);
+        Map<String, UUID> cuentas = new java.util.HashMap<>(identidad.cuentasPorCorreo(correosOperadores));
+        for (String c : correosOperadores) {
+            String email = c.toLowerCase();
+            if (cuentas.containsKey(email)) {
+                continue;
+            }
+            identidad.crearCuentaOperador(email).ifPresentOrElse(id -> {
+                cuentas.put(email, id);
+                log.info("app.plataforma.operadores: se creó la cuenta de {} y se le envió el enlace para la contraseña", email);
+            }, () -> log.warn("app.plataforma.operadores: la cuenta de {} está desactivada; no se marca como operador", email));
+        }
         comoSistema(() -> {
             cuentas.values().stream().filter(id -> !operadores.existsById(id))
                     .forEach(id -> operadores.save(new OperadorPlataforma(id)));
             return null;
         });
-        correosOperadores.stream().filter(c -> !cuentas.containsKey(c.toLowerCase()))
-                .forEach(c -> log.warn("app.plataforma.operadores: {} no tiene cuenta en Galeno", c));
     }
 
     // --- apoyo ---
