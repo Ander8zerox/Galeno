@@ -86,7 +86,7 @@ export function RegistroPage() {
     <div className="login">
       <form className="card login-card ancho stack" onSubmit={onSubmit}>
         <h1>Registre su consultorio</h1>
-        <p className="muted">Cree la cuenta de su consultorio en Galeno. Usted quedará como administrador y podrá invitar a su equipo.</p>
+        <p className="muted">Cree la cuenta de su consultorio en Galenum. Usted quedará como administrador y podrá invitar a su equipo.</p>
 
         <h3>Consultorio</h3>
         <Campo label="Nombre del consultorio" error={errores.consultorioNombre}>
@@ -126,7 +126,7 @@ export function RegistroPage() {
         )}
 
         <Campo label="Código de partner (opcional)" error={errores.codigoPartner}>
-          <input value={form.codigoPartner} onChange={(e) => setForm({ ...form, codigoPartner: e.target.value.toUpperCase() })} maxLength={20} placeholder="Si alguien le recomendó Galeno" />
+          <input value={form.codigoPartner} onChange={(e) => setForm({ ...form, codigoPartner: e.target.value.toUpperCase() })} maxLength={20} placeholder="Si alguien le recomendó Galenum" />
           {partner.data && <small className="badge badge-ok">Recomendado por {partner.data.partner}: {partner.data.descuentoPorcentaje} % de descuento en su suscripción</small>}
           {partner.isError && codigo.length >= 4 && <small className="field-error">Ese código no existe o no está activo</small>}
         </Campo>
@@ -191,7 +191,7 @@ export function ConfirmarRegistroPage() {
         {r.cuentaExistente && (
           <>
             <p className="alert">
-              Ya tiene una cuenta en Galeno con este correo. Confirme con su contraseña actual y el consultorio nuevo
+              Ya tiene una cuenta en Galenum con este correo. Confirme con su contraseña actual y el consultorio nuevo
               se agregará a su cuenta (su contraseña no cambia).
             </p>
             <label>Contraseña actual
@@ -217,13 +217,13 @@ export function PoliticaDatosPage() {
         <h1>Política de tratamiento de datos personales</h1>
         <p className="alert">Borrador en revisión legal · versión 2026-10.</p>
         <p>
-          Galeno es una herramienta para que consultorios médicos registren a sus pacientes, su agenda y su historia
+          Galenum es una herramienta para que consultorios médicos registren a sus pacientes, su agenda y su historia
           clínica. Cada consultorio es el <strong>responsable</strong> del tratamiento de los datos de sus pacientes;
-          Galeno actúa como <strong>encargado</strong> y solo los trata para prestar el servicio.
+          Galenum actúa como <strong>encargado</strong> y solo los trata para prestar el servicio.
         </p>
         <h3>Qué datos tratamos</h3>
         <p>
-          De las personas que usan Galeno: nombre, correo, contraseña (cifrada) y, para médicos, el registro profesional.
+          De las personas que usan Galenum: nombre, correo, contraseña (cifrada) y, para médicos, el registro profesional.
           De los pacientes: los datos de identificación, contacto y la información clínica que el consultorio registra,
           que son datos sensibles.
         </p>
@@ -241,7 +241,7 @@ export function PoliticaDatosPage() {
         <h3>Derechos</h3>
         <p>
           Los titulares pueden conocer, actualizar, rectificar y solicitar la supresión de sus datos (cuando la ley lo
-          permita) y revocar la autorización, a través de su consultorio o escribiendo a Galeno.
+          permita) y revocar la autorización, a través de su consultorio o escribiendo a Galenum.
         </p>
         <a href="/registro" className="btn-link">Volver al registro</a>
       </div>
@@ -261,7 +261,7 @@ export function TerminosPage() {
         <p className="alert">Borrador en revisión legal · versión 2026-11.</p>
         <h3>El servicio</h3>
         <p>
-          Galeno es un software en la nube para que consultorios de salud en Colombia gestionen su agenda, sus pacientes,
+          Galenum es un software en la nube para que consultorios de salud en Colombia gestionen su agenda, sus pacientes,
           la historia clínica y las fórmulas. Lo usan profesionales de salud y su personal administrativo; el criterio
           clínico y las decisiones son siempre del profesional tratante, también cuando usa las funciones de
           inteligencia artificial, que solo sugieren.
@@ -280,21 +280,21 @@ export function TerminosPage() {
         </p>
         <h3>Uso permitido</h3>
         <p>
-          Galeno se licencia para la atención de pacientes y la administración del consultorio. No se permite: copiar,
+          Galenum se licencia para la atención de pacientes y la administración del consultorio. No se permite: copiar,
           reproducir o imitar el software, sus pantallas, flujos o textos; descompilarlo o intentar obtener su código;
           extraer información de forma automatizada; usarlo para desarrollar, evaluar o promocionar un producto que
-          compita con Galeno; ni compartir el acceso con terceros ajenos al consultorio. Galeno puede suspender las cuentas
+          compita con Galenum; ni compartir el acceso con terceros ajenos al consultorio. Galenum puede suspender las cuentas
           que incumplan estas reglas.
         </p>
         <h3>Propiedad intelectual</h3>
         <p>
-          El software, su diseño, sus textos y su marca son de Galeno. Los datos que registra el consultorio son del
-          consultorio y de sus pacientes; Galeno los trata como encargado, según la{" "}
+          El software, su diseño, sus textos y su marca son de Galenum. Los datos que registra el consultorio son del
+          consultorio y de sus pacientes; Galenum los trata como encargado, según la{" "}
           <a href="/politica-datos" target="_blank" rel="noreferrer">política de tratamiento de datos personales</a>.
         </p>
         <h3>Responsabilidad</h3>
         <p>
-          Galeno pone los medios razonables para que el servicio esté disponible y los datos seguros, pero no garantiza un
+          Galenum pone los medios razonables para que el servicio esté disponible y los datos seguros, pero no garantiza un
           funcionamiento sin interrupciones. No responde por decisiones clínicas ni por el contenido que registra el
           consultorio.
         </p>
@@ -342,7 +342,7 @@ function Mensaje({ texto, enlace }: { texto: string; enlace?: boolean }) {
   return (
     <div className="login">
       <div className="card login-card stack">
-        <h1>Galeno</h1>
+        <h1>Galenum</h1>
         <p>{texto}</p>
         {enlace && <a href="/registro" className="btn btn-secondary">Registrarme de nuevo</a>}
       </div>

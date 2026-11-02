@@ -58,7 +58,7 @@ public class RegistroController {
         return registro.consultar(r.token());
     }
 
-    /** {@code password} solo se pide si el correo ya tenía cuenta en Galeno. */
+    /** {@code password} solo se pide si el correo ya tenía cuenta en Galenum. */
     public record ConfirmarRegistro(@NotBlank @Size(max = 100) String token, @Size(max = 200) String password) {
     }
 

@@ -55,7 +55,7 @@ public class Atencion {
     @Column(name = "paciente_id", nullable = false, updatable = false)
     private UUID pacienteId;
 
-    /** Vacío en las atenciones importadas: no las registró un médico de Galeno. */
+    /** Vacío en las atenciones importadas: no las registró un médico de Galenum. */
     @Column(name = "medico_membresia_id", updatable = false)
     private UUID medicoMembresiaId;
 

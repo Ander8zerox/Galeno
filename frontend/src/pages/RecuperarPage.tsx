@@ -16,7 +16,7 @@ export function RecuperarPage() {
       {enviar.isSuccess ? (
         <div className="card login-card stack">
           <h1>Revise su correo</h1>
-          <p>Si <strong>{email}</strong> tiene una cuenta en Galeno, le enviamos un enlace para elegir una contraseña nueva. Vence en una hora.</p>
+          <p>Si <strong>{email}</strong> tiene una cuenta en Galenum, le enviamos un enlace para elegir una contraseña nueva. Vence en una hora.</p>
           <p className="muted small">¿No le llegó? Revise la carpeta de spam o pida otro enlace en unos minutos.</p>
           {import.meta.env.DEV && <a href="/dev/buzon" className="btn btn-secondary">Abrir el buzón de desarrollo</a>}
           <a href="/" className="btn-link">Volver al inicio de sesión</a>

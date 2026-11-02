@@ -49,7 +49,7 @@ app:
   correo:
     proveedor: local # local (buzón de desarrollo en /api/v1/dev/buzon) | ses (en AWS)
     # Solo con ses (los valores reales los pone Terraform en el entorno):
-    remitente: ""          # APP_CORREO_REMITENTE, p. ej. "Galeno <no-responder@galeno.com.co>"
+    remitente: ""          # APP_CORREO_REMITENTE, p. ej. "Galenum <no-responder@galenum.com.co>"
     configuration-set: ""  # APP_CORREO_CONFIGURATION_SET: publica rebotes y quejas en SNS
     cola-eventos: ""       # APP_CORREO_COLA_EVENTOS: URL de la cola SQS suscrita a ese SNS
     region: us-east-2 # la región del proyecto de AWS (nueva experiencia): todo recurso regional va aquí

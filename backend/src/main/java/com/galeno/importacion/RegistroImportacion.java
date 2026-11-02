@@ -20,7 +20,7 @@ import org.hibernate.type.SqlTypes;
 class RegistroImportacion {
 
     enum Estado {
-        /** No existe en Galeno: se crea con datos incompletos. */
+        /** No existe en Galenum: se crea con datos incompletos. */
         NUEVO,
         /** Ya existe (mismo tipo y número de documento): solo se le agregan atenciones. */
         EXISTENTE,

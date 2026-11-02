@@ -22,7 +22,7 @@ import com.galeno.shared.web.LimiteIntentos;
 
 /**
  * "Olvidé mi contraseña" (endpoints públicos). La solicitud responde igual exista o no la cuenta, para no revelar
- * qué correos usan Galeno; si existe, llega un enlace de un solo uso que vence en una hora. Al restablecer, todas
+ * qué correos usan Galenum; si existe, llega un enlace de un solo uso que vence en una hora. Al restablecer, todas
  * las sesiones abiertas de esa cuenta dejan de servir (ver {@code SesionVigenteFilter}).
  */
 @Service
@@ -77,7 +77,7 @@ class RecuperacionService {
             log.info("Recuperación de contraseña para un correo sin cuenta, desde {}", ip);
             return;
         }
-        correo.enviar(new Correo(email, "Restablezca su contraseña de Galeno", """
+        correo.enviar(new Correo(email, "Restablezca su contraseña de Galenum", """
                 Hola %s:
 
                 Recibimos una solicitud para restablecer su contraseña. Para elegir una nueva, abra este enlace:
@@ -87,7 +87,7 @@ class RecuperacionService {
                 El enlace sirve una sola vez y vence en una hora. Si usted no lo pidió, ignore este correo: su
                 contraseña sigue siendo la misma.
 
-                Galeno""".formatted(usuario.get().getNombre(), baseUrl + "/restablecer#" + token)));
+                Galenum""".formatted(usuario.get().getNombre(), baseUrl + "/restablecer#" + token)));
     }
 
     /**
@@ -111,17 +111,17 @@ class RecuperacionService {
     }
 
     private void enviarEnlaceInicial(Usuario usuario, String token, String ingreso) {
-        correo.enviar(new Correo(usuario.getEmail(), "Defina su contraseña de Galeno", """
+        correo.enviar(new Correo(usuario.getEmail(), "Defina su contraseña de Galenum", """
                 Hola:
 
-                Se creó su cuenta en Galeno. Para elegir su contraseña, abra este enlace:
+                Se creó su cuenta en Galenum. Para elegir su contraseña, abra este enlace:
 
                 %s
 
                 El enlace sirve una sola vez y vence en una hora; si vence, pida otro con "¿Olvidó su contraseña?".
                 Después ingrese en %s
 
-                Galeno""".formatted(baseUrl + "/restablecer#" + token, baseUrl + ingreso)));
+                Galenum""".formatted(baseUrl + "/restablecer#" + token, baseUrl + ingreso)));
         log.info("Enlace inicial de contraseña enviado a la cuenta {}", usuario.getId());
     }
 
@@ -149,15 +149,15 @@ class RecuperacionService {
             return u;
         }));
         eventos.publishEvent(new CredencialesCambiadas(usuario.getId()));
-        correo.enviar(new Correo(usuario.getEmail(), "Su contraseña de Galeno cambió", """
+        correo.enviar(new Correo(usuario.getEmail(), "Su contraseña de Galenum cambió", """
                 Hola %s:
 
-                La contraseña de su cuenta en Galeno acaba de cambiar y se cerraron todas las sesiones abiertas.
+                La contraseña de su cuenta en Galenum acaba de cambiar y se cerraron todas las sesiones abiertas.
 
                 Si no fue usted, restablézcala de inmediato desde "¿Olvidó su contraseña?" y avise al administrador
                 de su consultorio.
 
-                Galeno""".formatted(usuario.getNombre())));
+                Galenum""".formatted(usuario.getNombre())));
         log.info("Contraseña restablecida para la cuenta {}", usuario.getId());
     }
 

@@ -67,7 +67,7 @@ export function InvitacionPage() {
         </p>
         {inv.cuentaExistente ? (
           <>
-            <p className="alert">Ya tiene una cuenta en Galeno. Confirme con su contraseña actual y el consultorio se agregará a su cuenta.</p>
+            <p className="alert">Ya tiene una cuenta en Galenum. Confirme con su contraseña actual y el consultorio se agregará a su cuenta.</p>
             <label>Contraseña actual
               <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </label>
@@ -106,7 +106,7 @@ function Mensaje({ texto }: { texto: string }) {
   return (
     <div className="login">
       <div className="card login-card">
-        <h1>Galeno</h1>
+        <h1>Galenum</h1>
         <p>{texto}</p>
         <a href="/">Ir al inicio de sesión</a>
       </div>

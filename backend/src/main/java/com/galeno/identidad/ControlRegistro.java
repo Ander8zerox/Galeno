@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 /**
  * Filtros del registro de consultorios contra el abuso de la prueba gratis: correos desechables y alias del mismo
- * buzón. No impide que alguien vea Galeno (puede pagar un mes); evita que encadene pruebas sin costo.
+ * buzón. No impide que alguien vea Galenum (puede pagar un mes); evita que encadene pruebas sin costo.
  */
 final class ControlRegistro {
 

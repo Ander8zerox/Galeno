@@ -14,7 +14,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
-/** Persona o empresa que vende Galeno a consultorios a cambio de una comisión recurrente (ver V13). */
+/** Persona o empresa que vende Galenum a consultorios a cambio de una comisión recurrente (ver V13). */
 @Entity
 @Table(name = "partners")
 class Partner {

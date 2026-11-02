@@ -8,7 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-/** Cuenta de Galeno con acceso a la consola de la plataforma (ver {@link OperadoresDesdeConfiguracion}). */
+/** Cuenta de Galenum con acceso a la consola de la plataforma (ver {@link OperadoresDesdeConfiguracion}). */
 @Entity
 @Table(name = "operadores_plataforma")
 class OperadorPlataforma {

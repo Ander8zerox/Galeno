@@ -20,7 +20,7 @@ import com.galeno.shared.tenancy.TenantContext;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
 /**
- * Aceptar una invitación (endpoint público). Si el correo ya tiene cuenta en Galeno, se pide su contraseña
+ * Aceptar una invitación (endpoint público). Si el correo ya tiene cuenta en Galenum, se pide su contraseña
  * actual y se le agrega el consultorio; si no, se crea la cuenta.
  */
 @Service
@@ -95,7 +95,7 @@ class InvitacionService {
 
     private Usuario verificarCuenta(Usuario existente, String password) {
         if (!existente.isActivo() || !passwordEncoder.matches(password, existente.getPasswordHash())) {
-            throw ApiProblem.unauthorized("Ya tiene una cuenta en Galeno con este correo: ingrese su contraseña actual");
+            throw ApiProblem.unauthorized("Ya tiene una cuenta en Galenum con este correo: ingrese su contraseña actual");
         }
         return existente;
     }

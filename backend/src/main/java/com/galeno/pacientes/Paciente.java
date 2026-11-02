@@ -113,7 +113,7 @@ public class Paciente {
     /**
      * Qué cambiaría un listado de otro sistema. Si el paciente tiene datos incompletos (vino del RIPS sin nombre),
      * el listado pone el nombre; si no, solo llena teléfono y correo vacíos. Nunca reemplaza lo que alguien ya
-     * registró en Galeno: las diferencias se muestran en la revisión, no se aplican.
+     * registró en Galenum: las diferencias se muestran en la revisión, no se aplican.
      */
     List<Cambio> cambiosDesde(DatosPersona d) {
         List<Cambio> cambios = new ArrayList<>();
@@ -131,7 +131,7 @@ public class Paciente {
         return cambios;
     }
 
-    /** Diferencias con Galeno que el listado no va a aplicar (para avisar en la revisión). */
+    /** Diferencias con Galenum que el listado no va a aplicar (para avisar en la revisión). */
     List<String> diferenciasCon(DatosPersona d) {
         List<String> diferencias = new ArrayList<>();
         if (!datosIncompletos && d.nombres() != null && d.apellidos() != null

@@ -45,7 +45,7 @@ export function App() {
   ];
 
   return (
-    <Shell marca="Galeno" items={menu} arriba={<SelectorConsultorio />} usuario={me.nombre ?? ""} onSalir={logout}>
+    <Shell marca="Galenum" items={menu} arriba={<SelectorConsultorio />} usuario={me.nombre ?? ""} onSalir={logout}>
         <AvisoSuscripcion />
         <Routes>
           <Route path="/pacientes" element={<PacientesPage />} />

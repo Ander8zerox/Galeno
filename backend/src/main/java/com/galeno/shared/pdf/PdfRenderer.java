@@ -24,7 +24,7 @@ public class PdfRenderer {
     /** Estilos comunes. Las fuentes base del PDF (Helvetica) cubren el español, incluidas tildes y ñ. */
     public static final String ESTILOS = """
             @page { size: letter; margin: 16mm 16mm 20mm 16mm;
-                    @bottom-center { content: "Galeno · página " counter(page) " de " counter(pages);
+                    @bottom-center { content: "Galenum · página " counter(page) " de " counter(pages);
                                      font-family: Helvetica, sans-serif; font-size: 8pt; color: #637083; } }
             body { font-family: Helvetica, sans-serif; font-size: 10pt; color: #1f2933; }
             h1 { font-size: 15pt; margin: 0; color: #0f6e8c; }

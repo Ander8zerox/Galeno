@@ -46,7 +46,7 @@ import com.galeno.suscripciones.SuscripcionService.EstadoVista;
 import com.galeno.suscripciones.SuscripcionService.PagoAprobado;
 
 /**
- * Programa de partners: quien vende Galeno a un consultorio recibe una comisión sobre cada pago de ese consultorio
+ * Programa de partners: quien vende Galenum a un consultorio recibe una comisión sobre cada pago de ese consultorio
  * mientras siga pagando, y el consultorio referido recibe un descuento.
  *
  * <ul>
@@ -175,17 +175,17 @@ class PartnerService implements CodigosReferido {
             return inscripciones.save(new InscripcionPartner(hash(token), email, passwordEncoder.encode(s.password()),
                     mapper.writeValueAsString(limpios)));
         });
-        correo.enviar(new Correo(email, "Confirme su inscripción como partner de Galeno", """
+        correo.enviar(new Correo(email, "Confirme su inscripción como partner de Galenum", """
                 Hola %s:
 
-                Recibimos su inscripción al programa de partners de Galeno. Para confirmarla, abra este enlace:
+                Recibimos su inscripción al programa de partners de Galenum. Para confirmarla, abra este enlace:
 
                 %s
 
                 El enlace vence en 24 horas. Después revisaremos su inscripción y le avisaremos por correo cuando
                 quede aprobada, con su código de referido.
 
-                Galeno""".formatted(limpios.nombre(), baseUrl + "/partner/confirmar#" + token)));
+                Galenum""".formatted(limpios.nombre(), baseUrl + "/partner/confirmar#" + token)));
     }
 
     public record InscripcionPublica(String email, String nombre, boolean cuentaExistente) {
@@ -208,7 +208,7 @@ class PartnerService implements CodigosReferido {
         String nombreCuenta;
         if (identidad.existeCuenta(i.getEmail())) {
             SesionService.Cuenta cuenta = sesiones.verificarCredenciales(i.getEmail(), passwordActual == null ? "" : passwordActual)
-                    .orElseThrow(() -> ApiProblem.unauthorized("Ya tiene una cuenta en Galeno con este correo: ingrese su contraseña actual"));
+                    .orElseThrow(() -> ApiProblem.unauthorized("Ya tiene una cuenta en Galenum con este correo: ingrese su contraseña actual"));
             usuarioId = cuenta.id();
             nombreCuenta = cuenta.nombre();
         } else {
@@ -314,7 +314,7 @@ class PartnerService implements CodigosReferido {
         });
         plataforma.auditar("APROBAR_PARTNER", null, p.getNombre() + " · " + p.getCodigo());
         correos().entrySet().stream().filter(e -> e.getKey().equals(p.getUsuarioId())).findFirst()
-                .ifPresent(e -> correo.enviar(new Correo(e.getValue(), "Ya es partner de Galeno", """
+                .ifPresent(e -> correo.enviar(new Correo(e.getValue(), "Ya es partner de Galenum", """
                         Hola %s:
 
                         Aprobamos su inscripción. Su código de referido es %s y su enlace:
@@ -322,10 +322,10 @@ class PartnerService implements CodigosReferido {
                         %s
 
                         Usted gana el %d%% de cada pago de los consultorios que se registren con su código, mientras sigan
-                        usando Galeno; ellos reciben %d%% de descuento. Cada comisión queda disponible %d días después del
+                        usando Galenum; ellos reciben %d%% de descuento. Cada comisión queda disponible %d días después del
                         pago, y se la transferimos cuando su disponible llegue a %s. Vea sus referidos y comisiones en %s.
 
-                        Galeno""".formatted(p.getNombre(), p.getCodigo(), enlace(p.getCodigo()), comisionPorcentaje,
+                        Galenum""".formatted(p.getNombre(), p.getCodigo(), enlace(p.getCodigo()), comisionPorcentaje,
                         descuentoPorcentaje, retencion.toDays(), SuscripcionService.pesos(minimoLiquidacion),
                         baseUrl + "/partner"))));
         return panel(partnerId).partner();
@@ -392,12 +392,12 @@ class PartnerService implements CodigosReferido {
         plataforma.auditar("LIQUIDAR_PARTNER", null, partnerId + " · " + l.getTotal() + " · " + referencia);
         Partner p = comoSistema(() -> partners.findById(partnerId).orElseThrow());
         Optional.ofNullable(correos().get(p.getUsuarioId())).ifPresent(email -> correo.enviar(new Correo(email,
-                "Le pagamos sus comisiones de Galeno", """
+                "Le pagamos sus comisiones de Galenum", """
                         Hola %s:
 
                         Transferimos %s por %d comisiones (referencia %s, %s). Vea el detalle en %s.
 
-                        Galeno""".formatted(p.getNombre(), SuscripcionService.pesos(l.getTotal()), l.getComisiones(),
+                        Galenum""".formatted(p.getNombre(), SuscripcionService.pesos(l.getTotal()), l.getComisiones(),
                         l.getReferencia(), l.getFechaPago(), baseUrl + "/partner"))));
         return vista(l);
     }

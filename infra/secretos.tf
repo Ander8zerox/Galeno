@@ -16,7 +16,7 @@ locals {
       SPRING_DATASOURCE_USERNAME   = aws_db_instance.principal.username
       APP_WEB_BASE_URL             = local.url_web
       APP_DOCUMENTOS_BUCKET        = aws_s3_bucket.documentos.bucket
-      APP_CORREO_REMITENTE         = "Galeno <no-responder@${var.dominio}>"
+      APP_CORREO_REMITENTE         = "Galenum <no-responder@${var.dominio}>"
       APP_CORREO_CONFIGURATION_SET = aws_sesv2_configuration_set.galeno.configuration_set_name
       APP_CORREO_COLA_EVENTOS      = aws_sqs_queue.correo_eventos.url
     },

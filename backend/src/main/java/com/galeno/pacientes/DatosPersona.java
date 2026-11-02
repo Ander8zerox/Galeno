@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 /**
  * Datos de una persona que llegan de un listado de otro sistema. Un campo en {@code null} significa que el
- * listado no lo trae (la columna no existe o la celda está vacía): nunca borra lo que ya hay en Galeno.
+ * listado no lo trae (la columna no existe o la celda está vacía): nunca borra lo que ya hay en Galenum.
  */
 public record DatosPersona(String nombres, String apellidos, LocalDate fechaNacimiento, String sexo, String telefono,
                            String email) {

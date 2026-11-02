@@ -235,7 +235,7 @@ public class HistoriaService {
         return delLote.size();
     }
 
-    /** Actividad clínica del paciente en Galeno (para saber si un paciente importado se puede borrar). */
+    /** Actividad clínica del paciente en Galenum (para saber si un paciente importado se puede borrar). */
     @Transactional(readOnly = true)
     public long actividadClinica(UUID pacienteId) {
         return atenciones.countByPacienteId(pacienteId) + documentos.countByPacienteId(pacienteId);

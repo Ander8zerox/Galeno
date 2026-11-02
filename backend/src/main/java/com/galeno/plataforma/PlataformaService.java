@@ -35,10 +35,10 @@ import com.galeno.suscripciones.SuscripcionService.PagoVista;
 import com.galeno.suscripciones.SuscripcionService.PlanVista;
 
 /**
- * Consola de la plataforma: la usan los operadores de Galeno (no los consultorios) para revisar pagos y
+ * Consola de la plataforma: la usan los operadores de Galenum (no los consultorios) para revisar pagos y
  * administrar suscripciones. Cada acción que cambia algo queda en {@code auditoria_plataforma}.
  *
- * <p>Los operadores son cuentas normales de Galeno marcadas por configuración ({@code app.plataforma.operadores});
+ * <p>Los operadores son cuentas normales de Galenum marcadas por configuración ({@code app.plataforma.operadores});
  * no hay forma de volverse operador desde la web.
  */
 @Service

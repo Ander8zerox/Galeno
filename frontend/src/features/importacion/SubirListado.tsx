@@ -99,7 +99,7 @@ export function SubirListado() {
       <p className="muted small">
         El Excel (.xlsx) o CSV con la lista de pacientes que exporta su sistema anterior. Se cruza por tipo y número de
         documento: completa los pacientes que el RIPS dejó sin nombre, agrega teléfono y correo donde falten y crea los que
-        no existen. Nunca reemplaza datos que ya están en Galeno.
+        no existen. Nunca reemplaza datos que ya están en Galenum.
       </p>
       {!columnas && (
         <div className="row">

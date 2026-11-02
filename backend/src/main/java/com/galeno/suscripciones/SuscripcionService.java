@@ -231,12 +231,12 @@ public class SuscripcionService implements EstadoSuscripcionVerifier {
         });
         eventos.publishEvent(new SuscripcionCambiada(consultorio));
         eventos.publishEvent(new PagoAprobado(pago.id(), consultorio, pago.monto(), pago.revisadoEn()));
-        avisar(pago.consultorioId(), "Pago aprobado: su suscripción a Galeno está al día", """
+        avisar(pago.consultorioId(), "Pago aprobado: su suscripción a Galenum está al día", """
                 Hola:
 
                 Aprobamos el pago %s de %s (plan %s). Su suscripción queda vigente hasta el %s.
 
-                Gracias por usar Galeno.""".formatted(pago.referencia(), pesos(pago.monto()), pago.plan().toLowerCase(),
+                Gracias por usar Galenum.""".formatted(pago.referencia(), pesos(pago.monto()), pago.plan().toLowerCase(),
                 fecha(pago.periodoHasta(), pago.consultorioId())));
         return pago;
     }
@@ -247,12 +247,12 @@ public class SuscripcionService implements EstadoSuscripcionVerifier {
             p.rechazar(operadorId, motivo.strip());
             return vista(p, identidad.consultorio(p.getTenantId()).nombre());
         });
-        avisar(pago.consultorioId(), "No pudimos aprobar su pago en Galeno", """
+        avisar(pago.consultorioId(), "No pudimos aprobar su pago en Galenum", """
                 Hola:
 
                 Revisamos el pago %s de %s y no lo pudimos aprobar: %s
 
-                Puede reportarlo de nuevo desde Galeno, en Suscripción.""".formatted(pago.referencia(), pesos(pago.monto()), motivo.strip()));
+                Puede reportarlo de nuevo desde Galenum, en Suscripción.""".formatted(pago.referencia(), pesos(pago.monto()), motivo.strip()));
         return pago;
     }
 

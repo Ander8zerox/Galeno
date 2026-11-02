@@ -32,7 +32,7 @@ import com.galeno.shared.web.LimiteIntentos;
  * ADMIN (y MÉDICO si la persona es médico). Así nadie crea un consultorio con un correo que no es suyo.
  *
  * <p>La respuesta de la solicitud es la misma exista o no una cuenta con ese correo: el formulario público no
- * revela qué correos usan Galeno. Eso se sabe solo al abrir el enlace, cuando ya se probó que el correo es suyo.
+ * revela qué correos usan Galenum. Eso se sabe solo al abrir el enlace, cuando ya se probó que el correo es suyo.
  */
 @Service
 class RegistroService {
@@ -142,16 +142,16 @@ class RegistroService {
                     s.esMedico() ? blankToNull(s.registroMedico()) : null, s.esMedico() ? blankToNull(s.especialidad()) : null,
                     TERMINOS_VERSION, ip, codigo));
         }));
-        correo.enviar(new Correo(email, "Active su consultorio en Galeno", """
+        correo.enviar(new Correo(email, "Active su consultorio en Galenum", """
                 Hola %s:
 
-                Recibimos la solicitud para registrar «%s» en Galeno. Para activarlo, abra este enlace:
+                Recibimos la solicitud para registrar «%s» en Galenum. Para activarlo, abra este enlace:
 
                 %s
 
                 El enlace vence el %s. Si usted no hizo esta solicitud, ignore este correo: no se creará nada.
 
-                Galeno""".formatted(pendiente.getNombre(), pendiente.getConsultorioNombre(),
+                Galenum""".formatted(pendiente.getNombre(), pendiente.getConsultorioNombre(),
                 baseUrl + "/registro/confirmar#" + token, VENCE.format(pendiente.getExpiraEn()))));
         log.info("Registro de consultorio solicitado desde {}", ip);
     }
@@ -167,7 +167,7 @@ class RegistroService {
     }
 
     /**
-     * Crea el consultorio y deja a la persona con sesión iniciada en él. Si el correo ya tenía cuenta en Galeno
+     * Crea el consultorio y deja a la persona con sesión iniciada en él. Si el correo ya tenía cuenta en Galenum
      * (p. ej. un médico que ya trabaja en otro consultorio), exige su contraseña actual.
      */
     public SesionResponse confirmar(String token, String passwordActual) {
@@ -178,7 +178,7 @@ class RegistroService {
             Usuario usuario = usuarios.findByEmail(r.getEmail()).map(existente -> {
                 if (!existente.isActivo() || passwordActual == null
                         || !passwordEncoder.matches(passwordActual, existente.getPasswordHash())) {
-                    throw ApiProblem.unauthorized("Ya tiene una cuenta en Galeno con este correo: ingrese su contraseña actual");
+                    throw ApiProblem.unauthorized("Ya tiene una cuenta en Galenum con este correo: ingrese su contraseña actual");
                 }
                 return existente;
             }).orElseGet(() -> usuarios.save(new Usuario(r.getEmail(), r.getPasswordHash(), r.getNombre())));

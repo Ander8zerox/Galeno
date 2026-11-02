@@ -56,7 +56,7 @@ final class HistoriaPdf {
 
         if (!documentos.isEmpty()) {
             b.append("<h2>Documentos adjuntos (").append(documentos.size()).append(")</h2>")
-                    .append("<p class=\"small muted\">Los archivos no se incluyen en este PDF; reposan en la historia del paciente en Galeno.</p>")
+                    .append("<p class=\"small muted\">Los archivos no se incluyen en este PDF; reposan en la historia del paciente en Galenum.</p>")
                     .append("<table class=\"grilla\"><tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th>Archivo</th></tr>");
             for (DocumentoClinico d : documentos) {
                 b.append("<tr><td>").append(esc(fechaHora(d.getCreadoEn(), consultorio.zona()))).append("</td><td>")
@@ -80,7 +80,7 @@ final class HistoriaPdf {
             b.append("</div>");
         }
 
-        b.append("<p class=\"small muted\">Copia generada por ").append(esc(generadoPor)).append(" en Galeno. Incluye solo atenciones ")
+        b.append("<p class=\"small muted\">Copia generada por ").append(esc(generadoPor)).append(" en Galenum. Incluye solo atenciones ")
                 .append("firmadas (o importadas de otro sistema); los borradores no son registro clínico. La historia clínica ")
                 .append("original reposa en el sistema.</p>");
         return PdfRenderer.documento("Historia clínica " + p.getNombres() + " " + p.getApellidos(), b.toString());

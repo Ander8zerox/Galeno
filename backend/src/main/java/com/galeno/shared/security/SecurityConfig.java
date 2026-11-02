@@ -43,7 +43,7 @@ public class SecurityConfig {
                         // El token de invitación viaja en el cuerpo, nunca en la URL (no queda en logs)
                         .requestMatchers(HttpMethod.POST, "/api/v1/invitaciones/consultar", "/api/v1/invitaciones/aceptar").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/registro", "/api/v1/registro/consultar", "/api/v1/registro/confirmar").permitAll()
-                        // Consola de la plataforma (operadores de Galeno): su propio login y su propio token
+                        // Consola de la plataforma (operadores de Galenum): su propio login y su propio token
                         .requestMatchers(HttpMethod.POST, "/api/v1/plataforma/login").permitAll()
                         .requestMatchers("/api/v1/plataforma/**").hasAuthority(TokenService.PLATAFORMA)
                         // Portal de partners: inscripción, login y validación de códigos son públicos

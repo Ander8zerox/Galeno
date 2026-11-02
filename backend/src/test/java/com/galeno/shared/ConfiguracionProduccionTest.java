@@ -16,7 +16,7 @@ class ConfiguracionProduccionTest {
                 .withProperty("app.web.base-url", "https://galeno.com.co")
                 .withProperty("app.web.origen-secreto", "x")
                 .withProperty("app.documentos.bucket", "galeno-docs")
-                .withProperty("app.correo.remitente", "Galeno <no-responder@galeno.com.co>")
+                .withProperty("app.correo.remitente", "Galenum <no-responder@galenum.com.co>")
                 .withProperty("app.correo.configuration-set", "galeno")
                 .withProperty("app.correo.cola-eventos", "https://sqs.us-east-2.amazonaws.com/1/galeno");
     }

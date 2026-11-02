@@ -56,7 +56,7 @@ final class FormulaPdf {
         if (medico.especialidad() != null) {
             b.append(esc(medico.especialidad())).append("<br />");
         }
-        b.append("<span class=\"small muted\">Firmada electrónicamente en Galeno el ")
+        b.append("<span class=\"small muted\">Firmada electrónicamente en Galenum el ")
                 .append(esc(fechaHora(f.getFirmadaEn(), consultorio.zona()))).append("</span></div></div>");
         b.append("<p class=\"small muted\">Fórmula ").append(esc(f.getId())).append("</p>");
         return PdfRenderer.documento("Fórmula " + numero, b.toString());

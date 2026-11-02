@@ -32,9 +32,9 @@ public class TokenService {
     /** Authority de todo token de sesión; los de selección no la tienen. */
     public static final String MIEMBRO = "MIEMBRO";
     public static final String SELECCION = "SELECCION_CONSULTORIO";
-    /** Operador de la plataforma (Galeno): consola de suscripciones y pagos. No da acceso a ningún consultorio. */
+    /** Operador de la plataforma (Galenum): consola de suscripciones y pagos. No da acceso a ningún consultorio. */
     public static final String PLATAFORMA = "PLATAFORMA";
-    /** Partner (quien vende Galeno): su portal de referidos y comisiones. No da acceso a ningún consultorio. */
+    /** Partner (quien vende Galenum): su portal de referidos y comisiones. No da acceso a ningún consultorio. */
     public static final String PARTNER = "PARTNER";
 
     private static final Duration TTL_SELECCION = Duration.ofMinutes(10);
