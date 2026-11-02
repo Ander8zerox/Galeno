@@ -10,9 +10,9 @@ class AiPropertiesTest {
 
     @Test
     void cadaFuncionUsaSuModelo() {
-        var props = new AiProperties("bedrock", "anthropic.claude-haiku-5-5", "anthropic.claude-sonnet-5-5", 8000, "medium", 4);
+        var props = new AiProperties("bedrock", "us.anthropic.claude-haiku-5-5", "us.anthropic.claude-sonnet-5-5", 8000, "medium", 4);
 
-        assertThat(props.modeloPara(AiJobType.BORRADOR_FORMULA)).isEqualTo("anthropic.claude-haiku-5-5");
-        assertThat(props.modeloPara(AiJobType.APOYO_DIAGNOSTICO)).isEqualTo("anthropic.claude-sonnet-5-5");
+        assertThat(props.modeloPara(AiJobType.BORRADOR_FORMULA)).isEqualTo("us.anthropic.claude-haiku-5-5");
+        assertThat(props.modeloPara(AiJobType.APOYO_DIAGNOSTICO)).isEqualTo("us.anthropic.claude-sonnet-5-5");
     }
 }

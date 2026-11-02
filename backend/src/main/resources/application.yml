@@ -64,9 +64,10 @@ app:
   ai:
     provider: fake            # fake | bedrock
     # Un modelo por función. Haiku 5.5 es el más económico (unas 40 veces menos que Opus); si la calidad del apoyo
-    # diagnóstico no alcanza, se sube solo ese a Sonnet: APP_AI_MODEL_DIAGNOSTICO=anthropic.claude-sonnet-5-5
-    model-formula: anthropic.claude-haiku-5-5
-    model-diagnostico: anthropic.claude-haiku-5-5
+    # diagnóstico no alcanza, se sube solo ese a Sonnet: APP_AI_MODEL_DIAGNOSTICO=us.anthropic.claude-sonnet-5-5
+    # Perfil de inferencia "us.": Bedrock no sirve Haiku 5.5 solo en us-east-2, y "us." lo mantiene en EE. UU.
+    model-formula: us.anthropic.claude-haiku-5-5
+    model-diagnostico: us.anthropic.claude-haiku-5-5
     max-tokens: 8000
     effort: medium
     worker-concurrency: 4

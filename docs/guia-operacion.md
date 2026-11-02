@@ -299,7 +299,7 @@ galeno-api-1`. Para el día a día bastan los logs de CloudWatch.
 
 | # | Pendiente | Por qué importa |
 |---|---|---|
-| — | **Activar Claude en Amazon Bedrock** (us-east-2) y hacer una invocación real | Las funciones de IA no responden hasta activarlo; el permiso `bedrock-mantle:CreateInference` aún no se ha probado en producción |
+| — | **Probar la IA en producción** (perfil `us.anthropic.claude-haiku-5-5`, ver [aws-capa-1.md](aws-capa-1.md)) | Anthropic ya está activado en Bedrock; falta ver un borrador de fórmula y un apoyo diagnóstico desde Galeno |
 | 12 | **Pruebas en producción**: registrar un consultorio desde cero, agenda, historia y PDF, documentos en S3, reportar y aprobar un pago, inscripción de un partner | Confirmar de punta a punta que todo funciona en AWS y no solo en local |
 | — | Revisar el gasto después de la primera semana (esperado: 35–50 USD al mes) | Confirmar que el costo real coincide con lo estimado; límite de gasto en 60 USD, presupuesto en 50 USD |
 

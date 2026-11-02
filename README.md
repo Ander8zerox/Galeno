@@ -43,7 +43,7 @@ Por defecto `APP_AI_PROVIDER=fake` devuelve respuestas simuladas sin costo. Para
 export APP_AI_PROVIDER=bedrock AWS_REGION=us-east-2 AWS_PROFILE=<tu-perfil>
 ```
 
-Cada función tiene su modelo: `APP_AI_MODEL_FORMULA` y `APP_AI_MODEL_DIAGNOSTICO` (ambos por defecto `anthropic.claude-haiku-5-5`, el más económico; si el apoyo diagnóstico necesita más calidad, se sube solo ese a `anthropic.claude-sonnet-5-5`) y la profundidad con `APP_AI_EFFORT` (`low`…`max`, por defecto `medium`).
+Cada función tiene su modelo: `APP_AI_MODEL_FORMULA` y `APP_AI_MODEL_DIAGNOSTICO` (ambos por defecto `us.anthropic.claude-haiku-5-5`, el más económico; si el apoyo diagnóstico necesita más calidad, se sube solo ese a `us.anthropic.claude-sonnet-5-5`) y la profundidad con `APP_AI_EFFORT` (`low`…`max`, por defecto `medium`).
 
 ## Cambios en la API
 

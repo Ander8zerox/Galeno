@@ -67,16 +67,22 @@ data "aws_iam_policy_document" "api" {
       "arn:aws:ssm:${var.region}:${local.cuenta}:parameter/galeno/prod/*",
     ]
   }
-  # Claude por el endpoint bedrock-mantle (BedrockMantleBackend); InvokeModel cubre el endpoint bedrock-runtime.
-  # Solo en la región del proyecto.
+  # Claude por bedrock-runtime con un perfil de inferencia "us." (Haiku 5.5 no se sirve solo en us-east-2; ver
+  # docs/aws-capa-1.md). IAM revisa dos cosas: el perfil y el modelo en cada región adonde el perfil lo envía. El modelo
+  # solo se puede usar a través de un perfil us. de Anthropic: ni directo ni por global.
   statement {
-    sid       = "Bedrock"
-    actions   = ["bedrock-mantle:CreateInference", "bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"]
-    resources = ["*"]
+    sid       = "BedrockPerfil"
+    actions   = ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"]
+    resources = ["arn:aws:bedrock:${var.region}:${local.cuenta}:inference-profile/us.anthropic.claude-*"]
+  }
+  statement {
+    sid       = "BedrockModelo"
+    actions   = ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"]
+    resources = ["arn:aws:bedrock:*::foundation-model/anthropic.claude-*"]
     condition {
-      test     = "StringEquals"
-      variable = "aws:RequestedRegion"
-      values   = [var.region]
+      test     = "StringLike"
+      variable = "bedrock:InferenceProfileArn"
+      values   = ["arn:aws:bedrock:${var.region}:${local.cuenta}:inference-profile/us.anthropic.claude-*"]
     }
   }
   # Documentos: leer y crear, nunca borrar

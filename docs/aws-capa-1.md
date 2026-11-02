@@ -65,13 +65,21 @@ ECR, CloudTrail y Bedrock.
 
 - Los valores por defecto del código ya son us-east-2: `app.documentos.region` y `app.correo.region` en
   `application.yml`, y `AWS_REGION` en `docker-compose.yml`.
-- Bedrock no tiene propiedad propia: `BedrockMantleBackend.fromEnv()` usa la cadena estándar del SDK, en este orden:
+- Bedrock no tiene propiedad propia: `BedrockBackend.fromEnv()` usa la cadena estándar del SDK, en este orden:
   la propiedad `aws.region`, la variable `AWS_REGION`, el perfil y, por último, los metadatos de la EC2. En la
   instancia sale us-east-2 de todos modos, pero se fija `AWS_REGION=us-east-2` para no depender de eso. El endpoint
-  es `bedrock-mantle.us-east-2.api.aws`.
-- Usa el ID de modelo **de la región**, `anthropic.claude-haiku-5-5` (así está en `application.yml`). Los perfiles de
-  inferencia `us.anthropic...` y `global.anthropic...` reparten las peticiones entre regiones, que es justo lo que el
-  proyecto restringe.
+  es `bedrock-runtime.us-east-2.amazonaws.com`.
+- **Claude va por el perfil de inferencia `us.anthropic.claude-haiku-5-5`** (decidido el 2 de noviembre de 2026).
+  En us-east-2, Haiku 5.5 solo se sirve por perfiles (`inferenceTypesSupported=INFERENCE_PROFILE`): con el ID de la
+  región responde "not available for this account", y el endpoint bedrock-mantle no lo ofrece (de Claude, solo lista
+  Haiku 4.5, que cuesta unas 10 veces más). El perfil `us.` reparte las peticiones entre us-east-1, us-east-2 y
+  us-west-2, así que los datos no salen de EE. UU.; `global.` sí podría sacarlos, y la política IAM no lo deja usar.
+  Las SCP del proyecto excluyen de la restricción de región la inferencia de Bedrock (`bedrock:InvokeModel` está en
+  el `NotAction` de `RegionFloor`), así que el perfil funciona sin activar funciones avanzadas.
+- Activar Anthropic fue: (1) el formulario de caso de uso en la consola de Bedrock, una vez por cuenta, y (2) aceptar
+  la oferta de Marketplace del modelo (`aws bedrock create-foundation-model-agreement`; se puede ver con
+  `get-foundation-model-availability`, `agreementAvailability=AVAILABLE`). Precio: 0,10 USD por millón de tokens de
+  entrada y 0,50 por millón de salida. Para subir el diagnóstico a Sonnet hay que aceptar también su oferta.
 
 ### Por qué el certificado de CloudFront va en us-east-1
 
@@ -109,7 +117,7 @@ Todo lo revisado en us-east-2 se hizo sin crear nada: `--dry-run` en EC2 y solo 
 | SES | Sí | Fuera del *sandbox* desde el 2 de noviembre de 2026 (`ProductionAccessEnabled=true`): 50.000 correos al día y 14 por segundo. Las SCP no bloquearon la solicitud; AWS la aprobó en horas. |
 | SNS | Sí | Sin restricciones. |
 | SQS | Sí | Sin restricciones. |
-| Bedrock, `anthropic.claude-haiku-5-5` | Sí | El modelo está en us-east-2 (`regionAvailability=AVAILABLE`, `authorizationStatus=AUTHORIZED`). Falta habilitarlo para Anthropic (formulario de caso de uso, pendiente del usuario) y probar una invocación real. |
+| Bedrock, `us.anthropic.claude-haiku-5-5` | Sí | Solo por el perfil de inferencia `us.` (ver "Región"). Formulario de Anthropic enviado y oferta de Marketplace aceptada el 2 de noviembre de 2026. |
 | SSM Parameter Store | Sí | Entra como "AWS Systems Manager". |
 | ECR | Sí | Sin restricciones. |
 | KMS | Sí | Sin restricciones (las llaves multirregión no aplican). |
@@ -138,7 +146,7 @@ Fuentes: [servicios de la nueva experiencia](https://docs.aws.amazon.com/account
 - [ ] Miembros del equipo invitados por correo desde AWS Settings (en esta experiencia no se crean usuarios de IAM)
 - [ ] En el plan pago: un *spend limit* en AWS Settings y un presupuesto con alertas en Billing and Cost Management (p. ej. 30 y 60 USD)
 - [ ] CloudTrail activado en `us-east-2`
-- [ ] En Bedrock, habilitar Anthropic y probar `anthropic.claude-haiku-5-5` (o los que configures en `APP_AI_MODEL_FORMULA` / `APP_AI_MODEL_DIAGNOSTICO`)
+- [ ] En Bedrock, habilitar Anthropic y probar `us.anthropic.claude-haiku-5-5` (o los que configures en `APP_AI_MODEL_FORMULA` / `APP_AI_MODEL_DIAGNOSTICO`)
 
 ### 1. Red y base de datos
 - [ ] VPC con 2 subredes públicas (EC2) y 2 privadas (RDS)

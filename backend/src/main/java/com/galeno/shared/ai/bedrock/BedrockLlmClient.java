@@ -1,6 +1,6 @@
 package com.galeno.shared.ai.bedrock;
 
-import com.anthropic.bedrock.backends.BedrockMantleBackend;
+import com.anthropic.bedrock.backends.BedrockBackend;
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 import com.anthropic.models.messages.MessageCreateParams;
@@ -20,6 +20,9 @@ import com.galeno.shared.ai.LlmClient;
  * Claude en Amazon Bedrock mediante el SDK oficial de Anthropic. Las credenciales salen de la cadena
  * estándar de AWS (rol de la instancia EC2/ECS en producción) y la región de {@code AWS_REGION}:
  * no hay llaves de API que guardar.
+ *
+ * <p>Va por bedrock-runtime (InvokeModel) y no por bedrock-mantle: Haiku 5.5 solo se sirve con el perfil de
+ * inferencia {@code us.anthropic.claude-haiku-5-5}, y Mantle no acepta perfiles (ver docs/aws-capa-1.md).
  */
 @Component
 @ConditionalOnProperty(name = "app.ai.provider", havingValue = "bedrock")
@@ -31,7 +34,7 @@ public class BedrockLlmClient implements LlmClient {
     public BedrockLlmClient(AiProperties props) {
         this.props = props;
         this.client = AnthropicOkHttpClient.builder()
-                .backend(BedrockMantleBackend.fromEnv())
+                .backend(BedrockBackend.fromEnv())
                 .build();
     }
 
