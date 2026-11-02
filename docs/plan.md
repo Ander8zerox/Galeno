@@ -12,7 +12,7 @@
 - Registro de consultorios desde la web con verificación del correo, NIT con dígito de verificación, aceptación de términos y política de datos, y límite de intentos.
 - Recuperación de contraseña por correo (enlace de un solo uso) que cierra todas las sesiones abiertas.
 - Programa de partners: inscripción con aprobación de la plataforma, código y enlace de referido, 10 % de descuento para el consultorio referido, comisión recurrente del 20 % sobre cada pago, retención de 30 días y liquidación desde $190.000.
-- Envío de correos con Amazon SES, con rebotes y quejas leídos de una cola SQS y lista de correos bloqueados en la consola de la plataforma (falta verificar el dominio y salir del sandbox).
+- Envío de correos con Amazon SES, con rebotes y quejas leídos de una cola SQS y lista de correos bloqueados en la consola de la plataforma (dominio verificado con DKIM, SPF y DMARC; fuera del sandbox desde noviembre de 2026).
 - Suscripciones: prueba de 30 días, planes mensual y anual, pago por transferencia o consignación reportado por el consultorio y aprobado en la consola de la plataforma, gracia de 5 días, solo lectura y avisos por correo.
 
 ## Siguiente

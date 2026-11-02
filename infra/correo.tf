@@ -1,5 +1,5 @@
 # SES con el dominio verificado por DKIM, rebotes y quejas hacia SNS -> SQS (shared.correo.ColaEventosSes).
-# Salir del sandbox (paso 9) es una solicitud a mano en la consola de SES; no se hace con Terraform.
+# Salir del sandbox (paso 9, aprobado en noviembre de 2026) fue una solicitud a mano a AWS; no se hace con Terraform.
 
 resource "aws_sesv2_configuration_set" "galeno" {
   configuration_set_name = "galeno"

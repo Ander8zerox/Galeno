@@ -106,7 +106,7 @@ Todo lo revisado en us-east-2 se hizo sin crear nada: `--dry-run` en EC2 y solo 
 | S3 | Sí | Bloqueadas las clases Glacier y Deep Archive. Glacier Instant Retrieval, la prevista para documentos viejos, no aparece bloqueada. Access Grants no está disponible. |
 | CloudFront | Sí | Lambda@Edge no está disponible (no se usa). |
 | ACM | Sí | Solo se bloquean los certificados *exportables* (no se usan). Se puede usar en us-east-1 (ver arriba). |
-| SES | Sí | La cuenta está en **sandbox**: `ProductionAccessEnabled=false`, 200 correos al día y 1 por segundo. Las SCP no bloquean la solicitud de salida, pero la aprueba AWS a mano, así que no se puede confirmar hasta hacerla (paso 9). |
+| SES | Sí | Fuera del *sandbox* desde el 2 de noviembre de 2026 (`ProductionAccessEnabled=true`): 50.000 correos al día y 14 por segundo. Las SCP no bloquearon la solicitud; AWS la aprobó en horas. |
 | SNS | Sí | Sin restricciones. |
 | SQS | Sí | Sin restricciones. |
 | Bedrock, `anthropic.claude-haiku-5-5` | Sí | El modelo está en us-east-2 (`regionAvailability=AVAILABLE`, `authorizationStatus=AUTHORIZED`). Falta habilitarlo para Anthropic (formulario de caso de uso, pendiente del usuario) y probar una invocación real. |
@@ -195,7 +195,7 @@ límites por IP (registro, recuperación de contraseña, partners) contarían a 
 - [ ] Cola SQS `galeno-correo-eventos` suscrita al tema (con su DLQ, 5 intentos) y supresión a nivel de cuenta activada para rebotes y quejas
 - [ ] Rol de la instancia: `ses:SendEmail` solo sobre la identidad y el configuration set, y `sqs:ReceiveMessage` / `sqs:DeleteMessage` sobre la cola
 - [ ] Variables: `APP_CORREO_REMITENTE="Galeno <no-responder@<dominio>>"`, `APP_CORREO_CONFIGURATION_SET=galeno`, `APP_CORREO_COLA_EVENTOS=<URL de la cola>` (`APP_CORREO_PROVEEDOR=ses` ya lo pone el perfil prod; la región por defecto es us-east-2)
-- [ ] Salir del *sandbox* de SES (en la consola de SES en us-east-2, "Request production access"): mientras tanto solo se puede escribir a direcciones verificadas, con un máximo de 200 al día
+- [x] Salir del *sandbox* de SES (en la consola de SES en us-east-2, "Request production access", o `aws sesv2 put-account-details --production-access-enabled`): aprobado el 2 de noviembre de 2026
 
 ### 5. Frontend y CDN
 - [ ] Bucket S3 privado para `frontend/dist` (us-east-2)

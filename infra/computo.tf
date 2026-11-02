@@ -93,8 +93,8 @@ data "aws_iam_policy_document" "api" {
   statement {
     sid     = "Correo"
     actions = ["ses:SendEmail", "ses:SendRawEmail"]
-    # SES también autoriza contra la identidad del destinatario cuando está verificada (en el sandbox lo están
-    # todos), así que el recurso es identity/*; lo que se limita es el remitente: solo no-responder@ del dominio.
+    # SES también autoriza contra la identidad del destinatario cuando está verificada (pasa con las direcciones
+    # verificadas en la época del sandbox), así que el recurso es identity/*; lo que se limita es el remitente.
     resources = [
       "arn:aws:ses:${var.region}:${local.cuenta}:identity/*",
       aws_sesv2_configuration_set.galeno.arn,
