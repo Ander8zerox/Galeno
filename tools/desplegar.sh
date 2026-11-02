@@ -65,13 +65,33 @@ if (( api )); then
   aws ecr get-login-password --region "$region" | docker login --username AWS --password-stdin "${imagen%%/*}"
   docker buildx build --platform linux/arm64 --push -t "$imagen:$version" -t "$imagen:latest" "$raiz/backend"
 
+  # Caddy (TLS del origen) solo se reconstruye si cambió su Dockerfile: la etiqueta es el hash del archivo
+  imagen_caddy="$(salida imagen_caddy)"
+  etiqueta_caddy="$(sha256sum "$raiz/infra/caddy/Dockerfile" | cut -c1-12)"
+  if aws ecr describe-images --region "$region" --repository-name "${imagen_caddy##*/}" \
+      --image-ids imageTag="$etiqueta_caddy" >/dev/null 2>&1; then
+    echo "Caddy $etiqueta_caddy ya está en ECR."
+  else
+    paso "Caddy: imagen linux/arm64 -> ECR ($etiqueta_caddy)"
+    docker buildx build --platform linux/arm64 --push -t "$imagen_caddy:$etiqueta_caddy" "$raiz/infra/caddy"
+  fi
+
   paso "API: actualizar la EC2 por SSM"
-  # desplegar.sh (lo deja el arranque de la instancia) lee la configuración de SSM y levanta la imagen nueva.
+  # Primero se suben docker-compose.yml y el Caddyfile del repo (infra/instancia), con los valores de terraform output.
+  # Con el origen todavía en HTTP la API se publica en todas las interfaces (el security group solo deja pasar a
+  # CloudFront); con el origen HTTPS, solo en la máquina.
+  if [[ "$(salida origen_https)" == "true" ]]; then puerto_api="127.0.0.1:8090"; else puerto_api="8090"; fi
+  compose_b64="$(sed -e "s|__IMAGEN_API__|$imagen|" -e "s|__IMAGEN_CADDY__|$imagen_caddy:$etiqueta_caddy|" \
+    -e "s|__REGION__|$region|g" -e "s|__GRUPO_LOGS__|$(salida grupo_logs)|g" -e "s|__DOMINIO__|$(salida dominio)|" \
+    -e "s|__PUERTO_API__|$puerto_api|" "$raiz/infra/instancia/docker-compose.yml" | base64 -w0)"
+  caddyfile_b64="$(base64 -w0 < "$raiz/infra/instancia/Caddyfile")"
+  # desplegar.sh (lo deja el arranque de la instancia) lee la configuración de SSM y levanta las imágenes nuevas.
   # Después espera hasta 3 minutos a que la API responda; si no, muestra sus últimos logs.
+  subir="echo $compose_b64 | base64 -d > /opt/galeno/docker-compose.yml && echo $caddyfile_b64 | base64 -d > /opt/galeno/Caddyfile"
   comando='/opt/galeno/desplegar.sh && for i in $(seq 1 60); do curl -sf http://localhost:8090/actuator/health && exit 0; sleep 3; done; docker logs --tail 80 galeno-api-1; exit 1'
   id="$(aws ssm send-command --region "$region" --instance-ids "$instancia" --document-name AWS-RunShellScript \
     --timeout-seconds 600 --comment "deploy $version" \
-    --parameters "{\"commands\":[\"$comando\"]}" --query Command.CommandId --output text)"
+    --parameters "{\"commands\":[\"$subir\",\"$comando\"]}" --query Command.CommandId --output text)"
   aws ssm wait command-executed --region "$region" --command-id "$id" --instance-id "$instancia" || true
   aws ssm get-command-invocation --region "$region" --command-id "$id" --instance-id "$instancia" \
     --query '[StandardOutputContent,StandardErrorContent]' --output text | tail -40

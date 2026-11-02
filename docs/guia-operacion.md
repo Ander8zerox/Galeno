@@ -124,6 +124,31 @@ Antes de aplicar, lee el resumen `Plan: X to add, Y to change, Z to destroy`. Si
 no lo esperabas, no apliques. La base de datos y el bucket de documentos están protegidos contra borrado, pero
 igual hay que leer el plan.
 
+### Origen HTTPS (Caddy): activarlo y volver atrás
+
+CloudFront llega a la API por HTTPS a través de Caddy (ver [aws-capa-1.md](aws-capa-1.md), "Origen de la API"). Se
+activa en dos fases para no cortar el servicio: si CloudFront pasara a HTTPS antes de que Caddy tenga su certificado,
+la API quedaría caída.
+
+**Fase 1: Caddy con su certificado, CloudFront todavía por HTTP.**
+1. `cd infra && terraform plan -out=origen1.tfplan`. Debe crear el repositorio `galeno-caddy`, el registro DNS
+   `origen.`, la regla del 443 y cambiar la política del rol; **nada se destruye** y CloudFront no cambia. Luego
+   `terraform apply origen1.tfplan && cd ..`
+2. `tools/desplegar.sh --solo-api`: construye la imagen de Caddy (la primera vez, unos minutos) y la levanta.
+3. Comprobar que Caddy tiene el certificado: en los logs (stream `caddy` del grupo `/galeno/prod/api`) debe aparecer
+   `certificate obtained successfully` para los dos nombres.
+
+**Fase 2: CloudFront por HTTPS.**
+1. En `infra/terraform.tfvars`: `origen_https = true`.
+2. `cd infra && terraform plan -out=origen2.tfplan`: cambia el origen de la distribución y **destruye la regla del
+   8090** (es lo esperado). `terraform apply origen2.tfplan && cd ..`. CloudFront tarda unos minutos en propagarlo.
+3. `tools/desplegar.sh --solo-api`: la API queda escuchando solo en la máquina.
+4. Comprobar: `curl -sD - -o /dev/null https://galenum.com.co/api/v1/auth/me` debe mostrar
+   `resource_metadata="https://…"` (antes decía `http://`).
+
+**Volver atrás** (si el origen HTTPS falla): `origen_https = false` en `terraform.tfvars`, `terraform plan`/`apply` y
+`tools/desplegar.sh --solo-api`. CloudFront vuelve a la API por HTTP en el 8090.
+
 ---
 
 ## 3. Operadores de la plataforma
@@ -305,10 +330,8 @@ galeno-api-1`. Para el día a día bastan los logs de CloudWatch.
 
 ### Antes de recibir pacientes reales
 
-- **HTTPS entre CloudFront y el servidor.** Hoy ese tramo va por HTTP dentro de AWS (ver
-  [aws-capa-1.md](aws-capa-1.md), "Origen de la API"). Opciones: origen VPC de CloudFront, o Caddy con Let's
-  Encrypt en la EC2.
-- **La API debe saber que el usuario llegó por HTTPS.** Hoy algunas respuestas anuncian `http://galenum.com.co`.
+- **HTTPS entre CloudFront y el servidor** (Caddy + Let's Encrypt) y `X-Forwarded-Proto` en la API: hechos; falta
+  activarlos en producción en las dos fases de "Origen HTTPS (Caddy)" (sección 2).
 - **MFA** para los operadores de la plataforma, y después para los consultorios.
 - **Revisión legal** de los términos y de la política de datos (hoy un borrador en `/politica-datos`). En partners,
   también la revisión contable de las condiciones.

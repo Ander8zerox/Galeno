@@ -90,12 +90,31 @@ resource "aws_security_group" "api" {
   vpc_id      = aws_vpc.principal.id
 }
 
+# HTTP directo a la API: solo hasta que el origen pase a HTTPS (var.origen_https)
 resource "aws_vpc_security_group_ingress_rule" "api_desde_cloudfront" {
+  count             = var.origen_https ? 0 : 1
   security_group_id = aws_security_group.api.id
   prefix_list_id    = data.aws_ec2_managed_prefix_list.cloudfront.id
   ip_protocol       = "tcp"
   from_port         = 8090
   to_port           = 8090
+}
+
+# Caddy (TLS) en el 443, también solo para CloudFront: el certificado se valida por DNS, sin abrir nada a internet.
+# Va en un security group aparte: el prefix list de CloudFront cuenta como ~55 reglas y un grupo admite 60, así que
+# no caben dos reglas con él en el mismo grupo (mientras dure la del 8090).
+resource "aws_security_group" "origen_https" {
+  name        = "${local.nombre}-origen-https"
+  description = "Caddy en la EC2 de la API: solo CloudFront en el 443"
+  vpc_id      = aws_vpc.principal.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "https_desde_cloudfront" {
+  security_group_id = aws_security_group.origen_https.id
+  prefix_list_id    = data.aws_ec2_managed_prefix_list.cloudfront.id
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
 }
 
 resource "aws_vpc_security_group_egress_rule" "api_salida" {

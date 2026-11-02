@@ -32,3 +32,19 @@ output "consola_instancia" {
   description = "Abre una terminal en la EC2 por Session Manager (sin SSH)."
   value       = "aws ssm start-session --profile ${var.perfil_aws} --region ${var.region} --target ${aws_instance.api.id}"
 }
+
+output "imagen_caddy" {
+  value = aws_ecr_repository.caddy.repository_url
+}
+
+output "grupo_logs" {
+  value = aws_cloudwatch_log_group.api.name
+}
+
+output "dominio" {
+  value = var.dominio
+}
+
+output "origen_https" {
+  value = var.origen_https
+}

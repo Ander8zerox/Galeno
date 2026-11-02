@@ -29,8 +29,14 @@ spring:
 server:
   port: 8090
   shutdown: graceful
-  # Sin forward-headers-strategy: Spring creería el X-Forwarded-For de cualquiera. La IP real la resuelve
+  # X-Forwarded-Proto: detrás de Caddy (TLS del origen) la API debe saber que la petición llegó por HTTPS, o anuncia
+  # http:// (p. ej. en WWW-Authenticate). Tomcat solo cree los X-Forwarded-* que vienen de la red interna de Docker,
+  # es decir de Caddy, que los arma él mismo; nunca los de afuera. La IP del visitante la sigue resolviendo
   # shared.web.IpCliente, solo para peticiones que traen el secreto de origen de CloudFront.
+  forward-headers-strategy: native
+  tomcat:
+    remoteip:
+      internal-proxies: '172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}'
 
 app:
   documentos:

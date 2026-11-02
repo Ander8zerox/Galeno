@@ -49,11 +49,24 @@ cd .. && tools/desplegar.sh        # paso 11: sube la API y el frontend (ver "6.
 - Protegidos contra borrado: la zona y el bucket de documentos (`prevent_destroy`) y RDS (`deletion_protection`, con
   instantánea final).
 
-### Origen de la API: HTTP entre CloudFront y la EC2
-El navegador habla con CloudFront por HTTPS, pero CloudFront llega a la EC2 por HTTP en el 8090: la EC2 no tiene
-certificado propio. Es el compromiso de la Capa 1 (sin balanceador). Antes de cargar pacientes reales hay que cerrarlo,
-por ejemplo con un *VPC origin* de CloudFront (sin costo, pero la EC2 tendría que ir en subred privada con salida a
-internet) o con un certificado en la instancia (Caddy + Let's Encrypt en un subdominio de origen).
+### Origen de la API: HTTPS entre CloudFront y la EC2 (Caddy)
+```
+Navegador ──HTTPS──▶ CloudFront ──HTTPS:443──▶ Caddy (EC2) ──HTTP, red interna de Docker──▶ API :8090
+```
+- **Caddy** corre en la EC2 junto a la API (`infra/instancia/docker-compose.yml` y `Caddyfile`, que
+  `tools/desplegar.sh` sube en cada despliegue de la API). Termina el TLS con un certificado de **Let's Encrypt** para
+  `galenum.com.co` y `origen.galenum.com.co`: CloudFront se conecta a `origen.` pero reenvía el `Host` del navegador.
+- El certificado se valida por **DNS (DNS-01)**: Caddy crea el TXT `_acme-challenge` en Route 53 con el rol de la EC2,
+  que solo puede escribir esos TXT. Por eso no se abre nada a internet: el 443 sigue solo para CloudFront. La imagen
+  oficial de Caddy no trae el módulo de Route 53: `infra/caddy/Dockerfile` la construye (repositorio ECR
+  `galeno-caddy`; la etiqueta es el hash del Dockerfile y solo se reconstruye si cambia).
+- **`X-Forwarded-Proto`**: Caddy le dice a la API que la petición llegó por HTTPS. Tomcat solo cree los `X-Forwarded-*`
+  que vienen de la red interna de Docker (`server.tomcat.remoteip.internal-proxies`), nunca los de afuera.
+- **Costo:** $0. Se descartó el *VPC origin* de CloudFront: exige la EC2 en subred privada, con NAT (~32 USD/mes) o
+  endpoints de VPC para salir a ECR, SSM, SES y Bedrock.
+- **Despliegue en dos fases** con `var.origen_https` (ver `docs/guia-operacion.md`): con `false`, CloudFront sigue
+  llegando por HTTP al 8090 mientras Caddy saca su certificado; con `true`, CloudFront pasa a `https-only`, se cierra el
+  8090 en el security group y la API se publica solo en la máquina (127.0.0.1, para el chequeo de salud).
 
 ## Región: us-east-2
 

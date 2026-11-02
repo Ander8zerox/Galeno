@@ -51,3 +51,12 @@ variable "version_compose" {
   type        = string
   default     = "v2.32.4"
 }
+
+variable "origen_https" {
+  description = <<-EOT
+    CloudFront llega a la API por HTTPS (Caddy en el 443) en vez de HTTP al 8090. Se pasa a true después de desplegar
+    Caddy y comprobar que tiene su certificado (ver docs/guia-operacion.md); con false se vuelve a HTTP.
+  EOT
+  type        = bool
+  default     = false
+}
