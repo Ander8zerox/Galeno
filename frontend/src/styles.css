@@ -204,6 +204,7 @@ input::placeholder, textarea::placeholder { color: #667180; }
 .badge-primary { background: var(--primary-soft); color: var(--primary-hover); }
 .badge-ok { background: var(--ok-bg); color: var(--ok); }
 .badge-warn { background: var(--warn-bg); color: var(--warn); }
+.aviso-precio { flex-basis: 100%; color: var(--warn); }
 .badge-danger { background: var(--danger-bg); color: var(--danger); }
 
 /* --- Login y páginas públicas --- */
