@@ -247,11 +247,14 @@ input::placeholder, textarea::placeholder { color: #667180; }
   box-shadow: var(--vidrio-sombra);
   -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
 }
-/* Ingresos (consultorio, partners, plataforma): la foto es paisaje, no protagonista; el velo más oscuro la manda al
-   fondo y la tarjeta va centrada encima */
+/* Ingresos (consultorio, partners, plataforma): la foto es paisaje, no protagonista, y el velo más oscuro la manda al
+   fondo. En pantallas anchas la tarjeta va a la izquierda, sobre los paneles; en el celular se centra */
 .login.con-foto {
   --fondo-acceso: url("/fondo-acceso.webp"); --acceso-velo: rgba(14, 42, 59, .28);
   background-position: 72% center;
+}
+@media (min-width: 960px) {
+  .login.con-foto { justify-items: start; padding-left: clamp(2rem, 11vw, 14rem); }
 }
 .login-card h1 { color: var(--nav-bg); }
 /* Sobre el vidrio el gris atenuado no alcanza el contraste: se usa el secundario */
