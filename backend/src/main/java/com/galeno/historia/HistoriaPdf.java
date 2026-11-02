@@ -61,7 +61,9 @@ final class HistoriaPdf {
             for (DocumentoClinico d : documentos) {
                 b.append("<tr><td>").append(esc(fechaHora(d.getCreadoEn(), consultorio.zona()))).append("</td><td>")
                         .append(esc(tipoDocumento(d.getTipo()))).append("</td><td>")
-                        .append(esc(d.getDescripcion() == null ? "" : d.getDescripcion())).append("</td><td>")
+                        .append(esc(d.getDescripcion() == null ? "" : d.getDescripcion()))
+                        .append(d.anulado() ? "<br /><span class=\"small muted\">Anulado: " + esc(d.getMotivoAnulacion()) + "</span>" : "")
+                        .append("</td><td>")
                         .append(esc(d.getNombreArchivo())).append("</td></tr>");
             }
             b.append("</table>");

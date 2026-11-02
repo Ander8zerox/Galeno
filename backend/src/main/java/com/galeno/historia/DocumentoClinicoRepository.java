@@ -11,5 +11,7 @@ interface DocumentoClinicoRepository extends JpaRepository<DocumentoClinico, UUI
 
     long countByPacienteId(UUID pacienteId);
 
-    boolean existsByAtencionId(UUID atencionId);
+    boolean existsByAtencionIdAndAnuladoEnIsNull(UUID atencionId);
+
+    List<DocumentoClinico> findByAtencionId(UUID atencionId);
 }

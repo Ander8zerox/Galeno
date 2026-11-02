@@ -139,11 +139,14 @@ public class HistoriaService {
         if (atencion.firmada()) {
             throw ApiProblem.conflict("Una atención firmada no se elimina");
         }
-        // Los documentos clínicos no se borran (ni en S3 ni aquí): el borrador que los tiene tampoco
-        if (documentos.existsByAtencionId(atencionId)) {
-            throw ApiProblem.conflict("Este borrador tiene documentos adjuntos y no se puede eliminar. Fírmelo, o déjelo "
-                    + "como borrador si la atención no se realizó.");
+        // Los documentos clínicos no se borran (ni en S3 ni aquí): con documentos vigentes, el borrador tampoco. Los
+        // anulados se desligan y quedan en la historia del paciente.
+        if (documentos.existsByAtencionIdAndAnuladoEnIsNull(atencionId)) {
+            throw ApiProblem.conflict("Este borrador tiene documentos adjuntos y no se puede eliminar. Anule los documentos "
+                    + "subidos por error, o firme la atención.");
         }
+        documentos.findByAtencionId(atencionId).forEach(DocumentoClinico::desligarDeAtencion);
+        documentos.flush();
         atenciones.delete(atencion);
     }
 
@@ -279,6 +282,15 @@ public class HistoriaService {
     }
 
     @Transactional
+    public DocumentoVista anularDocumento(UUID documentoId, String motivo) {
+        DocumentoClinico doc = documentos.findById(documentoId)
+                .orElseThrow(() -> ApiProblem.notFound("Documento no encontrado"));
+        doc.anular(AuthUser.current().id(), motivo);
+        auditar(doc.getPacienteId(), Accion.ANULAR_DOCUMENTO, documentoId);
+        return DocumentoVista.de(doc);
+    }
+
+    @Transactional
     public Archivo descargar(UUID documentoId) {
         DocumentoClinico doc = documentos.findById(documentoId)
                 .orElseThrow(() -> ApiProblem.notFound("Documento no encontrado"));
@@ -379,12 +391,15 @@ public class HistoriaService {
     public record DiagnosticoVista(String codigoCie10, String descripcion, boolean principal, Diagnostico.Tipo tipo) {
     }
 
+    /** @param anuladoEn si se subió por error (sigue en la historia, con {@code motivoAnulacion}) */
     public record DocumentoVista(UUID id, UUID atencionId, DocumentoClinico.Tipo tipo, String descripcion,
-                                 String nombreArchivo, String contentType, long tamanoBytes, Instant creadoEn) {
+                                 String nombreArchivo, String contentType, long tamanoBytes, Instant creadoEn,
+                                 Instant anuladoEn, String motivoAnulacion) {
 
         static DocumentoVista de(DocumentoClinico d) {
             return new DocumentoVista(d.getId(), d.getAtencionId(), d.getTipo(), d.getDescripcion(),
-                    d.getNombreArchivo(), d.getContentType(), d.getTamanoBytes(), d.getCreadoEn());
+                    d.getNombreArchivo(), d.getContentType(), d.getTamanoBytes(), d.getCreadoEn(), d.getAnuladoEn(),
+                    d.getMotivoAnulacion());
         }
     }
 
@@ -431,8 +446,8 @@ public class HistoriaService {
 
         static EventoHistoria de(DocumentoClinico d) {
             return new EventoHistoria(TipoEvento.DOCUMENTO, d.getId(), d.getCreadoEn(),
-                    d.getDescripcion() != null ? d.getDescripcion() : d.getNombreArchivo(), d.getNombreArchivo(),
-                    d.getTipo().name(), null);
+                    d.getDescripcion() != null ? d.getDescripcion() : d.getNombreArchivo(),
+                    d.anulado() ? "Anulado: " + d.getMotivoAnulacion() : d.getNombreArchivo(), d.getTipo().name(), null);
         }
     }
 }

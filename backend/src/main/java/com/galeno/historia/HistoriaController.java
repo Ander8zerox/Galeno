@@ -133,12 +133,21 @@ public class HistoriaController {
                 .body(archivo.contenido());
     }
 
+    /** Subido por error: queda en la historia marcado como anulado, con el motivo. */
+    @PostMapping("/documentos/{id}/anulacion")
+    public DocumentoVista anularDocumento(@PathVariable UUID id, @Valid @RequestBody AnularDocumento r) {
+        return historia.anularDocumento(id, r.motivo());
+    }
+
     @GetMapping("/cie10")
     public List<Cie10Vista> cie10(@RequestParam String q) {
         return historia.buscarCie10(q);
     }
 
     public record NuevaAtencion(@NotNull UUID pacienteId, UUID citaId) {
+    }
+
+    public record AnularDocumento(@NotBlank @Size(max = 300) String motivo) {
     }
 
     public record NuevaNota(@NotBlank @Size(max = 4000) String texto) {
