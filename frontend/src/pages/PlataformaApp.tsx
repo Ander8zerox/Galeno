@@ -510,14 +510,15 @@ function Auditoria() {
       <div className="page-header"><h1>Auditoría</h1><span className="muted">últimos 100</span></div>
       <div className="card table-wrap">
         <table>
-          <thead><tr><th>Fecha</th><th>Acción</th><th>Consultorio</th><th>Detalle</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Operador</th><th>Acción</th><th>Consultorio</th><th>Detalle</th></tr></thead>
           <tbody>
             {eventos.data?.map((e, i) => (
               <tr key={i}>
                 <td className="small">{fechaHora.format(new Date(e.fecha!))}</td>
+                <td className="small">{e.operador}</td>
                 <td>{ACCION[e.accion!] ?? e.accion}</td>
                 <td>{e.consultorio ?? "—"}</td>
-                <td className="small muted">{e.detalle}</td>
+                <td className="small muted texto-libre">{e.detalle}</td>
               </tr>
             ))}
           </tbody>
