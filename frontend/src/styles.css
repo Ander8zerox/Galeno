@@ -264,6 +264,18 @@ input::placeholder, textarea::placeholder { color: #667180; }
 .login-card.muy-ancho, .card.muy-ancho { width: min(720px, 100%); }
 .texto-libre { white-space: pre-wrap; margin: 0; font-family: inherit; }
 
+/* --- Verificación en dos pasos (components/DosPasos) --- */
+.pasos-mfa { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: .75rem; }
+.qr-mfa { display: grid; place-items: center; width: 216px; height: 216px; margin: .75rem 0 .5rem; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.clave-mfa { font-size: var(--fs-sm); letter-spacing: .05em; word-break: break-all; }
+.codigo-mfa { font-size: var(--fs-xl); letter-spacing: .35em; text-align: center; font-variant-numeric: tabular-nums; }
+.codigos-mfa { list-style: none; margin: 0; padding: 1rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem 1.5rem; background: var(--surface-muted); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.codigos-mfa code { font-size: var(--fs-base); letter-spacing: .08em; }
+.seguridad { max-width: 640px; }
+.datos-mfa { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1rem; margin: 0; }
+.datos-mfa dt { color: var(--muted); }
+.datos-mfa dd { margin: 0; display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+
 /* --- Encabezados, tablas y pestañas --- */
 .page-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
 .search { width: 100%; margin: 1rem 0; }

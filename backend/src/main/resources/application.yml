@@ -67,6 +67,8 @@ app:
       secret: "" # obligatorio: APP_SECURITY_JWT_SECRET (mínimo 32 bytes)
       issuer: galeno-api
       ttl: 8h
+  mfa:
+    clave: "" # obligatorio: APP_MFA_CLAVE (mínimo 32 caracteres). Cifra los secretos TOTP: no se rota (ver identidad.CifradoMfa)
   ai:
     provider: fake            # fake | bedrock
     # Un modelo por función. Haiku 5.5 es el más económico (unas 40 veces menos que Opus); si la calidad del apoyo

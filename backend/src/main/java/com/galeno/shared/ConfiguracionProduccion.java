@@ -21,6 +21,7 @@ public class ConfiguracionProduccion implements ApplicationListener<ApplicationE
             new String[] {"spring.datasource.username", "SPRING_DATASOURCE_USERNAME"},
             new String[] {"spring.datasource.password", "SPRING_DATASOURCE_PASSWORD"},
             new String[] {"app.security.jwt.secret", "APP_SECURITY_JWT_SECRET"},
+            new String[] {"app.mfa.clave", "APP_MFA_CLAVE"},
             new String[] {"app.web.base-url", "APP_WEB_BASE_URL"},
             new String[] {"app.web.origen-secreto", "APP_WEB_ORIGEN_SECRETO"},
             new String[] {"app.documentos.bucket", "APP_DOCUMENTOS_BUCKET"},

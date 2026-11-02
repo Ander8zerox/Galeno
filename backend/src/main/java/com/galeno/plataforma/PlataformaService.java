@@ -16,6 +16,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import com.galeno.identidad.IdentidadService;
 import com.galeno.identidad.IdentidadService.ConsultorioPlataforma;
+import com.galeno.identidad.MfaService;
 import com.galeno.identidad.SesionService;
 import com.galeno.shared.correo.Correo;
 import com.galeno.shared.correo.EnvioCorreo;
@@ -52,6 +53,7 @@ public class PlataformaService {
     private final IdentidadService identidad;
     private final SuscripcionService suscripciones;
     private final TokenService tokens;
+    private final MfaService mfa;
     private final EnvioCorreo correo;
     private final SupresionCorreos supresion;
     private final TransactionTemplate tx;
@@ -59,31 +61,75 @@ public class PlataformaService {
 
     PlataformaService(OperadorPlataformaRepository operadores, AuditoriaPlataformaRepository auditoria,
                       SesionService sesiones, IdentidadService identidad, SuscripcionService suscripciones,
-                      TokenService tokens, EnvioCorreo correo, SupresionCorreos supresion, TransactionTemplate tx,
-                      @Value("${app.plataforma.operadores:}") List<String> correosOperadores) {
+                      TokenService tokens, MfaService mfa, EnvioCorreo correo, SupresionCorreos supresion,
+                      TransactionTemplate tx, @Value("${app.plataforma.operadores:}") List<String> correosOperadores) {
         this.operadores = operadores;
         this.auditoria = auditoria;
         this.sesiones = sesiones;
         this.identidad = identidad;
         this.suscripciones = suscripciones;
         this.tokens = tokens;
+        this.mfa = mfa;
         this.correo = correo;
         this.supresion = supresion;
         this.tx = tx;
         this.correosOperadores = correosOperadores.stream().map(String::strip).filter(c -> !c.isEmpty()).toList();
     }
 
-    public record SesionPlataforma(String accessToken, Instant expiresAt, String nombre, String email) {
+    /**
+     * @param mfa                 si no es null, el token es el pendiente: falta el código ({@code VERIFICAR}) o
+     *                            configurar la app ({@code CONFIGURAR}). Para operadores es obligatoria.
+     * @param equipo              token de "recordar este equipo", para mandarlo en los próximos logins
+     * @param codigosRecuperacion solo al terminar de configurar la app: se muestran una única vez
+     */
+    public record SesionPlataforma(String accessToken, Instant expiresAt, String nombre, String email,
+                                   MfaService.Requisito mfa, String equipo, List<String> codigosRecuperacion) {
     }
 
-    public SesionPlataforma login(String email, String password) {
+    public SesionPlataforma login(String email, String password, String equipo) {
         SesionService.Cuenta cuenta = sesiones.verificarCredenciales(email, password)
                 .filter(c -> comoSistema(() -> operadores.existsById(c.id())))
                 // Mismo mensaje si no existe, si la contraseña está mal o si no es operador
                 .orElseThrow(() -> ApiProblem.unauthorized("Correo o contraseña incorrectos"));
-        IssuedToken token = tokens.issuePlataforma(cuenta.id(), cuenta.nombre(), cuenta.email());
-        registrar(cuenta.id(), "INGRESO", null, null);
-        return new SesionPlataforma(token.value(), token.expiresAt(), cuenta.nombre(), cuenta.email());
+        return mfa.compuerta(cuenta.id(), MfaService.Destino.PLATAFORMA, equipo, null)
+                .map(p -> new SesionPlataforma(p.accessToken(), p.expiresAt(), cuenta.nombre(), cuenta.email(),
+                        p.requisito(), null, null))
+                .orElseGet(() -> entrar(cuenta.id(), cuenta.nombre(), cuenta.email(), null, null));
+    }
+
+    /** Con el token pendiente del login. */
+    public SesionPlataforma completarMfa(String codigo, boolean recordar) {
+        MfaService.Completado c = mfa.completar(MfaService.Destino.PLATAFORMA, codigo, recordar);
+        AuthUser pendiente = AuthUser.current();
+        String email = identidad.correosDeCuentas(List.of(c.usuarioId())).get(c.usuarioId());
+        return entrar(c.usuarioId(), pendiente.nombre(), email, c.equipo(), c.codigosRecuperacion());
+    }
+
+    private SesionPlataforma entrar(UUID usuarioId, String nombre, String email, String equipo, List<String> codigos) {
+        // Pudo dejar de ser operador mientras escribía el código
+        if (!comoSistema(() -> operadores.existsById(usuarioId))) {
+            throw ApiProblem.unauthorized("Correo o contraseña incorrectos");
+        }
+        IssuedToken token = tokens.issuePlataforma(usuarioId, nombre, email);
+        registrar(usuarioId, "INGRESO", null, null);
+        return new SesionPlataforma(token.value(), token.expiresAt(), nombre, email, null, equipo, codigos);
+    }
+
+    /**
+     * Soporte: alguien perdió el celular y sus códigos de recuperación. Le borra la verificación en dos pasos; si para
+     * esa cuenta es obligatoria, el próximo ingreso le pide configurarla de nuevo. Queda en la auditoría.
+     */
+    public void restablecerMfa(String email) {
+        UUID yo = operador();
+        UUID cuenta = identidad.cuentasPorCorreo(List.of(email)).get(email.strip().toLowerCase());
+        if (cuenta == null) {
+            throw ApiProblem.notFound("No hay una cuenta activa con ese correo");
+        }
+        if (cuenta.equals(yo)) {
+            throw ApiProblem.conflict("Otro operador debe restablecer la suya");
+        }
+        mfa.restablecer(cuenta);
+        registrar(yo, "MFA_RESTABLECIDA", null, email.strip().toLowerCase());
     }
 
     // --- pagos ---

@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Size;
 
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.galeno.plataforma.PlataformaService.EventoAuditoria;
@@ -47,12 +49,34 @@ public class PlataformaController {
         this.plataforma = plataforma;
     }
 
-    public record LoginPlataforma(@NotBlank @Size(max = 190) String email, @NotBlank @Size(max = 200) String password) {
+    /** @param equipo el token de "recordar este equipo" que guardó el navegador para este correo, si hay */
+    public record LoginPlataforma(@NotBlank @Size(max = 190) String email, @NotBlank @Size(max = 200) String password,
+                                  @Size(max = 100) String equipo) {
     }
 
     @PostMapping("/login")
     public SesionPlataforma login(@Valid @RequestBody LoginPlataforma r) {
-        return plataforma.login(r.email(), r.password());
+        return plataforma.login(r.email(), r.password(), r.equipo());
+    }
+
+    /** @param codigo de la app (6 dígitos) o de recuperación (XXXX-XXXX) */
+    public record CodigoMfaPlataforma(@NotBlank @Size(max = 20) String codigo, boolean recordar) {
+    }
+
+    /** Con el token pendiente del login. */
+    @PostMapping("/mfa")
+    public SesionPlataforma mfa(@Valid @RequestBody CodigoMfaPlataforma r) {
+        return plataforma.completarMfa(r.codigo(), r.recordar());
+    }
+
+    public record RestablecerMfa(@NotBlank @Size(max = 190) String email) {
+    }
+
+    /** Soporte: borra la verificación en dos pasos de una cuenta que perdió el celular y los códigos. */
+    @PostMapping("/cuentas/mfa/restablecer")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void restablecerMfa(@Valid @RequestBody RestablecerMfa r) {
+        plataforma.restablecerMfa(r.email());
     }
 
     // --- pagos ---

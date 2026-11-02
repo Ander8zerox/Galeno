@@ -36,9 +36,21 @@ public class TokenService {
     public static final String PLATAFORMA = "PLATAFORMA";
     /** Partner (quien vende Galenum): su portal de referidos y comisiones. No da acceso a ningún consultorio. */
     public static final String PARTNER = "PARTNER";
+    /**
+     * La contraseña ya se verificó, falta el código de la verificación en dos pasos. Solo sirve para enviar el código
+     * (o configurar la app) en la entrada de la que viene ({@link #CLAIM_MFA_DESTINO}).
+     */
+    public static final String MFA_PENDIENTE = "MFA_PENDIENTE";
+    public static final String CLAIM_MFA_DESTINO = "mfa_destino";
+    /** VERIFICAR (ya tiene la app) o CONFIGURAR (debe configurarla antes de entrar). */
+    public static final String CLAIM_MFA_REQUISITO = "mfa_requisito";
+    /** Consultorio al que entra tras el código (registro e invitaciones); sin él, el de siempre. */
+    public static final String CLAIM_MFA_CONSULTORIO = "mfa_consultorio";
 
     private static final Duration TTL_SELECCION = Duration.ofMinutes(10);
     private static final Duration TTL_PLATAFORMA = Duration.ofHours(4);
+    /** Alcanza para instalar la app y escanear el QR. */
+    private static final Duration TTL_MFA = Duration.ofMinutes(10);
 
     private final JwtEncoder encoder;
     private final JwtProperties props;
@@ -54,6 +66,17 @@ public class TokenService {
 
     public IssuedToken issuePlataforma(UUID userId, String nombre, String email) {
         return issue(base(userId, nombre, email, TTL_PLATAFORMA).claim(CLAIM_AUTHORITIES, List.of(PLATAFORMA)), TTL_PLATAFORMA);
+    }
+
+    public IssuedToken issueMfa(UUID userId, String nombre, String email, String destino, String requisito, UUID consultorioId) {
+        JwtClaimsSet.Builder claims = base(userId, nombre, email, TTL_MFA)
+                .claim(CLAIM_AUTHORITIES, List.of(MFA_PENDIENTE))
+                .claim(CLAIM_MFA_DESTINO, destino)
+                .claim(CLAIM_MFA_REQUISITO, requisito);
+        if (consultorioId != null) {
+            claims.claim(CLAIM_MFA_CONSULTORIO, consultorioId.toString());
+        }
+        return issue(claims, TTL_MFA);
     }
 
     public IssuedToken issuePartner(UUID userId, String nombre, String email) {

@@ -7,6 +7,8 @@ app:
   security:
     jwt:
       secret: solo-desarrollo-local-cambiar-en-produccion-0123456789
+  mfa:
+    clave: solo-desarrollo-local-clave-mfa-0123456789
   seed:
     email: medico@demo.local
     password: Demo-Galeno-2026

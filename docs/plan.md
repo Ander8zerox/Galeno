@@ -121,7 +121,9 @@ La competencia ofrece decenas de formatos (historias por especialidad, exámenes
 
 ### Otros pendientes
 - Portal del paciente: cuenta separada que ve sus citas y fórmulas.
-- Invitaciones por correo (hoy se comparte el enlace) y MFA (sobre todo para los operadores de la plataforma).
+- Invitaciones por correo (hoy se comparte el enlace).
+- ✅ MFA (TOTP): obligatoria para operadores de la plataforma y administradores de consultorio, opcional para los
+  demás; códigos de recuperación, "recordar este equipo" 30 días y restablecimiento desde la consola.
 - Suscripciones, siguiente iteración: pasarela de pagos (Wompi, PayU…) cuyo webhook haga lo mismo que "Aprobar"; factura electrónica de Galeno por cada pago (obligatoria ante la DIAN); renovación automática.
 - Partners, antes de lanzar: revisión legal y contable de las condiciones (contrato de prestación de servicios, retención en la fuente y ReteICA sobre comisiones, cuenta de cobro o factura del partner) y reportes de comisiones para contabilidad.
 - Revisión legal de los términos y de la política de datos (hoy un borrador en `/politica-datos`) antes de abrir el registro al público.

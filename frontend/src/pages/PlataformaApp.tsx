@@ -5,8 +5,9 @@ import { ApiError, expectOk, unwrap, type Schemas } from "../api/client";
 import type { paths } from "../api/schema";
 import { ESTADO_SUSCRIPCION, pesos } from "./SuscripcionPage";
 import { ESTADO_PARTNER, TablaComisiones } from "./PartnerApp";
-import { Building, Handshake, MailX, Receipt, ScrollText, Settings2 } from "lucide-react";
+import { Building, Handshake, MailX, Receipt, ScrollText, Settings2, ShieldCheck } from "lucide-react";
 import { Shell } from "../components/Shell";
+import { SeguridadCuenta, VerificacionDosPasos, equiposRecordados } from "../components/DosPasos";
 
 type Pago = Schemas["PagoVista"];
 type Consultorio = Schemas["ConsultorioVista"];
@@ -48,19 +49,37 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false 
 
 export function PlataformaApp() {
   const [sesion, setSesion] = useState<Sesion | null>(leerSesion);
+  /** Contraseña correcta, falta el código (para operadores la verificación en dos pasos es obligatoria). */
+  const [pendiente, setPendiente] = useState<Sesion | null>(null);
   alSalir = () => {
     sessionStorage.removeItem(CLAVE);
     token = null;
     queryClient.clear();
+    setPendiente(null);
     setSesion(null);
   };
+  const entrar = (s: Sesion) => {
+    token = s.accessToken!;
+    if (s.mfa) {
+      setPendiente(s);
+      return;
+    }
+    equiposRecordados.guardar(s.email ?? "", s.equipo);
+    sessionStorage.setItem(CLAVE, JSON.stringify(s));
+    setPendiente(null);
+    setSesion(s);
+  };
 
+  if (pendiente) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <VerificacionDosPasos api={api} requisito={pendiente.mfa!} onCancelar={alSalir} alTerminar={entrar}
+          completar={async (codigo, recordar) => unwrap(await api.POST("/api/v1/plataforma/mfa", { body: { codigo, recordar } }))} />
+      </QueryClientProvider>
+    );
+  }
   if (!sesion) {
-    return <Login onEntrar={(s) => {
-      sessionStorage.setItem(CLAVE, JSON.stringify(s));
-      token = s.accessToken!;
-      setSesion(s);
-    }} />;
+    return <QueryClientProvider client={queryClient}><Login onEntrar={entrar} /></QueryClientProvider>;
   }
   return (
     <QueryClientProvider client={queryClient}>
@@ -73,7 +92,7 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const entrar = useMutation({
-    mutationFn: async () => unwrap(await api.POST("/api/v1/plataforma/login", { body: { email, password } })),
+    mutationFn: async () => unwrap(await api.POST("/api/v1/plataforma/login", { body: { email, password, equipo: equiposRecordados.leer(email) } })),
     onSuccess: onEntrar,
   });
   return (
@@ -90,7 +109,7 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
   );
 }
 
-type Pestana = "pagos" | "consultorios" | "partners" | "configuracion" | "correos" | "auditoria";
+type Pestana = "pagos" | "consultorios" | "partners" | "configuracion" | "correos" | "auditoria" | "seguridad";
 
 function Consola({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
   const [pestana, setPestana] = useState<Pestana>("pagos");
@@ -101,7 +120,7 @@ function Consola({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
   });
   const secciones = ([
     ["pagos", "Pagos por revisar", Receipt], ["consultorios", "Consultorios", Building], ["partners", "Partners", Handshake],
-    ["configuracion", "Planes y datos de pago", Settings2], ["correos", "Correos bloqueados", MailX], ["auditoria", "Auditoría", ScrollText],
+    ["configuracion", "Planes y datos de pago", Settings2], ["correos", "Correos bloqueados", MailX], ["auditoria", "Auditoría", ScrollText], ["seguridad", "Seguridad", ShieldCheck],
   ] as const).map(([p, etiqueta, icono]) => ({
     etiqueta, icono, activo: pestana === p, onClick: () => setPestana(p),
     contador: p === "pagos" ? pendientes.data?.length : undefined,
@@ -114,6 +133,7 @@ function Consola({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
         {pestana === "configuracion" && <Configuracion />}
         {pestana === "correos" && <CorreosSuprimidos />}
         {pestana === "auditoria" && <Auditoria />}
+        {pestana === "seguridad" && <Seguridad />}
     </Shell>
   );
 }
@@ -555,5 +575,35 @@ function Auditoria() {
         </table>
       </div>
     </section>
+  );
+}
+
+function Seguridad() {
+  const [email, setEmail] = useState("");
+  const restablecer = useMutation({
+    mutationFn: async () => expectOk(await api.POST("/api/v1/plataforma/cuentas/mfa/restablecer", { body: { email } })),
+  });
+  return (
+    <div className="stack">
+      <div className="page-header"><h1>Seguridad</h1></div>
+      <SeguridadCuenta api={api} />
+      <section className="card stack seguridad">
+        <h2>Restablecer la verificación de otra cuenta</h2>
+        <p className="muted small">
+          Para quien perdió el celular y sus códigos de recuperación. Antes, confirme que quien lo pide es el titular
+          (por ejemplo, con una llamada al número registrado). La cuenta recibe un correo y queda en la auditoría.
+        </p>
+        <form className="row" onSubmit={(e: FormEvent) => {
+          e.preventDefault();
+          if (confirm(`¿Restablecer la verificación en dos pasos de ${email}?`)) restablecer.mutate();
+        }}>
+          <input type="email" className="grow" placeholder="correo@ejemplo.com" value={email}
+                 onChange={(e) => { setEmail(e.target.value); restablecer.reset(); }} required aria-label="Correo de la cuenta" />
+          <button className="btn btn-secondary" disabled={restablecer.isPending}>Restablecer</button>
+        </form>
+        {restablecer.isSuccess && <p className="alert alert-ok">Listo: la próxima vez que ingrese podrá configurarla de nuevo.</p>}
+        {restablecer.error && <p className="alert alert-error">{restablecer.error.message}</p>}
+      </section>
+    </div>
   );
 }

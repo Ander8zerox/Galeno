@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { CalendarDays, CreditCard, FileUp, Users, UsersRound } from "lucide-react";
+import { CalendarDays, CreditCard, FileUp, ShieldCheck, Users, UsersRound } from "lucide-react";
 import { Shell, type ItemMenu } from "./components/Shell";
 import { Bienvenida } from "./components/Bienvenida";
+import { SeguridadCuenta, VerificacionDosPasos } from "./components/DosPasos";
 import { api, unwrap } from "./api/client";
 import { useAuth } from "./auth/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
@@ -21,8 +22,13 @@ import { AtencionPage } from "./pages/AtencionPage";
 import { ImportarPage, LoteImportacionPage } from "./pages/ImportarPage";
 
 export function App() {
-  const { me, seleccion, logout, puede } = useAuth();
+  const { me, seleccion, mfa, logout, puede } = useAuth();
   const location = useLocation();
+
+  // Entre la contraseña y la sesión, también al llegar desde una invitación o la confirmación del registro
+  if (mfa && !location.pathname.startsWith("/plataforma") && !location.pathname.startsWith("/partner")) {
+    return <VerificacionConsultorio />;
+  }
 
   // Páginas públicas: quien las abre puede no tener cuenta todavía
   if (location.pathname === "/invitacion") return <InvitacionPage />;
@@ -43,6 +49,7 @@ export function App() {
     ...(puede("EQUIPO_GESTIONAR") ? [{ etiqueta: "Equipo", icono: UsersRound, to: "/equipo" }] : []),
     ...(puede("IMPORTAR_HISTORIAS") ? [{ etiqueta: "Importar", icono: FileUp, to: "/importar" }] : []),
     ...(puede("SUSCRIPCION_GESTIONAR") ? [{ etiqueta: "Suscripción", icono: CreditCard, to: "/suscripcion" }] : []),
+    { etiqueta: "Seguridad", icono: ShieldCheck, to: "/seguridad" },
   ];
 
   return (
@@ -58,9 +65,28 @@ export function App() {
           {puede("IMPORTAR_HISTORIAS") && <Route path="/importar/:id" element={<LoteImportacionPage />} />}
           {puede("SUSCRIPCION_GESTIONAR") && <Route path="/suscripcion" element={<SuscripcionPage />} />}
           {puede("AGENDA_GESTIONAR") && <Route path="/agenda" element={<AgendaPage />} />}
+          <Route path="/seguridad" element={<SeguridadPage />} />
           <Route path="*" element={<Navigate to={puede("AGENDA_GESTIONAR") ? "/agenda" : "/pacientes"} replace />} />
         </Routes>
     </Shell>
+  );
+}
+
+function VerificacionConsultorio() {
+  const { mfa, completarMfa, terminarMfa, logout } = useAuth();
+  const navigate = useNavigate();
+  return (
+    <VerificacionDosPasos api={api} requisito={mfa!} completar={completarMfa} onCancelar={logout}
+      alTerminar={async (res) => { await terminarMfa(res); navigate("/", { replace: true }); }} />
+  );
+}
+
+function SeguridadPage() {
+  return (
+    <>
+      <div className="page-header"><h1>Seguridad</h1></div>
+      <SeguridadCuenta api={api} />
+    </>
   );
 }
 

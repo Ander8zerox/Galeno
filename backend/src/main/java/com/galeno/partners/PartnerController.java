@@ -77,12 +77,24 @@ public class PartnerController {
         return partners.confirmarInscripcion(r.token(), r.password());
     }
 
-    public record LoginPartner(@NotBlank @Size(max = 190) String email, @NotBlank @Size(max = 200) String password) {
+    /** @param equipo el token de "recordar este equipo" que guardó el navegador para este correo, si hay */
+    public record LoginPartner(@NotBlank @Size(max = 190) String email, @NotBlank @Size(max = 200) String password,
+                               @Size(max = 100) String equipo) {
     }
 
     @PostMapping("/login")
     public SesionPartner login(@Valid @RequestBody LoginPartner r) {
-        return partners.login(r.email(), r.password());
+        return partners.login(r.email(), r.password(), r.equipo());
+    }
+
+    /** @param codigo de la app (6 dígitos) o de recuperación (XXXX-XXXX) */
+    public record CodigoMfaPartner(@NotBlank @Size(max = 20) String codigo, boolean recordar) {
+    }
+
+    /** Con el token pendiente del login. */
+    @PostMapping("/mfa")
+    public SesionPartner mfa(@Valid @RequestBody CodigoMfaPartner r) {
+        return partners.completarMfa(r.codigo(), r.recordar());
     }
 
     @GetMapping("/yo")

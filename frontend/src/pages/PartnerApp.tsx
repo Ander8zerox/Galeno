@@ -4,9 +4,10 @@ import createClient, { type Middleware } from "openapi-fetch";
 import { expectOk, unwrap, type Schemas } from "../api/client";
 import type { paths } from "../api/schema";
 import { pesos } from "./SuscripcionPage";
-import { Wallet } from "lucide-react";
+import { ShieldCheck, Wallet } from "lucide-react";
 import { Shell } from "../components/Shell";
 import { EnlacesLegales } from "../components/EnlacesLegales";
+import { SeguridadCuenta, VerificacionDosPasos, equiposRecordados } from "../components/DosPasos";
 
 /**
  * Portal de los partners (quienes venden Galenum): inscripción, su código, sus referidos y sus comisiones.
@@ -60,21 +61,36 @@ export const ESTADO_PARTNER: Record<NonNullable<Schemas["PartnerVista"]["estado"
 
 export function PartnerApp() {
   const [sesion, setSesion] = useState<Sesion | null>(leerSesion);
+  /** Contraseña correcta, falta el código de la verificación en dos pasos (si la activó). */
+  const [pendiente, setPendiente] = useState<Sesion | null>(null);
   alSalir = () => {
     sessionStorage.removeItem(CLAVE);
     token = null;
     queryClient.clear();
+    setPendiente(null);
     setSesion(null);
   };
   const entrar = (s: Sesion) => {
-    sessionStorage.setItem(CLAVE, JSON.stringify(s));
     token = s.accessToken!;
+    if (s.mfa) {
+      setPendiente(s);
+      return;
+    }
+    equiposRecordados.guardar(s.email ?? "", s.equipo);
+    sessionStorage.setItem(CLAVE, JSON.stringify(s));
+    setPendiente(null);
     setSesion(s);
   };
   const ruta = window.location.pathname;
 
   let contenido;
-  if (ruta === "/partner/condiciones") contenido = <Condiciones />;
+  if (pendiente) {
+    contenido = (
+      <VerificacionDosPasos api={api} requisito={pendiente.mfa!} onCancelar={alSalir}
+        alTerminar={(s) => { entrar(s); history.replaceState(null, "", "/partner"); }}
+        completar={async (codigo, recordar) => unwrap(await api.POST("/api/v1/partners/mfa", { body: { codigo, recordar } }))} />
+    );
+  } else if (ruta === "/partner/condiciones") contenido = <Condiciones />;
   else if (ruta === "/partner/inscripcion") contenido = <Inscripcion />;
   else if (ruta === "/partner/confirmar") contenido = <Confirmar onEntrar={(s) => { entrar(s); history.replaceState(null, "", "/partner"); }} />;
   else if (!sesion) contenido = <Login onEntrar={entrar} />;
@@ -86,7 +102,7 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const entrar = useMutation({
-    mutationFn: async () => unwrap(await api.POST("/api/v1/partners/login", { body: { email, password } })),
+    mutationFn: async () => unwrap(await api.POST("/api/v1/partners/login", { body: { email, password, equipo: equiposRecordados.leer(email) } })),
     onSuccess: onEntrar,
   });
   return (
@@ -224,6 +240,21 @@ function Confirmar({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
 function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
   const panel = useQuery({ queryKey: ["partner", "yo"], queryFn: async () => unwrap(await api.GET("/api/v1/partners/yo")) });
   const [copiado, setCopiado] = useState(false);
+  const [vista, setVista] = useState<"panel" | "seguridad">("panel");
+  const menu = [
+    { etiqueta: "Mi panel", icono: Wallet, activo: vista === "panel", onClick: () => setVista("panel") },
+    { etiqueta: "Seguridad", icono: ShieldCheck, activo: vista === "seguridad", onClick: () => setVista("seguridad") },
+  ];
+  if (vista === "seguridad") {
+    return (
+      <Shell marca="Partners" items={menu} usuario={sesion.nombre ?? ""} onSalir={onSalir}>
+        <div className="stack">
+          <div className="page-header"><h1>Seguridad</h1></div>
+          <SeguridadCuenta api={api} />
+        </div>
+      </Shell>
+    );
+  }
   if (panel.isLoading) return <Mensaje texto="Cargando…" />;
   if (panel.error || !panel.data) return <Mensaje texto={panel.error?.message ?? "No se pudo cargar su panel."} />;
   const d = panel.data;
@@ -232,7 +263,7 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
   const [texto, clase] = ESTADO_PARTNER[p.estado!];
 
   return (
-    <Shell marca="Partners" items={[{ etiqueta: "Mi panel", icono: Wallet, activo: true }]} usuario={sesion.nombre ?? ""} onSalir={onSalir}>
+    <Shell marca="Partners" items={menu} usuario={sesion.nombre ?? ""} onSalir={onSalir}>
       <div className="stack">
         <div className="page-header between"><h1>{p.nombre}</h1><span className={`badge ${clase}`}>{texto}</span></div>
 

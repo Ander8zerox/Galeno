@@ -52,6 +52,21 @@ resource "aws_ssm_parameter" "jwt" {
   value_wo_version = local.version_jwt
 }
 
+# Cifra los secretos de la verificación en dos pasos (identidad.CifradoMfa). A diferencia de los de arriba, NO se rota
+# subiendo una versión: con otra clave los secretos guardados no se pueden descifrar y todos tendrían que configurar su
+# app de nuevo (los operadores pueden restablecerla desde la consola). Por eso no tiene local de versión.
+ephemeral "random_password" "mfa" {
+  length  = 64
+  special = false
+}
+
+resource "aws_ssm_parameter" "mfa" {
+  name             = "/galeno/prod/APP_MFA_CLAVE"
+  type             = "SecureString"
+  value_wo         = ephemeral.random_password.mfa.result
+  value_wo_version = 1
+}
+
 # Este sí queda en el estado: CloudFront lo necesita en claro para agregarlo como encabezado de origen.
 # Para rotarlo sin cortar el servicio, ver "3a" en docs/aws-capa-1.md.
 resource "random_password" "origen" {
