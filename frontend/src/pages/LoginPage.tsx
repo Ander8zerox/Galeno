@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { EnlacesLegales } from "../components/EnlacesLegales";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -38,6 +39,7 @@ export function LoginPage() {
         <a href="/recuperar" className="btn-link small">¿Olvidó su contraseña?</a>
         <button className="btn" disabled={enviando}>{enviando ? "Ingresando…" : "Ingresar"}</button>
         <p className="muted small center">¿Su consultorio aún no usa Galenum? <a href="/registro">Regístrelo aquí</a></p>
+        <EnlacesLegales />
       </form>
     </div>
   );

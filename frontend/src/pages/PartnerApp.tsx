@@ -6,6 +6,7 @@ import type { paths } from "../api/schema";
 import { pesos } from "./SuscripcionPage";
 import { Wallet } from "lucide-react";
 import { Shell } from "../components/Shell";
+import { EnlacesLegales } from "../components/EnlacesLegales";
 
 /**
  * Portal de los partners (quienes venden Galenum): inscripción, su código, sus referidos y sus comisiones.
@@ -99,6 +100,7 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
         <button className="btn" disabled={entrar.isPending}>{entrar.isPending ? "Ingresando…" : "Ingresar"}</button>
         <a href="/partner/inscripcion" className="btn btn-secondary">Quiero ser partner</a>
         <a href="/recuperar" className="btn-link small center">¿Olvidó su contraseña?</a>
+        <EnlacesLegales />
       </form>
     </div>
   );
@@ -178,6 +180,7 @@ function Inscripcion() {
         {(errorLocal || enviar.error) && <p className="alert alert-error">{errorLocal ?? enviar.error?.message}</p>}
         <button className="btn" disabled={enviar.isPending}>{enviar.isPending ? "Enviando…" : "Inscribirme"}</button>
         <a href="/partner" className="btn-link center">Ya soy partner: ingresar</a>
+        <EnlacesLegales />
       </form>
     </div>
   );

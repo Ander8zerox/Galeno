@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { LogOut, Menu, X, type LucideIcon } from "lucide-react";
+import { EnlacesLegales } from "./EnlacesLegales";
 
 /** Una entrada del menú: navega a una ruta (consultorio) o cambia de pestaña (consola de la plataforma). */
 export type ItemMenu = {
@@ -65,6 +66,7 @@ export function Shell({ marca, items, arriba, usuario, onSalir, children }: {
           <span className="grow sidebar-usuario">{usuario}</span>
           <button className="sidebar-salir" onClick={() => confirm("¿Cerrar sesión?") && onSalir()} aria-label="Salir" title="Salir"><LogOut size={18} /></button>
         </div>
+        <EnlacesLegales className="sidebar-legal" />
       </aside>
       {abierto && <div className="sidebar-fondo" onClick={() => setAbierto(false)} />}
 
