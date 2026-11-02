@@ -52,7 +52,7 @@ public class BedrockLlmClient implements LlmClient {
 
         StopReason stop = message.stopReason().orElse(null);
         if (StopReason.REFUSAL.equals(stop)) {
-            throw new LlmException("El modelo rechazó la solicitud por sus políticas de seguridad");
+            throw new LlmRechazoException();
         }
         if (StopReason.MAX_TOKENS.equals(stop)) {
             throw new LlmException("La respuesta superó el máximo de tokens configurado");

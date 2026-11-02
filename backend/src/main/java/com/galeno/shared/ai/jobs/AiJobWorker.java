@@ -20,6 +20,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.json.JsonMapper;
 
 import com.galeno.shared.ai.AiProperties;
+import com.galeno.shared.ai.LlmClient.LlmRechazoException;
 import com.galeno.shared.ai.LlmClient.LlmResult;
 import com.galeno.shared.tenancy.TenantContext;
 
@@ -98,8 +99,19 @@ public class AiJobWorker {
                     .completar(json, result.model(), result.inputTokens(), result.outputTokens()));
         } catch (RuntimeException e) {
             log.warn("Falló el trabajo de IA {} ({})", id, job.getTipo(), e);
-            tx.executeWithoutResult(status -> repository.findById(id).ifPresent(j -> j.fallar(e.getMessage())));
+            tx.executeWithoutResult(status -> repository.findById(id).ifPresent(j -> j.fallar(mensajeParaUsuario(e))));
         }
+    }
+
+    /**
+     * Lo que ve el médico cuando la IA falla. Nunca el mensaje de la excepción: trae el JSON del proveedor (ids internos,
+     * nombres de modelo). El detalle queda en el log con el id del trabajo.
+     */
+    static String mensajeParaUsuario(RuntimeException e) {
+        if (e instanceof LlmRechazoException) {
+            return "El asistente de IA no puede responder esta solicitud. Continúe sin él.";
+        }
+        return "El asistente de IA no está disponible en este momento. Intente de nuevo en unos minutos o continúe sin él.";
     }
 
     @PreDestroy
