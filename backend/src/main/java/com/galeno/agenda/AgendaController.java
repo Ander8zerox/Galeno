@@ -28,6 +28,7 @@ import com.galeno.agenda.AgendaService.CitaVista;
 import com.galeno.agenda.AgendaService.Horario;
 import com.galeno.agenda.AgendaService.MedicoAgenda;
 import com.galeno.agenda.Disponibilidad.Intervalo;
+import com.galeno.agenda.FestivosColombia.Festivo;
 
 /** Las fechas ({@code LocalDate}) se interpretan en la zona horaria del consultorio; las horas de cita, en UTC/ISO-8601. */
 @RestController
@@ -55,7 +56,13 @@ public class AgendaController {
     public Horario actualizarHorario(@PathVariable UUID medicoId, @Valid @RequestBody ActualizarHorario r) {
         List<Bloque> bloques = r.bloques().stream()
                 .map(b -> new Bloque(b.diaSemana(), b.horaInicio(), b.horaFin())).toList();
-        return agenda.actualizarHorario(medicoId, r.duracionMinutos(), bloques);
+        return agenda.actualizarHorario(medicoId, r.duracionMinutos(), bloques, r.atiendeFestivos());
+    }
+
+    @GetMapping("/festivos")
+    public List<Festivo> festivos(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        return agenda.festivos(desde, hasta);
     }
 
     @GetMapping("/medicos/{medicoId}/disponibilidad")
@@ -93,8 +100,9 @@ public class AgendaController {
         return agenda.proximasDelPaciente(pacienteId);
     }
 
+    /** @param atiendeFestivos si se omite, se queda como estaba */
     public record ActualizarHorario(@Min(5) @Max(240) int duracionMinutos,
-                                    @NotNull @Size(max = 50) List<@Valid BloqueRequest> bloques) {
+                                    @NotNull @Size(max = 50) List<@Valid BloqueRequest> bloques, Boolean atiendeFestivos) {
     }
 
     public record BloqueRequest(@Min(1) @Max(7) int diaSemana, @NotNull LocalTime horaInicio, @NotNull LocalTime horaFin) {

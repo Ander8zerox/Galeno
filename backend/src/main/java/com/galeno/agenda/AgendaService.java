@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.galeno.agenda.Disponibilidad.Intervalo;
+import com.galeno.agenda.FestivosColombia.Festivo;
 import com.galeno.identidad.IdentidadService;
 import com.galeno.identidad.IdentidadService.MedicoResumen;
 import com.galeno.pacientes.PacienteService;
@@ -71,15 +72,26 @@ class AgendaService {
     }
 
     @Transactional
-    public Horario actualizarHorario(UUID medicoId, int duracionMinutos, List<Bloque> bloques) {
+    /** @param atiendeFestivos null: se queda como estaba */
+    public Horario actualizarHorario(UUID medicoId, int duracionMinutos, List<Bloque> bloques, Boolean atiendeFestivos) {
         verificarAcceso(medicoId);
         if (!puedeEditarHorario(AuthUser.current(), medicoId)) {
             throw ApiProblem.forbidden("Solo el propio médico o un administrador cambian el horario");
         }
         validarHorario(duracionMinutos, bloques);
         AgendaMedico agenda = obtenerOCrear(medicoId);
-        agenda.actualizar(duracionMinutos, bloques);
+        agenda.actualizar(duracionMinutos, bloques, atiendeFestivos != null ? atiendeFestivos : agenda.isAtiendeFestivos());
         return Horario.de(agenda);
+    }
+
+    /** Festivos de Colombia entre dos fechas (para marcarlos en la agenda). */
+    public List<Festivo> festivos(LocalDate desde, LocalDate hasta) {
+        if (hasta.isBefore(desde) || desde.plusYears(2).isBefore(hasta)) {
+            throw ApiProblem.badRequest("El rango debe ser de máximo 2 años");
+        }
+        return java.util.stream.IntStream.rangeClosed(desde.getYear(), hasta.getYear())
+                .mapToObj(FestivosColombia::del).flatMap(List::stream)
+                .filter(f -> !f.fecha().isBefore(desde) && !f.fecha().isAfter(hasta)).toList();
     }
 
     @Transactional
@@ -98,6 +110,9 @@ class AgendaService {
     public List<Intervalo> disponibilidad(UUID medicoId, LocalDate fecha) {
         verificarAcceso(medicoId);
         AgendaMedico agenda = obtenerOCrear(medicoId);
+        if (!agenda.isAtiendeFestivos() && FestivosColombia.en(fecha).isPresent()) {
+            return List.of();
+        }
         ZoneId zona = zona();
         Instant inicioDia = fecha.atStartOfDay(zona).toInstant();
         Instant finDia = fecha.plusDays(1).atStartOfDay(zona).toInstant();
@@ -169,6 +184,11 @@ class AgendaService {
         agendas.bloquear(agenda.getMedicoMembresiaId()); // serializa las reservas de este médico
         if (sobrecupo) {
             return; // el sobrecupo es una decisión explícita: puede estar fuera del horario y cruzarse
+        }
+        if (!agenda.isAtiendeFestivos()) {
+            FestivosColombia.en(intervalo.inicio().atZone(zona()).toLocalDate()).ifPresent(f -> {
+                throw ApiProblem.conflict("Es festivo (" + f.nombre() + "). Use sobrecupo si el médico atiende ese día.");
+            });
         }
         if (!Disponibilidad.dentroDelHorario(intervalo, zona(), agenda.getBloques())) {
             throw ApiProblem.conflict("La hora está fuera del horario del médico. Use sobrecupo si es necesario.");
@@ -269,13 +289,13 @@ class AgendaService {
     public record MedicoAgenda(UUID membresiaId, String nombre, boolean puedeEditarHorario) {
     }
 
-    public record Horario(UUID medicoId, int duracionMinutos, List<BloqueVista> bloques) {
+    public record Horario(UUID medicoId, int duracionMinutos, List<BloqueVista> bloques, boolean atiendeFestivos) {
 
         static Horario de(AgendaMedico a) {
             return new Horario(a.getMedicoMembresiaId(), a.getDuracionMinutos(), a.getBloques().stream()
                     .sorted(Comparator.comparing(Bloque::getDiaSemana).thenComparing(Bloque::getHoraInicio))
                     .map(b -> new BloqueVista(b.getDiaSemana(), b.getHoraInicio(), b.getHoraFin()))
-                    .toList());
+                    .toList(), a.isAtiendeFestivos());
         }
     }
 

@@ -41,6 +41,10 @@ public class AgendaMedico {
     @OrderColumn(name = "orden")
     private List<Bloque> bloques = new ArrayList<>();
 
+    /** Si no, en los festivos de Colombia no hay cupos (se puede agendar con sobrecupo). */
+    @Column(name = "atiende_festivos", nullable = false)
+    private boolean atiendeFestivos;
+
     @Column(name = "actualizado_en", nullable = false)
     private Instant actualizadoEn;
 
@@ -60,11 +64,16 @@ public class AgendaMedico {
         return agenda;
     }
 
-    void actualizar(int duracionMinutos, List<Bloque> nuevos) {
+    void actualizar(int duracionMinutos, List<Bloque> nuevos, boolean atiendeFestivos) {
         this.duracionMinutos = duracionMinutos;
         this.bloques.clear();
         this.bloques.addAll(nuevos);
+        this.atiendeFestivos = atiendeFestivos;
         this.actualizadoEn = Instant.now();
+    }
+
+    public boolean isAtiendeFestivos() {
+        return atiendeFestivos;
     }
 
     public UUID getMedicoMembresiaId() {
