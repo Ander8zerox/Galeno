@@ -7,16 +7,25 @@ output "nameservers" {
   value       = aws_route53_zone.principal.name_servers
 }
 
-output "variables_github" {
-  description = "GitHub > Settings > Secrets and variables > Actions > Variables (para deploy.yml)."
-  value = {
-    AWS_REGION                 = var.region
-    AWS_DEPLOY_ROLE_ARN        = aws_iam_role.deploy.arn
-    ECR_REPOSITORY             = aws_ecr_repository.api.name
-    EC2_INSTANCE_ID            = aws_instance.api.id
-    WEB_BUCKET                 = aws_s3_bucket.web.bucket
-    CLOUDFRONT_DISTRIBUTION_ID = aws_cloudfront_distribution.web.id
-  }
+# Lo que necesita tools/desplegar.sh (los lee con terraform output -raw)
+output "region" {
+  value = var.region
+}
+
+output "imagen_api" {
+  value = aws_ecr_repository.api.repository_url
+}
+
+output "instancia_api" {
+  value = aws_instance.api.id
+}
+
+output "bucket_web" {
+  value = aws_s3_bucket.web.bucket
+}
+
+output "distribucion_web" {
+  value = aws_cloudfront_distribution.web.id
 }
 
 output "consola_instancia" {

@@ -33,7 +33,7 @@ cd infra
 terraform init
 terraform plan -out capa1.tfplan   # solo lee: muestra qué se crearía
 terraform apply capa1.tfplan       # paso 10: crea (y empieza a cobrar)
-terraform output variables_github  # paso 11: variables de GitHub para deploy.yml
+cd .. && tools/desplegar.sh        # paso 11: sube la API y el frontend (ver "6. Despliegue")
 ```
 
 - Usa el perfil `galeno` de `aws login` (variable `perfil_aws`). El estado queda en `infra/terraform.tfstate`, fuera
@@ -164,7 +164,7 @@ localhost), `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `APP_SEC
 (con `https://`), `APP_WEB_ORIGEN_SECRETO`, `APP_DOCUMENTOS_BUCKET`, `APP_CORREO_REMITENTE`,
 `APP_CORREO_CONFIGURATION_SET` y `APP_CORREO_COLA_EVENTOS`.
 
-> La EC2 es ARM (t4g): `deploy.yml` construye la imagen con `docker buildx build --platform linux/arm64` (QEMU), que es más lento que un build nativo.
+> La EC2 es ARM (t4g): la imagen es `linux/arm64`. El Dockerfile compila el JAR en la arquitectura del equipo que construye (`--platform=$BUILDPLATFORM`) y solo la imagen final es ARM, así que no hay que emular Maven.
 
 ### 3a. IP real del cliente detrás de CloudFront
 Detrás de CloudFront, la IP que ve la API es la de un nodo de CloudFront. Si no se resuelve la del visitante, los
@@ -203,9 +203,25 @@ límites por IP (registro, recuperación de contraseña, partners) contarían a 
 - [ ] Rutas del SPA → `/index.html` con una CloudFront Function (`infra/funcion-spa.js`), que además redirige `www` al dominio raíz. No con respuestas de error de la distribución: esas aplican también a `/api/*`
 - [ ] Certificado ACM **en us-east-1** (lo exige CloudFront; ver "Región") y registro en Route 53
 
-### 6. CI/CD
-- [ ] Proveedor OIDC de GitHub en IAM, con un rol para `.github/workflows/deploy.yml`
-- [ ] Variables del repositorio: `AWS_REGION=us-east-2`, `AWS_DEPLOY_ROLE_ARN`, `ECR_REPOSITORY`, `EC2_INSTANCE_ID`, `WEB_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`
+### 6. Despliegue
+El proyecto de AWS **no permite crear proveedores de identidad**: la SCP `DenyIAMRestrictedActions` niega
+`iam:*Provider*`, así que GitHub Actions no puede entrar con OIDC. Para no guardar una llave de acceso permanente en
+GitHub, el despliegue se hace desde el computador con la sesión de `aws login`. GitHub Actions sigue corriendo las
+pruebas (`ci.yml`).
+
+```bash
+aws login --profile galeno       # si la sesión venció (dura 12 h)
+tools/desplegar.sh               # API y frontend; también --solo-api o --solo-web
+```
+
+El script lee los datos de `terraform output`, sube la imagen `linux/arm64` a ECR con la etiqueta del commit y
+`latest`, y por SSM corre `/opt/galeno/desplegar.sh` en la EC2, esperando a que `/actuator/health` responda (si no,
+muestra los últimos logs). Luego publica `frontend/dist` en S3 (assets con caché de un año, `index.html` sin caché) e
+invalida CloudFront. Si hay cambios sin commit, la imagen lleva la etiqueta `<commit>-local`.
+
+Si más adelante el equipo crece y se quiere desplegar desde GitHub, hay dos caminos: un usuario de IAM con una llave
+en los secretos del repositorio (permitido, pero es una llave permanente que hay que rotar) o activar las *advanced
+features* del proyecto (irreversible, y la documentación no confirma que quite esta restricción).
 
 ## Siguiente capa
 

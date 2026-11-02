@@ -1,5 +1,7 @@
 # Imagen única para local, EC2 (Capa 1) y ECS Fargate (Capa 3).
-FROM maven:3.9-eclipse-temurin-21 AS build
+# El JAR no depende de la arquitectura: se compila en la del equipo que construye (sin emulación) y solo la imagen
+# final es de la plataforma pedida (linux/arm64 para la EC2 t4g).
+FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /src
 COPY pom.xml .
 RUN mvn -q -B dependency:go-offline
