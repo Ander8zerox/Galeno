@@ -134,7 +134,7 @@ export function RegistroPage() {
         <label className="check">
           <input type="checkbox" checked={form.aceptaTerminos} onChange={(e) => setForm({ ...form, aceptaTerminos: e.target.checked })} />
           <span>
-            Acepto los términos de uso y la <a href="/politica-datos" target="_blank" rel="noreferrer">política de tratamiento de datos personales</a>
+            Acepto los <a href="/terminos" target="_blank" rel="noreferrer">términos de uso</a> y la <a href="/politica-datos" target="_blank" rel="noreferrer">política de tratamiento de datos personales</a>
           </span>
         </label>
 
@@ -242,6 +242,66 @@ export function PoliticaDatosPage() {
         <p>
           Los titulares pueden conocer, actualizar, rectificar y solicitar la supresión de sus datos (cuando la ley lo
           permita) y revocar la autorización, a través de su consultorio o escribiendo a Galeno.
+        </p>
+        <a href="/registro" className="btn-link">Volver al registro</a>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Borrador de los términos de uso: falta revisarlos con un abogado antes de abrir el registro al público. La versión
+ * va en RegistroService.TERMINOS_VERSION y queda guardada con cada consultorio.
+ */
+export function TerminosPage() {
+  return (
+    <div className="login">
+      <div className="card muy-ancho stack">
+        <h1>Términos de uso</h1>
+        <p className="alert">Borrador en revisión legal · versión 2026-11.</p>
+        <h3>El servicio</h3>
+        <p>
+          Galeno es un software en la nube para que consultorios de salud en Colombia gestionen su agenda, sus pacientes,
+          la historia clínica y las fórmulas. Lo usan profesionales de salud y su personal administrativo; el criterio
+          clínico y las decisiones son siempre del profesional tratante, también cuando usa las funciones de
+          inteligencia artificial, que solo sugieren.
+        </p>
+        <h3>Cuentas</h3>
+        <p>
+          Quien registra el consultorio declara que los datos del registro son ciertos y queda como su administrador. Cada
+          persona usa su propia cuenta y protege su contraseña; el consultorio responde por lo que hagan las cuentas que
+          invite.
+        </p>
+        <h3>Prueba gratis y pagos</h3>
+        <p>
+          Cada consultorio nuevo tiene una prueba gratis de 30 días, una por consultorio. Después, el servicio se paga por
+          adelantado según el plan elegido. Si el pago se atrasa, hay un período de gracia; luego el consultorio queda en
+          solo lectura, sin perder sus datos.
+        </p>
+        <h3>Uso permitido</h3>
+        <p>
+          Galeno se licencia para la atención de pacientes y la administración del consultorio. No se permite: copiar,
+          reproducir o imitar el software, sus pantallas, flujos o textos; descompilarlo o intentar obtener su código;
+          extraer información de forma automatizada; usarlo para desarrollar, evaluar o promocionar un producto que
+          compita con Galeno; ni compartir el acceso con terceros ajenos al consultorio. Galeno puede suspender las cuentas
+          que incumplan estas reglas.
+        </p>
+        <h3>Propiedad intelectual</h3>
+        <p>
+          El software, su diseño, sus textos y su marca son de Galeno. Los datos que registra el consultorio son del
+          consultorio y de sus pacientes; Galeno los trata como encargado, según la{" "}
+          <a href="/politica-datos" target="_blank" rel="noreferrer">política de tratamiento de datos personales</a>.
+        </p>
+        <h3>Responsabilidad</h3>
+        <p>
+          Galeno pone los medios razonables para que el servicio esté disponible y los datos seguros, pero no garantiza un
+          funcionamiento sin interrupciones. No responde por decisiones clínicas ni por el contenido que registra el
+          consultorio.
+        </p>
+        <h3>Cambios y ley aplicable</h3>
+        <p>
+          Si estos términos cambian, se avisará a los consultorios antes de que rijan. Se rigen por las leyes de la
+          República de Colombia.
         </p>
         <a href="/registro" className="btn-link">Volver al registro</a>
       </div>

@@ -11,7 +11,7 @@ import { PlataformaApp } from "./pages/PlataformaApp";
 import { PartnerApp } from "./pages/PartnerApp";
 import { RecuperarPage, RestablecerPage } from "./pages/RecuperarPage";
 import { AvisoSuscripcion, SuscripcionPage } from "./pages/SuscripcionPage";
-import { BuzonDevPage, ConfirmarRegistroPage, PoliticaDatosPage, RegistroPage } from "./pages/RegistroPage";
+import { BuzonDevPage, ConfirmarRegistroPage, PoliticaDatosPage, RegistroPage, TerminosPage } from "./pages/RegistroPage";
 import { PacientesPage } from "./pages/PacientesPage";
 import { PacientePage } from "./pages/PacientePage";
 import { EquipoPage } from "./pages/EquipoPage";
@@ -32,6 +32,7 @@ export function App() {
   if (location.pathname === "/restablecer") return <RestablecerPage />;
   if (location.pathname === "/registro/confirmar") return <ConfirmarRegistroPage />;
   if (location.pathname === "/politica-datos") return <PoliticaDatosPage />;
+  if (location.pathname === "/terminos") return <TerminosPage />;
   if (import.meta.env.DEV && location.pathname === "/dev/buzon") return <BuzonDevPage />;
   if (!me) return seleccion ? <SeleccionConsultorioPage opciones={seleccion} /> : <LoginPage />;
 

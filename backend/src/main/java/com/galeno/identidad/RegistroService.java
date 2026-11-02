@@ -38,7 +38,7 @@ import com.galeno.shared.web.LimiteIntentos;
 class RegistroService {
 
     /** Cambiarla cuando cambien los términos o la política de datos (y pedir una nueva aceptación). */
-    static final String TERMINOS_VERSION = "2026-10";
+    static final String TERMINOS_VERSION = "2026-11"; // 2026-11: primera versión de los términos de uso (/terminos)
 
     private static final Logger log = LoggerFactory.getLogger(RegistroService.class);
     private static final DateTimeFormatter VENCE = DateTimeFormatter.ofPattern("d 'de' MMMM 'a las' h:mm a", Locale.forLanguageTag("es-CO"))
