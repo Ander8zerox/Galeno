@@ -85,3 +85,9 @@ management:
     health:
       probes:
         enabled: true
+
+logging:
+  level:
+    # El contenedor no trae las 14 fuentes base de PDF y PDFBox avisa con 13 WARN por cada PDF que usa LiberationSans en
+    # su lugar: el PDF sale bien, es ruido.
+    org.apache.pdfbox.pdmodel.font.PDType1Font: ERROR
