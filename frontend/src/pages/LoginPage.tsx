@@ -23,7 +23,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="login">
+    <div className="login con-foto">
       <form className="card login-card" onSubmit={onSubmit}>
         <h1>Galenum</h1>
         <p className="muted">Ingrese con su cuenta del consultorio</p>

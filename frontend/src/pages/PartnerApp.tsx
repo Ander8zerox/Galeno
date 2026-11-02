@@ -90,7 +90,7 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
     onSuccess: onEntrar,
   });
   return (
-    <div className="login">
+    <div className="login con-foto">
       <form className="card login-card stack" onSubmit={(e: FormEvent) => { e.preventDefault(); entrar.mutate(); }}>
         <h1>Partners de Galenum</h1>
         <p className="muted">Recomiende Galenum a consultorios y reciba una comisión mensual mientras sigan usándolo.</p>

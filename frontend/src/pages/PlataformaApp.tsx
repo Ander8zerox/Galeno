@@ -77,7 +77,7 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
     onSuccess: onEntrar,
   });
   return (
-    <div className="login">
+    <div className="login con-foto">
       <form className="card login-card" onSubmit={(e: FormEvent) => { e.preventDefault(); entrar.mutate(); }}>
         <h1>Galenum · Plataforma</h1>
         <p className="muted">Consola para los operadores de Galenum.</p>
