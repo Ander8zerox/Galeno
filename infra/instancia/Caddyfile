@@ -17,5 +17,11 @@
 	# Caddy agrega X-Forwarded-Proto: https y la API solo le cree a la red interna de Docker
 	# (server.tomcat.remoteip.internal-proxies)
 	reverse_proxy api:8090
-	log
+	# Sin encabezados en el log: traen el secreto de origen (X-Origen-Galeno, Caddy solo oculta Authorization y
+	# Cookie) y la IP del visitante. Para diagnosticar bastan método, ruta, estado y duración.
+	log {
+		format filter {
+			request>headers delete
+		}
+	}
 }
