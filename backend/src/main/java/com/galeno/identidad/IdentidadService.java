@@ -24,11 +24,13 @@ public class IdentidadService implements SesionVerifier {
     private final PerfilMedicoRepository perfiles;
     private final AsignacionSecretarioRepository asignaciones;
     private final ConsultorioRepository consultorios;
+    private final RecuperacionService recuperacion;
     private final org.springframework.transaction.support.TransactionTemplate tx;
 
     IdentidadService(MembresiaRepository membresias, UsuarioRepository usuarios, PerfilMedicoRepository perfiles,
                      AsignacionSecretarioRepository asignaciones, ConsultorioRepository consultorios,
-                     org.springframework.transaction.support.TransactionTemplate tx) {
+                     RecuperacionService recuperacion, org.springframework.transaction.support.TransactionTemplate tx) {
+        this.recuperacion = recuperacion;
         this.tx = tx;
         this.membresias = membresias;
         this.usuarios = usuarios;
@@ -118,6 +120,14 @@ public class IdentidadService implements SesionVerifier {
             }
             return usuarios.save(new Usuario(email, passwordHash, nombre)).getId();
         }));
+    }
+
+    /**
+     * Crea la cuenta de un operador de la plataforma que aún no la tiene (sin consultorio) y le envía por correo un
+     * enlace para elegir su contraseña. Vacío si el correo ya tiene cuenta.
+     */
+    public Optional<UUID> crearCuentaOperador(String email) {
+        return recuperacion.crearCuentaConEnlace(email, "Operador de Galeno", "/plataforma");
     }
 
     /** Correo de cada cuenta (para avisos a partners y operadores). */
