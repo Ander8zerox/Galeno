@@ -307,6 +307,8 @@ a.evento:hover { background: var(--primary-soft); box-shadow: var(--shadow-md); 
 .nota { border-left: 3px solid var(--warn-line); padding-left: .9rem; }
 .nota p { margin: .2rem 0 0; white-space: pre-wrap; }
 .aviso-suscripcion { margin-bottom: 1.25rem; }
+.bienvenida { margin-bottom: 1.25rem; border-left: 4px solid var(--primary); }
+.bienvenida ol { margin: 0; padding-left: 1.25rem; line-height: 1.8; }
 
 /* --- Cifras destacadas (importación, partners, planes) --- */
 .cifra { display: flex; flex-direction: column; min-width: 6rem; }

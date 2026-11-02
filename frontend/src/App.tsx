@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { CalendarDays, CreditCard, FileUp, Users, UsersRound } from "lucide-react";
 import { Shell, type ItemMenu } from "./components/Shell";
+import { Bienvenida } from "./components/Bienvenida";
 import { api, unwrap } from "./api/client";
 import { useAuth } from "./auth/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
@@ -47,6 +48,7 @@ export function App() {
   return (
     <Shell marca="Galenum" items={menu} arriba={<SelectorConsultorio />} usuario={me.nombre ?? ""} onSalir={logout}>
         <AvisoSuscripcion />
+        <Bienvenida />
         <Routes>
           <Route path="/pacientes" element={<PacientesPage />} />
           <Route path="/pacientes/:id" element={<PacientePage />} />

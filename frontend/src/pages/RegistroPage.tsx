@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { api, ApiError, unwrap, type Schemas } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { marcarBienvenida } from "../components/Bienvenida";
 
 type Solicitud = Schemas["SolicitudRegistro"];
 
@@ -168,8 +169,9 @@ export function ConfirmarRegistroPage() {
     onSuccess: async (res) => {
       setActivado(true);
       await iniciar(res);
-      history.replaceState(null, "", "/equipo"); // retira el token de la barra de direcciones
-      navigate("/equipo", { replace: true });
+      marcarBienvenida();
+      history.replaceState(null, "", "/"); // retira el token de la barra de direcciones
+      navigate("/", { replace: true }); // la página de inicio de siempre (agenda o pacientes), con la bienvenida
     },
   });
 
