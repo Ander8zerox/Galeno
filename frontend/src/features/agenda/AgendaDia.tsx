@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { api, unwrap, type Schemas } from "../../api/client";
@@ -74,7 +74,9 @@ function CitaFila({ cita, zona }: { cita: Cita; zona: string }) {
   const { me, puede } = useAuth();
   const queryClient = useQueryClient();
   const [cancelando, setCancelando] = useState(false);
+  const [marcandoInasistencia, setMarcandoInasistencia] = useState(false);
   const [motivo, setMotivo] = useState("");
+  const diferida = useAccionDiferida();
   const abierta = cita.estado === "PROGRAMADA" || cita.estado === "CONFIRMADA";
   const esMiCita = cita.medicoId === me?.membresiaId;
   const navigate = useNavigate();
@@ -91,8 +93,10 @@ function CitaFila({ cita, zona }: { cita: Cita; zona: string }) {
       queryClient.invalidateQueries({ queryKey: ["citas"] });
       queryClient.invalidateQueries({ queryKey: ["disponibilidad"] });
       setCancelando(false);
+      setMarcandoInasistencia(false);
     },
   });
+  const cuando = `${cita.pacienteNombre} a las ${hora(cita.inicio!, zona)}`;
 
   return (
     <div className={`cita cita-${cita.estado!.toLowerCase()}`}>
@@ -110,22 +114,68 @@ function CitaFila({ cita, zona }: { cita: Cita; zona: string }) {
           {cita.motivoCancelacion && ` · Cancelada: ${cita.motivoCancelacion}`}
         </div>
         {cancelando && (
-          <div className="row">
-            <input className="grow" placeholder="Motivo de la cancelación" value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus />
-            <button className="btn" disabled={!motivo.trim() || cambiar.isPending} onClick={() => cambiar.mutate({ estado: "CANCELADA", motivoCancelacion: motivo })}>Cancelar cita</button>
-            <button className="btn-link" onClick={() => setCancelando(false)}>Volver</button>
+          <div className="stack-sm confirmar">
+            <span className="small">¿Cancelar la cita de {cuando}?</span>
+            <div className="row">
+              <input className="grow" placeholder="Motivo de la cancelación" value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus />
+              <button className="btn" disabled={!motivo.trim() || cambiar.isPending} onClick={() => cambiar.mutate({ estado: "CANCELADA", motivoCancelacion: motivo })}>Cancelar cita</button>
+              <button className="btn-link" onClick={() => setCancelando(false)}>Volver</button>
+            </div>
+          </div>
+        )}
+        {marcandoInasistencia && (
+          <div className="row confirmar">
+            <span className="small grow">¿Marcar que no asistió {cuando}?</span>
+            <button className="btn" disabled={cambiar.isPending} onClick={() => cambiar.mutate({ estado: "NO_ASISTIO" })}>Sí, no asistió</button>
+            <button className="btn-link" onClick={() => setMarcandoInasistencia(false)}>Volver</button>
+          </div>
+        )}
+        {diferida.pendiente && (
+          <div className="row confirmar">
+            <span className="small grow">{diferida.pendiente}…</span>
+            <button className="btn-link" onClick={diferida.deshacer}>Deshacer</button>
           </div>
         )}
         {(cambiar.error || atender.error) && <p className="alert alert-error">{(cambiar.error ?? atender.error)?.message}</p>}
       </div>
-      {abierta && !cancelando && (
+      {abierta && !cancelando && !marcandoInasistencia && !diferida.pendiente && (
         <div className="row acciones">
-          {cita.estado === "PROGRAMADA" && <button className="btn-link" onClick={() => cambiar.mutate({ estado: "CONFIRMADA" })}>Confirmar</button>}
-          {puede("HISTORIA_REGISTRAR") && esMiCita && <button className="btn" disabled={atender.isPending} onClick={() => atender.mutate()}>Atender</button>}
-          <button className="btn-link" onClick={() => cambiar.mutate({ estado: "NO_ASISTIO" })}>No asistió</button>
+          {cita.estado === "PROGRAMADA" && <button className="btn-link" onClick={() => diferida.programar("Confirmando la cita", () => cambiar.mutate({ estado: "CONFIRMADA" }))}>Confirmar</button>}
+          {puede("HISTORIA_REGISTRAR") && esMiCita && <button className="btn" disabled={atender.isPending} onClick={() => diferida.programar("Abriendo la atención", () => atender.mutate())}>Atender</button>}
+          <button className="btn-link" onClick={() => setMarcandoInasistencia(true)}>No asistió</button>
           <button className="btn-link danger" onClick={() => setCancelando(true)}>Cancelar</button>
         </div>
       )}
     </div>
   );
+}
+
+/**
+ * "Deshacer" sin revertir nada en el servidor: la acción se ejecuta unos segundos después del clic, salvo que se
+ * deshaga. Para pasos normales del día (confirmar, atender), donde un diálogo de confirmación acostumbraría a decir
+ * "sí" sin leer.
+ */
+function useAccionDiferida(segundos = 4) {
+  const [pendiente, setPendiente] = useState<string | null>(null);
+  const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (temporizador.current) clearTimeout(temporizador.current); // al salir de la pantalla no se ejecuta nada
+  }, []);
+
+  function programar(texto: string, accion: () => void) {
+    setPendiente(texto);
+    temporizador.current = setTimeout(() => {
+      temporizador.current = null;
+      setPendiente(null);
+      accion();
+    }, segundos * 1000);
+  }
+
+  function deshacer() {
+    if (temporizador.current) clearTimeout(temporizador.current);
+    temporizador.current = null;
+    setPendiente(null);
+  }
+
+  return { pendiente, programar, deshacer };
 }
