@@ -139,6 +139,11 @@ public class HistoriaService {
         if (atencion.firmada()) {
             throw ApiProblem.conflict("Una atención firmada no se elimina");
         }
+        // Los documentos clínicos no se borran (ni en S3 ni aquí): el borrador que los tiene tampoco
+        if (documentos.existsByAtencionId(atencionId)) {
+            throw ApiProblem.conflict("Este borrador tiene documentos adjuntos y no se puede eliminar. Fírmelo, o déjelo "
+                    + "como borrador si la atención no se realizó.");
+        }
         atenciones.delete(atencion);
     }
 
