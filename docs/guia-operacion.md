@@ -146,20 +146,13 @@ operadores_plataforma = "andersoncabezas31@gmail.com"
    operadores_plataforma = "andersoncabezas31@gmail.com,otra.persona@ejemplo.com"
    ```
 
-2. **Verifica el correo en SES**, solo mientras SES siga en modo de prueba (ver pendientes). A esa persona le llega
-   un correo de Amazon Web Services con un enlace que debe abrir:
-
-   ```bash
-   aws sesv2 create-email-identity --email-identity otra.persona@ejemplo.com --region us-east-2
-   ```
-
-3. **Aplica Terraform** (debe salir `1 to change`, el parámetro `APP_PLATAFORMA_OPERADORES`):
+2. **Aplica Terraform** (debe salir `1 to change`, el parámetro `APP_PLATAFORMA_OPERADORES`):
 
    ```bash
    cd infra && terraform plan -out=operadores.tfplan && terraform apply operadores.tfplan && cd ..
    ```
 
-4. **Reinicia la API** para que lea la lista nueva:
+3. **Reinicia la API** para que lea la lista nueva:
 
    ```bash
    tools/desplegar.sh --solo-api
@@ -176,7 +169,7 @@ Qué pasa al arrancar:
 ### Quitar un operador
 
 1. Borra su correo de `operadores_plataforma` en `infra/terraform.tfvars`.
-2. Aplica Terraform (paso 3 de arriba).
+2. Aplica Terraform (paso 2 de arriba).
 3. Reinicia la API con `tools/desplegar.sh --solo-api`.
 
 Al arrancar, la API le quita el acceso; si tenía la consola abierta, su sesión deja de servir en la siguiente
@@ -306,7 +299,6 @@ galeno-api-1`. Para el día a día bastan los logs de CloudWatch.
 
 | # | Pendiente | Por qué importa |
 |---|---|---|
-| 9 | **Sacar SES del modo de prueba** (solicitud a AWS, tarda alrededor de un día) | Hoy solo llegan correos a direcciones verificadas: un consultorio real no recibiría su confirmación de registro |
 | — | **Activar Claude en Amazon Bedrock** (us-east-2) y hacer una invocación real | Las funciones de IA no responden hasta activarlo; el permiso `bedrock-mantle:CreateInference` aún no se ha probado en producción |
 | 12 | **Pruebas en producción**: registrar un consultorio desde cero, agenda, historia y PDF, documentos en S3, reportar y aprobar un pago, inscripción de un partner | Confirmar de punta a punta que todo funciona en AWS y no solo en local |
 | — | Revisar el gasto después de la primera semana (esperado: 35–50 USD al mes) | Confirmar que el costo real coincide con lo estimado; límite de gasto en 60 USD, presupuesto en 50 USD |
