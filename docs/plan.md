@@ -22,12 +22,12 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
 - **Página de inicio después de activar el consultorio.** Hoy `RegistroPage.tsx` manda a `/equipo`. Debe abrir la
   Agenda con un aviso de bienvenida: la prueba de 30 días empezó, y los siguientes pasos son crear un paciente, agendar
   una cita e invitar al equipo (decidido el 2 de noviembre de 2026).
-- **Errores de IA crudos en pantalla (prioridad alta).** Si Bedrock falla, el médico ve el JSON del proveedor
+- **Errores de IA crudos en pantalla (prioridad alta).** ✅ Corregido. Si Bedrock falla, el médico ve el JSON del proveedor
   (`404: {"type":"error","request_id":…,"message":"The model 'anthropic.claude-haiku-5-5' does not exist"}`), porque
   `AiJobWorker` guarda `e.getMessage()` en el trabajo y el front lo muestra tal cual. Guardar un mensaje en español
   ("El asistente de IA no está disponible en este momento; puede llenar la fórmula manualmente") y dejar el detalle
   solo en el log, con el id del trabajo. Probado en fórmula y en apoyo diagnóstico.
-- **Eliminar un borrador con documentos da error 500 (prioridad alta).** `HistoriaService.eliminarBorrador` borra la
+- **Eliminar un borrador con documentos da error 500 (prioridad alta).** ✅ Corregido. `HistoriaService.eliminarBorrador` borra la
   atención y MySQL lo rechaza por `fk_documentos_atencion` (ERROR en el log del 2 de noviembre de 2026 a las 12:14 UTC).
   Nada se pierde, pero el médico ve "Error inesperado". Responder 409 con un mensaje claro ("tiene documentos
   adjuntos: anúlelos o firme la atención"), y resolverlo junto con "Anular un documento".
@@ -56,7 +56,7 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
 - **Precios de los planes sin validación (baja prioridad).** Se pudo guardar el mensual en $1.118.700 y el anual en
   $1.052.522 (error de digitación). Advertir antes de guardar si el anual cuesta más que 12 mensualidades, o si un precio
   cambia más de, digamos, 50 %.
-- **Condiciones de partners (decidido el 2 de noviembre de 2026).** Comisión del **30 %** (antes 20 %), retención de
+- **Condiciones de partners (decidido el 2 de noviembre de 2026).** ✅ Corregido. Comisión del **30 %** (antes 20 %), retención de
   **30 días** (sin cambio) y liquidación desde **$30.000** (antes $190.000), para que el partner cobre desde el primer
   pago de su primer referido. Con el mensual de $128.700 y el 10 % de descuento, la comisión es de $34.749. Cambiar
   `app.partners.comision-porcentaje` y `minimo-liquidacion` en `application.yml`, y `docs/arquitectura.md`; las
@@ -72,14 +72,14 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
   campo. Alinear los campos abajo (`.signos input { margin-top: auto; }`).
 - **Poco espacio para la firma en los PDF (prioridad media).** `.firma { margin-top: 28px }` en `PdfRenderer.java`
   (fórmula e historia) deja unos 7 mm para firmar a mano. Subir a unos 75 px (2 cm).
-- **La marca no coincide con el dominio (prioridad alta, antes de tener clientes).** La aplicación, los correos y
+- **La marca no coincide con el dominio (prioridad alta, antes de tener clientes).** ✅ Corregido (falta aplicar el remitente con Terraform). La aplicación, los correos y
   los PDF dicen "Galeno", y el dominio es galenum.com.co: parece un descuido o una imitación. galeno.com está ocupado,
   y galeno.co y galenum.com están en venta en Afternic. Propuesta: cambiar la marca visible a **Galenum** (pantallas,
   correos, remitente, PDF, títulos); el código interno conserva "galeno". "Galeno" es una palabra común en salud
   (difícil de registrar ante la SIC y de encontrar en Google); "Galenum" es distintiva. Antes: consultar en la SIC que
   "Galenum" esté libre en las clases 42 y 44, y registrarla.
   **Decidido el 2 de noviembre de 2026: la marca visible pasa a Galenum.** El usuario consulta la SIC.
-- **Registro abierto a cualquiera (prioridad alta, decidir el alcance).** Preocupa que un competidor use la prueba para
+- **Registro abierto a cualquiera (prioridad alta, decidir el alcance).** ✅ (d) y (e) corregidos; la cláusula está en el borrador de /terminos. Preocupa que un competidor use la prueba para
   copiar Galeno. No se puede impedir del todo (puede pagar un mes); el código del servidor no se expone. Propuesta:
   (a) pedir cédula y registro profesional y verificarlos en ReTHUS desde la consola, con opción de suspender; (c) prueba
   con topes (pacientes, cupo de IA, sin exportar); (d) cláusula en los términos contra el uso para copia o
