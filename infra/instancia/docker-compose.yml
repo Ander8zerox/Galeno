@@ -1,0 +1,43 @@
+# Servicios de la EC2. Lo sube tools/desplegar.sh a /opt/galeno en cada despliegue de la API, con los __VALORES__
+# reemplazados (salen de terraform output). La configuración de la API está en galeno.env, que /opt/galeno/desplegar.sh
+# arma con los parámetros de SSM /galeno/prod/*.
+name: galeno
+
+services:
+  api:
+    image: __IMAGEN_API__:latest
+    restart: unless-stopped
+    env_file: galeno.env
+    ports:
+      # Mientras CloudFront llegue directo al 8090 se publica en todas las interfaces (el security group solo deja
+      # entrar a CloudFront); con el origen HTTPS, solo en la máquina, para el chequeo de salud del despliegue
+      - "__PUERTO_API__:8090"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: __REGION__
+        awslogs-group: __GRUPO_LOGS__
+        awslogs-stream: api
+
+  caddy:
+    image: __IMAGEN_CADDY__
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      DOMINIO: __DOMINIO__
+      AWS_REGION: __REGION__ # Route 53 es global; el SDK igual pide una región
+    ports:
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-datos:/data # certificados: sin esto, cada reinicio pediría uno nuevo a Let's Encrypt (con límites)
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: __REGION__
+        awslogs-group: __GRUPO_LOGS__
+        awslogs-stream: caddy
+
+volumes:
+  caddy-datos:

@@ -160,15 +160,16 @@ resource "aws_cloudfront_distribution" "web" {
     origin_access_control_id = aws_cloudfront_origin_access_control.web.id
   }
 
-  # Entre CloudFront y la EC2 el tráfico va por HTTP (ver docs/aws-capa-1.md, "Origen de la API")
+  # Entre CloudFront y la EC2: HTTPS a Caddy en el 443 con var.origen_https; si no, HTTP al 8090 (ver
+  # docs/aws-capa-1.md, "Origen de la API")
   origin {
     origin_id   = "api"
-    domain_name = aws_eip.api.public_dns
+    domain_name = var.origen_https ? aws_route53_record.origen.fqdn : aws_eip.api.public_dns
 
     custom_origin_config {
       http_port              = 8090
       https_port             = 443
-      origin_protocol_policy = "http-only"
+      origin_protocol_policy = var.origen_https ? "https-only" : "http-only"
       origin_ssl_protocols   = ["TLSv1.2"]
       origin_read_timeout    = 60
     }

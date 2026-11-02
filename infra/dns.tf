@@ -14,6 +14,15 @@ resource "aws_route53_zone" "principal" {
   }
 }
 
+# El origen de la API para CloudFront (Caddy en la EC2, con certificado para este nombre y para el dominio raíz)
+resource "aws_route53_record" "origen" {
+  zone_id = aws_route53_zone.principal.zone_id
+  name    = "origen.${var.dominio}"
+  type    = "A"
+  ttl     = 300
+  records = [aws_eip.api.public_ip]
+}
+
 # La app en el dominio raíz y en www (la función de CloudFront redirige www al raíz)
 resource "aws_route53_record" "web" {
   for_each = toset(flatten([for n in [var.dominio, "www.${var.dominio}"] : [for t in ["A", "AAAA"] : "${n}|${t}"]]))

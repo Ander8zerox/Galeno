@@ -20,6 +20,28 @@ resource "aws_ecr_lifecycle_policy" "api" {
   })
 }
 
+# Caddy con el módulo de Route 53 (infra/caddy/Dockerfile): el TLS entre CloudFront y la API
+resource "aws_ecr_repository" "caddy" {
+  name                 = "galeno-caddy"
+  image_tag_mutability = "IMMUTABLE" # la etiqueta es el hash del Dockerfile
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "caddy" {
+  repository = aws_ecr_repository.caddy.name
+  policy = jsonencode({
+    rules = [{
+      rulePriority = 1
+      description  = "Conserva las ultimas 3 imagenes"
+      selection    = { tagStatus = "any", countType = "imageCountMoreThan", countNumber = 3 }
+      action       = { type = "expire" }
+    }]
+  })
+}
+
 resource "aws_cloudwatch_log_group" "api" {
   name              = "/galeno/prod/api"
   retention_in_days = 30
@@ -57,7 +79,33 @@ data "aws_iam_policy_document" "api" {
   statement {
     sid       = "EcrDescargar"
     actions   = ["ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer", "ecr:BatchCheckLayerAvailability"]
-    resources = [aws_ecr_repository.api.arn]
+    resources = [aws_ecr_repository.api.arn, aws_ecr_repository.caddy.arn]
+  }
+  # Caddy saca el certificado de origen validando por DNS: solo puede escribir los TXT _acme-challenge de la zona
+  statement {
+    sid       = "CertificadoDns"
+    actions   = ["route53:ChangeResourceRecordSets"]
+    resources = [aws_route53_zone.principal.arn]
+    condition {
+      test     = "ForAllValues:StringEquals"
+      variable = "route53:ChangeResourceRecordSetsNormalizedRecordNames"
+      values   = ["_acme-challenge.${var.dominio}", "_acme-challenge.origen.${var.dominio}"]
+    }
+    condition {
+      test     = "ForAllValues:StringEquals"
+      variable = "route53:ChangeResourceRecordSetsRecordTypes"
+      values   = ["TXT"]
+    }
+  }
+  statement {
+    sid       = "CertificadoDnsLectura"
+    actions   = ["route53:ListResourceRecordSets"]
+    resources = [aws_route53_zone.principal.arn]
+  }
+  statement {
+    sid       = "CertificadoDnsCambios"
+    actions   = ["route53:GetChange", "route53:ListHostedZones", "route53:ListHostedZonesByName"]
+    resources = ["*"]
   }
   statement {
     sid     = "Configuracion"
@@ -148,7 +196,7 @@ resource "aws_instance" "api" {
   ami                         = data.aws_ami.al2023_arm.id
   instance_type               = var.tipo_instancia
   subnet_id                   = aws_subnet.publica[0].id
-  vpc_security_group_ids      = [aws_security_group.api.id]
+  vpc_security_group_ids      = [aws_security_group.api.id, aws_security_group.origen_https.id]
   iam_instance_profile        = aws_iam_instance_profile.api.name
   associate_public_ip_address = true # mientras arranca; luego queda la IP elástica
 

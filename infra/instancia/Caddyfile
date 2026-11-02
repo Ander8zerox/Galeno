@@ -1,0 +1,21 @@
+# TLS entre CloudFront y la API (ver docs/aws-capa-1.md, "Origen de la API"). Lo sube tools/desplegar.sh a
+# /opt/galeno en cada despliegue de la API.
+{
+	# Sin el admin API (no hace falta en producción) y sin HTTP/3 (CloudFront llega por TCP)
+	admin off
+	servers {
+		protocols h1 h2
+	}
+}
+
+# CloudFront reenvía el Host del navegador (galenum.com.co) y se conecta a origen.galenum.com.co: el certificado
+# cubre los dos. Let's Encrypt lo valida por DNS (registro TXT _acme-challenge en Route 53, con el rol de la EC2).
+{$DOMINIO}, origen.{$DOMINIO} {
+	tls {
+		dns route53
+	}
+	# Caddy agrega X-Forwarded-Proto: https y la API solo le cree a la red interna de Docker
+	# (server.tomcat.remoteip.internal-proxies)
+	reverse_proxy api:8090
+	log
+}
