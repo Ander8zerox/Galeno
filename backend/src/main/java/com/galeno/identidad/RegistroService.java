@@ -56,6 +56,8 @@ class RegistroService {
     private final TransactionTemplate tx;
     private final String baseUrl;
     private final int limitePorIp;
+    private final int consultoriosPorIp;
+    private final int consultoriosPorCorreo;
     private final ApplicationEventPublisher eventos;
     private final ObjectProvider<CodigosReferido> codigos;
 
@@ -63,11 +65,15 @@ class RegistroService {
                     MembresiaRepository membresias, PerfilMedicoRepository perfiles, PasswordEncoder passwordEncoder,
                     SesionService sesiones, EnvioCorreo correo, LimiteIntentos limites, TransactionTemplate tx,
                     @Value("${app.web.base-url}") String baseUrl,
-                    @Value("${app.registro.solicitudes-por-ip-hora:5}") int limitePorIp, ApplicationEventPublisher eventos,
-                    ObjectProvider<CodigosReferido> codigos) {
+                    @Value("${app.registro.solicitudes-por-ip-hora:5}") int limitePorIp,
+                    @Value("${app.registro.consultorios-por-ip-30-dias:3}") int consultoriosPorIp,
+                    @Value("${app.registro.consultorios-por-correo-30-dias:2}") int consultoriosPorCorreo,
+                    ApplicationEventPublisher eventos, ObjectProvider<CodigosReferido> codigos) {
         this.eventos = eventos;
         this.codigos = codigos;
         this.limitePorIp = limitePorIp;
+        this.consultoriosPorIp = consultoriosPorIp;
+        this.consultoriosPorCorreo = consultoriosPorCorreo;
         this.pendientes = pendientes;
         this.usuarios = usuarios;
         this.consultorios = consultorios;
@@ -113,11 +119,17 @@ class RegistroService {
         if (codigo != null && codigos.getIfAvailable() != null && codigos.getIfAvailable().partnerActivo(codigo).isEmpty()) {
             errores.add("El código de partner " + codigo + " no existe o no está activo");
         }
+        if (ControlRegistro.desechable(email)) {
+            errores.add("Use un correo permanente: no se aceptan correos temporales");
+        }
         if (!errores.isEmpty()) {
             throw ApiProblem.badRequest(String.join(". ", errores));
         }
+        String buzon = ControlRegistro.buzon(email);
+        String nitUnico = nit;
+        TenantContext.runAs(TenantContext.SYSTEM, () -> tx.executeWithoutResult(t -> limitarPruebas(nitUnico, buzon, ip)));
         // Por correo cuentan solo las solicitudes válidas: el límite es para no inundar un buzón con enlaces
-        if (!limites.permitir("registro-email:" + email, 3, Duration.ofHours(1))) {
+        if (!limites.permitir("registro-email:" + buzon, 3, Duration.ofHours(1))) {
             throw ApiProblem.tooManyRequests("Ya enviamos varios enlaces a este correo. Revise su bandeja o intente en una hora.");
         }
 
@@ -194,6 +206,30 @@ class RegistroService {
     private static RegistroPendiente vigente(Optional<RegistroPendiente> r) {
         return r.filter(RegistroPendiente::vigente)
                 .orElseThrow(() -> ApiProblem.notFound("El enlace no es válido, ya se usó o venció. Puede registrarse de nuevo."));
+    }
+
+    /**
+     * Contra el abuso de la prueba gratis: un consultorio por NIT, y pocos consultorios nuevos por IP y por buzón en 30
+     * días (cuentan los confirmados, que se conservan). Un médico puede tener dos consultorios; para más, que escriba.
+     */
+    private void limitarPruebas(String nit, String buzon, String ip) {
+        if (nit != null && consultorios.existsByNit(nit)) {
+            throw ApiProblem.conflict("Ya hay un consultorio registrado en Galenum con este NIT. Si es otra sede, "
+                    + "escríbanos para habilitarla.");
+        }
+        Instant desde = Instant.now().minus(Duration.ofDays(30));
+        if (pendientes.countByIpAndConfirmadoEnAfter(ip, desde) >= consultoriosPorIp) {
+            log.warn("Registro bloqueado: {} consultorios creados desde {} en 30 días", consultoriosPorIp, ip);
+            throw ApiProblem.tooManyRequests("Desde esta conexión ya se crearon varios consultorios este mes. "
+                    + "Escríbanos si necesita otro.");
+        }
+        long delBuzon = pendientes.correosConfirmadosDesde(desde).stream().map(ControlRegistro::buzon)
+                .filter(buzon::equals).count();
+        if (delBuzon >= consultoriosPorCorreo) {
+            log.warn("Registro bloqueado: el buzón {} ya creó {} consultorios en 30 días", buzon, delBuzon);
+            throw ApiProblem.tooManyRequests("Con este correo ya se crearon varios consultorios este mes. "
+                    + "Escríbanos si necesita otro.");
+        }
     }
 
     private static String blankToNull(String s) {
