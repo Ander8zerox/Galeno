@@ -19,7 +19,7 @@
 
 ### Hallazgos de las pruebas en producción (paso 12)
 Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en producción.
-- **Página de inicio después de activar el consultorio.** Hoy `RegistroPage.tsx` manda a `/equipo`. Debe abrir la
+- **Página de inicio después de activar el consultorio.** ✅ Corregido. Hoy `RegistroPage.tsx` manda a `/equipo`. Debe abrir la
   Agenda con un aviso de bienvenida: la prueba de 30 días empezó, y los siguientes pasos son crear un paciente, agendar
   una cita e invitar al equipo (decidido el 2 de noviembre de 2026).
 - **Errores de IA crudos en pantalla (prioridad alta).** ✅ Corregido. Si Bedrock falla, el médico ve el JSON del proveedor
@@ -33,23 +33,23 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
   adjuntos: anúlelos o firme la atención"), y resolverlo junto con "Anular un documento".
   Cómo reproducirlo: agendar una cita → abrir la atención y adjuntar un documento → marcar la cita como "no asistió" →
   "Eliminar borrador".
-- **"No asistió" con una atención en borrador (prioridad media).** En la misma secuencia, la agenda deja marcar la
+- **"No asistió" con una atención en borrador (prioridad media).** ✅ Corregido (también al cancelar). En la misma secuencia, la agenda deja marcar la
   inasistencia aunque la cita ya tenga una atención abierta con documentos: la cita dice que el paciente no vino y la
   historia tiene una atención de esa visita. No permitirlo: "Esta cita tiene una atención en curso. Fírmela o elimine
   el borrador antes de marcar la inasistencia".
-- **Acciones de un clic sin confirmación (prioridad media).** En la agenda, "Confirmar", "Atender", "No asistió" y
+- **Acciones de un clic sin confirmación (prioridad media).** ✅ Corregido con el patrón mixto. En la agenda, "Confirmar", "Atender", "No asistió" y
   "Cancelar" se ejecutan de inmediato al primer clic, igual que "Cerrar sesión": un clic por error cambia la cita o
   saca a la persona. Pedido del usuario: que pidan confirmación. Alternativa propuesta, para no acostumbrar a decir
   "sí" sin leer: confirmación (con paciente y hora) en "Cancelar" y "No asistió"; "Deshacer" por unos segundos en
   "Confirmar" y "Atender"; y en "Cerrar sesión", confirmación o alejar el botón de los demás. Se decide al
   implementarlo.
-- **Anular un documento subido por error (prioridad media).** Hoy solo hay subir y descargar
+- **Anular un documento subido por error (prioridad media).** ✅ Corregido. Hoy solo hay subir y descargar
   (`HistoriaController`). Si un médico sube el archivo equivocado o al paciente equivocado, no puede corregirlo, y el
   bucket no deja borrar versiones a nadie (`SinBorrarVersiones`), como debe ser para la historia clínica. Agregar
   "Anular" con motivo obligatorio: el documento sale de la lista (queda visible en un filtro de anulados), el archivo
   se conserva en S3 y queda registro de quién lo anuló y cuándo. Pasó en la prueba: se subió un PDF con datos reales a
   un paciente de prueba.
-- **Auditoría de la plataforma incompleta (prioridad media).** (1) "Cambió los datos de pago" se guarda sin detalle
+- **Auditoría de la plataforma incompleta (prioridad media).** ✅ Corregido. (1) "Cambió los datos de pago" se guarda sin detalle
   (`PlataformaService.cambiarDatosPago`): debe guardar el texto anterior y el nuevo, porque cambiar la cuenta bancaria
   es la acción más sensible de la consola. (2) La tabla no muestra qué operador hizo cada acción; el dato ya está en
   `auditoria_plataforma`, falta exponerlo en `EventoAuditoria` y en la pantalla.
@@ -64,13 +64,13 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
   - Mejorar el mensaje al partner aprobado: primero "gana el 30 % de cada pago de sus referidos", después cuándo se le
     transfiere.
   - Pendiente de decidir antes de tener partners reales: si la comisión recurrente tiene tope (p. ej., 12 o 24 meses).
-- **Festivos en la agenda (prioridad media).** La agenda no conoce los festivos: un lunes festivo tiene el horario de
+- **Festivos en la agenda (prioridad media).** ✅ Corregido (sin agenda pública de pacientes: no existe). La agenda no conoce los festivos: un lunes festivo tiene el horario de
   cualquier lunes, también en la agenda pública. Calcular los festivos de Colombia en Galeno (fijos, trasladados al
   lunes por la Ley 51 de 1983 y los que dependen de la Pascua), mostrarlos con su nombre, sin disponibilidad por
   defecto, y una opción por médico "Atiendo festivos". Después, días cerrados propios del consultorio (vacaciones).
 - **TA diastólica desalineada (baja prioridad).** En `.signos` (`styles.css`), el título largo ocupa dos líneas y baja su
   campo. Alinear los campos abajo (`.signos input { margin-top: auto; }`).
-- **Poco espacio para la firma en los PDF (prioridad media).** `.firma { margin-top: 28px }` en `PdfRenderer.java`
+- **Poco espacio para la firma en los PDF (prioridad media).** ✅ Corregido (22 mm). `.firma { margin-top: 28px }` en `PdfRenderer.java`
   (fórmula e historia) deja unos 7 mm para firmar a mano. Subir a unos 75 px (2 cm).
 - **La marca no coincide con el dominio (prioridad alta, antes de tener clientes).** ✅ Corregido (falta aplicar el remitente con Terraform). La aplicación, los correos y
   los PDF dicen "Galeno", y el dominio es galenum.com.co: parece un descuido o una imitación. galeno.com está ocupado,
