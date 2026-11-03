@@ -7,6 +7,7 @@ import { pesos } from "./SuscripcionPage";
 import { ShieldCheck, Wallet } from "lucide-react";
 import { Shell } from "../components/Shell";
 import { EnlacesLegales } from "../components/EnlacesLegales";
+import { contactoSoporte } from "../soporte";
 import { SeguridadCuenta, VerificacionDosPasos, equiposRecordados } from "../components/DosPasos";
 
 /**
@@ -268,7 +269,7 @@ function Panel({ sesion, onSalir }: { sesion: Sesion; onSalir: () => void }) {
         <div className="page-header between"><h1>{p.nombre}</h1><span className={`badge ${clase}`}>{texto}</span></div>
 
         {p.estado === "PENDIENTE" && <p className="alert">Estamos revisando su inscripción. Le avisaremos por correo cuando quede aprobada, con su código.</p>}
-        {(p.estado === "SUSPENDIDO" || p.estado === "RECHAZADO") && <p className="alert alert-error">{texto}{p.motivo ? `: ${p.motivo}` : ""}. Escríbanos si cree que es un error.</p>}
+        {(p.estado === "SUSPENDIDO" || p.estado === "RECHAZADO") && <p className="alert alert-error">{texto}{p.motivo ? `: ${p.motivo}` : ""}. Si cree que es un error, escríbanos a {contactoSoporte}.</p>}
 
         {p.codigo && (
           <div className="card stack">

@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.galeno.identidad.SesionService.SesionResponse;
+import com.galeno.shared.SoporteProperties;
 import com.galeno.shared.correo.Correo;
 import com.galeno.shared.correo.EnvioCorreo;
 import com.galeno.shared.tenancy.TenantContext;
@@ -60,6 +61,7 @@ class RegistroService {
     private final int consultoriosPorCorreo;
     private final ApplicationEventPublisher eventos;
     private final ObjectProvider<CodigosReferido> codigos;
+    private final SoporteProperties soporte;
 
     RegistroService(RegistroPendienteRepository pendientes, UsuarioRepository usuarios, ConsultorioRepository consultorios,
                     MembresiaRepository membresias, PerfilMedicoRepository perfiles, PasswordEncoder passwordEncoder,
@@ -68,7 +70,9 @@ class RegistroService {
                     @Value("${app.registro.solicitudes-por-ip-hora:5}") int limitePorIp,
                     @Value("${app.registro.consultorios-por-ip-30-dias:3}") int consultoriosPorIp,
                     @Value("${app.registro.consultorios-por-correo-30-dias:2}") int consultoriosPorCorreo,
-                    ApplicationEventPublisher eventos, ObjectProvider<CodigosReferido> codigos) {
+                    ApplicationEventPublisher eventos, ObjectProvider<CodigosReferido> codigos,
+                    SoporteProperties soporte) {
+        this.soporte = soporte;
         this.eventos = eventos;
         this.codigos = codigos;
         this.limitePorIp = limitePorIp;
@@ -215,20 +219,20 @@ class RegistroService {
     private void limitarPruebas(String nit, String buzon, String ip) {
         if (nit != null && consultorios.existsByNit(nit)) {
             throw ApiProblem.conflict("Ya hay un consultorio registrado en Galenum con este NIT. Si es otra sede, "
-                    + "escríbanos para habilitarla.");
+                    + "escríbanos a " + soporte.contacto() + " para habilitarla.");
         }
         Instant desde = Instant.now().minus(Duration.ofDays(30));
         if (pendientes.countByIpAndConfirmadoEnAfter(ip, desde) >= consultoriosPorIp) {
             log.warn("Registro bloqueado: {} consultorios creados desde {} en 30 días", consultoriosPorIp, ip);
             throw ApiProblem.tooManyRequests("Desde esta conexión ya se crearon varios consultorios este mes. "
-                    + "Escríbanos si necesita otro.");
+                    + "Si necesita otro, escríbanos a " + soporte.contacto() + ".");
         }
         long delBuzon = pendientes.correosConfirmadosDesde(desde).stream().map(ControlRegistro::buzon)
                 .filter(buzon::equals).count();
         if (delBuzon >= consultoriosPorCorreo) {
             log.warn("Registro bloqueado: el buzón {} ya creó {} consultorios en 30 días", buzon, delBuzon);
             throw ApiProblem.tooManyRequests("Con este correo ya se crearon varios consultorios este mes. "
-                    + "Escríbanos si necesita otro.");
+                    + "Si necesita otro, escríbanos a " + soporte.contacto() + ".");
         }
     }
 

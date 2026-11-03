@@ -59,6 +59,9 @@ app:
     configuration-set: ""  # APP_CORREO_CONFIGURATION_SET: publica rebotes y quejas en SNS
     cola-eventos: ""       # APP_CORREO_COLA_EVENTOS: URL de la cola SQS suscrita a ese SNS
     region: us-east-2 # la región del proyecto de AWS (nueva experiencia): todo recurso regional va aquí
+  soporte: # los mismos valores en frontend/src/soporte.ts
+    correo: soporte@galenum.com.co # se reenvía al buzón del equipo (MX en infra/correo.tf)
+    whatsapp: "" # p. ej. 573001234567; vacío, no se muestra
   web:
     base-url: http://localhost:5180 # para los enlaces de invitación; en AWS, el dominio de CloudFront
     origen-secreto: ""  # APP_WEB_ORIGEN_SECRETO: el encabezado X-Origen-Galeno que agrega CloudFront (vacío = sin CloudFront)

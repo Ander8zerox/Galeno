@@ -91,7 +91,8 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
   lista de dominios de correo desechable; un límite largo (p. ej., 2 pruebas por IP cada 30 días, en base de datos y
   no en memoria); una prueba gratis por NIT; y normalizar los alias de Gmail (`nombre+x@`, puntos) al contar pruebas,
   para que no se encadenen pruebas con un solo correo.
-- **Canal de soporte (prioridad media).** Los mensajes del registro dicen "escríbanos" (NIT repetido, límite de
+- **Canal de soporte (prioridad media).** ✅ Corregido: soporte@galenum.com.co con reenvío de ImprovMX, Reply-To en los
+  correos, "Ayuda" al pie de las pantallas (WhatsApp cuando haya número; ver la guía de operación). Los mensajes del registro dicen "escríbanos" (NIT repetido, límite de
   consultorios), pero Galenum no tiene correo de soporte (galenum.com.co no tiene MX; no-responder@ no recibe). Crear
   `soporte@galenum.com.co` (Google Workspace, Zoho o reenvío) o un WhatsApp, y ponerlo en esos mensajes, en el pie de
   los correos y en el sitio.
@@ -131,6 +132,25 @@ La competencia ofrece decenas de formatos (historias por especialidad, exámenes
 - Cifrado de campos sensibles.
 - Pruebas de integración con Testcontainers.
 - RIPS y facturación electrónica.
+
+### Expansión a España (idea del 3 de noviembre de 2026, después del lanzamiento en Colombia)
+Es un proyecto aparte, no una configuración. Orden: validar la demanda con algunas clínicas → asesoría de un abogado
+español en protección de datos sanitarios → decidir la arquitectura → adaptar el producto.
+- **Datos en la UE.** La nueva experiencia de AWS fija una sola región por proyecto (la de Galeno es us-east-2), así que
+  España necesita su propia cuenta de AWS con región europea (p. ej., `eu-south-2`, Madrid) y un despliegue separado:
+  base de datos, S3, Bedrock y correo propios. No mezclar pacientes colombianos y españoles en la misma base. Con datos
+  en EE. UU. es legal (Marco de Privacidad UE–EE. UU.), pero las clínicas suelen exigir la UE.
+- **RGPD y LOPDGDD.** Datos de salud = categoría especial (art. 9). DPA con cada encargado (AWS, correo, Bedrock,
+  soporte), registro de actividades, evaluación de impacto (EIPD), probablemente Delegado de Protección de Datos, y
+  representante en la UE (art. 27) si la empresa sigue siendo colombiana. Términos y política de datos propios.
+- **Correo de soporte.** ImprovMX no sirve tal cual: hay que confirmar DPA y dónde procesa. Opciones: Google Workspace
+  con región de datos en Europa, o recepción con SES en la región europea.
+- **Producto.** Lo colombiano queda fuera (RIPS, CUPS, NIT, DIAN, festivos de Colombia). Falta lo español: facturación
+  con **Verifactu**, **receta médica privada electrónica** (RD 192/2023, requisitos de homologación), historia clínica
+  según la **Ley 41/2002** (conservación mínima de 5 años), CIE-10 (ya existe), euros e IVA, festivos nacionales y
+  autonómicos. Ayuda que el contenido clínico sea datos y no código (motor de formatos).
+- **Comercial y fiscal.** Facturación a clientes españoles desde Colombia o con una sociedad en España, IVA del SaaS,
+  partners en euros.
 
 ### Importación de historias desde otros sistemas (pausada: queda para el final)
 El principio: primero las fuentes masivas, todas por el mismo flujo **extraer → revisar → confirmar**.
