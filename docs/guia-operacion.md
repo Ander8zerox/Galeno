@@ -295,16 +295,59 @@ partners y del menú), en los mensajes que dicen "escríbanos" y en el pie de to
 Galenum salen de `no-responder@` con **Reply-To: soporte@**, así que si alguien responde, la respuesta llega a
 soporte.
 
-SES solo envía correo. El correo entrante lo recibe **ImprovMX** (plan gratuito, hasta 25 alias) y lo reenvía a tu
-Gmail. Los registros MX y SPF del dominio están en `infra/correo.tf`.
+#### Conexión con ImprovMX (correo entrante)
 
-**Configuración inicial (una sola vez):**
-1. Crea una cuenta en [improvmx.com](https://improvmx.com) y agrega el dominio `galenum.com.co`.
-2. Crea el alias `soporte` → tu Gmail. Si quieres, crea también `*` (catch-all), para no perder correos enviados a
-   otras direcciones como `hola@` o `contacto@`.
-3. Aplica Terraform (crea los registros MX y SPF). En unos minutos ImprovMX marca el dominio como verificado.
-4. Prueba: desde otro correo, escribe a soporte@galenum.com.co y responde un correo de Galenum (por ejemplo, el de
-   recuperar la contraseña). Los dos deben llegar a tu Gmail.
+SES solo envía correo, no lo recibe. Lo que llega a cualquier dirección `@galenum.com.co` lo recibe **ImprovMX** y lo
+reenvía al Gmail del dueño de la cuenta de ImprovMX:
+
+```
+Cliente → soporte@galenum.com.co → MX de galenum.com.co (Route 53) → ImprovMX → Gmail del equipo
+Galenum (SES, no-responder@) → cliente responde → Reply-To: soporte@ → (mismo camino)
+```
+
+**Configuración actual** (creada el 3 de noviembre de 2026):
+
+| Qué | Valor |
+|---|---|
+| Cuenta | [app.improvmx.com](https://app.improvmx.com), plan **Free** (US$0: 1 dominio, 25 alias, 500 correos reenviados al día, registro de 7 días, sin envío) |
+| Dominio | `galenum.com.co` |
+| Alias | `soporte` → Gmail del equipo; `*` (catch-all) → Gmail del equipo, para no perder lo que llegue a `hola@`, `contacto@`, etc. |
+| Registros DNS (Terraform, `infra/correo.tf`) | MX `@` → `10 mx1.improvmx.com` y `20 mx2.improvmx.com`; TXT `@` → `v=spf1 include:spf.improvmx.com ~all` |
+
+Los registros DNS **solo se cambian con Terraform**: si se crean a mano en Route 53, el siguiente `terraform apply`
+falla porque el registro ya existe. No chocan con SES: los rebotes de SES van a `correo.galenum.com.co`, que tiene su
+propio MX, y la firma DKIM de SES no depende del SPF raíz.
+
+**Cómo se conectó (una sola vez):**
+1. Se creó la cuenta en ImprovMX con el Gmail del equipo y se agregó el dominio `galenum.com.co`.
+2. Se crearon los alias `soporte` y `*`.
+3. Se aplicó Terraform (`aws_route53_record.mx` y `aws_route53_record.spf`).
+4. En ImprovMX, "Check": el dominio pasa de "Forwarding not active" (rojo) a activo (verde).
+5. Prueba: desde otro correo, escribir a soporte@galenum.com.co, y responder un correo de Galenum (por ejemplo, el de
+   "¿Olvidó su contraseña?"). Los dos deben llegar al Gmail del equipo.
+
+**Cómo comprobarlo:**
+- Panel de ImprovMX: el dominio en verde y, en "Logs", los correos reenviados de los últimos 7 días (con el motivo si
+  alguno no se entregó).
+- Desde la terminal, los registros publicados:
+  ```bash
+  nslookup -type=MX galenum.com.co 8.8.8.8
+  nslookup -type=TXT galenum.com.co 8.8.8.8
+  ```
+
+**Si deja de llegar el correo de soporte:**
+- Revisa el spam de Gmail (los reenvíos a veces caen ahí: marca "No es spam" y crea un filtro para `to:soporte@galenum.com.co`).
+- En ImprovMX → Logs: si dice que se superó el límite diario (500), se reanuda al día siguiente; si pasa seguido, plan
+  pago.
+- Si el dominio volvió a rojo, alguien cambió o borró los MX: `terraform plan` en `infra/` muestra la diferencia y
+  `terraform apply` los restaura.
+
+**Cambiar a dónde llega:** en ImprovMX, edita el destino de los alias (p. ej., a otra persona del equipo, o varios
+destinos separados por coma). No hace falta tocar Galenum ni Terraform.
+
+**Privacidad:** los correos de soporte pasan por ImprovMX (un tercero, fuera de Colombia) y Google. Pide a los
+clientes no enviar historias clínicas ni datos de pacientes por correo, y menciona a ambos como encargados en la
+política de datos (revisión legal). Para España no sirve tal cual (ver "Expansión a España" en plan.md).
 
 **Responder como soporte@ y no desde tu Gmail personal:** el plan gratuito de ImprovMX no envía correo. Hay dos
 opciones: en Gmail, "Enviar como" con el SMTP de SES (credenciales SMTP de un usuario IAM solo con `ses:SendRawEmail`;
