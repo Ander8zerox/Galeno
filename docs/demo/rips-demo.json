@@ -1,0 +1,364 @@
+{
+  "numFactura": "DEMO-0001",
+  "usuarios": [
+    {
+      "tipoDocumentoIdentificacion": "CC",
+      "numDocumentoIdentificacion": "990000101",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "1988-03-14",
+      "codSexo": "F",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 1,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890203",
+            "fechaInicioAtencion": "2026-05-12 09:00",
+            "codDiagnosticoPrincipal": "K021",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          },
+          {
+            "codConsulta": "890303",
+            "fechaInicioAtencion": "2026-08-20 10:00",
+            "codDiagnosticoPrincipal": "K050",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 3
+          }
+        ],
+        "procedimientos": [
+          {
+            "codProcedimiento": "232102",
+            "fechaInicioAtencion": "2026-05-12 09:30",
+            "codDiagnosticoPrincipal": "K021",
+            "codDiagnosticoRelacionado": null,
+            "consecutivo": 2
+          },
+          {
+            "codProcedimiento": "997301",
+            "fechaInicioAtencion": "2026-08-20 10:20",
+            "codDiagnosticoPrincipal": "K050",
+            "codDiagnosticoRelacionado": null,
+            "consecutivo": 4
+          }
+        ]
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "CC",
+      "numDocumentoIdentificacion": "990000102",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "1975-11-02",
+      "codSexo": "M",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 2,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890201",
+            "fechaInicioAtencion": "2026-04-03 08:00",
+            "codDiagnosticoPrincipal": "I10X",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          },
+          {
+            "codConsulta": "890301",
+            "fechaInicioAtencion": "2026-07-03 08:00",
+            "codDiagnosticoPrincipal": "I10X",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 2
+          },
+          {
+            "codConsulta": "890301",
+            "fechaInicioAtencion": "2026-10-02 08:30",
+            "codDiagnosticoPrincipal": "I10X",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 3
+          }
+        ],
+        "procedimientos": []
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "CC",
+      "numDocumentoIdentificacion": "990000103",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "1962-07-21",
+      "codSexo": "F",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 3,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890201",
+            "fechaInicioAtencion": "2026-03-18 11:00",
+            "codDiagnosticoPrincipal": "E119",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          },
+          {
+            "codConsulta": "890301",
+            "fechaInicioAtencion": "2026-06-18 11:00",
+            "codDiagnosticoPrincipal": "E119",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 2
+          },
+          {
+            "codConsulta": "890301",
+            "fechaInicioAtencion": "2026-09-17 11:00",
+            "codDiagnosticoPrincipal": "E669",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 3
+          }
+        ],
+        "procedimientos": []
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "CC",
+      "numDocumentoIdentificacion": "990000104",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "1958-01-30",
+      "codSexo": "M",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 4,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890203",
+            "fechaInicioAtencion": "2026-06-05 15:00",
+            "codDiagnosticoPrincipal": "K051",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          }
+        ],
+        "procedimientos": [
+          {
+            "codProcedimiento": "230101",
+            "fechaInicioAtencion": "2026-06-12 15:00",
+            "codDiagnosticoPrincipal": "K040",
+            "codDiagnosticoRelacionado": null,
+            "consecutivo": 2
+          }
+        ]
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "CC",
+      "numDocumentoIdentificacion": "990000105",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "1993-09-08",
+      "codSexo": "F",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 5,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890201",
+            "fechaInicioAtencion": "2026-09-02 14:00",
+            "codDiagnosticoPrincipal": "J029",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          },
+          {
+            "codConsulta": "890301",
+            "fechaInicioAtencion": "2026-10-15 14:30",
+            "codDiagnosticoPrincipal": "F411",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 2
+          }
+        ],
+        "procedimientos": []
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "CC",
+      "numDocumentoIdentificacion": "990000106",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "2001-05-17",
+      "codSexo": "M",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 6,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890203",
+            "fechaInicioAtencion": "2026-07-22 16:00",
+            "codDiagnosticoPrincipal": "K036",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          }
+        ],
+        "procedimientos": [
+          {
+            "codProcedimiento": "997310",
+            "fechaInicioAtencion": "2026-07-22 16:20",
+            "codDiagnosticoPrincipal": "K036",
+            "codDiagnosticoRelacionado": null,
+            "consecutivo": 2
+          }
+        ]
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "CC",
+      "numDocumentoIdentificacion": "990000107",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "1985-12-03",
+      "codSexo": "F",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 7,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890201",
+            "fechaInicioAtencion": "2026-08-08 09:30",
+            "codDiagnosticoPrincipal": "N390",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          }
+        ],
+        "procedimientos": []
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "CC",
+      "numDocumentoIdentificacion": "990000108",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "1969-04-25",
+      "codSexo": "M",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 8,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890201",
+            "fechaInicioAtencion": "2026-05-27 10:30",
+            "codDiagnosticoPrincipal": "M545",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          },
+          {
+            "codConsulta": "890301",
+            "fechaInicioAtencion": "2026-06-24 10:30",
+            "codDiagnosticoPrincipal": "M545",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 2
+          }
+        ],
+        "procedimientos": []
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "CC",
+      "numDocumentoIdentificacion": "990000109",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "1979-08-11",
+      "codSexo": "F",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 9,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890201",
+            "fechaInicioAtencion": "2026-09-25 08:00",
+            "codDiagnosticoPrincipal": "K297",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          }
+        ],
+        "procedimientos": []
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "CC",
+      "numDocumentoIdentificacion": "990000110",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "1990-02-19",
+      "codSexo": "M",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 10,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890201",
+            "fechaInicioAtencion": "2026-10-09 17:00",
+            "codDiagnosticoPrincipal": "Z000",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          }
+        ],
+        "procedimientos": []
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "TI",
+      "numDocumentoIdentificacion": "990000111",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "2012-06-09",
+      "codSexo": "F",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 11,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890203",
+            "fechaInicioAtencion": "2026-07-01 15:00",
+            "codDiagnosticoPrincipal": "K021",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          }
+        ],
+        "procedimientos": [
+          {
+            "codProcedimiento": "990203",
+            "fechaInicioAtencion": "2026-07-01 15:20",
+            "codDiagnosticoPrincipal": "K021",
+            "codDiagnosticoRelacionado": null,
+            "consecutivo": 2
+          }
+        ]
+      }
+    },
+    {
+      "tipoDocumentoIdentificacion": "RC",
+      "numDocumentoIdentificacion": "990000112",
+      "tipoUsuario": "04",
+      "fechaNacimiento": "2019-10-28",
+      "codSexo": "M",
+      "codMunicipioResidencia": "11001",
+      "consecutivo": 12,
+      "servicios": {
+        "consultas": [
+          {
+            "codConsulta": "890201",
+            "fechaInicioAtencion": "2026-10-20 09:00",
+            "codDiagnosticoPrincipal": "J00X",
+            "codDiagnosticoRelacionado1": null,
+            "tipoDiagnosticoPrincipal": "02",
+            "consecutivo": 1
+          }
+        ],
+        "procedimientos": []
+      }
+    }
+  ]
+}
