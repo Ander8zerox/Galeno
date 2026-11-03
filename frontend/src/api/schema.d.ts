@@ -916,6 +916,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/equipo/invitaciones/{id}/reenviar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reenviar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dev/suscripciones/avisos": {
         parameters: {
             query?: never;
@@ -2593,27 +2609,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            number?: boolean;
-            floatingPointNumber?: boolean;
-            container?: boolean;
-            missingNode?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            integralNumber?: boolean;
-            bigInteger?: boolean;
-            valueNode?: boolean;
-            bigDecimal?: boolean;
-            binary?: boolean;
-            int?: boolean;
-            pojo?: boolean;
+            long?: boolean;
+            boolean?: boolean;
             object?: boolean;
-            string?: boolean;
-            double?: boolean;
             short?: boolean;
+            pojo?: boolean;
+            binary?: boolean;
+            string?: boolean;
+            int?: boolean;
+            double?: boolean;
             /** @deprecated */
             textual?: boolean;
-            boolean?: boolean;
-            long?: boolean;
+            floatingPointNumber?: boolean;
+            number?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            bigInteger?: boolean;
+            bigDecimal?: boolean;
+            integralNumber?: boolean;
+            missingNode?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -4262,6 +4278,28 @@ export interface operations {
         responses: {
             /** @description Created */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InvitacionCreada"];
+                };
+            };
+        };
+    };
+    reenviar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

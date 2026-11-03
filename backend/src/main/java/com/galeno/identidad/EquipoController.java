@@ -54,11 +54,17 @@ public class EquipoController {
         equipo.asignarMedicos(membresiaId, request.medicos());
     }
 
-    /** Devuelve el enlace de invitación para que el administrador lo comparta (más adelante, por correo con SES). */
+    /** Envía la invitación por correo y devuelve también el enlace, por si el administrador prefiere compartirlo. */
     @PostMapping("/invitaciones")
     @ResponseStatus(HttpStatus.CREATED)
     public InvitacionCreada invitar(@Valid @RequestBody Invitar request) {
         return equipo.invitar(request.email(), request.roles(), request.registroMedico());
+    }
+
+    /** Crea un enlace nuevo con los mismos datos, lo envía y anula el anterior. */
+    @PostMapping("/invitaciones/{id}/reenviar")
+    public InvitacionCreada reenviar(@PathVariable UUID id) {
+        return equipo.reenviar(id);
     }
 
     @GetMapping("/invitaciones")
