@@ -200,7 +200,7 @@ class RegistroService {
         log.info("Consultorio {} registrado", creado.consultorioId());
         eventos.publishEvent(new ConsultorioRegistrado(creado.consultorioId(), creado.usuarioId(), creado.codigoPartner(),
                 creado.nit()));
-        return sesiones.elegir(creado.usuarioId(), creado.consultorioId());
+        return sesiones.ingresar(creado.usuarioId(), creado.consultorioId());
     }
 
     private static RegistroPendiente vigente(Optional<RegistroPendiente> r) {

@@ -90,7 +90,7 @@ class InvitacionService {
             return usuario.getId();
         }));
 
-        return sesiones.elegir(usuarioId, consultorioId);
+        return sesiones.ingresar(usuarioId, consultorioId);
     }
 
     private Usuario verificarCuenta(Usuario existente, String password) {

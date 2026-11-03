@@ -218,7 +218,34 @@ Cada vez que se da o se quita un acceso queda registrado en `auditoria_plataform
 
 - Solo quien de verdad revisa pagos: un operador puede aprobar pagos, regalar días y suspender consultorios.
 - Un correo por persona, nunca cuentas compartidas, para que la auditoría diga quién hizo qué.
-- Contraseñas largas y únicas: la consola todavía no tiene MFA.
+- Contraseñas largas y únicas, además de la verificación en dos pasos (obligatoria para operadores, ver abajo).
+
+### Verificación en dos pasos (MFA)
+
+Al ingresar, además de la contraseña se pide el código de 6 dígitos de una app de autenticación (Google
+Authenticator, Microsoft Authenticator, 1Password…).
+
+| Quién | Cómo es |
+|---|---|
+| Operadores de la plataforma | Obligatoria: el primer ingreso pide configurarla (QR) antes de entrar |
+| Quien administra algún consultorio | Obligatoria, igual que los operadores; también al confirmar el registro de un consultorio nuevo |
+| Médicos, secretarios y partners | Opcional: se activa en **Seguridad**, en el menú |
+
+- Al configurarla se entregan **10 códigos de recuperación** de un solo uso, que se muestran una sola vez.
+- "Recordar este equipo" deja entrar 30 días desde ese navegador solo con la contraseña. En **Seguridad** se
+  pueden olvidar todos los equipos.
+- Tras 5 códigos equivocados seguidos, la cuenta queda 15 minutos sin poder intentar.
+- La persona recibe un correo cuando se activa, se desactiva, se usa un código de recuperación o se restablece.
+
+**Si alguien pierde el celular y los códigos:** primero confirma que quien lo pide es el titular (por ejemplo, con
+una llamada al número que tienes registrado). Luego, en la consola de la plataforma, **Seguridad → Restablecer la
+verificación de otra cuenta** con su correo. Queda en la auditoría como `MFA_RESTABLECIDA`, y en su próximo ingreso
+la configura de nuevo. Nadie puede restablecer la suya: lo hace otro operador. Si eres el único operador y pierdes
+la tuya, hay que borrarla en la base de datos (tablas `mfa_*`); por eso conviene tener al menos dos operadores, o
+guardar bien tus códigos.
+
+**La clave `APP_MFA_CLAVE` (SSM) no se rota.** Cifra los secretos de las apps; si cambia, ninguno se puede descifrar
+y todas las cuentas tendrían que configurarla de nuevo (habría que restablecerlas una por una).
 
 ---
 
@@ -338,7 +365,8 @@ galeno-api-1`. Para el día a día bastan los logs de CloudWatch.
 
 - ~~**HTTPS entre CloudFront y el servidor** (Caddy + Let's Encrypt) y `X-Forwarded-Proto` en la API.~~ Activos en
   producción desde el 2 de noviembre de 2026 (sección 2, "Origen HTTPS (Caddy)").
-- **MFA** para los operadores de la plataforma, y después para los consultorios.
+- ~~**MFA** para los operadores de la plataforma, y después para los consultorios.~~ Obligatoria para operadores y
+  administradores de consultorio, opcional para los demás (sección 3, "Verificación en dos pasos").
 - **Revisión legal** de los términos y de la política de datos (hoy un borrador en `/politica-datos`). En partners,
   también la revisión contable de las condiciones.
 

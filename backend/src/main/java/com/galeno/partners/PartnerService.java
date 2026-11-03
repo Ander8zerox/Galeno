@@ -31,6 +31,7 @@ import com.galeno.identidad.CodigosReferido;
 import com.galeno.identidad.ConsultorioRegistrado;
 import com.galeno.identidad.IdentidadService;
 import com.galeno.identidad.IdentidadService.ConsultorioPlataforma;
+import com.galeno.identidad.MfaService;
 import com.galeno.identidad.SesionService;
 import com.galeno.plataforma.PlataformaService;
 import com.galeno.shared.correo.Correo;
@@ -77,6 +78,7 @@ class PartnerService implements CodigosReferido {
     private final SuscripcionService suscripciones;
     private final PlataformaService plataforma;
     private final TokenService tokens;
+    private final MfaService mfa;
     private final PasswordEncoder passwordEncoder;
     private final EnvioCorreo correo;
     private final LimiteIntentos limites;
@@ -92,8 +94,8 @@ class PartnerService implements CodigosReferido {
     PartnerService(PartnerRepository partners, InscripcionPartnerRepository inscripciones, ReferidoRepository referidos,
                    ComisionPartnerRepository comisiones, LiquidacionPartnerRepository liquidaciones,
                    IdentidadService identidad, SesionService sesiones, SuscripcionService suscripciones,
-                   PlataformaService plataforma, TokenService tokens, PasswordEncoder passwordEncoder, EnvioCorreo correo,
-                   LimiteIntentos limites, JsonMapper mapper, TransactionTemplate tx,
+                   PlataformaService plataforma, TokenService tokens, MfaService mfa, PasswordEncoder passwordEncoder,
+                   EnvioCorreo correo, LimiteIntentos limites, JsonMapper mapper, TransactionTemplate tx,
                    @Value("${app.web.base-url}") String baseUrl,
                    @Value("${app.partners.comision-porcentaje:30}") int comisionPorcentaje,
                    @Value("${app.partners.descuento-porcentaje:10}") int descuentoPorcentaje,
@@ -110,6 +112,7 @@ class PartnerService implements CodigosReferido {
         this.suscripciones = suscripciones;
         this.plataforma = plataforma;
         this.tokens = tokens;
+        this.mfa = mfa;
         this.passwordEncoder = passwordEncoder;
         this.correo = correo;
         this.limites = limites;
@@ -197,7 +200,14 @@ class PartnerService implements CodigosReferido {
         return new InscripcionPublica(i.getEmail(), d.nombre(), identidad.existeCuenta(i.getEmail()));
     }
 
-    public record SesionPartner(String accessToken, Instant expiresAt, String nombre, String email) {
+    /**
+     * @param mfa                 si no es null, el token es el pendiente: falta el código ({@code VERIFICAR}) o
+     *                            configurar la app ({@code CONFIGURAR})
+     * @param equipo              token de "recordar este equipo", para mandarlo en los próximos logins
+     * @param codigosRecuperacion solo al terminar de configurar la app: se muestran una única vez
+     */
+    public record SesionPartner(String accessToken, Instant expiresAt, String nombre, String email,
+                                MfaService.Requisito mfa, String equipo, List<String> codigosRecuperacion) {
     }
 
     /** Crea el partner (en revisión) con la cuenta nueva o, si el correo ya tenía cuenta, con su contraseña actual. */
@@ -228,16 +238,34 @@ class PartnerService implements CodigosReferido {
                 %s (%s %s) se inscribió como partner.
 
                 Revíselo en la consola de la plataforma, en Partners.""".formatted(d.nombre(), d.tipoDocumento(), d.numeroDocumento()));
-        IssuedToken t = tokens.issuePartner(usuarioId, nombreCuenta, i.getEmail());
-        return new SesionPartner(t.value(), t.expiresAt(), nombreCuenta, i.getEmail());
+        // Una cuenta que ya existía y usa verificación en dos pasos manda el código antes de entrar
+        return ingresar(usuarioId, nombreCuenta, i.getEmail(), null);
     }
 
-    public SesionPartner login(String email, String password) {
+    public SesionPartner login(String email, String password, String equipo) {
         SesionService.Cuenta cuenta = sesiones.verificarCredenciales(email, password)
                 .filter(c -> comoSistema(() -> partners.findByUsuarioId(c.id()).isPresent()))
                 .orElseThrow(() -> ApiProblem.unauthorized("Correo o contraseña incorrectos"));
-        IssuedToken t = tokens.issuePartner(cuenta.id(), cuenta.nombre(), cuenta.email());
-        return new SesionPartner(t.value(), t.expiresAt(), cuenta.nombre(), cuenta.email());
+        return ingresar(cuenta.id(), cuenta.nombre(), cuenta.email(), equipo);
+    }
+
+    /** Con el token pendiente del login. */
+    public SesionPartner completarMfa(String codigo, boolean recordar) {
+        MfaService.Completado c = mfa.completar(MfaService.Destino.PARTNER, codigo, recordar);
+        AuthUser pendiente = AuthUser.current();
+        String email = identidad.correosDeCuentas(List.of(c.usuarioId())).get(c.usuarioId());
+        IssuedToken t = tokens.issuePartner(c.usuarioId(), pendiente.nombre(), email);
+        return new SesionPartner(t.value(), t.expiresAt(), pendiente.nombre(), email, null, c.equipo(),
+                c.codigosRecuperacion());
+    }
+
+    private SesionPartner ingresar(UUID usuarioId, String nombre, String email, String equipo) {
+        return mfa.compuerta(usuarioId, MfaService.Destino.PARTNER, equipo, null)
+                .map(p -> new SesionPartner(p.accessToken(), p.expiresAt(), nombre, email, p.requisito(), null, null))
+                .orElseGet(() -> {
+                    IssuedToken t = tokens.issuePartner(usuarioId, nombre, email);
+                    return new SesionPartner(t.value(), t.expiresAt(), nombre, email, null, null, null);
+                });
     }
 
     // ===================== portal del partner =====================

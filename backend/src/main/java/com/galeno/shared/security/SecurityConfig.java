@@ -43,6 +43,15 @@ public class SecurityConfig {
                         // El token de invitación viaja en el cuerpo, nunca en la URL (no queda en logs)
                         .requestMatchers(HttpMethod.POST, "/api/v1/invitaciones/consultar", "/api/v1/invitaciones/aceptar").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/registro", "/api/v1/registro/consultar", "/api/v1/registro/confirmar").permitAll()
+                        // Verificación en dos pasos al ingresar: solo con el token pendiente que entrega el login
+                        // (cada servicio revisa además que sea de su entrada). Configurar la app también sirve con una
+                        // sesión normal; lo demás de /mfa es de la sesión ya iniciada, en cualquiera de las tres entradas.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/mfa", "/api/v1/plataforma/mfa", "/api/v1/partners/mfa")
+                                .hasAuthority(TokenService.MFA_PENDIENTE)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/mfa/configuracion").hasAnyAuthority(TokenService.MFA_PENDIENTE,
+                                TokenService.MIEMBRO, TokenService.PLATAFORMA, TokenService.PARTNER)
+                        .requestMatchers("/api/v1/mfa/**", "/api/v1/mfa").hasAnyAuthority(TokenService.MIEMBRO,
+                                TokenService.PLATAFORMA, TokenService.PARTNER)
                         // Consola de la plataforma (operadores de Galenum): su propio login y su propio token
                         .requestMatchers(HttpMethod.POST, "/api/v1/plataforma/login").permitAll()
                         .requestMatchers("/api/v1/plataforma/**").hasAuthority(TokenService.PLATAFORMA)
@@ -57,8 +66,10 @@ public class SecurityConfig {
                         // Solo existe con el perfil local
                         .requestMatchers(HttpMethod.POST, "/api/v1/dev/suscripciones/avisos").permitAll()
                         .requestMatchers("/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // Cualquier token válido, incluido el de selección de consultorio
-                        .requestMatchers("/api/v1/auth/consultorios", "/api/v1/auth/sesion").authenticated()
+                        // El de selección de consultorio o uno de sesión; nunca el pendiente de la verificación en dos
+                        // pasos (sería entrar sin el código), ni los de plataforma o partners
+                        .requestMatchers("/api/v1/auth/consultorios", "/api/v1/auth/sesion")
+                                .hasAnyAuthority(TokenService.SELECCION, TokenService.MIEMBRO)
                         // Por permiso (los roles solo agrupan permisos, ver identidad.Rol)
                         .requestMatchers("/api/v1/equipo/**").hasAuthority(Permiso.EQUIPO_GESTIONAR.name())
                         .requestMatchers(HttpMethod.POST, "/api/v1/formulacion/formulas").hasAuthority(Permiso.FORMULA_FIRMAR.name())

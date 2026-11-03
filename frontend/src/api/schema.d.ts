@@ -372,6 +372,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plataforma/mfa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mfa"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plataforma/login": {
         parameters: {
             query?: never;
@@ -382,6 +398,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plataforma/cuentas/mfa/restablecer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restablecerMfa"];
         delete?: never;
         options?: never;
         head?: never;
@@ -484,6 +516,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/partners/mfa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mfa_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/partners/login": {
         parameters: {
             query?: never;
@@ -558,6 +606,70 @@ export interface paths {
         get: operations["list"];
         put?: never;
         post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mfa/desactivacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["desactivar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mfa/configuracion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["configurar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mfa/codigos-recuperacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["regenerar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mfa/activacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["activar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -900,6 +1012,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/mfa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mfa_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -1132,6 +1260,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["codigo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mfa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["estado_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1423,6 +1567,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mfa/equipos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["olvidarEquipos"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1909,6 +2069,10 @@ export interface components {
             expiresAt?: string;
             completa?: boolean;
             consultorios?: components["schemas"]["ConsultorioOpcion"][];
+            /** @enum {string} */
+            mfa?: "VERIFICAR" | "CONFIGURAR";
+            equipo?: string;
+            codigosRecuperacion?: string[];
         };
         MotivoPartner: {
             motivo: string;
@@ -1934,9 +2098,9 @@ export interface components {
         Motivo: {
             motivo: string;
         };
-        LoginPlataforma: {
-            email: string;
-            password: string;
+        CodigoMfaPlataforma: {
+            codigo: string;
+            recordar?: boolean;
         };
         SesionPlataforma: {
             accessToken?: string;
@@ -1944,6 +2108,18 @@ export interface components {
             expiresAt?: string;
             nombre?: string;
             email?: string;
+            /** @enum {string} */
+            mfa?: "VERIFICAR" | "CONFIGURAR";
+            equipo?: string;
+            codigosRecuperacion?: string[];
+        };
+        LoginPlataforma: {
+            email: string;
+            password: string;
+            equipo?: string;
+        };
+        RestablecerMfa: {
+            email: string;
         };
         DireccionCorreo: {
             email: string;
@@ -1997,9 +2173,9 @@ export interface components {
             disponibleDesde?: string;
             motivoAnulacion?: string;
         };
-        LoginPartner: {
-            email: string;
-            password: string;
+        CodigoMfaPartner: {
+            codigo: string;
+            recordar?: boolean;
         };
         SesionPartner: {
             accessToken?: string;
@@ -2007,6 +2183,15 @@ export interface components {
             expiresAt?: string;
             nombre?: string;
             email?: string;
+            /** @enum {string} */
+            mfa?: "VERIFICAR" | "CONFIGURAR";
+            equipo?: string;
+            codigosRecuperacion?: string[];
+        };
+        LoginPartner: {
+            email: string;
+            password: string;
+            equipo?: string;
         };
         InscripcionPartnerSolicitud: {
             /** Format: email */
@@ -2035,6 +2220,16 @@ export interface components {
         ConfirmacionInscripcion: {
             token: string;
             password?: string;
+        };
+        CodigoMfa: {
+            codigo: string;
+        };
+        Configuracion: {
+            uri?: string;
+            secreto?: string;
+        };
+        CodigosRecuperacion: {
+            codigos?: string[];
         };
         ConsultarInvitacion: {
             token: string;
@@ -2180,6 +2375,7 @@ export interface components {
             /** Format: email */
             email: string;
             password: string;
+            equipo?: string;
         };
         SolicitudApoyo: {
             /** Format: uuid */
@@ -2274,6 +2470,16 @@ export interface components {
             size?: number;
             /** Format: int64 */
             total?: number;
+        };
+        Estado: {
+            activo?: boolean;
+            obligatoria?: boolean;
+            /** Format: date-time */
+            activadaEn?: string;
+            /** Format: int32 */
+            codigosRestantes?: number;
+            /** Format: int64 */
+            equiposRecordados?: number;
         };
         PaginaLoteVista: {
             items?: components["schemas"]["LoteVista"][];
@@ -2389,25 +2595,25 @@ export interface components {
             float?: boolean;
             number?: boolean;
             floatingPointNumber?: boolean;
+            container?: boolean;
             missingNode?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             integralNumber?: boolean;
-            valueNode?: boolean;
-            container?: boolean;
             bigInteger?: boolean;
+            valueNode?: boolean;
             bigDecimal?: boolean;
-            int?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            boolean?: boolean;
             binary?: boolean;
+            int?: boolean;
+            pojo?: boolean;
+            object?: boolean;
             string?: boolean;
             double?: boolean;
             short?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            boolean?: boolean;
             long?: boolean;
-            pojo?: boolean;
-            object?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -3172,6 +3378,30 @@ export interface operations {
             };
         };
     };
+    mfa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodigoMfaPlataforma"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SesionPlataforma"];
+                };
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;
@@ -3193,6 +3423,28 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["SesionPlataforma"];
                 };
+            };
+        };
+    };
+    restablecerMfa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestablecerMfa"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -3344,6 +3596,30 @@ export interface operations {
             };
         };
     };
+    mfa_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodigoMfaPartner"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SesionPartner"];
+                };
+            };
+        };
+    };
     login_1: {
         parameters: {
             query?: never;
@@ -3483,6 +3759,96 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PacienteResponse"];
+                };
+            };
+        };
+    };
+    desactivar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodigoMfa"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    configurar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Configuracion"];
+                };
+            };
+        };
+    };
+    regenerar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodigoMfa"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CodigosRecuperacion"];
+                };
+            };
+        };
+    };
+    activar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodigoMfa"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CodigosRecuperacion"];
                 };
             };
         };
@@ -4041,6 +4407,30 @@ export interface operations {
             };
         };
     };
+    mfa_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodigoMfa"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SesionResponse"];
+                };
+            };
+        };
+    };
     login_2: {
         parameters: {
             query?: never;
@@ -4357,6 +4747,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CodigoPublico"];
+                };
+            };
+        };
+    };
+    estado_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Estado"];
                 };
             };
         };
@@ -4775,6 +5185,24 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["Festivo"][];
                 };
+            };
+        };
+    };
+    olvidarEquipos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

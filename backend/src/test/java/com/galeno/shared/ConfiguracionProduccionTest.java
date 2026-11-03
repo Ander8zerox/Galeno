@@ -13,6 +13,7 @@ class ConfiguracionProduccionTest {
                 .withProperty("spring.datasource.username", "galeno")
                 .withProperty("spring.datasource.password", "x")
                 .withProperty("app.security.jwt.secret", "x")
+                .withProperty("app.mfa.clave", "x")
                 .withProperty("app.web.base-url", "https://galeno.com.co")
                 .withProperty("app.web.origen-secreto", "x")
                 .withProperty("app.documentos.bucket", "galeno-docs")

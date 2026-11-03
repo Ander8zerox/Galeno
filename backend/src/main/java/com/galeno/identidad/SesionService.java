@@ -33,12 +33,13 @@ public class SesionService {
     private final PerfilMedicoRepository perfiles;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokens;
+    private final MfaService mfa;
     private final TransactionTemplate tx;
     /** Hash de relleno: el login tarda lo mismo exista o no el correo (evita enumerar cuentas). */
     private final String hashRelleno;
 
     SesionService(UsuarioRepository usuarios, MembresiaRepository membresias, ConsultorioRepository consultorios,
-                  PerfilMedicoRepository perfiles, PasswordEncoder passwordEncoder, TokenService tokens,
+                  PerfilMedicoRepository perfiles, PasswordEncoder passwordEncoder, TokenService tokens, MfaService mfa,
                   TransactionTemplate tx) {
         this.usuarios = usuarios;
         this.membresias = membresias;
@@ -46,19 +47,48 @@ public class SesionService {
         this.perfiles = perfiles;
         this.passwordEncoder = passwordEncoder;
         this.tokens = tokens;
+        this.mfa = mfa;
         this.tx = tx;
         this.hashRelleno = passwordEncoder.encode(UUID.randomUUID().toString());
     }
 
-    public SesionResponse login(String email, String password) {
-        return comoSistema(() -> {
+    /** @param equipo token de "recordar este equipo" que guardó el navegador, o null */
+    public SesionResponse login(String email, String password, String equipo) {
+        Usuario u = comoSistema(() -> {
             Optional<Usuario> usuario = usuarios.findByEmail(email.toLowerCase());
             boolean valido = passwordEncoder.matches(password, usuario.map(Usuario::getPasswordHash).orElse(hashRelleno));
             if (!valido || usuario.isEmpty() || !usuario.get().isActivo()) {
                 throw ApiProblem.unauthorized("Correo o contraseña incorrectos");
             }
-            return iniciar(usuario.get(), null);
+            // Antes del código: no tiene sentido pedirlo para luego decir que no hay consultorios
+            if (activas(usuario.get().getId()).isEmpty()) {
+                throw ApiProblem.forbidden("Su cuenta no tiene consultorios activos");
+            }
+            return usuario.get();
         });
+        return ingresar(u.getId(), null, equipo);
+    }
+
+    /**
+     * Entrar después de verificar a la persona por otra vía (registro, invitación): pasa por la verificación en dos
+     * pasos igual que el login.
+     */
+    public SesionResponse ingresar(UUID usuarioId, UUID consultorioId) {
+        return ingresar(usuarioId, consultorioId, null);
+    }
+
+    private SesionResponse ingresar(UUID usuarioId, UUID consultorioId, String equipo) {
+        return mfa.compuerta(usuarioId, MfaService.Destino.CONSULTORIO, equipo, consultorioId)
+                .map(p -> new SesionResponse(p.accessToken(), p.expiresAt(), false, List.of(), p.requisito(), null, null))
+                .orElseGet(() -> elegir(usuarioId, consultorioId));
+    }
+
+    /** Con el token pendiente: el código de la app (o la configuración, si apenas la está activando). */
+    public SesionResponse completarMfa(String codigo, boolean recordar) {
+        MfaService.Completado c = mfa.completar(MfaService.Destino.CONSULTORIO, codigo, recordar);
+        SesionResponse r = elegir(c.usuarioId(), c.consultorioId());
+        return new SesionResponse(r.accessToken(), r.expiresAt(), r.completa(), r.consultorios(), null, c.equipo(),
+                c.codigosRecuperacion());
     }
 
     public record Cuenta(UUID id, String nombre, String email) {
@@ -75,7 +105,10 @@ public class SesionService {
         });
     }
 
-    /** Elegir (o cambiar de) consultorio. Sirve con el token de selección o con uno de sesión. */
+    /**
+     * Elegir (o cambiar de) consultorio. Sirve con el token de selección o con uno de sesión: quien tiene uno de esos
+     * ya pasó la verificación en dos pasos. No llamarlo desde otra entrada sin pasar por {@link #ingresar}.
+     */
     public SesionResponse elegir(UUID usuarioId, UUID consultorioId) {
         return comoSistema(() -> {
             Usuario usuario = usuarios.findById(usuarioId).filter(Usuario::isActivo)
@@ -120,12 +153,12 @@ public class SesionService {
             elegida = activas.getFirst();
         } else {
             IssuedToken seleccion = tokens.issueSeleccion(usuario.getId(), usuario.getNombre(), usuario.getEmail());
-            return new SesionResponse(seleccion.value(), seleccion.expiresAt(), false, opciones);
+            return new SesionResponse(seleccion.value(), seleccion.expiresAt(), false, opciones, null, null, null);
         }
         IssuedToken token = tokens.issueSesion(usuario.getId(), usuario.getNombre(), usuario.getEmail(),
                 elegida.getTenantId(), elegida.getId(), ordenados(elegida).stream().map(Enum::name).toList(),
                 elegida.permisos());
-        return new SesionResponse(token.value(), token.expiresAt(), true, opciones);
+        return new SesionResponse(token.value(), token.expiresAt(), true, opciones, null, null, null);
     }
 
     private List<Membresia> activas(UUID usuarioId) {
@@ -150,10 +183,16 @@ public class SesionService {
     }
 
     /**
-     * @param completa {@code false} si la persona debe elegir consultorio: el token solo sirve para eso
+     * @param completa            {@code false} si la persona debe elegir consultorio o enviar el código de la
+     *                            verificación en dos pasos: el token solo sirve para eso
+     * @param mfa                 si no es null, falta el código ({@code VERIFICAR}) o configurar la app
+     *                            ({@code CONFIGURAR}): el token es el pendiente
+     * @param equipo              token de "recordar este equipo", para mandarlo en los próximos logins
+     * @param codigosRecuperacion solo al terminar de configurar la app: se muestran una única vez
      */
     public record SesionResponse(String accessToken, Instant expiresAt, boolean completa,
-                                 List<ConsultorioOpcion> consultorios) {
+                                 List<ConsultorioOpcion> consultorios, MfaService.Requisito mfa, String equipo,
+                                 List<String> codigosRecuperacion) {
     }
 
     public record ConsultorioOpcion(UUID consultorioId, String nombre, List<Rol> roles) {
