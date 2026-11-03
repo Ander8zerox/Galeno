@@ -91,7 +91,8 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
   lista de dominios de correo desechable; un límite largo (p. ej., 2 pruebas por IP cada 30 días, en base de datos y
   no en memoria); una prueba gratis por NIT; y normalizar los alias de Gmail (`nombre+x@`, puntos) al contar pruebas,
   para que no se encadenen pruebas con un solo correo.
-- **Canal de soporte (prioridad media).** Los mensajes del registro dicen "escríbanos" (NIT repetido, límite de
+- **Canal de soporte (prioridad media).** ✅ Corregido: soporte@galenum.com.co con reenvío de ImprovMX, Reply-To en los
+  correos, "Ayuda" al pie de las pantallas (WhatsApp cuando haya número; ver la guía de operación). Los mensajes del registro dicen "escríbanos" (NIT repetido, límite de
   consultorios), pero Galenum no tiene correo de soporte (galenum.com.co no tiene MX; no-responder@ no recibe). Crear
   `soporte@galenum.com.co` (Google Workspace, Zoho o reenvío) o un WhatsApp, y ponerlo en esos mensajes, en el pie de
   los correos y en el sitio.

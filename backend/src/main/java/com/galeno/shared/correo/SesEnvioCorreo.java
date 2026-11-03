@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import com.galeno.shared.SoporteProperties;
+
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.regions.Region;
@@ -18,7 +20,8 @@ import software.amazon.awssdk.services.sesv2.model.SendEmailRequest;
 
 /**
  * Envío real con Amazon SES (API v2). Las credenciales salen de la cadena estándar de AWS (en EC2, el rol de la
- * instancia). Cada correo va con el configuration set, que es el que publica los rebotes y quejas.
+ * instancia). Cada correo va con el configuration set, que es el que publica los rebotes y quejas, y responde a soporte:
+ * quien contesta a no-responder@ le escribe al equipo.
  */
 @Component
 @ConditionalOnProperty(name = "app.correo.proveedor", havingValue = "ses")
@@ -29,13 +32,15 @@ class SesEnvioCorreo implements EnvioCorreo, AutoCloseable {
     private final SesV2Client ses;
     private final CorreoProperties props;
     private final SupresionCorreos supresion;
+    private final SoporteProperties soporte;
 
-    SesEnvioCorreo(CorreoProperties props, SupresionCorreos supresion) {
+    SesEnvioCorreo(CorreoProperties props, SupresionCorreos supresion, SoporteProperties soporte) {
         if (props.remitente() == null || props.remitente().isBlank()) {
             throw new IllegalStateException("Falta app.correo.remitente (APP_CORREO_REMITENTE) para enviar con SES");
         }
         this.props = props;
         this.supresion = supresion;
+        this.soporte = soporte;
         this.ses = SesV2Client.builder().region(Region.of(props.region())).build();
     }
 
@@ -48,9 +53,10 @@ class SesEnvioCorreo implements EnvioCorreo, AutoCloseable {
         var req = SendEmailRequest.builder()
                 .fromEmailAddress(props.remitente())
                 .destination(Destination.builder().toAddresses(correo.para()).build())
+                .replyToAddresses(soporte.correo())
                 .content(EmailContent.builder().simple(Message.builder()
                         .subject(utf8(correo.asunto()))
-                        .body(Body.builder().text(utf8(correo.texto())).build())
+                        .body(Body.builder().text(utf8(PieCorreo.agregar(correo.texto(), soporte))).build())
                         .build()).build());
         if (props.configurationSet() != null && !props.configurationSet().isBlank()) {
             req.configurationSetName(props.configurationSet());

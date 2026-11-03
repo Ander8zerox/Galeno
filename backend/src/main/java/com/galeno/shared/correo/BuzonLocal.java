@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import com.galeno.shared.SoporteProperties;
+
 /**
  * Para desarrollo: no envía nada, guarda los últimos correos en memoria (los muestra {@link BuzonController})
  * y deja una línea en el log. Como SES, no escribe a direcciones suprimidas. Solo existe con {@code app.correo.proveedor=local}.
@@ -26,9 +28,11 @@ public class BuzonLocal implements EnvioCorreo {
 
     private final Deque<Enviado> enviados = new ArrayDeque<>();
     private final SupresionCorreos supresion;
+    private final SoporteProperties soporte;
 
-    BuzonLocal(SupresionCorreos supresion) {
+    BuzonLocal(SupresionCorreos supresion, SoporteProperties soporte) {
         this.supresion = supresion;
+        this.soporte = soporte;
     }
 
     @Override
@@ -37,7 +41,7 @@ public class BuzonLocal implements EnvioCorreo {
             log.warn("No se envía \"{}\" a {}: la dirección rebotó o se quejó antes", correo.asunto(), correo.para());
             return;
         }
-        enviados.addFirst(new Enviado(correo.para(), correo.asunto(), correo.texto(), Instant.now()));
+        enviados.addFirst(new Enviado(correo.para(), correo.asunto(), PieCorreo.agregar(correo.texto(), soporte), Instant.now()));
         while (enviados.size() > MAX) {
             enviados.removeLast();
         }

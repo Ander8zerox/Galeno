@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { ShieldCheck } from "lucide-react";
 import { expectOk, unwrap } from "../api/client";
 import type { paths } from "../api/schema";
+import { contactoSoporte } from "../soporte";
 
 /**
  * Verificación en dos pasos (código de una app de autenticación), compartida por las tres entradas: consultorio,
@@ -314,7 +315,7 @@ export function SeguridadCuenta({ api }: { api: Api }) {
           {e.obligatoria && (
             <p className="muted small">
               Es obligatoria para su cuenta porque administra un consultorio o la plataforma, así que no se puede
-              desactivar. Si pierde el celular y los códigos, escríbanos para restablecerla.
+              desactivar. Si pierde el celular y los códigos, escríbanos a {contactoSoporte} para restablecerla.
             </p>
           )}
           {modo === "codigos" && (

@@ -288,6 +288,32 @@ Tiene su propio inicio de sesión. Solo entran las cuentas de la lista de operad
 | Presupuestos y costos | Consola de AWS → Billing and Cost Management |
 | Repositorio | https://github.com/Ander8zerox/Galeno |
 
+### Canal de soporte
+
+Los clientes escriben a **soporte@galenum.com.co**. Aparece en "Ayuda" (al pie del ingreso, del registro, del portal de
+partners y del menú), en los mensajes que dicen "escríbanos" y en el pie de todos los correos. Además, los correos de
+Galenum salen de `no-responder@` con **Reply-To: soporte@**, así que si alguien responde, la respuesta llega a
+soporte.
+
+SES solo envía correo. El correo entrante lo recibe **ImprovMX** (plan gratuito, hasta 25 alias) y lo reenvía a tu
+Gmail. Los registros MX y SPF del dominio están en `infra/correo.tf`.
+
+**Configuración inicial (una sola vez):**
+1. Crea una cuenta en [improvmx.com](https://improvmx.com) y agrega el dominio `galenum.com.co`.
+2. Crea el alias `soporte` → tu Gmail. Si quieres, crea también `*` (catch-all), para no perder correos enviados a
+   otras direcciones como `hola@` o `contacto@`.
+3. Aplica Terraform (crea los registros MX y SPF). En unos minutos ImprovMX marca el dominio como verificado.
+4. Prueba: desde otro correo, escribe a soporte@galenum.com.co y responde un correo de Galenum (por ejemplo, el de
+   recuperar la contraseña). Los dos deben llegar a tu Gmail.
+
+**Responder como soporte@ y no desde tu Gmail personal:** el plan gratuito de ImprovMX no envía correo. Hay dos
+opciones: en Gmail, "Enviar como" con el SMTP de SES (credenciales SMTP de un usuario IAM solo con `ses:SendRawEmail`;
+el dominio ya está verificado en SES), o el plan pago de ImprovMX. Mientras tanto, respondes desde tu Gmail.
+
+**WhatsApp:** cuando tengas un número de WhatsApp Business para soporte, ponlo en `app.soporte.whatsapp`
+(`application.yml`) y en `SOPORTE.whatsapp` (`frontend/src/soporte.ts`), en formato `573001234567`. Con eso, "Ayuda"
+abre WhatsApp y los mensajes y correos lo mencionan. Luego despliega.
+
 ---
 
 ## 5. Logs de la aplicación

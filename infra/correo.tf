@@ -62,6 +62,27 @@ resource "aws_route53_record" "dmarc" {
   records = ["v=DMARC1; p=none;"]
 }
 
+# --- Correo entrante: soporte@<dominio> ---
+# SES solo envía. El dominio no tenía buzón, así que lo que llegue a @<dominio> lo recibe ImprovMX (plan gratuito) y lo
+# reenvía al correo del equipo; los alias se configuran en improvmx.com (ver "Canal de soporte" en docs/guia-operacion.md).
+# No choca con SES: los rebotes de SES van a correo.<dominio>, que tiene su propio MX.
+resource "aws_route53_record" "mx" {
+  zone_id = aws_route53_zone.principal.zone_id
+  name    = var.dominio
+  type    = "MX"
+  ttl     = 3600
+  records = ["10 mx1.improvmx.com", "20 mx2.improvmx.com"]
+}
+
+# ImprovMX lo pide para dar por verificado el dominio. SES no lo usa: su MAIL FROM es correo.<dominio>.
+resource "aws_route53_record" "spf" {
+  zone_id = aws_route53_zone.principal.zone_id
+  name    = var.dominio
+  type    = "TXT"
+  ttl     = 3600
+  records = ["v=spf1 include:spf.improvmx.com ~all"]
+}
+
 # Una dirección que rebota o se queja no vuelve a recibir correos de la cuenta
 resource "aws_sesv2_account_suppression_attributes" "galeno" {
   suppressed_reasons = ["BOUNCE", "COMPLAINT"]
