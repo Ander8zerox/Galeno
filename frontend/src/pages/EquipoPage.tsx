@@ -48,7 +48,6 @@ function Invitar() {
   const [email, setEmail] = useState("");
   const [roles, setRoles] = useState<Rol[]>(["MEDICO"]);
   const [registroMedico, setRegistroMedico] = useState("");
-  const [copiado, setCopiado] = useState(false);
   const invitar = useMutation({
     mutationFn: async () =>
       unwrap(await api.POST("/api/v1/equipo/invitaciones", {
@@ -58,22 +57,18 @@ function Invitar() {
       queryClient.invalidateQueries({ queryKey: ["invitaciones"] });
       setEmail("");
       setRegistroMedico("");
-      setCopiado(false);
     },
   });
+  // Si después se reenvía o se revoca, este enlace deja de servir: no se sigue mostrando
+  const pendientes = useQuery({
+    queryKey: ["invitaciones"],
+    queryFn: async () => unwrap(await api.GET("/api/v1/equipo/invitaciones")),
+  });
+  const creada = invitar.data && pendientes.data?.some((i) => i.id === invitar.data.id) ? invitar.data : null;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     invitar.mutate();
-  }
-
-  async function copiar(enlace: string) {
-    try {
-      await navigator.clipboard.writeText(enlace);
-      setCopiado(true);
-    } catch {
-      setCopiado(false);
-    }
   }
 
   return (
@@ -90,16 +85,36 @@ function Invitar() {
       <RolesCheckboxes value={roles} onChange={setRoles} />
       {invitar.error && <p className="alert alert-error">{invitar.error.message}</p>}
       <div><button className="btn" disabled={!roles.length || invitar.isPending}>Crear invitación</button></div>
-      {invitar.data && (
+      {creada && (
         <div className="alert stack">
-          <span>Envíe este enlace a <strong>{invitar.data.email}</strong> (vence el {fecha.format(new Date(invitar.data.expiraEn!))}):</span>
-          <div className="row">
-            <input readOnly value={invitar.data.enlace} className="grow" onFocus={(e) => e.target.select()} />
-            <button type="button" className="btn btn-secondary" onClick={() => copiar(invitar.data.enlace!)}>{copiado ? "Copiado" : "Copiar"}</button>
-          </div>
+          <span>
+            Le enviamos la invitación a <strong>{creada.email}</strong> (vence el {fecha.format(new Date(creada.expiraEn!))}).
+            Si no le llega, revise la carpeta de spam o compártale este enlace:
+          </span>
+          <EnlaceCopiable key={creada.id} enlace={creada.enlace!} />
         </div>
       )}
     </form>
+  );
+}
+
+function EnlaceCopiable({ enlace }: { enlace: string }) {
+  const [copiado, setCopiado] = useState(false);
+
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(enlace);
+      setCopiado(true);
+    } catch {
+      setCopiado(false);
+    }
+  }
+
+  return (
+    <div className="row">
+      <input readOnly value={enlace} className="grow" onFocus={(e) => e.target.select()} />
+      <button type="button" className="btn btn-secondary" onClick={copiar}>{copiado ? "Copiado" : "Copiar"}</button>
+    </div>
   );
 }
 
@@ -114,10 +129,16 @@ function Pendientes() {
       expectOk(await api.DELETE("/api/v1/equipo/invitaciones/{id}", { params: { path: { id } } })),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invitaciones"] }),
   });
+  // Crea un enlace nuevo y anula el anterior (el servidor solo guarda el hash del token)
+  const reenviar = useMutation({
+    mutationFn: async (id: string) =>
+      unwrap(await api.POST("/api/v1/equipo/invitaciones/{id}/reenviar", { params: { path: { id } } })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invitaciones"] }),
+  });
 
   if (!pendientes.data?.length) return null;
   return (
-    <div className="card table-wrap">
+    <div className="card table-wrap stack">
       <table>
         <thead><tr><th>Invitación pendiente</th><th>Roles</th><th>Vence</th><th /></tr></thead>
         <tbody>
@@ -126,11 +147,25 @@ function Pendientes() {
               <td>{i.email}</td>
               <td>{i.roles?.map((r) => ROL_NOMBRE[r]).join(", ")}</td>
               <td>{fecha.format(new Date(i.expiraEn!))}</td>
-              <td><button className="btn-link danger" onClick={() => revocar.mutate(i.id!)}>Revocar</button></td>
+              <td>
+                <button className="btn-link" disabled={reenviar.isPending} onClick={() => reenviar.mutate(i.id!)}>Reenviar</button>
+                {" · "}
+                <button className="btn-link danger" onClick={() => revocar.mutate(i.id!)}>Revocar</button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      {reenviar.data && pendientes.data.some((i) => i.id === reenviar.data.id) && (
+        <div className="alert stack">
+          <span>
+            Le reenviamos la invitación a <strong>{reenviar.data.email}</strong> con un enlace nuevo; el anterior ya no
+            sirve. Si prefiere, compártale este:
+          </span>
+          <EnlaceCopiable key={reenviar.data.id} enlace={reenviar.data.enlace!} />
+        </div>
+      )}
+      {reenviar.error && <p className="alert alert-error">{reenviar.error.message}</p>}
     </div>
   );
 }

@@ -122,7 +122,9 @@ La competencia ofrece decenas de formatos (historias por especialidad, exámenes
 
 ### Otros pendientes
 - Portal del paciente: cuenta separada que ve sus citas y fórmulas.
-- Invitaciones por correo (hoy se comparte el enlace).
+- ✅ Invitaciones por correo: al crearla, Galenum envía el enlace (quién invita, consultorio, roles, vencimiento); el
+  enlace y "Copiar" quedan de respaldo. "Reenviar" crea un enlace nuevo y anula el anterior; máximo 5 envíos por hora
+  a la misma dirección.
 - ✅ MFA (TOTP): obligatoria para operadores de la plataforma y administradores de consultorio, opcional para los
   demás; códigos de recuperación, "recordar este equipo" 30 días y restablecimiento desde la consola.
 - Suscripciones, siguiente iteración: pasarela de pagos (Wompi, PayU…) cuyo webhook haga lo mismo que "Aprobar"; factura electrónica de Galeno por cada pago (obligatoria ante la DIAN); renovación automática.
