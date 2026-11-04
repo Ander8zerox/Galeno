@@ -49,6 +49,7 @@ public class PdfRenderer {
             .firma .linea { border-top: 1px solid #1f2933; padding-top: 4px; }
             .texto { white-space: pre-wrap; }
             h3 { font-size: 10.5pt; margin: 0 0 4px; color: #1f2933; }
+            h3.seccion-formato { margin-top: 8px; }
             h2, h3 { page-break-after: avoid; }
             tr, .caja, .firma { page-break-inside: avoid; }
             /* Historia completa: atenciones seguidas, separadas por una línea, como un documento corrido (no una por

@@ -1,6 +1,7 @@
 # Diseño: motor de formatos clínicos (primera especialidad: odontología)
 
-Estado: **borrador para revisión** (3 de noviembre de 2026). Nada de esto está construido todavía.
+Estado: **fase 1 construida** (4 de noviembre de 2026; ver "Cómo quedó la fase 1" al final). Las fases 2 a 4 siguen
+siendo diseño.
 
 ## Problema
 
@@ -163,3 +164,27 @@ Cada fase se puede desplegar sola y ya le sirve a un consultorio.
 3. **¿Ocultar campos generales por consultorio** (revisión por sistemas, signos vitales) desde la fase 1, o después?
 4. **¿Quién arma el contenido clínico** de la historia odontológica? Hace falta un odontólogo que revise los campos;
    el motor no sirve si el formato no es el que usa un consultorio real.
+
+## Cómo quedó la fase 1
+
+Lo que se ajustó al construirla, frente a lo de arriba:
+
+- **El catálogo vive en el repositorio:** `backend/src/main/resources/formatos/<codigo>.v<N>.json`, un archivo por versión.
+  Al arrancar, Galenum publica las versiones nuevas. Si cambia el archivo de una versión ya publicada, el arranque falla
+  (se compara un SHA-256): para corregir, se agrega la versión siguiente. Una propiedad mal escrita en el JSON también
+  impide arrancar.
+- **Activación sin columnas `activo` ni `orden`:** que exista la fila en `formatos_consultorio` (o en
+  `formatos_profesional`) es estar activo. Desactivar borra la fila, no lo diligenciado.
+- **Posición:** en la pantalla, el PDF y la lectura, los formatos van después del examen físico y antes de los
+  diagnósticos, porque son hallazgos que los sustentan.
+- **Guardado:** las respuestas viajan en el mismo `PUT` de la atención (`formatos: [{id, respuestas}]`), con el mismo
+  bloqueo optimista. Agregar o quitar un formato también sube la versión de la atención.
+- **Limpieza al guardar:** el servidor no guarda vacíos, filas vacías ni campos ocultos por `visibleSi`, y ordena la
+  selección múltiple como la definición.
+- **Permisos:** `FORMATOS_GESTIONAR` (nuevo, del administrador) para activar. Ver los disponibles exige `HISTORIA_VER`
+  y elegirlos por defecto, `HISTORIA_REGISTRAR`. Como los permisos van en el token, un administrador con la sesión
+  abierta antes del despliegue ve el menú Formatos después de volver a ingresar.
+- **IA:** el texto de los formatos se arma en el navegador (solo lo diligenciado y visible) y va en el campo
+  `formatos` del apoyo diagnóstico; el médico lo ve y lo puede editar antes de enviarlo.
+- **Contenido clínico:** la historia odontológica v1 es un primer borrador para que el odontólogo la revise. Sus
+  correcciones salen como v2; las atenciones firmadas con la v1 se siguen viendo con la v1.

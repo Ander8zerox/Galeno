@@ -18,7 +18,7 @@ import com.galeno.shared.pdf.PdfRenderer;
  */
 final class HistoriaPdf {
 
-    record AtencionImpresa(Atencion atencion, List<NotaAclaratoria> notas) {
+    record AtencionImpresa(Atencion atencion, List<NotaAclaratoria> notas, String formatosHtml) {
     }
 
     private HistoriaPdf() {
@@ -78,7 +78,7 @@ final class HistoriaPdf {
             Atencion a = ai.atencion();
             b.append("<div class=\"atencion\"><h3>Atención ").append(i++).append(" de ").append(atenciones.size())
                     .append(" · ").append(esc(fechaHora(a.getFechaAtencion(), consultorio.zona()))).append("</h3>");
-            AtencionPdf.cuerpo(b, a, consultorio, ai.notas());
+            AtencionPdf.cuerpo(b, a, consultorio, ai.notas(), ai.formatosHtml());
             b.append("</div>");
         }
 

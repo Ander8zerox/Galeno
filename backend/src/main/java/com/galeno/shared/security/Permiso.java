@@ -22,5 +22,7 @@ public enum Permiso {
     /** Importar historias desde otros sistemas (además requiere HISTORIA_VER: ver datos clínicos). */
     IMPORTAR_HISTORIAS,
     /** Ver la suscripción del consultorio, elegir plan y reportar pagos. */
-    SUSCRIPCION_GESTIONAR
+    SUSCRIPCION_GESTIONAR,
+    /** Activar y desactivar formatos clínicos en el consultorio. */
+    FORMATOS_GESTIONAR
 }

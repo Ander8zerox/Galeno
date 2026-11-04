@@ -37,15 +37,17 @@ public class ApoyoDiagnosticoController {
     public AiJobAccepted solicitar(@Valid @RequestBody SolicitudApoyo r) {
         pacientes.get(r.pacienteId());
         var entrada = new ApoyoDiagnosticoHandler.Entrada(r.pacienteId(), r.motivoConsulta(), r.enfermedadActual(),
-                r.signosVitales(), r.examenFisico());
+                r.signosVitales(), r.examenFisico(), r.formatos());
         return AiJobAccepted.of(jobs.enqueue(AiJobType.APOYO_DIAGNOSTICO, r.pacienteId(), entrada,
                 ApoyoDiagnosticoHandler.PROMPT));
     }
 
+    /** @param formatos los formatos diligenciados (p. ej. historia odontológica) como texto, sección por sección */
     public record SolicitudApoyo(@NotNull UUID pacienteId,
                                  @NotBlank @Size(max = 1000) String motivoConsulta,
                                  @NotBlank @Size(max = 4000) String enfermedadActual,
                                  @Size(max = 500) String signosVitales,
-                                 @Size(max = 4000) String examenFisico) {
+                                 @Size(max = 4000) String examenFisico,
+                                 @Size(max = 8000) String formatos) {
     }
 }

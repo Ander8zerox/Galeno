@@ -8,6 +8,9 @@ import { RedactorFormula } from "../features/formulacion/RedactorFormula";
 import { DiagnosticosEditor, TIPO_DX, type DiagnosticoForm } from "../features/historia/DiagnosticosEditor";
 import { AnularDocumento, BotonArchivo, BotonDescargar, MarcaAnulado, SubirDocumento, TIPO_DOCUMENTO, tamano } from "../features/historia/Documentos";
 import { fechaHoraCorta } from "../features/agenda/tiempo";
+import { FormatosAtencion, type Diligenciado } from "../features/formatos/FormatosAtencion";
+import { FormatoLectura } from "../features/formatos/FormatoLectura";
+import { textoFormatos, type Definicion, type Respuestas } from "../features/formatos/motor";
 
 type Atencion = Schemas["AtencionVista"];
 
@@ -44,6 +47,9 @@ function aForm(a: Atencion): Form {
   }
   return f;
 }
+
+const respuestasDe = (formatos?: Diligenciado[]) =>
+  Object.fromEntries((formatos ?? []).map((f) => [f.id!, (f.respuestas ?? {}) as Respuestas])) as Record<string, Respuestas>;
 
 const num = (v: string) => (v.trim() === "" ? undefined : Number(v.replace(",", ".")));
 const txt = (v: string) => (v.trim() === "" ? undefined : v);
@@ -89,10 +95,14 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
   const [confirmando, setConfirmando] = useState(false);
   const [panel, setPanel] = useState<"ia" | "formula" | "documentos" | null>(null);
   const [guardadoEn, setGuardadoEn] = useState<Date | null>(null);
+  const [formatos, setFormatos] = useState<Diligenciado[]>(() => atencion.formatos ?? []);
+  const [respuestas, setRespuestas] = useState(() => respuestasDe(atencion.formatos));
 
   const original = useMemo(() => JSON.stringify({ f: aForm(atencion), d: atencion.diagnosticos ?? [] }), [atencion]);
   const [base, setBase] = useState(original);
-  const sucio = JSON.stringify({ f: form, d: dx }) !== base;
+  // Lo último guardado de cada formato (agregar o quitar uno no deja la atención "sin guardar")
+  const [baseRespuestas, setBaseRespuestas] = useState(() => respuestasDe(atencion.formatos));
+  const sucio = JSON.stringify({ f: form, d: dx }) !== base || JSON.stringify(respuestas) !== JSON.stringify(baseRespuestas);
 
   useEffect(() => {
     if (!sucio) return;
@@ -115,11 +125,13 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
           pesoKg: num(form.pesoKg), tallaCm: num(form.tallaCm),
           examenFisico: txt(form.examenFisico), analisis: txt(form.analisis), plan: txt(form.plan),
           diagnosticos: dx,
+          formatos: formatos.map((f) => ({ id: f.id!, respuestas: respuestas[f.id!] ?? {} })),
         },
       })),
     onSuccess: (a) => {
       setVersion(a.version ?? version);
       setBase(JSON.stringify({ f: form, d: dx }));
+      setBaseRespuestas(respuestas);
       setGuardadoEn(new Date());
     },
   });
@@ -157,6 +169,19 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
   ].filter(Boolean).join(", ");
   const error = guardar.error ?? firmar.error ?? eliminar.error;
 
+  /** Tras agregar o quitar un formato: se conserva lo que aún no se ha guardado en los demás. */
+  const cambioFormatos = (a: Atencion) => {
+    const nuevos = a.formatos ?? [];
+    const conservar = <T,>(r: Record<string, T>, servidor: Record<string, T>) =>
+      Object.fromEntries(nuevos.map((f) => [f.id!, f.id! in r ? r[f.id!] : servidor[f.id!]])) as Record<string, T>;
+    const delServidor = respuestasDe(nuevos);
+    setFormatos(nuevos);
+    setRespuestas((r) => conservar(r, delServidor));
+    setBaseRespuestas((r) => conservar(r, delServidor));
+    setVersion(a.version ?? version);
+  };
+  const textoDeFormatos = textoFormatos(formatos.map((f) => ({ nombre: f.nombre, definicion: f.definicion as unknown as Definicion, respuestas: respuestas[f.id!] ?? {} })));
+
   return (
     <div className="stack">
       <div className="row between">
@@ -180,6 +205,9 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
           ))}
         </div>
       </div>
+
+      <FormatosAtencion atencionId={atencion.id!} formatos={formatos} respuestas={respuestas}
+        onRespuestas={(id, r) => setRespuestas({ ...respuestas, [id]: r })} onCambio={cambioFormatos} />
 
       <div className="card stack">
         <label>Examen físico<textarea rows={4} value={form.examenFisico} onChange={set("examenFisico")} /></label>
@@ -214,7 +242,7 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
       {panel === "ia" && (
         <ApoyoDiagnostico
           pacienteId={atencion.pacienteId!}
-          inicial={{ motivoConsulta: form.motivoConsulta, enfermedadActual: form.enfermedadActual, signosVitales: signosTexto, examenFisico: form.examenFisico }}
+          inicial={{ motivoConsulta: form.motivoConsulta, enfermedadActual: form.enfermedadActual, signosVitales: signosTexto, examenFisico: form.examenFisico, formatos: textoDeFormatos }}
           onUsarDiagnostico={(d) => {
             // La IA puede escribir "J02.9"; el catálogo y RIPS usan "J029"
             const codigo = (d.codigoCie10 ?? "").toUpperCase().replace(/[.\s]/g, "");
@@ -276,6 +304,9 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
         <Seccion titulo="Revisión por sistemas" texto={a.revisionSistemas} />
         {!!signos.length && <Seccion titulo="Signos vitales" texto={signos.join(" · ")} />}
         <Seccion titulo="Examen físico" texto={a.examenFisico} />
+        {a.formatos?.map((f) => (
+          <FormatoLectura key={f.id} nombre={f.nombre} definicion={f.definicion as unknown as Definicion} respuestas={(f.respuestas ?? {}) as Respuestas} />
+        ))}
         {!!a.diagnosticos?.length && (
           <div>
             <h3>Diagnósticos</h3>

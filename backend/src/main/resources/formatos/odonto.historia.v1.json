@@ -1,0 +1,110 @@
+{
+  "codigo": "odonto.historia",
+  "nombre": "Historia odontológica",
+  "especialidad": "Odontología",
+  "descripcion": "Antecedentes odontológicos, hábitos e higiene oral, examen estomatológico y periodontal, y dolor (EVA). Se suma a los campos generales de la atención.",
+  "version": 1,
+  "definicion": {
+    "secciones": [
+      {
+        "clave": "antecedentes",
+        "titulo": "Antecedentes odontológicos",
+        "campos": [
+          { "clave": "ultima_visita", "tipo": "seleccion", "etiqueta": "Última visita al odontólogo",
+            "opciones": ["Menos de 6 meses", "6 a 12 meses", "1 a 2 años", "Más de 2 años", "Nunca"] },
+          { "clave": "motivo_ultima", "tipo": "texto", "etiqueta": "Motivo de la última visita" },
+          { "clave": "tratamientos", "tipo": "multiple", "etiqueta": "Tratamientos previos",
+            "opciones": ["Operatoria (resinas o amalgamas)", "Endodoncia", "Periodoncia", "Ortodoncia", "Cirugía oral",
+                         "Prótesis fija", "Prótesis removible", "Implantes", "Blanqueamiento"] },
+          { "clave": "reaccion_anestesia", "tipo": "si_no", "etiqueta": "Reacción adversa a la anestesia local", "obligatorio": true },
+          { "clave": "reaccion_anestesia_cual", "tipo": "texto", "etiqueta": "¿Cuál reacción?",
+            "visibleSi": { "campo": "reaccion_anestesia", "igual": true }, "obligatorio": true },
+          { "clave": "sangrado_prolongado", "tipo": "si_no", "etiqueta": "Sangrado prolongado después de extracciones", "obligatorio": true },
+          { "clave": "observaciones", "tipo": "texto_largo", "etiqueta": "Observaciones" }
+        ]
+      },
+      {
+        "clave": "habitos",
+        "titulo": "Hábitos e higiene oral",
+        "campos": [
+          { "clave": "cepillado", "tipo": "seleccion", "etiqueta": "Cepillado al día",
+            "opciones": ["No se cepilla", "1 vez", "2 veces", "3 o más"], "obligatorio": true },
+          { "clave": "seda", "tipo": "si_no", "etiqueta": "Usa seda dental" },
+          { "clave": "enjuague", "tipo": "si_no", "etiqueta": "Usa enjuague bucal" },
+          { "clave": "habitos", "tipo": "multiple", "etiqueta": "Hábitos",
+            "opciones": ["Bruxismo", "Onicofagia", "Succión digital", "Respiración oral", "Interposición lingual",
+                         "Morder objetos", "Tabaquismo"] },
+          { "clave": "dieta_azucares", "tipo": "seleccion", "etiqueta": "Consumo de azúcares entre comidas",
+            "opciones": ["Nunca o casi nunca", "1 a 2 veces al día", "3 o más veces al día"] },
+          { "clave": "observaciones", "tipo": "texto_largo", "etiqueta": "Observaciones" }
+        ]
+      },
+      {
+        "clave": "estomatologico",
+        "titulo": "Examen estomatológico",
+        "campos": [
+          { "clave": "estructuras", "tipo": "tabla", "etiqueta": "Estructuras",
+            "filas": [
+              { "clave": "labios", "etiqueta": "Labios" },
+              { "clave": "carrillos", "etiqueta": "Carrillos" },
+              { "clave": "lengua", "etiqueta": "Lengua" },
+              { "clave": "piso_boca", "etiqueta": "Piso de boca" },
+              { "clave": "paladar_duro", "etiqueta": "Paladar duro" },
+              { "clave": "paladar_blando", "etiqueta": "Paladar blando" },
+              { "clave": "orofaringe", "etiqueta": "Orofaringe" },
+              { "clave": "encia", "etiqueta": "Encía" },
+              { "clave": "frenillos", "etiqueta": "Frenillos" },
+              { "clave": "glandulas_salivales", "etiqueta": "Glándulas salivales" },
+              { "clave": "atm", "etiqueta": "Articulación temporomandibular" },
+              { "clave": "ganglios", "etiqueta": "Ganglios" }
+            ],
+            "columnas": [
+              { "clave": "estado", "etiqueta": "Estado", "tipo": "seleccion", "opciones": ["Normal", "Anormal"] },
+              { "clave": "hallazgo", "etiqueta": "Hallazgo", "tipo": "texto" }
+            ] },
+          { "clave": "observaciones", "tipo": "texto_largo", "etiqueta": "Observaciones" }
+        ]
+      },
+      {
+        "clave": "periodontal",
+        "titulo": "Examen periodontal e higiene",
+        "campos": [
+          { "clave": "indice_placa", "tipo": "numero", "etiqueta": "Índice de placa (O'Leary)", "unidad": "%",
+            "min": 0, "max": 100 },
+          { "clave": "sangrado_sondaje", "tipo": "si_no", "etiqueta": "Sangrado al sondaje" },
+          { "clave": "calculos", "tipo": "seleccion", "etiqueta": "Cálculos",
+            "opciones": ["Ausentes", "Supragingivales", "Subgingivales", "Supra y subgingivales"] },
+          { "clave": "movilidad", "tipo": "si_no", "etiqueta": "Movilidad dental" },
+          { "clave": "recesiones", "tipo": "si_no", "etiqueta": "Recesiones gingivales" },
+          { "clave": "observaciones", "tipo": "texto_largo", "etiqueta": "Observaciones" }
+        ]
+      },
+      {
+        "clave": "dolor",
+        "titulo": "Dolor",
+        "campos": [
+          { "clave": "eva", "tipo": "escala", "etiqueta": "Escala visual análoga (EVA)",
+            "items": [
+              { "clave": "intensidad", "etiqueta": "Intensidad del dolor",
+                "opciones": [
+                  { "etiqueta": "0 · Sin dolor", "puntaje": 0 }, { "etiqueta": "1", "puntaje": 1 },
+                  { "etiqueta": "2", "puntaje": 2 }, { "etiqueta": "3", "puntaje": 3 }, { "etiqueta": "4", "puntaje": 4 },
+                  { "etiqueta": "5", "puntaje": 5 }, { "etiqueta": "6", "puntaje": 6 }, { "etiqueta": "7", "puntaje": 7 },
+                  { "etiqueta": "8", "puntaje": 8 }, { "etiqueta": "9", "puntaje": 9 },
+                  { "etiqueta": "10 · El peor dolor imaginable", "puntaje": 10 }
+                ] }
+            ],
+            "rangos": [
+              { "min": 0, "max": 0, "interpretacion": "Sin dolor" },
+              { "min": 1, "max": 3, "interpretacion": "Dolor leve" },
+              { "min": 4, "max": 6, "interpretacion": "Dolor moderado" },
+              { "min": 7, "max": 10, "interpretacion": "Dolor intenso" }
+            ] },
+          { "clave": "localizacion", "tipo": "texto", "etiqueta": "Localización (diente o zona)" },
+          { "clave": "desencadenantes", "tipo": "multiple", "etiqueta": "Se desencadena con",
+            "opciones": ["Frío", "Calor", "Dulce", "Masticación", "Espontáneo", "Nocturno"] }
+        ]
+      }
+    ]
+  }
+}

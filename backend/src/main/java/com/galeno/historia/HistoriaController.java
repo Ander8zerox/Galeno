@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.galeno.formatos.FormatosService.RespuestasFormato;
 import com.galeno.historia.HistoriaService.Archivo;
 import com.galeno.historia.HistoriaService.AtencionVista;
 import com.galeno.historia.HistoriaService.Cie10Vista;
@@ -90,7 +92,22 @@ public class HistoriaController {
         return historia.guardar(id, r.version(), new Atencion.Contenido(r.motivoConsulta(), r.enfermedadActual(),
                 r.antecedentes(), r.revisionSistemas(), r.taSistolica(), r.taDiastolica(), r.frecuenciaCardiaca(),
                 r.frecuenciaRespiratoria(), r.temperatura(), r.saturacionO2(), r.pesoKg(), r.tallaCm(),
-                r.examenFisico(), r.analisis(), r.plan(), dx));
+                r.examenFisico(), r.analisis(), r.plan(), dx),
+                r.formatos() == null ? null : r.formatos().stream()
+                        .map(f -> new RespuestasFormato(f.id(), f.respuestas())).toList());
+    }
+
+    /** Agrega al borrador un formato activo del consultorio, con su última versión. */
+    @PostMapping("/atenciones/{id}/formatos")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AtencionVista agregarFormato(@PathVariable UUID id, @Valid @RequestBody NuevoFormato r) {
+        return historia.agregarFormato(id, r.formatoId());
+    }
+
+    /** Quita un formato del borrador (con lo que tenía diligenciado). */
+    @DeleteMapping("/atenciones/{id}/formatos/{formatoAtencionId}")
+    public AtencionVista quitarFormato(@PathVariable UUID id, @PathVariable UUID formatoAtencionId) {
+        return historia.quitarFormato(id, formatoAtencionId);
     }
 
     /** Firma el borrador: queda inmutable. Si viene de una cita, la cita pasa a ATENDIDA. */
@@ -175,6 +192,17 @@ public class HistoriaController {
                                   @Size(max = 20000) String examenFisico,
                                   @Size(max = 20000) String analisis,
                                   @Size(max = 20000) String plan,
-                                  @NotNull @Size(max = 20) List<@Valid DiagnosticoRequest> diagnosticos) {
+                                  @NotNull @Size(max = 20) List<@Valid DiagnosticoRequest> diagnosticos,
+                                  @Size(max = 10) List<@Valid RespuestasFormatoRequest> formatos) {
+    }
+
+    public record NuevoFormato(@NotNull UUID formatoId) {
+    }
+
+    /**
+     * @param id el del formato dentro de la atención ({@code AtencionVista.formatos[].id})
+     * @param respuestas {@code {"seccion": {"campo": valor}}}; se validan contra la versión del formato
+     */
+    public record RespuestasFormatoRequest(@NotNull UUID id, Map<String, Object> respuestas) {
     }
 }
