@@ -145,6 +145,8 @@ La competencia ofrece decenas de formatos (historias por especialidad, exámenes
 - Revisión legal de los términos y de la política de datos (hoy un borrador en `/politica-datos`) antes de abrir el registro al público.
 - Catálogo CUM/INVIMA y rangos de dosis en `ValidadorFormula`.
 - Cifrado de campos sensibles.
+- Interoperabilidad de la historia clínica electrónica (IHCE) del Ministerio: el RIPS ya trae el campo `codigoVIDA`
+  (id de la atención en la IHCE), que será obligatorio cuando el sistema entre en operación. Seguir su calendario.
 - Pruebas de integración con Testcontainers.
 - Facturación electrónica: ver "RIPS: generación" (fase 4).
 

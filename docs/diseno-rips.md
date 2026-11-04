@@ -1,7 +1,7 @@
 # Diseño: generación de RIPS (y los CUPS en la atención)
 
-Estado: **decisiones tomadas** (4 de noviembre de 2026). Norma vigente verificada: Res. 948 de 2026. Antes de construir
-falta descargar su Documento Técnico 1.
+Estado: **decisiones tomadas** (4 de noviembre de 2026). Norma vigente verificada: Res. 948 de 2026, con su Documento
+Técnico 1 versión 003. Listo para construir la fase 1.
 
 ## Problema
 
@@ -47,6 +47,37 @@ en el texto que publica el régimen legal de la Alcaldía de Bogotá; el PDF del
 
 Esto también afecta a la importación: `RipsParser` se escribió con la 2275 y hay que revisarlo contra el Documento
 Técnico 1 vigente.
+
+### Documentos técnicos vigentes (descargados el 4 de noviembre de 2026)
+
+En el micrositio FEV RIPS de SISPRO, sección "Componentes FEV RIPS", bloque **Normatividad** (no en "Documentación
+técnica"):
+
+- [Documento Técnico 1, versión 003 del 15 de julio de 2026](https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/OT/doc-tec1-tecnicas-datos-validacion-rips-fev-salud.pdf)
+  (153 páginas): campos y reglas de validación del RIPS.
+- [Documento Técnico 2, versión 001 del 15 de julio de 2026](https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/OT/doc-tec2-campos-datos-sector-salud-generacion-fev.pdf)
+  (59 páginas): campos de salud en la factura electrónica.
+- [Ejemplos oficiales en JSON](https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/OT/ejemplificaciones-estructura-resolucion-948-de-2026.zip)
+  (consultas, procedimientos, urgencias, hospitalización, medicamentos, otros servicios, factura sin contrato).
+
+**Lo que cambia frente a lo que ya conocíamos** (según los ejemplos y el Documento Técnico 1):
+
+- **Usuario:** campo nuevo `registroSIRAS`, solo para víctimas de accidentes de tránsito (SOAT); en lo demás va nulo.
+- **Consultas y procedimientos:**
+  - Por cada diagnóstico CIE-10 hay ahora un par para **CIE-11** (`codDiagnosticoPrincipalCIE11` y
+    `nomCodDiagnosticoPrincipalCIE11`, y lo mismo en los relacionados y la complicación). Hoy son opcionales (longitud
+    0 a 256): se envían nulos mientras la CIE-11 no sea obligatoria.
+  - Campo nuevo **`codigoVIDA`**: el identificador único de la atención en el sistema de interoperabilidad de historia
+    clínica electrónica (IHCE). Hoy va nulo, pero "será obligatorio una vez entre en operación". Galenum, como historia
+    clínica, tendrá que integrarse con la IHCE cuando el Ministerio la ponga en marcha: queda anotado en el plan.
+  - `codPrestador` tiene **12 caracteres** (el código de habilitación con la sede) y debe corresponder al NIT del
+    consultorio (`numDocumentoIdObligado`).
+  - `codServicio` es numérico (p. ej. `130`); los demás códigos van como texto.
+  - Cuota moderadora o copago: `conceptoRecaudo`, `valorPagoModerador` y `numFEVPagoModerador` (la factura con la que
+    se cobró el pago moderador, si la hubo).
+- **Listas de valores** (tipo de usuario, finalidad, causa, modalidad, grupo de servicios, concepto de recaudo…): se
+  consultan en las tablas de referencia de web.sispro.gov.co. En la fase 2 hay que cargarlas como catálogos, como ya
+  se hizo con CUPS y CIE-10.
 
 ## Qué tenemos y qué falta
 
@@ -163,5 +194,6 @@ Los lotes contienen datos clínicos (diagnósticos), así que su consulta queda 
 
 ## Antes de construir
 
-- Descargar la versión vigente del Documento Técnico 1 (y del 2) del micrositio de SISPRO y ajustar los campos.
+- Cargar las listas de valores de SISPRO como catálogos (fase 2) y revisar `RipsParser` contra el Documento Técnico 1
+  versión 003.
 - Confirmar en la revisión legal si el RIPS es obligatorio para lo que paga un particular.
