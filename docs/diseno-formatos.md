@@ -1,6 +1,6 @@
 # Diseño: motor de formatos clínicos (primera especialidad: odontología)
 
-Estado: **borrador para revisión** (3 de noviembre de 2026). Nada de esto está construido todavía.
+Estado: **aprobado para la fase 1** (decisiones del 4 de noviembre de 2026). Nada de esto está construido todavía.
 
 ## Problema
 
@@ -174,16 +174,15 @@ Tiene tablas propias y se diseña en detalle al llegar a esa fase.
 4. **Formatos transversales:** incapacidad, remisión y contrarreferencia, y consentimiento firmado por el paciente.
 
 Cada fase se puede desplegar sola y ya le sirve a un consultorio. Las fases 1 a 3 solo le sirven a quien activa
-odontología; la fase 4 le sirve a todos (ver la decisión 5).
+odontología; la fase 4 le sirve a todos.
 
-## Decisiones abiertas
+## Decisiones (4 de noviembre de 2026)
 
-1. **¿Formatos propios del consultorio en la fase 1?** Propuesta: no. Solo el catálogo de Galenum hasta ver qué piden.
-2. **¿Varios formatos en una misma atención?** Propuesta: sí, por ejemplo historia odontológica más una escala de dolor.
-3. **¿Ocultar campos generales por consultorio** (revisión por sistemas, signos vitales) desde la fase 1, o después?
-4. **¿Quién arma el contenido clínico** de la historia odontológica? Hace falta un odontólogo que revise los campos;
-   el motor no sirve si el formato no es el que usa un consultorio real.
-5. **¿Adelantar formatos transversales?** Como no todos los consultorios son odontológicos, una opción es construir
-   el motor (fase 1) estrenándolo con algo que sirva a todos, como incapacidad y remisión, y dejar odontología para
-   después. Gana: todos los clientes ven valor desde la primera entrega. Pierde: se demora la especialidad que
-   motivó el motor y que más nos diferencia frente a la competencia.
+1. **Formatos propios del consultorio:** no en la fase 1. Solo el catálogo de Galenum; se itera después según lo que
+   pidan los clientes.
+2. **Varios formatos en una misma atención:** sí.
+3. **Ocultar campos generales por consultorio:** más adelante, fuera de la fase 1.
+4. **Contenido clínico:** hay un odontólogo que lo valida cuando esté implementado. Para no rehacer trabajo, la
+   definición de la historia odontológica se le muestra como lista de campos apenas esté escrita, antes de pulir la
+   pantalla y el PDF.
+5. **Primera especialidad:** odontología. Los formatos transversales (incapacidad, remisión) quedan en la fase 4.
