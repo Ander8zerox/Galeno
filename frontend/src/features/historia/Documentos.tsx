@@ -26,7 +26,7 @@ export function BotonDescargar({ id, nombre, children }: { id: string; nombre: s
 export function BotonArchivo({ ruta, nombre, children, className = "btn-link" }: { ruta: string; nombre: string; children: React.ReactNode; className?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [bajando, setBajando] = useState(false);
-  const [listo, setListo] = useState<string | null>(null);
+  const [listo, setListo] = useState<{ url: string; nombre: string } | null>(null);
   return (
     <>
       <button type="button" className={className} disabled={bajando} onClick={() => {
@@ -34,8 +34,8 @@ export function BotonArchivo({ ruta, nombre, children, className = "btn-link" }:
         setError(null);
         setListo(null);
         descargarArchivo(ruta, nombre)
-          .then((url) => {
-            setListo(url);
+          .then((archivo) => {
+            setListo(archivo);
             setTimeout(() => setListo(null), 5 * 60_000);
           })
           .catch((e: Error) => setError(e.message))
@@ -46,7 +46,7 @@ export function BotonArchivo({ ruta, nombre, children, className = "btn-link" }:
       {/* Algunos navegadores guardan el archivo sin avisar: se confirma aquí y se puede abrir en una pestaña */}
       {listo && (
         <small className="muted">
-          {nombre} descargado: revise su carpeta Descargas · <a href={listo} target="_blank" rel="noreferrer">Abrir aquí</a>
+          {listo.nombre} descargado: revise su carpeta Descargas · <a href={listo.url} target="_blank" rel="noreferrer">Abrir aquí</a>
         </small>
       )}
       {error && <small className="field-error">{error}</small>}

@@ -33,6 +33,7 @@ import com.galeno.pacientes.PacienteService;
 import com.galeno.shared.ai.jobs.AiJobController.AiJobAccepted;
 import com.galeno.shared.ai.jobs.AiJobService;
 import com.galeno.shared.ai.jobs.AiJobType;
+import com.galeno.shared.pdf.NombreArchivo;
 import com.galeno.shared.pdf.PdfRenderer;
 import com.galeno.shared.security.AuthUser;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
@@ -96,12 +97,16 @@ public class FormulacionController {
         Formula f = formulas.findById(id).orElseThrow(() -> ApiProblem.notFound("Fórmula no encontrada"));
         Paciente paciente = pacientes.get(f.getPacienteId());
         String diagnostico = f.getAtencionId() == null ? null : historia.diagnosticoPrincipal(f.getAtencionId()).orElse(null);
-        byte[] contenido = pdf.render(FormulaPdf.html(f, paciente, identidad.consultorio(AuthUser.current().tenantId()),
-                identidad.profesional(f.getMedicoId()), diagnostico));
+        var consultorio = identidad.consultorio(AuthUser.current().tenantId());
+        byte[] contenido = pdf.render(FormulaPdf.html(f, paciente, consultorio, identidad.profesional(f.getMedicoId()),
+                diagnostico));
+        String nombre = NombreArchivo.pdf("formula", paciente.getApellidos(), paciente.getNombres(), f.getFirmadaEn(),
+                consultorio.zona());
         historia.registrarAcceso(f.getPacienteId(), AccesoHistoria.Accion.IMPRIMIR_FORMULA, id);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename("formula-" + id + ".pdf").build().toString())
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
+                        .filename(nombre, java.nio.charset.StandardCharsets.UTF_8).build().toString())
                 .body(contenido);
     }
 

@@ -53,21 +53,34 @@ export async function subirArchivo<T>(ruta: string, datos: FormData): Promise<T>
   return (await res.json()) as T;
 }
 
+/** Nombre del archivo según el servidor (Content-Disposition); `filename*` (UTF-8) tiene prioridad. */
+export function nombreDeDescarga(cabecera: string | null): string | null {
+  if (!cabecera) return null;
+  const utf8 = /filename\*\s*=\s*UTF-8''([^;]+)/i.exec(cabecera);
+  if (utf8) {
+    try { return decodeURIComponent(utf8[1].trim()); } catch { /* sigue con filename */ }
+  }
+  const simple = /filename\s*=\s*"?([^";]+)"?/i.exec(cabecera);
+  return simple ? simple[1].trim() : null;
+}
+
 /**
- * Descarga con el token (un enlace normal no lo enviaría) y la guarda con el nombre dado. Devuelve una URL local del
- * archivo, válida 5 minutos, para abrirlo también en una pestaña (algunos navegadores guardan sin avisar).
+ * Descarga con el token (un enlace normal no lo enviaría) y la guarda con el nombre que indica el servidor (o el dado,
+ * si no indica ninguno). Devuelve el nombre y una URL local del archivo, válida 5 minutos, para abrirlo también en una
+ * pestaña (algunos navegadores guardan sin avisar).
  */
-export async function descargarArchivo(ruta: string, nombre: string): Promise<string> {
+export async function descargarArchivo(ruta: string, nombre: string): Promise<{ url: string; nombre: string }> {
   const res = await fetch(ruta, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
   if (res.status === 401) onUnauthorized();
   if (!res.ok) throw await problema(res);
+  const final = nombreDeDescarga(res.headers.get("Content-Disposition")) ?? nombre;
   const url = URL.createObjectURL(await res.blob());
   const a = document.createElement("a");
   a.href = url;
-  a.download = nombre;
+  a.download = final;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000);
-  return url;
+  return { url, nombre: final };
 }
 
 /** Para respuestas sin cuerpo (204): lanza ApiError si la petición falló. */
