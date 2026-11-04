@@ -101,6 +101,11 @@ Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en produc
   propio logger, fuera del JSON de CloudWatch. Bajar `org.apache.pdfbox.pdmodel.font` a ERROR y mandar openhtmltopdf a
   SLF4J.
 
+### RIPS: generación (prioridad, decidido el 4 de noviembre de 2026)
+Los consultorios objetivo facturan sobre todo a EPS y prepagadas: sin RIPS no cobran, así que va antes que el plan de
+tratamiento. Diseño en `docs/diseno-rips.md`: (1) procedimientos realizados con CUPS en la atención, (2) datos de RIPS
+y generación del JSON por factura, (3) envío al MUV, (4) factura electrónica desde Galenum (opcional).
+
 ### Formatos clínicos por especialidad (después de salir a AWS)
 La competencia ofrece decenas de formatos (historias por especialidad, exámenes, escalas, terapias, formatos administrativos) que el consultorio activa sin costo adicional. Hoy todo especialista llena la misma atención de medicina general.
 - **Motor de formatos**, no un formato programado a mano por cada especialidad: un formato son datos versionados (secciones; campos de texto, número, selección, casillas, tablas y escalas con puntaje; reglas de obligatoriedad). El consultorio activa los suyos. Lo diligenciado queda dentro de la atención firmada (inmutable), en el PDF de la historia y disponible para la IA.
@@ -140,8 +145,10 @@ La competencia ofrece decenas de formatos (historias por especialidad, exámenes
 - Revisión legal de los términos y de la política de datos (hoy un borrador en `/politica-datos`) antes de abrir el registro al público.
 - Catálogo CUM/INVIMA y rangos de dosis en `ValidadorFormula`.
 - Cifrado de campos sensibles.
+- Interoperabilidad de la historia clínica electrónica (IHCE) del Ministerio: el RIPS ya trae el campo `codigoVIDA`
+  (id de la atención en la IHCE), que será obligatorio cuando el sistema entre en operación. Seguir su calendario.
 - Pruebas de integración con Testcontainers.
-- RIPS y facturación electrónica.
+- Facturación electrónica: ver "RIPS: generación" (fase 4).
 
 ### Expansión a España (idea del 3 de noviembre de 2026, después del lanzamiento en Colombia)
 Es un proyecto aparte, no una configuración. Orden: validar la demanda con algunas clínicas → asesoría de un abogado
@@ -167,7 +174,7 @@ El principio: primero las fuentes masivas, todas por el mismo flujo **extraer �
 
 | Prioridad | Fuente | Cómo se procesa |
 |---|---|---|
-| ✔ | **RIPS JSON** (Res. 2275/2023; según Medifolios la reemplazó la 948/2026, sin verificar en la fuente oficial) | Hecho: pacientes por documento y atenciones con CUPS y CIE-10. Faltan medicamentos y otros servicios |
+| ✔ | **RIPS JSON** (escrito con la Res. 2275/2023; la reemplazó la 948/2026, verificado: revisar contra su Documento Técnico 1) | Hecho: pacientes por documento y atenciones con CUPS y CIE-10. Faltan medicamentos y otros servicios |
 | ✔ | **Excel o CSV de pacientes** | Hecho: completa los pacientes que el RIPS dejó sin nombre y crea los que faltan; el mapeo se recuerda por encabezados. Falta: sugerir con IA las columnas que no se reconocen |
 | 1 | RIPS TXT antiguos (AF, US, AC, AP…) | Solo si los clientes los tienen; mismo lote y revisión que el JSON |
 | 3 | PDF en lote (ZIP, digitales o escaneados) | IA con salida estructurada, un trabajo por archivo en `ai_jobs`; procesamiento por lotes de Bedrock para migraciones grandes |
