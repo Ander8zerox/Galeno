@@ -430,6 +430,8 @@ a.evento:hover { background: var(--primary-soft); box-shadow: var(--shadow-md); 
 /* --- Formatos clínicos (motor genérico: ver features/formatos) --- */
 .seccion-formato { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: .75rem 1rem 0; margin: 0; min-width: 0; }
 .seccion-formato legend { font-weight: 600; padding: 0 .35rem; }
+/* Si una etiqueta ocupa dos líneas, los controles de la fila siguen alineados (como en .signos) */
+.seccion-formato .form-grid > label > :is(input, select, textarea) { margin-top: auto; }
 .etiqueta-campo { font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); } /* como un label */
 .opciones-multiples { flex-wrap: wrap; gap: .35rem 1rem; }
 .tabla-formato th, .tabla-formato td { padding: .35rem .5rem; }

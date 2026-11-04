@@ -29,7 +29,8 @@ export function FormatoEditor({ definicion, value, onChange }: {
 const ANCHOS = new Set(["texto_largo", "multiple", "tabla", "escala"]);
 
 function CampoEditor({ campo: c, valor, onChange }: { campo: Campo; valor: unknown; onChange: (v: unknown) => void }) {
-  const etiqueta = <>{c.etiqueta}{c.obligatorio && " *"}{c.unidad && <span className="muted small"> ({c.unidad})</span>}</>;
+  // Un solo bloque de texto: el label es flex en columna y la unidad no debe quedar en otra línea
+  const etiqueta = <span>{c.etiqueta}{c.obligatorio && " *"}{c.unidad && <span className="muted small"> ({c.unidad})</span>}</span>;
   const error = errorCampo(c, valor);
   const ayuda = c.ayuda && <span className="muted small">{c.ayuda}</span>;
   const clase = ANCHOS.has(c.tipo) ? "wide" : undefined;
