@@ -116,8 +116,11 @@ La competencia ofrece decenas de formatos (historias por especialidad, exámenes
 - ✅ Fase 1 (diseño en `docs/diseno-formatos.md`): motor genérico (tipos básicos, tabla y escala; obligatorios al firmar;
   `visibleSi`), catálogo en `backend/src/main/resources/formatos` (una versión por archivo, inmutable), activación por
   consultorio (menú Formatos del administrador), formatos por defecto de cada profesional, varios formatos por atención,
-  PDF e IA. Primer formato: historia odontológica v1, **pendiente de validar con el odontólogo**. Sigue la fase 2
-  (odontograma).
+  PDF e IA. Primer formato: historia odontológica v1, **pendiente de validar con el odontólogo**.
+- ✅ Fase 2: formato Odontograma (FDI, cinco superficies, hallazgos por diente y por superficie, dentición permanente,
+  temporal o mixta). Cada atención parte del último odontograma firmado del paciente (opción genérica `arrastrar`);
+  en el PDF va como cuadrícula con colores y lista de hallazgos. Sigue la fase 3 (periodontograma, plan de tratamiento
+  con presupuesto, consentimientos y CUPS de odontología).
 
 ### Historia clínica, siguiente iteración
 - Imagen de la firma del médico y código QR de verificación en los PDF, reporte de auditoría para el administrador, y documentos en S3.

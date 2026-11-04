@@ -146,6 +146,7 @@ final class ValidadorRespuestas {
             case SI_NO -> siNo(donde, v);
             case TABLA -> tabla(donde, c, v);
             case ESCALA -> escala(donde, c, v);
+            case ODONTOGRAMA -> Odontograma.normalizar(donde, v);
         };
     }
 
@@ -248,7 +249,7 @@ final class ValidadorRespuestas {
             }
             for (Columna col : c.columnas()) {
                 Campo comoCampo = new Campo(col.clave(), col.tipo(), col.etiqueta(), null, false, col.opciones(), null,
-                        null, null, null, null, null, null, null);
+                        null, null, null, null, null, null, null, false);
                 JsonNode valor = normalizarValor(donde + " › " + col.etiqueta(), comoCampo, fila.get(col.clave()));
                 if (valor != null) {
                     limpia.set(col.clave(), valor);

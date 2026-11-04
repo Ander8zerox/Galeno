@@ -1,7 +1,9 @@
 // Definición de un formato clínico (ver docs/diseno-formatos.md y formatos/DefinicionFormato.java). El servidor valida
 // lo mismo al guardar y al firmar; aquí solo se usa para dibujar y para mostrar los errores a tiempo.
 
-export type Tipo = "texto" | "texto_largo" | "numero" | "fecha" | "seleccion" | "multiple" | "si_no" | "tabla" | "escala";
+import { lineasHallazgos, type ValorOdontograma } from "./odontograma";
+
+export type Tipo = "texto" | "texto_largo" | "numero" | "fecha" | "seleccion" | "multiple" | "si_no" | "tabla" | "escala" | "odontograma";
 
 export interface Campo {
   clave: string;
@@ -9,6 +11,8 @@ export interface Campo {
   etiqueta: string;
   ayuda?: string;
   obligatorio?: boolean;
+  /** Parte del valor de la última atención firmada del paciente con este formato. */
+  arrastrar?: boolean;
   opciones?: string[];
   unidad?: string;
   min?: number;
@@ -85,7 +89,10 @@ export function textoFormatos(formatos: { nombre?: string; definicion: Definicio
         const v = valores?.[c.clave];
         if (vacio(v) || !visible(c, valores)) continue;
         const prefijo = `${f.nombre} › ${s.titulo} — ${c.etiqueta}`;
-        if (c.tipo === "escala") {
+        if (c.tipo === "odontograma") {
+          const l = lineasHallazgos(v as ValorOdontograma);
+          lineas.push(`${prefijo}: ${l.length ? l.join("; ") : "sin hallazgos"}`);
+        } else if (c.tipo === "escala") {
           const t = total(c, v);
           if (t) lineas.push(`${prefijo}: ${t.puntaje}/${t.maximo}${t.interpretacion ? ` (${t.interpretacion})` : ""}`);
         } else if (c.tipo === "tabla") {

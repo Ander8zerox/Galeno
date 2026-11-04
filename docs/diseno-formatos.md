@@ -1,7 +1,7 @@
 # Diseño: motor de formatos clínicos (primera especialidad: odontología)
 
-Estado: **fase 1 construida** (4 de noviembre de 2026; ver "Cómo quedó la fase 1" al final). Las fases 2 a 4 siguen
-siendo diseño.
+Estado: **fases 1 y 2 construidas** (4 de noviembre de 2026; ver "Cómo quedó la fase 1" y "Cómo quedó la fase 2" al
+final). Las fases 3 y 4 siguen siendo diseño.
 
 ## Problema
 
@@ -188,3 +188,24 @@ Lo que se ajustó al construirla, frente a lo de arriba:
   `formatos` del apoyo diagnóstico; el médico lo ve y lo puede editar antes de enviarlo.
 - **Contenido clínico:** la historia odontológica v1 es un primer borrador para que el odontólogo la revise. Sus
   correcciones salen como v2; las atenciones firmadas con la v1 se siguen viendo con la v1.
+
+## Cómo quedó la fase 2 (odontograma)
+
+- **Formato propio:** `odonto.odontograma` v1, aparte de la historia odontológica, con el campo tipo `odontograma` y
+  unas observaciones. El catálogo de dientes, superficies y hallazgos está en `formatos/Odontograma.java` y en
+  `features/formatos/odontograma.ts` (el servidor es el que valida).
+- **Respuesta:** `{"denticion": "permanente|temporal|mixta", "dientes": {"36": {"hallazgos": ["endodoncia"],
+  "superficies": {"O": "caries"}, "nota": "..."}}}`. Hallazgos por superficie: caries, resina, amalgama y sellante.
+  Por diente: ausente, extracción indicada, corona, endodoncia, implante, prótesis y fractura. Un diente ausente no
+  lleva otros hallazgos, y los dientes deben ser de la dentición elegida.
+- **Inicial y evolución:** el campo tiene `"arrastrar": true`. Opción genérica del motor: al agregar el formato, el
+  campo copia el valor de la última atención firmada del paciente con ese formato (en cualquier versión; si ya no es
+  válido para la versión nueva, no se copia). `atencion_formatos.arrastrado_de` (V20) guarda de cuál atención salió, y
+  la pantalla lo enlaza. La primera atención con odontograma es el inicial.
+- **Pantalla:** SVG propio. Se elige un hallazgo de la paleta y se hace clic en la superficie (o en el diente, para los
+  hallazgos del diente); un segundo clic lo quita. El número del diente abre su nota. En celular, el dibujo se desplaza
+  de lado dentro de su caja.
+- **PDF:** cuadrícula HTML de 3×3 por diente con colores (rojo para tratar, azul resina, gris amalgama, verde sellante),
+  siglas de los hallazgos del diente y la lista escrita de hallazgos, que es la que vale como registro.
+- **Pendiente para el odontólogo:** validar el catálogo de hallazgos y los colores. Una "diferencia frente al anterior"
+  (qué cambió en esta atención) quedaría para después.

@@ -206,7 +206,7 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
         </div>
       </div>
 
-      <FormatosAtencion atencionId={atencion.id!} formatos={formatos} respuestas={respuestas}
+      <FormatosAtencion atencionId={atencion.id!} pacienteId={atencion.pacienteId!} formatos={formatos} respuestas={respuestas}
         onRespuestas={(id, r) => setRespuestas({ ...respuestas, [id]: r })} onCambio={cambioFormatos} />
 
       <div className="card stack">
