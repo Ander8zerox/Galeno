@@ -16,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.galeno.agenda.AgendaPublica;
 import com.galeno.agenda.AgendaPublica.CitaResumen;
+import com.galeno.formatos.FormatosService;
+import com.galeno.formatos.FormatosService.FormatoDiligenciado;
+import com.galeno.formatos.FormatosService.RespuestasFormato;
 import com.galeno.historia.AccesoHistoria.Accion;
 import com.galeno.identidad.IdentidadService;
 import com.galeno.pacientes.Paciente;
@@ -43,11 +46,12 @@ public class HistoriaService {
     private final IdentidadService identidad;
     private final AgendaPublica agenda;
     private final PdfRenderer pdf;
+    private final FormatosService formatos;
 
     HistoriaService(AtencionRepository atenciones, NotaAclaratoriaRepository notas,
                     DocumentoClinicoRepository documentos, AccesoHistoriaRepository accesos, Cie10Repository cie10,
                     AlmacenDocumentos almacen, PacienteService pacientes, IdentidadService identidad,
-                    AgendaPublica agenda, PdfRenderer pdf) {
+                    AgendaPublica agenda, PdfRenderer pdf, FormatosService formatos) {
         this.atenciones = atenciones;
         this.notas = notas;
         this.documentos = documentos;
@@ -58,6 +62,7 @@ public class HistoriaService {
         this.identidad = identidad;
         this.agenda = agenda;
         this.pdf = pdf;
+        this.formatos = formatos;
     }
 
     // --- línea de tiempo ---
@@ -97,6 +102,7 @@ public class HistoriaService {
         }
         Atencion atencion = atenciones.save(Atencion.nueva(pacienteId, yo.membresiaId(), yo.id(), yo.nombre(), citaId,
                 paciente.getAntecedentes()));
+        formatos.agregarPorDefecto(atencion.getId(), yo.id());
         auditar(pacienteId, Accion.CREAR_ATENCION, atencion.getId());
         return vista(atencion);
     }
@@ -108,14 +114,39 @@ public class HistoriaService {
         return vista(atencion);
     }
 
+    /** @param respuestasFormatos {@code null}: los formatos no cambian */
     @Transactional
-    public AtencionVista guardar(UUID atencionId, long version, Atencion.Contenido contenido) {
+    public AtencionVista guardar(UUID atencionId, long version, Atencion.Contenido contenido,
+                                 List<RespuestasFormato> respuestasFormatos) {
         Atencion atencion = propia(atencionId);
         if (atencion.getVersion() != version) {
             throw ApiProblem.conflict("La atención cambió en otra pestaña o equipo. Recargue para ver la última versión.");
         }
         atencion.actualizar(contenido);
+        if (respuestasFormatos != null) {
+            formatos.guardar(atencionId, respuestasFormatos);
+        }
         atenciones.flush(); // incrementa la versión antes de responder
+        return vista(atencion);
+    }
+
+    /** Agrega un formato activo del consultorio al borrador. */
+    @Transactional
+    public AtencionVista agregarFormato(UUID atencionId, UUID formatoId) {
+        Atencion atencion = propia(atencionId);
+        atencion.registrarCambio();
+        formatos.agregar(atencionId, formatoId);
+        atenciones.flush();
+        return vista(atencion);
+    }
+
+    /** Quita un formato del borrador, con lo que tenía diligenciado. */
+    @Transactional
+    public AtencionVista quitarFormato(UUID atencionId, UUID atencionFormatoId) {
+        Atencion atencion = propia(atencionId);
+        atencion.registrarCambio();
+        formatos.quitar(atencionId, atencionFormatoId);
+        atenciones.flush();
         return vista(atencion);
     }
 
@@ -124,6 +155,12 @@ public class HistoriaService {
         Atencion atencion = propia(atencionId);
         String registro = identidad.registroMedico(atencion.getMedicoUsuarioId())
                 .orElseThrow(() -> ApiProblem.conflict("Para firmar debe tener su registro médico en el perfil"));
+        if (!atencion.firmada()) {
+            List<String> faltan = formatos.faltantesParaFirmar(atencionId);
+            if (!faltan.isEmpty()) {
+                throw ApiProblem.badRequest("Para firmar, complete: " + String.join("; ", faltan));
+            }
+        }
         atencion.firmar(registro);
         if (atencion.getCitaId() != null) {
             agenda.marcarAtendida(atencion.getCitaId());
@@ -147,6 +184,7 @@ public class HistoriaService {
         }
         documentos.findByAtencionId(atencionId).forEach(DocumentoClinico::desligarDeAtencion);
         documentos.flush();
+        formatos.eliminarDeAtencion(atencionId);
         atenciones.delete(atencion);
     }
 
@@ -169,7 +207,8 @@ public class HistoriaService {
         Paciente p = pacientes.get(a.getPacienteId());
         var consultorio = identidad.consultorio(AuthUser.current().tenantId());
         auditar(a.getPacienteId(), Accion.IMPRIMIR_ATENCION, atencionId);
-        return pdf.render(AtencionPdf.html(a, p, consultorio, notas.findByAtencionIdOrderByCreadaEn(atencionId)));
+        return pdf.render(AtencionPdf.html(a, p, consultorio, notas.findByAtencionIdOrderByCreadaEn(atencionId),
+                formatos.htmlPorAtencion(List.of(atencionId)).getOrDefault(atencionId, "")));
     }
 
     /**
@@ -181,8 +220,11 @@ public class HistoriaService {
         Paciente p = pacientes.get(pacienteId);
         AuthUser yo = AuthUser.current();
         var consultorio = identidad.consultorio(yo.tenantId());
-        List<HistoriaPdf.AtencionImpresa> lista = atenciones.firmadas(pacienteId).stream()
-                .map(a -> new HistoriaPdf.AtencionImpresa(a, notas.findByAtencionIdOrderByCreadaEn(a.getId())))
+        List<Atencion> firmadas = atenciones.firmadas(pacienteId);
+        var formatosHtml = formatos.htmlPorAtencion(firmadas.stream().map(Atencion::getId).toList());
+        List<HistoriaPdf.AtencionImpresa> lista = firmadas.stream()
+                .map(a -> new HistoriaPdf.AtencionImpresa(a, notas.findByAtencionIdOrderByCreadaEn(a.getId()),
+                        formatosHtml.getOrDefault(a.getId(), "")))
                 .toList();
         auditar(pacienteId, Accion.IMPRIMIR_HISTORIA, null);
         return pdf.render(HistoriaPdf.html(p, consultorio, lista, documentos.findByPacienteIdOrderByCreadoEnDesc(pacienteId),
@@ -339,7 +381,8 @@ public class HistoriaService {
                 .map(n -> new NotaVista(n.getId(), n.getAutorNombre(), n.getTexto(), n.getCreadaEn())).toList();
         List<DocumentoVista> docs = documentos.findByPacienteIdOrderByCreadoEnDesc(a.getPacienteId()).stream()
                 .filter(d -> a.getId().equals(d.getAtencionId())).map(DocumentoVista::de).toList();
-        return AtencionVista.de(a, java.util.Objects.equals(a.getMedicoUsuarioId(), AuthUser.current().id()), notasVista, docs);
+        return AtencionVista.de(a, java.util.Objects.equals(a.getMedicoUsuarioId(), AuthUser.current().id()), notasVista, docs,
+                formatos.deAtencion(a.getId()));
     }
 
     /** El tipo se decide por el contenido (firma del archivo), no por lo que diga el navegador. */
@@ -413,9 +456,10 @@ public class HistoriaService {
                                 Integer saturacionO2, java.math.BigDecimal pesoKg, java.math.BigDecimal tallaCm,
                                 String examenFisico, String analisis, String plan,
                                 List<DiagnosticoVista> diagnosticos, List<NotaVista> notas,
-                                List<DocumentoVista> documentos) {
+                                List<DocumentoVista> documentos, List<FormatoDiligenciado> formatos) {
 
-        static AtencionVista de(Atencion a, boolean propia, List<NotaVista> notas, List<DocumentoVista> documentos) {
+        static AtencionVista de(Atencion a, boolean propia, List<NotaVista> notas, List<DocumentoVista> documentos,
+                                List<FormatoDiligenciado> formatos) {
             return new AtencionVista(a.getId(), a.getPacienteId(), a.getCitaId(), a.getMedicoNombre(),
                     a.getRegistroMedico(), a.getOrigen(), a.getEstado(), a.getFechaAtencion(), a.getFirmadaEn(),
                     a.getVersion(), propia, a.getMotivoConsulta(), a.getEnfermedadActual(), a.getAntecedentes(),
@@ -423,7 +467,7 @@ public class HistoriaService {
                     a.getFrecuenciaRespiratoria(), a.getTemperatura(), a.getSaturacionO2(), a.getPesoKg(),
                     a.getTallaCm(), a.getExamenFisico(), a.getAnalisis(), a.getPlan(),
                     a.getDiagnosticos().stream().map(d -> new DiagnosticoVista(d.getCodigoCie10(), d.getDescripcion(),
-                            d.isPrincipal(), d.getTipo())).toList(), notas, documentos);
+                            d.isPrincipal(), d.getTipo())).toList(), notas, documentos, formatos);
         }
     }
 

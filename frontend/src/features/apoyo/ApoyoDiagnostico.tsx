@@ -24,6 +24,7 @@ export function ApoyoDiagnostico({ pacienteId, inicial, onUsarDiagnostico }: Pro
     enfermedadActual: inicial?.enfermedadActual ?? "",
     signosVitales: inicial?.signosVitales ?? "",
     examenFisico: inicial?.examenFisico ?? "",
+    formatos: inicial?.formatos ?? "",
   });
   const [jobId, setJobId] = useState<string>();
   const solicitar = useMutation({
@@ -46,6 +47,9 @@ export function ApoyoDiagnostico({ pacienteId, inicial, onUsarDiagnostico }: Pro
         <label className="wide">Enfermedad actual *<textarea rows={3} value={form.enfermedadActual} onChange={set("enfermedadActual")} required /></label>
         <label>Signos vitales<input placeholder="TA, FC, FR, T°, SatO2" value={form.signosVitales} onChange={set("signosVitales")} /></label>
         <label>Examen físico<textarea rows={2} value={form.examenFisico} onChange={set("examenFisico")} /></label>
+        {!!inicial?.formatos && (
+          <label className="wide">Formatos diligenciados<textarea rows={4} maxLength={8000} value={form.formatos} onChange={set("formatos")} /></label>
+        )}
         <div className="wide">
           <button className="btn" disabled={solicitar.isPending || job.enCurso}>{job.enCurso ? "Analizando el caso…" : "Sugerir diagnósticos"}</button>
         </div>

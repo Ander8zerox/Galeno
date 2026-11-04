@@ -16,7 +16,9 @@ final class AtencionPdf {
     private AtencionPdf() {
     }
 
-    static String html(Atencion a, Paciente p, ConsultorioResumen consultorio, List<NotaAclaratoria> notas) {
+    /** @param formatosHtml los formatos diligenciados, ya en XHTML (vacío si no tiene) */
+    static String html(Atencion a, Paciente p, ConsultorioResumen consultorio, List<NotaAclaratoria> notas,
+                       String formatosHtml) {
         StringBuilder b = new StringBuilder();
         if (!a.firmada()) {
             b.append("<div class=\"marca-agua\">BORRADOR</div>");
@@ -24,14 +26,15 @@ final class AtencionPdf {
         b.append(EncabezadoPdf.html(consultorio, "HISTORIA CLÍNICA · ATENCIÓN",
                 "Fecha: " + fechaHora(a.getFechaAtencion(), consultorio.zona())));
         b.append(EncabezadoPdf.paciente(p));
-        cuerpo(b, a, consultorio, notas);
+        cuerpo(b, a, consultorio, notas, formatosHtml);
         b.append("<p class=\"small muted\">Atención ").append(esc(a.getId())).append(" · origen ").append(esc(a.getOrigen()))
                 .append(". Documento generado por Galenum; la historia clínica original reposa en el sistema.</p>");
         return PdfRenderer.documento("Atención " + p.getNombres() + " " + p.getApellidos(), b.toString());
     }
 
     /** Todo lo de la atención salvo el encabezado y los datos del paciente (también lo usa {@link HistoriaPdf}). */
-    static void cuerpo(StringBuilder b, Atencion a, ConsultorioResumen consultorio, List<NotaAclaratoria> notas) {
+    static void cuerpo(StringBuilder b, Atencion a, ConsultorioResumen consultorio, List<NotaAclaratoria> notas,
+                       String formatosHtml) {
         seccion(b, "Motivo de consulta", a.getMotivoConsulta());
         seccion(b, "Enfermedad actual", a.getEnfermedadActual());
         seccion(b, "Antecedentes", a.getAntecedentes());
@@ -55,6 +58,8 @@ final class AtencionPdf {
             seccion(b, "Signos vitales", String.join(" · ", signos));
         }
         seccion(b, "Examen físico", a.getExamenFisico());
+        // Los formatos van con el examen, antes del diagnóstico: son hallazgos que lo sustentan
+        b.append(formatosHtml);
 
         if (!a.getDiagnosticos().isEmpty()) {
             b.append("<h2>Diagnósticos</h2><table class=\"grilla\"><tr><th>Código</th><th>Descripción</th><th>Tipo</th><th></th></tr>");

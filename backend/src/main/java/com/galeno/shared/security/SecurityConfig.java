@@ -80,6 +80,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/historia/**").hasAuthority(Permiso.HISTORIA_VER.name())
                         .requestMatchers("/api/v1/historia/**").hasAuthority(Permiso.HISTORIA_REGISTRAR.name())
                         .requestMatchers("/api/v1/importaciones/**").hasAuthority(Permiso.IMPORTAR_HISTORIAS.name())
+                        .requestMatchers("/api/v1/formatos/consultorio/**").hasAuthority(Permiso.FORMATOS_GESTIONAR.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/formatos/**").hasAuthority(Permiso.HISTORIA_VER.name())
+                        .requestMatchers("/api/v1/formatos/**").hasAuthority(Permiso.HISTORIA_REGISTRAR.name())
                         .requestMatchers("/api/v1/agenda/**").hasAuthority(Permiso.AGENDA_GESTIONAR.name())
                         // El estado lo ve cualquier miembro (para el aviso); lo demás, quien administra la suscripción
                         .requestMatchers(HttpMethod.GET, "/api/v1/suscripcion").hasAuthority(TokenService.MIEMBRO)

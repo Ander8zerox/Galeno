@@ -426,3 +426,17 @@ a.evento:hover { background: var(--primary-soft); box-shadow: var(--shadow-md); 
   *, *::before, *::after { transition: none !important; animation: none !important; }
   .btn:active:not(:disabled) { transform: none; }
 }
+
+/* --- Formatos clínicos (motor genérico: ver features/formatos) --- */
+.seccion-formato { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: .75rem 1rem 0; margin: 0; min-width: 0; }
+.seccion-formato legend { font-weight: 600; padding: 0 .35rem; }
+.etiqueta-campo { font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); } /* como un label */
+.opciones-multiples { flex-wrap: wrap; gap: .35rem 1rem; }
+.tabla-formato th, .tabla-formato td { padding: .35rem .5rem; }
+.tabla-formato tbody th { text-transform: none; letter-spacing: 0; font-size: var(--fs-sm); color: var(--text); background: none; font-weight: 500; }
+.tabla-formato select, .tabla-formato input { min-width: 7rem; }
+.seccion-lectura h4 { margin: .5rem 0 .25rem; font-size: var(--fs-sm); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.campos-lectura { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .5rem 1rem; margin: 0; }
+.campos-lectura .wide { grid-column: 1 / -1; }
+.campos-lectura dt { font-size: var(--fs-xs); color: var(--muted); }
+.campos-lectura dd { margin: 0; }

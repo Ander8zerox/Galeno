@@ -49,8 +49,10 @@ class ApoyoDiagnosticoHandler implements AiJobHandler {
                 Enfermedad actual: %s
                 Signos vitales: %s
                 Examen físico: %s
+                Formatos diligenciados:
+                %s
                 </caso>""".formatted(paciente.resumenAnonimizado(), e.motivoConsulta(), e.enfermedadActual(),
-                orNone(e.signosVitales()), orNone(e.examenFisico()));
+                orNone(e.signosVitales()), orNone(e.examenFisico()), orNone(e.formatos()));
         return llm.generate(new LlmRequest(AiJobType.APOYO_DIAGNOSTICO, prompts.get(PROMPT), contenido), SugerenciasDiagnosticas.class);
     }
 
@@ -59,6 +61,6 @@ class ApoyoDiagnosticoHandler implements AiJobHandler {
     }
 
     record Entrada(UUID pacienteId, String motivoConsulta, String enfermedadActual, String signosVitales,
-                   String examenFisico) {
+                   String examenFisico, String formatos) {
     }
 }

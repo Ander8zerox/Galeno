@@ -132,6 +132,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/formatos/disponibles/{formatoId}/por-defecto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["porDefecto"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/formatos/consultorio/{formatoId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["activar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/equipo/{membresiaId}": {
         parameters: {
             query?: never;
@@ -669,7 +701,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["activar"];
+        post: operations["activar_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -846,6 +878,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["agregarNota"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/historia/atenciones/{id}/formatos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["agregarFormato"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1428,6 +1476,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/formatos/disponibles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["disponibles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/formatos/consultorio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["catalogo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/equipo": {
         parameters: {
             query?: never;
@@ -1599,6 +1679,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["olvidarEquipos"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/historia/atenciones/{id}/formatos/{formatoAtencionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["quitarFormato"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1870,6 +1966,14 @@ export interface components {
             analisis?: string;
             plan?: string;
             diagnosticos: components["schemas"]["DiagnosticoRequest"][];
+            formatos?: components["schemas"]["RespuestasFormatoRequest"][];
+        };
+        RespuestasFormatoRequest: {
+            /** Format: uuid */
+            id: string;
+            respuestas?: {
+                [key: string]: unknown;
+            };
         };
         AtencionVista: {
             /** Format: uuid */
@@ -1914,6 +2018,7 @@ export interface components {
             diagnosticos?: components["schemas"]["DiagnosticoVista"][];
             notas?: components["schemas"]["NotaVista"][];
             documentos?: components["schemas"]["DocumentoVista"][];
+            formatos?: components["schemas"]["FormatoDiligenciado"][];
         };
         DiagnosticoVista: {
             codigoCie10?: string;
@@ -1940,6 +2045,22 @@ export interface components {
             anuladoEn?: string;
             motivoAnulacion?: string;
         };
+        FormatoDiligenciado: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            formatoId?: string;
+            codigo?: string;
+            nombre?: string;
+            /** Format: int32 */
+            version?: number;
+            definicion?: {
+                [key: string]: unknown;
+            };
+            respuestas?: {
+                [key: string]: unknown;
+            };
+        };
         NotaVista: {
             /** Format: uuid */
             id?: string;
@@ -1947,6 +2068,32 @@ export interface components {
             texto?: string;
             /** Format: date-time */
             creadaEn?: string;
+        };
+        PorDefecto: {
+            porDefecto: boolean;
+        };
+        FormatoDisponible: {
+            /** Format: uuid */
+            formatoId?: string;
+            codigo?: string;
+            nombre?: string;
+            especialidad?: string;
+            porDefecto?: boolean;
+        };
+        Activacion: {
+            activo: boolean;
+        };
+        FormatoCatalogo: {
+            /** Format: uuid */
+            formatoId?: string;
+            codigo?: string;
+            nombre?: string;
+            especialidad?: string;
+            descripcion?: string;
+            /** Format: int32 */
+            version?: number;
+            secciones?: string[];
+            activo?: boolean;
         };
         ActualizarMiembro: {
             roles: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
@@ -2296,6 +2443,10 @@ export interface components {
         NuevaNota: {
             texto: string;
         };
+        NuevoFormato: {
+            /** Format: uuid */
+            formatoId: string;
+        };
         FirmarFormula: {
             /** Format: uuid */
             pacienteId: string;
@@ -2400,6 +2551,7 @@ export interface components {
             enfermedadActual: string;
             signosVitales?: string;
             examenFisico?: string;
+            formatos?: string;
         };
         NuevaCita: {
             /** Format: uuid */
@@ -2586,7 +2738,7 @@ export interface components {
             /** Format: uuid */
             membresiaId?: string;
             roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
-            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR")[];
+            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR" | "FORMATOS_GESTIONAR")[];
             /** Format: int32 */
             totalConsultorios?: number;
         };
@@ -2609,27 +2761,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            long?: boolean;
-            boolean?: boolean;
-            object?: boolean;
-            short?: boolean;
-            pojo?: boolean;
-            binary?: boolean;
-            string?: boolean;
-            int?: boolean;
-            double?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            floatingPointNumber?: boolean;
             number?: boolean;
-            valueNode?: boolean;
-            container?: boolean;
+            missingNode?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            bigInteger?: boolean;
-            bigDecimal?: boolean;
+            container?: boolean;
+            valueNode?: boolean;
             integralNumber?: boolean;
-            missingNode?: boolean;
+            bigDecimal?: boolean;
+            bigInteger?: boolean;
+            floatingPointNumber?: boolean;
+            string?: boolean;
+            int?: boolean;
+            binary?: boolean;
+            short?: boolean;
+            double?: boolean;
+            object?: boolean;
+            pojo?: boolean;
+            long?: boolean;
+            boolean?: boolean;
+            /** @deprecated */
+            textual?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -2971,6 +3123,58 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    porDefecto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formatoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PorDefecto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FormatoDisponible"];
+                };
+            };
+        };
+    };
+    activar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formatoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Activacion"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FormatoCatalogo"];
+                };
             };
         };
     };
@@ -3845,7 +4049,7 @@ export interface operations {
             };
         };
     };
-    activar: {
+    activar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4137,6 +4341,32 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["NuevaNota"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AtencionVista"];
+                };
+            };
+        };
+    };
+    agregarFormato: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NuevoFormato"];
             };
         };
         responses: {
@@ -5010,6 +5240,46 @@ export interface operations {
             };
         };
     };
+    disponibles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FormatoDisponible"][];
+                };
+            };
+        };
+    };
+    catalogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FormatoCatalogo"][];
+                };
+            };
+        };
+    };
     listar_1: {
         parameters: {
             query?: never;
@@ -5241,6 +5511,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    quitarFormato: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                formatoAtencionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AtencionVista"];
+                };
             };
         };
     };

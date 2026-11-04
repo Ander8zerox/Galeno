@@ -113,6 +113,11 @@ La competencia ofrece decenas de formatos (historias por especialidad, exámenes
   - Procedimientos con CUPS de odontología para los RIPS.
 - **Formatos transversales** para cualquier especialidad: incapacidad, remisión y contrarreferencia, consentimiento informado firmado por el paciente.
 - Fuera por ahora: los que dependen de equipos (examen con cámara, videoquimografía, estroboscopia).
+- ✅ Fase 1 (diseño en `docs/diseno-formatos.md`): motor genérico (tipos básicos, tabla y escala; obligatorios al firmar;
+  `visibleSi`), catálogo en `backend/src/main/resources/formatos` (una versión por archivo, inmutable), activación por
+  consultorio (menú Formatos del administrador), formatos por defecto de cada profesional, varios formatos por atención,
+  PDF e IA. Primer formato: historia odontológica v1, **pendiente de validar con el odontólogo**. Sigue la fase 2
+  (odontograma).
 
 ### Historia clínica, siguiente iteración
 - Imagen de la firma del médico y código QR de verificación en los PDF, reporte de auditoría para el administrador, y documentos en S3.

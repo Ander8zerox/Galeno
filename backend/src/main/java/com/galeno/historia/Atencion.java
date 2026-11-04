@@ -220,6 +220,12 @@ public class Atencion {
         this.actualizadaEn = Instant.now();
     }
 
+    /** Algo de la atención que vive en otra tabla cambió (p. ej. sus formatos): sube la versión, como al guardar. */
+    void registrarCambio() {
+        exigirBorrador();
+        this.actualizadaEn = Instant.now();
+    }
+
     void firmar(String registroMedico) {
         exigirBorrador();
         if (motivoConsulta == null || motivoConsulta.isBlank()) {

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { CalendarDays, CreditCard, FileUp, ShieldCheck, Users, UsersRound } from "lucide-react";
+import { CalendarDays, ClipboardList, CreditCard, FileUp, ShieldCheck, Users, UsersRound } from "lucide-react";
 import { Shell, type ItemMenu } from "./components/Shell";
 import { Bienvenida } from "./components/Bienvenida";
 import { SeguridadCuenta, VerificacionDosPasos } from "./components/DosPasos";
@@ -20,6 +20,7 @@ import { EquipoPage } from "./pages/EquipoPage";
 import { AgendaPage } from "./pages/AgendaPage";
 import { AtencionPage } from "./pages/AtencionPage";
 import { ImportarPage, LoteImportacionPage } from "./pages/ImportarPage";
+import { FormatosPage } from "./pages/FormatosPage";
 
 export function App() {
   const { me, seleccion, mfa, logout, puede } = useAuth();
@@ -48,6 +49,7 @@ export function App() {
     { etiqueta: "Pacientes", icono: Users, to: "/pacientes" },
     ...(puede("EQUIPO_GESTIONAR") ? [{ etiqueta: "Equipo", icono: UsersRound, to: "/equipo" }] : []),
     ...(puede("IMPORTAR_HISTORIAS") ? [{ etiqueta: "Importar", icono: FileUp, to: "/importar" }] : []),
+    ...(puede("FORMATOS_GESTIONAR") ? [{ etiqueta: "Formatos", icono: ClipboardList, to: "/formatos" }] : []),
     ...(puede("SUSCRIPCION_GESTIONAR") ? [{ etiqueta: "Suscripción", icono: CreditCard, to: "/suscripcion" }] : []),
     { etiqueta: "Seguridad", icono: ShieldCheck, to: "/seguridad" },
   ];
@@ -64,6 +66,7 @@ export function App() {
           {puede("IMPORTAR_HISTORIAS") && <Route path="/importar" element={<ImportarPage />} />}
           {puede("IMPORTAR_HISTORIAS") && <Route path="/importar/:id" element={<LoteImportacionPage />} />}
           {puede("SUSCRIPCION_GESTIONAR") && <Route path="/suscripcion" element={<SuscripcionPage />} />}
+          {puede("FORMATOS_GESTIONAR") && <Route path="/formatos" element={<FormatosPage />} />}
           {puede("AGENDA_GESTIONAR") && <Route path="/agenda" element={<AgendaPage />} />}
           <Route path="/seguridad" element={<SeguridadPage />} />
           <Route path="*" element={<Navigate to={puede("AGENDA_GESTIONAR") ? "/agenda" : "/pacientes"} replace />} />
