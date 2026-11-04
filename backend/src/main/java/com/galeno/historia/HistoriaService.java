@@ -23,6 +23,7 @@ import com.galeno.historia.AccesoHistoria.Accion;
 import com.galeno.identidad.IdentidadService;
 import com.galeno.pacientes.Paciente;
 import com.galeno.pacientes.PacienteService;
+import com.galeno.shared.pdf.NombreArchivo;
 import com.galeno.shared.pdf.PdfRenderer;
 import com.galeno.shared.security.AuthUser;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
@@ -202,13 +203,15 @@ public class HistoriaService {
 
     /** PDF de la atención (con marca de agua si es un borrador). Queda auditado. */
     @Transactional
-    public byte[] pdfAtencion(UUID atencionId) {
+    public Archivo pdfAtencion(UUID atencionId) {
         Atencion a = visible(atencionId);
         Paciente p = pacientes.get(a.getPacienteId());
         var consultorio = identidad.consultorio(AuthUser.current().tenantId());
         auditar(a.getPacienteId(), Accion.IMPRIMIR_ATENCION, atencionId);
-        return pdf.render(AtencionPdf.html(a, p, consultorio, notas.findByAtencionIdOrderByCreadaEn(atencionId),
+        byte[] contenido = pdf.render(AtencionPdf.html(a, p, consultorio, notas.findByAtencionIdOrderByCreadaEn(atencionId),
                 formatos.htmlPorAtencion(List.of(atencionId)).getOrDefault(atencionId, "")));
+        return new Archivo(NombreArchivo.pdf("atencion", p.getApellidos(), p.getNombres(), a.getFechaAtencion(), consultorio.zona()),
+                "application/pdf", contenido);
     }
 
     /**
@@ -216,7 +219,7 @@ public class HistoriaService {
      * con sus notas aclaratorias, y la lista de documentos adjuntos. Los borradores no salen: no son registro clínico.
      */
     @Transactional
-    public byte[] pdfHistoria(UUID pacienteId) {
+    public Archivo pdfHistoria(UUID pacienteId) {
         Paciente p = pacientes.get(pacienteId);
         AuthUser yo = AuthUser.current();
         var consultorio = identidad.consultorio(yo.tenantId());
@@ -227,8 +230,10 @@ public class HistoriaService {
                         formatosHtml.getOrDefault(a.getId(), "")))
                 .toList();
         auditar(pacienteId, Accion.IMPRIMIR_HISTORIA, null);
-        return pdf.render(HistoriaPdf.html(p, consultorio, lista, documentos.findByPacienteIdOrderByCreadoEnDesc(pacienteId),
-                yo.nombre()));
+        byte[] contenido = pdf.render(HistoriaPdf.html(p, consultorio, lista,
+                documentos.findByPacienteIdOrderByCreadoEnDesc(pacienteId), yo.nombre()));
+        return new Archivo(NombreArchivo.pdf("historia-clinica", p.getApellidos(), p.getNombres(), Instant.now(),
+                consultorio.zona()), "application/pdf", contenido);
     }
 
     /** Para la fórmula impresa: el diagnóstico principal de la atención en la que se emitió. */

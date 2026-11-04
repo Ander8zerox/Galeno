@@ -71,18 +71,21 @@ public class HistoriaController {
     /** Historia clínica completa del paciente (atenciones firmadas, notas y lista de documentos). */
     @GetMapping(value = "/pacientes/{pacienteId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> pdfHistoria(@PathVariable UUID pacienteId) {
+        Archivo pdf = historia.pdfHistoria(pacienteId);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-                        .filename("historia-clinica.pdf", StandardCharsets.UTF_8).build().toString())
-                .body(historia.pdfHistoria(pacienteId));
+                        .filename(pdf.nombre(), StandardCharsets.UTF_8).build().toString())
+                .body(pdf.contenido());
     }
 
     @GetMapping(value = "/atenciones/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> pdf(@PathVariable UUID id) {
+        Archivo pdf = historia.pdfAtencion(id);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename("atencion-" + id + ".pdf").build().toString())
-                .body(historia.pdfAtencion(id));
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
+                        .filename(pdf.nombre(), StandardCharsets.UTF_8).build().toString())
+                .body(pdf.contenido());
     }
 
     @PutMapping("/atenciones/{id}")
