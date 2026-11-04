@@ -102,7 +102,7 @@ public class HistoriaService {
         }
         Atencion atencion = atenciones.save(Atencion.nueva(pacienteId, yo.membresiaId(), yo.id(), yo.nombre(), citaId,
                 paciente.getAntecedentes()));
-        formatos.agregarPorDefecto(atencion.getId(), yo.id());
+        formatos.agregarPorDefecto(atencion.getId(), yo.id(), firmadasRecientes(pacienteId));
         auditar(pacienteId, Accion.CREAR_ATENCION, atencion.getId());
         return vista(atencion);
     }
@@ -135,7 +135,7 @@ public class HistoriaService {
     public AtencionVista agregarFormato(UUID atencionId, UUID formatoId) {
         Atencion atencion = propia(atencionId);
         atencion.registrarCambio();
-        formatos.agregar(atencionId, formatoId);
+        formatos.agregar(atencionId, formatoId, firmadasRecientes(atencion.getPacienteId()));
         atenciones.flush();
         return vista(atencion);
     }
@@ -370,6 +370,13 @@ public class HistoriaService {
             throw ApiProblem.forbidden("Solo el médico que la registró puede modificarla");
         }
         return a;
+    }
+
+    /** Atenciones firmadas del paciente, de la más reciente a la más antigua (de ahí se arrastra el odontograma). */
+    private List<UUID> firmadasRecientes(UUID pacienteId) {
+        List<UUID> ids = new ArrayList<>(atenciones.firmadas(pacienteId).stream().map(Atencion::getId).toList());
+        java.util.Collections.reverse(ids);
+        return ids;
     }
 
     private void auditar(UUID pacienteId, Accion accion, UUID recursoId) {

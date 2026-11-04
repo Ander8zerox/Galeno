@@ -1,0 +1,20 @@
+{
+  "codigo": "odonto.odontograma",
+  "nombre": "Odontograma",
+  "especialidad": "Odontología",
+  "descripcion": "Dientes en numeración FDI con hallazgos por diente y por superficie. Cada atención parte del último odontograma firmado del paciente.",
+  "version": 1,
+  "definicion": {
+    "secciones": [
+      {
+        "clave": "odontograma",
+        "titulo": "Odontograma",
+        "campos": [
+          { "clave": "dientes", "tipo": "odontograma", "etiqueta": "Estado dental", "obligatorio": true, "arrastrar": true,
+            "ayuda": "Elija un hallazgo y haga clic en la superficie o en el diente." },
+          { "clave": "observaciones", "tipo": "texto_largo", "etiqueta": "Observaciones" }
+        ]
+      }
+    ]
+  }
+}

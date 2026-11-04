@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { FormatoEditor } from "./FormatoEditor";
 import { vacio, type Definicion, type Respuestas } from "./motor";
@@ -11,8 +12,9 @@ export type Diligenciado = Schemas["FormatoDiligenciado"];
  * Formatos del borrador. Si el consultorio no tiene formatos activos (y la atención no trae ninguno), no se dibuja
  * nada: la atención se ve como siempre.
  */
-export function FormatosAtencion({ atencionId, formatos, respuestas, onRespuestas, onCambio }: {
+export function FormatosAtencion({ atencionId, pacienteId, formatos, respuestas, onRespuestas, onCambio }: {
   atencionId: string;
+  pacienteId: string;
   formatos: Diligenciado[];
   respuestas: Record<string, Respuestas>;
   onRespuestas: (id: string, r: Respuestas) => void;
@@ -75,6 +77,9 @@ export function FormatosAtencion({ atencionId, formatos, respuestas, onRespuesta
                 )}
               </div>
             </div>
+            {f.arrastradoDe && (
+              <p className="muted small">Parte del registrado en la <Link to={`/pacientes/${pacienteId}/atenciones/${f.arrastradoDe}`} target="_blank">última atención firmada</Link>: actualice lo que cambió.</p>
+            )}
             <FormatoEditor definicion={f.definicion as unknown as Definicion} value={r} onChange={(nuevas) => onRespuestas(f.id!, nuevas)} />
           </div>
         );

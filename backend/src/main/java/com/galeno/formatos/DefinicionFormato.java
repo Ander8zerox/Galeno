@@ -31,7 +31,9 @@ public record DefinicionFormato(List<Seccion> secciones) {
         /** Filas de columnas tipadas: fijas ({@code filas}) o libres. */
         @JsonProperty("tabla") TABLA,
         /** Ítems con puntaje, total automático e interpretación por rangos (Glasgow, EVA…). */
-        @JsonProperty("escala") ESCALA
+        @JsonProperty("escala") ESCALA,
+        /** Dientes FDI con hallazgos por diente y por superficie (ver {@link Odontograma}). */
+        @JsonProperty("odontograma") ODONTOGRAMA
     }
 
     public record Seccion(String clave, String titulo, List<Campo> campos) {
@@ -40,10 +42,13 @@ public record DefinicionFormato(List<Seccion> secciones) {
     /**
      * @param visibleSi el campo solo se muestra (y solo se guarda) si otro campo de la misma sección tiene ese valor
      * @param obligatorio se exige al firmar la atención, no al guardar el borrador
+     * @param arrastrar al agregar el formato a una atención, el campo parte del valor que tenía en la última atención
+     *                  firmada del paciente con este formato (p. ej. el odontograma)
      */
     public record Campo(String clave, Tipo tipo, String etiqueta, String ayuda, boolean obligatorio,
                         List<String> opciones, String unidad, BigDecimal min, BigDecimal max, VisibleSi visibleSi,
-                        List<Columna> columnas, List<Fila> filas, List<ItemEscala> items, List<Rango> rangos) {
+                        List<Columna> columnas, List<Fila> filas, List<ItemEscala> items, List<Rango> rangos,
+                        boolean arrastrar) {
 
         int puntajeMaximo() {
             return items.stream().mapToInt(i -> i.opciones().stream().mapToInt(OpcionEscala::puntaje).max().orElse(0)).sum();

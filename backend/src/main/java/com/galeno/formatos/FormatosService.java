@@ -3,9 +3,11 @@ package com.galeno.formatos;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,6 +21,7 @@ import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Formatos clínicos: catálogo, activación por consultorio, formatos por defecto de cada profesional y formatos
@@ -117,21 +120,30 @@ public class FormatosService {
         return diligenciados.findByAtencionIdOrderByOrden(atencionId).stream().map(this::diligenciado).toList();
     }
 
-    /** Al crear la atención: los formatos por defecto del profesional que sigan activos en el consultorio. */
+    /**
+     * Al crear la atención: los formatos por defecto del profesional que sigan activos en el consultorio.
+     *
+     * @param firmadasDelPaciente sus atenciones firmadas, de la más reciente a la más antigua (para "arrastrar")
+     */
     @Transactional
-    public void agregarPorDefecto(UUID atencionId, UUID usuarioId) {
+    public void agregarPorDefecto(UUID atencionId, UUID usuarioId, List<UUID> firmadasDelPaciente) {
         Set<UUID> activosAqui = activos.findAll().stream().map(FormatoConsultorio::getFormatoId).collect(Collectors.toSet());
         delProfesional.findByUsuarioId(usuarioId).stream()
                 .map(FormatoProfesional::getFormatoId)
                 .filter(activosAqui::contains)
                 .map(this::formato)
                 .sorted(Comparator.comparing(Formato::getNombre))
-                .forEach(f -> agregar(atencionId, f.getId()));
+                .forEach(f -> agregar(atencionId, f.getId(), firmadasDelPaciente));
     }
 
-    /** Con la última versión publicada. Cada formato va una sola vez por atención. */
+    /**
+     * Con la última versión publicada. Cada formato va una sola vez por atención. Los campos con {@code arrastrar}
+     * parten de la atención firmada más reciente del paciente que tenga este formato (en cualquier versión).
+     *
+     * @param firmadasDelPaciente sus atenciones firmadas, de la más reciente a la más antigua
+     */
     @Transactional
-    public void agregar(UUID atencionId, UUID formatoId) {
+    public void agregar(UUID atencionId, UUID formatoId, List<UUID> firmadasDelPaciente) {
         formato(formatoId);
         exigirActivo(formatoId);
         List<AtencionFormato> actuales = diligenciados.findByAtencionIdOrderByOrden(atencionId);
@@ -142,7 +154,52 @@ public class FormatosService {
             throw ApiProblem.badRequest("Una atención admite hasta " + MAX_POR_ATENCION + " formatos");
         }
         int orden = actuales.stream().mapToInt(AtencionFormato::getOrden).max().orElse(-1) + 1;
-        diligenciados.save(new AtencionFormato(atencionId, ultima(formatoId).id(), orden));
+        Version v = ultima(formatoId);
+        Arrastre arrastre = arrastre(v, firmadasDelPaciente);
+        diligenciados.save(new AtencionFormato(atencionId, v.id(), orden,
+                DefinicionFormato.JSON.writeValueAsString(arrastre.respuestas()), arrastre.desde()));
+    }
+
+    /** Los campos con "arrastrar" tomados del mismo formato en la firmada más reciente; nada si no hay. */
+    private Arrastre arrastre(Version v, List<UUID> firmadas) {
+        boolean hayQueArrastrar = v.definicion().secciones().stream().flatMap(s -> s.campos().stream())
+                .anyMatch(DefinicionFormato.Campo::arrastrar);
+        if (!hayQueArrastrar || firmadas.isEmpty()) {
+            return Arrastre.NADA;
+        }
+        Map<UUID, AtencionFormato> delFormato = new HashMap<>();
+        diligenciados.findByAtencionIdInOrderByOrden(firmadas).stream()
+                .filter(af -> version(af.getFormatoVersionId()).formatoId().equals(v.formatoId()))
+                .forEach(af -> delFormato.put(af.getAtencionId(), af));
+        AtencionFormato previo = firmadas.stream().map(delFormato::get).filter(Objects::nonNull).findFirst().orElse(null);
+        if (previo == null) {
+            return Arrastre.NADA;
+        }
+        JsonNode anteriores = leer(previo.getRespuestas());
+        ObjectNode copia = DefinicionFormato.JSON.createObjectNode();
+        for (DefinicionFormato.Seccion s : v.definicion().secciones()) {
+            for (DefinicionFormato.Campo c : s.campos()) {
+                JsonNode valor = anteriores.path(s.clave()).get(c.clave());
+                if (!c.arrastrar() || valor == null) {
+                    continue;
+                }
+                // La versión nueva puede haber cambiado el campo: si el valor ya no es válido, no se arrastra
+                ObjectNode prueba = DefinicionFormato.JSON.createObjectNode();
+                prueba.putObject(s.clave()).set(c.clave(), valor);
+                try {
+                    ValidadorRespuestas.normalizar(v.nombre(), v.definicion(), prueba);
+                } catch (ApiProblem e) {
+                    continue;
+                }
+                ObjectNode seccion = copia.has(s.clave()) ? (ObjectNode) copia.get(s.clave()) : copia.putObject(s.clave());
+                seccion.set(c.clave(), valor);
+            }
+        }
+        return copia.isEmpty() ? Arrastre.NADA : new Arrastre(copia, previo.getAtencionId());
+    }
+
+    private record Arrastre(JsonNode respuestas, UUID desde) {
+        static final Arrastre NADA = new Arrastre(DefinicionFormato.JSON.createObjectNode(), null);
     }
 
     @Transactional
@@ -204,7 +261,7 @@ public class FormatosService {
         Version v = version(af.getFormatoVersionId());
         return new FormatoDiligenciado(af.getId(), v.formatoId(), v.codigo(), v.nombre(), v.version(),
                 DefinicionFormato.JSON.convertValue(v.json(), MAPA),
-                DefinicionFormato.JSON.readValue(af.getRespuestas(), MAPA));
+                DefinicionFormato.JSON.readValue(af.getRespuestas(), MAPA), af.getArrastradoDe());
     }
 
     private AtencionFormato deLaAtencion(UUID atencionId, UUID atencionFormatoId) {
@@ -263,9 +320,11 @@ public class FormatosService {
      * @param id el del formato dentro de esta atención
      * @param definicion secciones y campos de la versión con la que se diligenció (ver docs/diseno-formatos.md)
      * @param respuestas {@code {"seccion": {"campo": valor}}}
+     * @param arrastradoDe la atención firmada de la que partieron los campos con "arrastrar" (p. ej. el odontograma)
      */
     public record FormatoDiligenciado(UUID id, UUID formatoId, String codigo, String nombre, int version,
-                                      Map<String, Object> definicion, Map<String, Object> respuestas) {
+                                      Map<String, Object> definicion, Map<String, Object> respuestas,
+                                      UUID arrastradoDe) {
     }
 
     /** @param id el del formato dentro de la atención */

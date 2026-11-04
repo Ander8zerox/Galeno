@@ -2060,6 +2060,8 @@ export interface components {
             respuestas?: {
                 [key: string]: unknown;
             };
+            /** Format: uuid */
+            arrastradoDe?: string;
         };
         NotaVista: {
             /** Format: uuid */
@@ -2761,27 +2763,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            number?: boolean;
-            missingNode?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            container?: boolean;
-            valueNode?: boolean;
-            integralNumber?: boolean;
-            bigDecimal?: boolean;
-            bigInteger?: boolean;
-            floatingPointNumber?: boolean;
-            string?: boolean;
-            int?: boolean;
-            binary?: boolean;
             short?: boolean;
-            double?: boolean;
-            object?: boolean;
-            pojo?: boolean;
-            long?: boolean;
-            boolean?: boolean;
             /** @deprecated */
             textual?: boolean;
+            long?: boolean;
+            pojo?: boolean;
+            int?: boolean;
+            double?: boolean;
+            boolean?: boolean;
+            binary?: boolean;
+            string?: boolean;
+            object?: boolean;
+            number?: boolean;
+            floatingPointNumber?: boolean;
+            integralNumber?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            missingNode?: boolean;
+            valueNode?: boolean;
+            bigDecimal?: boolean;
+            container?: boolean;
+            bigInteger?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {

@@ -34,6 +34,10 @@ class AtencionFormato {
     @Column(name = "formato_version_id", nullable = false, updatable = false)
     private UUID formatoVersionId;
 
+    /** La atención firmada de la que partieron los campos con "arrastrar", si hubo. */
+    @Column(name = "arrastrado_de", updatable = false)
+    private UUID arrastradoDe;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
     private String respuestas;
@@ -44,11 +48,12 @@ class AtencionFormato {
     protected AtencionFormato() {
     }
 
-    AtencionFormato(UUID atencionId, UUID formatoVersionId, int orden) {
+    AtencionFormato(UUID atencionId, UUID formatoVersionId, int orden, String respuestas, UUID arrastradoDe) {
         this.atencionId = atencionId;
         this.formatoVersionId = formatoVersionId;
-        this.respuestas = "{}";
+        this.respuestas = respuestas;
         this.orden = orden;
+        this.arrastradoDe = arrastradoDe;
     }
 
     void responder(String respuestas) {
@@ -69,6 +74,10 @@ class AtencionFormato {
 
     String getRespuestas() {
         return respuestas;
+    }
+
+    UUID getArrastradoDe() {
+        return arrastradoDe;
     }
 
     int getOrden() {

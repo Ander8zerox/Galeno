@@ -1,3 +1,5 @@
+import { OdontogramaEditor } from "./OdontogramaEditor";
+import type { ValorOdontograma } from "./odontograma";
 import { errorCampo, total, visible, type Campo, type Definicion, type Fila, type Respuestas } from "./motor";
 
 /** Dibuja cualquier formato a partir de su definición. Un solo componente para todas las especialidades. */
@@ -26,7 +28,7 @@ export function FormatoEditor({ definicion, value, onChange }: {
   );
 }
 
-const ANCHOS = new Set(["texto_largo", "multiple", "tabla", "escala"]);
+const ANCHOS = new Set(["texto_largo", "multiple", "tabla", "escala", "odontograma"]);
 
 function CampoEditor({ campo: c, valor, onChange }: { campo: Campo; valor: unknown; onChange: (v: unknown) => void }) {
   // Un solo bloque de texto: el label es flex en columna y la unidad no debe quedar en otra línea
@@ -108,6 +110,13 @@ function CampoEditor({ campo: c, valor, onChange }: { campo: Campo; valor: unkno
         </div>
       );
     }
+    case "odontograma":
+      return (
+        <div className={`stack-sm ${clase}`}>
+          <span className="etiqueta-campo">{etiqueta}</span>{ayuda}
+          <OdontogramaEditor value={(valor as ValorOdontograma) ?? null} onChange={onChange} />
+        </div>
+      );
     case "tabla":
       return <TablaEditor campo={c} etiqueta={etiqueta} filas={(valor as Fila[]) ?? []} onChange={onChange} />;
   }

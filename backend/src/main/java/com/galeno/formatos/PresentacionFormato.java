@@ -33,26 +33,36 @@ final class PresentacionFormato {
             if (valores == null || valores.isEmpty()) {
                 continue;
             }
+            // Una sección con el mismo nombre del formato (p. ej. "Odontograma") no repite el título
+            if (!s.titulo().equalsIgnoreCase(nombre)) {
+                b.append("<h3 class=\"seccion-formato\">").append(esc(s.titulo())).append("</h3>");
+            }
+            // En el orden de la definición: los campos sencillos seguidos van en una misma grilla
             List<String> filas = new ArrayList<>();
-            StringBuilder aparte = new StringBuilder();
             for (Campo c : s.campos()) {
                 JsonNode v = valores.get(c.clave());
                 if (v == null) {
                     continue;
                 }
                 switch (c.tipo()) {
-                    case TABLA -> aparte.append(tabla(c, v));
+                    case TABLA, ODONTOGRAMA -> {
+                        cerrarGrilla(b, filas);
+                        b.append(c.tipo() == DefinicionFormato.Tipo.TABLA ? tabla(c, v) : odontograma(c, v));
+                    }
                     case ESCALA -> filas.add(fila(c.etiqueta(), escala(c, v)));
                     default -> filas.add(fila(c.etiqueta(), esc(valor(c.tipo(), v, c.unidad()))));
                 }
             }
-            b.append("<h3 class=\"seccion-formato\">").append(esc(s.titulo())).append("</h3>");
-            if (!filas.isEmpty()) {
-                b.append("<table class=\"grilla\">").append(String.join("", filas)).append("</table>");
-            }
-            b.append(aparte);
+            cerrarGrilla(b, filas);
         }
         return b.isEmpty() ? "" : "<h2>" + esc(nombre) + "</h2>" + b;
+    }
+
+    private static void cerrarGrilla(StringBuilder b, List<String> filas) {
+        if (!filas.isEmpty()) {
+            b.append("<table class=\"grilla\">").append(String.join("", filas)).append("</table>");
+            filas.clear();
+        }
     }
 
     private static String fila(String etiqueta, String valorHtml) {
@@ -81,6 +91,64 @@ final class PresentacionFormato {
             b.append("</tr>");
         }
         return b.append("</table>").toString();
+    }
+
+    /** Colores de los hallazgos por superficie: rojo lo que hay que tratar, azul lo tratado (como en la pantalla). */
+    private static final java.util.Map<String, String> COLORES = java.util.Map.of(
+            "caries", "#d64545", "resina", "#2f6fd6", "amalgama", "#5b6577", "sellante", "#2a9d8f");
+
+    private static final java.util.Map<String, String> SIGLAS = java.util.Map.of(
+            "ausente", "AU", "extraccion_indicada", "EI", "corona", "CO", "endodoncia", "EN", "implante", "IM",
+            "protesis", "PR", "fractura", "FR");
+
+    /** Cuadrícula de dientes (sin SVG: openhtmltopdf no lo dibuja sin Batik) y la lista de hallazgos, que es la que vale. */
+    private static String odontograma(Campo c, JsonNode v) {
+        String denticion = v.get("denticion").stringValue();
+        JsonNode dientes = v.get("dientes");
+        StringBuilder b = new StringBuilder("<p class=\"small\"><strong>").append(esc(c.etiqueta())).append("</strong> · dentición ")
+                .append(esc(Odontograma.nombreDenticion(denticion).toLowerCase(java.util.Locale.ROOT))).append("</p>");
+        b.append("<table class=\"odontograma\">");
+        for (List<Integer> fila : Odontograma.filas(denticion)) {
+            b.append("<tr>");
+            for (int i = 0; i < fila.size(); i++) {
+                if (i == fila.size() / 2) {
+                    b.append("<td class=\"linea-media\"></td>");
+                }
+                b.append("<td>").append(diente(fila.get(i), dientes.get(String.valueOf(fila.get(i))))).append("</td>");
+            }
+            b.append("</tr>");
+        }
+        b.append("</table><p class=\"small muted\">Rojo: caries · Azul: resina · Gris: amalgama · Verde: sellante · ")
+                .append("AU ausente · EI extracción indicada · CO corona · EN endodoncia · IM implante · PR prótesis · FR fractura</p>");
+        List<String> hallazgos = Odontograma.hallazgos(v);
+        b.append(hallazgos.isEmpty() ? "<p class=\"small\">Sin hallazgos.</p>"
+                : "<ul class=\"small\"><li>" + hallazgos.stream().map(com.galeno.shared.pdf.PdfRenderer::esc)
+                        .collect(java.util.stream.Collectors.joining("</li><li>")) + "</li></ul>");
+        return b.toString();
+    }
+
+    private static String diente(int numero, JsonNode d) {
+        int cuadrante = numero / 10;
+        boolean superior = cuadrante == 1 || cuadrante == 2 || cuadrante == 5 || cuadrante == 6;
+        // A la izquierda de quien mira está el lado derecho del paciente: allí la mesial queda hacia la línea media
+        boolean derechoPaciente = cuadrante == 1 || cuadrante == 4 || cuadrante == 5 || cuadrante == 8;
+        JsonNode sup = d == null ? null : d.get("superficies");
+        java.util.function.Function<String, String> celda = s -> {
+            String color = sup != null && sup.has(s) ? COLORES.get(sup.get(s).stringValue()) : null;
+            return "<td" + (color != null ? " style=\"background: " + color + "\"" : "") + "></td>";
+        };
+        List<String> siglas = new ArrayList<>();
+        if (d != null && d.has("hallazgos")) {
+            d.get("hallazgos").forEach(h -> siglas.add(SIGLAS.get(h.stringValue())));
+        }
+        boolean ausente = siglas.contains("AU");
+        String arriba = superior ? "V" : "L", abajo = superior ? "L" : "V";
+        String izq = derechoPaciente ? "D" : "M", der = derechoPaciente ? "M" : "D";
+        return "<div class=\"numero\">" + numero + "</div><table class=\"diente" + (ausente ? " ausente" : "") + "\">"
+                + "<tr><td></td>" + celda.apply(arriba) + "<td></td></tr>"
+                + "<tr>" + celda.apply(izq) + celda.apply("O") + celda.apply(der) + "</tr>"
+                + "<tr><td></td>" + celda.apply(abajo) + "<td></td></tr></table>"
+                + "<div class=\"siglas\">" + esc(String.join(" ", siglas)) + "</div>";
     }
 
     private static String escala(Campo c, JsonNode v) {

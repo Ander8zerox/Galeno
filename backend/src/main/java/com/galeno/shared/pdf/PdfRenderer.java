@@ -50,6 +50,15 @@ public class PdfRenderer {
             .texto { white-space: pre-wrap; }
             h3 { font-size: 10.5pt; margin: 0 0 4px; color: #1f2933; }
             h3.seccion-formato { margin-top: 8px; }
+            table.odontograma { border-collapse: collapse; margin: 4px auto; }
+            table.odontograma > tbody > tr > td, table.odontograma > tr > td { padding: 1px; text-align: center; vertical-align: top; }
+            table.odontograma td.linea-media { border-left: 1px solid #1f2933; padding: 0 1px; }
+            table.diente { border-collapse: collapse; margin: 0 auto; }
+            table.diente td { width: 2.4mm; height: 2.4mm; padding: 0; border: 0.3pt solid #9aa5b1; }
+            table.diente tr:first-child td:first-child, table.diente tr:first-child td:last-child, table.diente tr:last-child td:first-child, table.diente tr:last-child td:last-child { border: 0; }
+            table.diente.ausente td { background: #e4e7eb; }
+            .numero { font-size: 6.5pt; color: #52606d; }
+            .siglas { font-size: 5.5pt; font-weight: bold; min-height: 2.5mm; }
             h2, h3 { page-break-after: avoid; }
             tr, .caja, .firma { page-break-inside: avoid; }
             /* Historia completa: atenciones seguidas, separadas por una línea, como un documento corrido (no una por
