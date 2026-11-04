@@ -462,3 +462,7 @@ a.evento:hover { background: var(--primary-soft); box-shadow: var(--shadow-md); 
 .odontograma-svg .marca-extraccion { stroke: #d64545; stroke-width: 2.5; fill: none; }
 .odontograma-svg .marca-tratado { stroke: #2f6fd6; stroke-width: 2; fill: none; }
 .hallazgos-odontograma { margin: 0; padding-left: 1.2rem; columns: 2 18rem; }
+
+/* Procedimientos con CUPS (módulo de RIPS) */
+.tabla-procedimientos th, .tabla-procedimientos td { padding: .4rem .5rem; vertical-align: middle; }
+.tabla-procedimientos input { min-height: 2.1rem; padding: .3rem .45rem; }

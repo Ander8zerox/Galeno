@@ -1,189 +1,261 @@
 # Hoja de ruta
 
+Estado al **4 de noviembre de 2026**. Galenum (marca visible; el código interno sigue como "galeno") está en
+producción en AWS, en https://galenum.com.co.
+
 ## Hecho
 
-- Esqueleto de la Capa 1: pacientes, redactor de fórmulas con IA, apoyo diagnóstico y multi-tenant.
-- Equipo del consultorio: membresías con varios roles, permisos, selector de consultorio e invitaciones.
-- Agenda por médico: horario semanal, cupos, citas, sobrecupos, estados y vista para secretarios.
-- Historia clínica: atenciones con firma e inmutabilidad, notas aclaratorias, documentos, CIE-10, auditoría y conexión con agenda, fórmulas y apoyo diagnóstico.
-- CIE-10 oficial de MinSalud (con avisos de sexo y edad) y PDF de la fórmula y de la atención.
-- Importación de RIPS JSON (varios archivos o ZIP) con revisión, confirmación y deshacer; catálogo CUPS; completar datos de pacientes importados.
-- Importación de listados de pacientes (Excel o CSV) con mapeo de columnas recordado por sistema de origen; filtro y avisos de datos incompletos.
-- Registro de consultorios desde la web con verificación del correo, NIT con dígito de verificación, aceptación de términos y política de datos, y límite de intentos.
-- Recuperación de contraseña por correo (enlace de un solo uso) que cierra todas las sesiones abiertas.
-- Programa de partners: inscripción con aprobación de la plataforma, código y enlace de referido, 10 % de descuento para el consultorio referido, comisión recurrente del 20 % sobre cada pago, retención de 30 días y liquidación desde $190.000 (pasa a 30 % y $30.000: ver "Hallazgos de las pruebas en producción").
-- Envío de correos con Amazon SES, con rebotes y quejas leídos de una cola SQS y lista de correos bloqueados en la consola de la plataforma (dominio verificado con DKIM, SPF y DMARC; fuera del sandbox desde noviembre de 2026).
-- Suscripciones: prueba de 30 días, planes mensual y anual, pago por transferencia o consignación reportado por el consultorio y aprobado en la consola de la plataforma, gracia de 5 días, solo lectura y avisos por correo.
+### Producto
 
-## Siguiente
+- **Base (Capa 1):** pacientes, multi-tenant por consultorio, redactor de fórmulas con IA y apoyo diagnóstico con IA.
+- **Equipo del consultorio:** membresías con varios roles (administrador, médico, secretario), permisos, selector de
+  consultorio e invitaciones.
+  - **Invitaciones por correo:** Galenum envía el enlace (quién invita, consultorio, roles, vencimiento). El enlace y
+    "Copiar" quedan de respaldo. "Reenviar" crea un enlace nuevo y anula el anterior; máximo 5 envíos por hora a la
+    misma dirección.
+- **Agenda por médico:** horario semanal, cupos, citas, sobrecupos, estados, vista para secretarios y festivos de
+  Colombia (con la opción "Atiendo festivos"). Confirmación antes de cancelar o marcar inasistencia, y "Deshacer" al
+  confirmar o atender.
+- **Historia clínica:**
+  - Atenciones con firma e inmutabilidad, notas aclaratorias, documentos en S3, CIE-10 oficial de MinSalud (con
+    avisos de sexo y edad), auditoría, y conexión con agenda, fórmulas y apoyo diagnóstico.
+  - Anular un documento subido por error: con motivo; el archivo se conserva.
+  - PDF de la atención, de la historia completa y de la fórmula. Se descargan como
+    `tipo-apellidos-nombres-fecha.pdf`, nunca con el número de documento.
+- **Importación:**
+  - RIPS JSON (varios archivos o ZIP) con revisión, confirmación y deshacer.
+  - Listados de pacientes en Excel o CSV, con el mapeo de columnas recordado por sistema de origen.
+- **Registro de consultorios desde la web:** verificación del correo, NIT con dígito de verificación, aceptación de
+  términos y política de datos, y límite de intentos. Al activarse, abre la agenda con un aviso de bienvenida.
+- **Seguridad de las cuentas:**
+  - Recuperación de contraseña por enlace de un solo uso, que cierra las sesiones abiertas.
+  - MFA (TOTP): obligatoria para operadores de la plataforma y administradores de consultorio, opcional para los
+    demás. Incluye códigos de recuperación, "recordar este equipo" 30 días y restablecimiento desde la consola.
+- **Suscripciones:**
+  - Prueba de 30 días y planes mensual y anual.
+  - Pago por transferencia o consignación: lo reporta el consultorio y se aprueba en la consola de la plataforma.
+  - Gracia de 5 días, después solo lectura, y avisos por correo.
+  - Aviso si un precio parece mal digitado.
+- **Programa de partners:**
+  - Inscripción con aprobación de la plataforma, y código y enlace de referido.
+  - 10 % de descuento para el consultorio referido.
+  - Comisión recurrente del 30 % sobre cada pago, con retención de 30 días y liquidación desde $30.000.
+- **Consola de la plataforma:** operadores, consultorios, pagos, partners, correos bloqueados y auditoría con el
+  detalle y el operador de cada acción.
+- **Correo:** Amazon SES con el dominio verificado (DKIM, SPF y DMARC), fuera del sandbox. Los rebotes y las quejas
+  llegan por SNS y SQS. Soporte en soporte@galenum.com.co (reenvío de ImprovMX), con Reply-To en los correos y
+  "Ayuda" al pie de las pantallas.
+- **Motor de formatos clínicos** (`docs/diseno-formatos.md`):
+  - **Fase 1:** motor genérico.
+    - Tipos de campo: texto, número, fecha, selección, casillas, sí/no, tabla y escala con puntaje.
+    - Obligatorios al firmar y `visibleSi`.
+    - Catálogo versionado e inmutable en `backend/src/main/resources/formatos`.
+    - Activación por consultorio (menú Formatos), formatos por defecto de cada profesional y varios formatos por
+      atención.
+    - Salen en el PDF y en la IA.
+    - Primer formato: **historia odontológica v1**.
+  - **Fase 2:** formato **Odontograma**.
+    - Numeración FDI, cinco superficies, hallazgos por diente y por superficie, dentición permanente, temporal o
+      mixta.
+    - Cada atención parte del último odontograma firmado (opción genérica `arrastrar`).
+    - En el PDF va como cuadrícula con colores y lista de hallazgos.
+- **Consultorio de demostración:** archivos de pacientes y RIPS ficticios en `docs/demo` y guía para montarlo en
+  producción.
 
-### Hallazgos de las pruebas en producción (paso 12)
-Se corrigen en una rama al terminar las pruebas, y se vuelven a probar en producción.
-- **Página de inicio después de activar el consultorio.** ✅ Corregido. Hoy `RegistroPage.tsx` manda a `/equipo`. Debe abrir la
-  Agenda con un aviso de bienvenida: la prueba de 30 días empezó, y los siguientes pasos son crear un paciente, agendar
-  una cita e invitar al equipo (decidido el 2 de noviembre de 2026).
-- **Errores de IA crudos en pantalla (prioridad alta).** ✅ Corregido. Si Bedrock falla, el médico ve el JSON del proveedor
-  (`404: {"type":"error","request_id":…,"message":"The model 'anthropic.claude-haiku-5-5' does not exist"}`), porque
-  `AiJobWorker` guarda `e.getMessage()` en el trabajo y el front lo muestra tal cual. Guardar un mensaje en español
-  ("El asistente de IA no está disponible en este momento; puede llenar la fórmula manualmente") y dejar el detalle
-  solo en el log, con el id del trabajo. Probado en fórmula y en apoyo diagnóstico.
-- **Eliminar un borrador con documentos da error 500 (prioridad alta).** ✅ Corregido. `HistoriaService.eliminarBorrador` borra la
-  atención y MySQL lo rechaza por `fk_documentos_atencion` (ERROR en el log del 2 de noviembre de 2026 a las 12:14 UTC).
-  Nada se pierde, pero el médico ve "Error inesperado". Responder 409 con un mensaje claro ("tiene documentos
-  adjuntos: anúlelos o firme la atención"), y resolverlo junto con "Anular un documento".
-  Cómo reproducirlo: agendar una cita → abrir la atención y adjuntar un documento → marcar la cita como "no asistió" →
-  "Eliminar borrador".
-- **"No asistió" con una atención en borrador (prioridad media).** ✅ Corregido (también al cancelar). En la misma secuencia, la agenda deja marcar la
-  inasistencia aunque la cita ya tenga una atención abierta con documentos: la cita dice que el paciente no vino y la
-  historia tiene una atención de esa visita. No permitirlo: "Esta cita tiene una atención en curso. Fírmela o elimine
-  el borrador antes de marcar la inasistencia".
-- **Acciones de un clic sin confirmación (prioridad media).** ✅ Corregido con el patrón mixto. En la agenda, "Confirmar", "Atender", "No asistió" y
-  "Cancelar" se ejecutan de inmediato al primer clic, igual que "Cerrar sesión": un clic por error cambia la cita o
-  saca a la persona. Pedido del usuario: que pidan confirmación. Alternativa propuesta, para no acostumbrar a decir
-  "sí" sin leer: confirmación (con paciente y hora) en "Cancelar" y "No asistió"; "Deshacer" por unos segundos en
-  "Confirmar" y "Atender"; y en "Cerrar sesión", confirmación o alejar el botón de los demás. Se decide al
-  implementarlo.
-- **Anular un documento subido por error (prioridad media).** ✅ Corregido. Hoy solo hay subir y descargar
-  (`HistoriaController`). Si un médico sube el archivo equivocado o al paciente equivocado, no puede corregirlo, y el
-  bucket no deja borrar versiones a nadie (`SinBorrarVersiones`), como debe ser para la historia clínica. Agregar
-  "Anular" con motivo obligatorio: el documento sale de la lista (queda visible en un filtro de anulados), el archivo
-  se conserva en S3 y queda registro de quién lo anuló y cuándo. Pasó en la prueba: se subió un PDF con datos reales a
-  un paciente de prueba.
-- **Auditoría de la plataforma incompleta (prioridad media).** ✅ Corregido. (1) "Cambió los datos de pago" se guarda sin detalle
-  (`PlataformaService.cambiarDatosPago`): debe guardar el texto anterior y el nuevo, porque cambiar la cuenta bancaria
-  es la acción más sensible de la consola. (2) La tabla no muestra qué operador hizo cada acción; el dato ya está en
-  `auditoria_plataforma`, falta exponerlo en `EventoAuditoria` y en la pantalla.
-- **Precios de los planes sin validación (baja prioridad).** ✅ Corregido (aviso, no bloqueo). Se pudo guardar el mensual en $1.118.700 y el anual en
-  $1.052.522 (error de digitación). Advertir antes de guardar si el anual cuesta más que 12 mensualidades, o si un precio
-  cambia más de, digamos, 50 %.
-- **Condiciones de partners (decidido el 2 de noviembre de 2026).** ✅ Corregido. Comisión del **30 %** (antes 20 %), retención de
-  **30 días** (sin cambio) y liquidación desde **$30.000** (antes $190.000), para que el partner cobre desde el primer
-  pago de su primer referido. Con el mensual de $128.700 y el 10 % de descuento, la comisión es de $34.749. Cambiar
-  `app.partners.comision-porcentaje` y `minimo-liquidacion` en `application.yml`, y `docs/arquitectura.md`; las
-  pantallas toman los valores de la configuración. Las comisiones ya creadas conservan su porcentaje.
-  - Mejorar el mensaje al partner aprobado: primero "gana el 30 % de cada pago de sus referidos", después cuándo se le
-    transfiere.
-  - Pendiente de decidir antes de tener partners reales: si la comisión recurrente tiene tope (p. ej., 12 o 24 meses).
-- **Festivos en la agenda (prioridad media).** ✅ Corregido (sin agenda pública de pacientes: no existe). La agenda no conoce los festivos: un lunes festivo tiene el horario de
-  cualquier lunes, también en la agenda pública. Calcular los festivos de Colombia en Galeno (fijos, trasladados al
-  lunes por la Ley 51 de 1983 y los que dependen de la Pascua), mostrarlos con su nombre, sin disponibilidad por
-  defecto, y una opción por médico "Atiendo festivos". Después, días cerrados propios del consultorio (vacaciones).
-- **TA diastólica desalineada (baja prioridad).** ✅ Corregido. En `.signos` (`styles.css`), el título largo ocupa dos líneas y baja su
-  campo. Alinear los campos abajo (`.signos input { margin-top: auto; }`).
-- **Poco espacio para la firma en los PDF (prioridad media).** ✅ Corregido (22 mm). `.firma { margin-top: 28px }` en `PdfRenderer.java`
-  (fórmula e historia) deja unos 7 mm para firmar a mano. Subir a unos 75 px (2 cm).
-- **La marca no coincide con el dominio (prioridad alta, antes de tener clientes).** ✅ Corregido (falta aplicar el remitente con Terraform). La aplicación, los correos y
-  los PDF dicen "Galeno", y el dominio es galenum.com.co: parece un descuido o una imitación. galeno.com está ocupado,
-  y galeno.co y galenum.com están en venta en Afternic. Propuesta: cambiar la marca visible a **Galenum** (pantallas,
-  correos, remitente, PDF, títulos); el código interno conserva "galeno". "Galeno" es una palabra común en salud
-  (difícil de registrar ante la SIC y de encontrar en Google); "Galenum" es distintiva. Antes: consultar en la SIC que
-  "Galenum" esté libre en las clases 42 y 44, y registrarla.
-  **Decidido el 2 de noviembre de 2026: la marca visible pasa a Galenum.** El usuario consulta la SIC.
-- **Registro abierto a cualquiera (prioridad alta, decidir el alcance).** ✅ (d) y (e) corregidos; la cláusula está en el borrador de /terminos. Preocupa que un competidor use la prueba para
-  copiar Galeno. No se puede impedir del todo (puede pagar un mes); el código del servidor no se expone. Propuesta:
-  (a) pedir cédula y registro profesional y verificarlos en ReTHUS desde la consola, con opción de suspender; (c) prueba
-  con topes (pacientes, cupo de IA, sin exportar); (d) cláusula en los términos contra el uso para copia o
-  competencia; (e) bloquear correos desechables y limitar registros por IP. La aprobación previa del operador queda
-  como opción si se ve abuso.
-  **Decidido el 2 de noviembre de 2026: por ahora solo (d) y (e).** (a) y (c) se retoman si se ve abuso o cuando
-  crezca el costo de la IA. La cláusula (d) entra en la revisión legal de los términos.
-  Para (e), ya existen 5 solicitudes por IP por hora y 3 por correo por hora (`RegistroService`, en memoria). Falta:
-  lista de dominios de correo desechable; un límite largo (p. ej., 2 pruebas por IP cada 30 días, en base de datos y
-  no en memoria); una prueba gratis por NIT; y normalizar los alias de Gmail (`nombre+x@`, puntos) al contar pruebas,
-  para que no se encadenen pruebas con un solo correo.
-- **Canal de soporte (prioridad media).** ✅ Corregido: soporte@galenum.com.co con reenvío de ImprovMX, Reply-To en los
-  correos, "Ayuda" al pie de las pantallas (WhatsApp cuando haya número; ver la guía de operación). Los mensajes del registro dicen "escríbanos" (NIT repetido, límite de
-  consultorios), pero Galenum no tiene correo de soporte (galenum.com.co no tiene MX; no-responder@ no recibe). Crear
-  `soporte@galenum.com.co` (Google Workspace, Zoho o reenvío) o un WhatsApp, y ponerlo en esos mensajes, en el pie de
-  los correos y en el sitio.
-- **Logs del PDF (baja prioridad).** ✅ Corregido. Cada vez que se genera un PDF, PDFBox escribe 13 WARN de "Using fallback font
-  LiberationSans" (el contenedor no trae las fuentes estándar de PDF; el PDF sale bien), y openhtmltopdf escribe con su
-  propio logger, fuera del JSON de CloudWatch. Bajar `org.apache.pdfbox.pdmodel.font` a ERROR y mandar openhtmltopdf a
-  SLF4J.
+### Infraestructura en AWS (producción)
 
-### RIPS: generación (prioridad, decidido el 4 de noviembre de 2026)
-Los consultorios objetivo facturan sobre todo a EPS y prepagadas: sin RIPS no cobran, así que va antes que el plan de
-tratamiento. Diseño en `docs/diseno-rips.md`: (1) procedimientos realizados con CUPS en la atención, (2) datos de RIPS
-y generación del JSON por factura, (3) envío al MUV, (4) factura electrónica desde Galenum (opcional).
+Detalle en `docs/aws-capa-1.md` y operación en `docs/guia-operacion.md`.
 
-### Formatos clínicos por especialidad (después de salir a AWS)
-La competencia ofrece decenas de formatos (historias por especialidad, exámenes, escalas, terapias, formatos administrativos) que el consultorio activa sin costo adicional. Hoy todo especialista llena la misma atención de medicina general.
-- **Motor de formatos**, no un formato programado a mano por cada especialidad: un formato son datos versionados (secciones; campos de texto, número, selección, casillas, tablas y escalas con puntaje; reglas de obligatoriedad). El consultorio activa los suyos. Lo diligenciado queda dentro de la atención firmada (inmutable), en el PDF de la historia y disponible para la IA.
-- **Primera especialidad: odontología** (es el mercado inicial):
-  - Odontograma interactivo por diente y superficie (caries, obturación, ausente, corona, endodoncia, extracción indicada…), con el inicial y los de evolución. Necesita un componente gráfico propio.
-  - Periodontograma (profundidad de sondaje, sangrado, movilidad).
-  - Historia odontológica (antecedentes médicos y odontológicos, examen estomatológico, higiene oral, índice de placa).
-  - Plan de tratamiento por fases con presupuesto, y su aceptación por el paciente.
-  - Evolución por sesión ligada al plan, y consentimientos informados odontológicos (exodoncia, endodoncia, anestesia local).
-  - Procedimientos con CUPS de odontología para los RIPS.
-- **Formatos transversales** para cualquier especialidad: incapacidad, remisión y contrarreferencia, consentimiento informado firmado por el paciente.
-- Fuera por ahora: los que dependen de equipos (examen con cámara, videoquimografía, estroboscopia).
-- ✅ Fase 1 (diseño en `docs/diseno-formatos.md`): motor genérico (tipos básicos, tabla y escala; obligatorios al firmar;
-  `visibleSi`), catálogo en `backend/src/main/resources/formatos` (una versión por archivo, inmutable), activación por
-  consultorio (menú Formatos del administrador), formatos por defecto de cada profesional, varios formatos por atención,
-  PDF e IA. Primer formato: historia odontológica v1, **pendiente de validar con el odontólogo**.
-- ✅ Fase 2: formato Odontograma (FDI, cinco superficies, hallazgos por diente y por superficie, dentición permanente,
-  temporal o mixta). Cada atención parte del último odontograma firmado del paciente (opción genérica `arrastrar`);
-  en el PDF va como cuadrícula con colores y lista de hallazgos. Sigue la fase 3 (periodontograma, plan de tratamiento
-  con presupuesto, consentimientos y CUPS de odontología).
+- **Proyecto:** nueva experiencia de AWS, región **us-east-2**, perfil `galeno` con `aws login`. Plan pagado con
+  créditos, límite de gasto de 60 USD y presupuesto de 50 USD.
+- **Terraform** en `infra/`, con el estado local en `infra/terraform.tfstate`, fuera de git: hay que guardarlo.
+- **Cómputo:**
+  - EC2 `t4g.small` con Docker: la API y **Caddy** con HTTPS (Let's Encrypt) entre CloudFront y el servidor.
+  - IP elástica e imagen en ECR.
+- **Base de datos:** RDS MySQL `db.t4g.micro`, con copias de 7 días y protección contra borrado.
+- **Documentos:** S3 cifrado con KMS, con versiones que nadie puede borrar.
+- **Web:** CloudFront con el certificado de ACM (en us-east-1, como lo exige CloudFront) y una función para la SPA.
+  Route 53 para galenum.com.co; el dominio se compró en Colombia Hosting.
+- **Secretos y configuración:** SSM Parameter Store bajo `/galeno/prod/`. Las claves de la base de datos y del JWT
+  quedan fuera del estado de Terraform.
+- **Logs:** CloudWatch en JSON, sin el ruido de PDFBox.
+- **Despliegue:** `tools/desplegar.sh` desde el computador, con `aws login`.
+- **Pruebas en producción (paso 12):** hechas. Todos los hallazgos quedaron corregidos: inicio tras activar,
+  errores de IA en español, borradores con documentos, inasistencia con atención abierta, confirmaciones, anular
+  documentos, auditoría, precios, condiciones de partners, festivos, signos vitales, espacio para firmar, marca
+  Galenum, cláusula contra copia en los términos, soporte y logs.
 
-### Historia clínica, siguiente iteración
-- Imagen de la firma del médico y código QR de verificación en los PDF, reporte de auditoría para el administrador, y documentos en S3.
+### Diseños escritos
 
-### Agenda, siguiente iteración
-- Bloqueos (vacaciones, festivos de Colombia), vista semanal y recordatorios por WhatsApp o SMS.
+- `docs/arquitectura.md`, `docs/aws-capa-1.md` y `docs/guia-operacion.md`.
+- `docs/diseno-formatos.md`: fases 1 y 2 construidas.
+- `docs/diseno-rips.md`: fase 1 construida; la norma vigente quedó verificada.
 
-### Otros pendientes
+## En curso
+
+### RIPS, fase 1 (rama `feature/rips-fase1`, lista para su PR)
+
+- **Módulos opcionales por consultorio** (menú Módulos del administrador). El primero es "RIPS y facturación",
+  incluido en todos los planes. Apagado, no se ve nada y el servidor rechaza sus servicios.
+- **Procedimientos realizados con CUPS en la atención:** cantidad, valor, diente FDI y superficies. Quedan firmados con
+  la atención y salen en el PDF, sin valores.
+- **Consulta del día sugerida:** primera vez o control, según la especialidad del médico.
+- **Lista de precios por CUPS** (menú Precios).
+- Permisos nuevos del administrador: `MODULOS_GESTIONAR` y `RIPS_GESTIONAR`. Tras desplegar, se ven después de volver
+  a ingresar.
+
+## Siguiente (en orden)
+
+### 1. RIPS, fase 2: datos y generación del JSON
+
+Prioridad: los consultorios objetivo facturan sobre todo a EPS y prepagadas, y sin RIPS no cobran. La norma vigente es
+la **Res. 948 de 2026**, con el Documento Técnico 1 v003 y el 2 v001, ambos del 15 de julio de 2026 (ver
+`docs/diseno-rips.md`).
+
+- **Datos que faltan:**
+  - Del paciente: tipo de usuario, país, municipio, zona y pagador (con número de afiliación).
+  - Del consultorio: código de habilitación de 12 caracteres, servicios habilitados y valores por defecto (finalidad,
+    causa, modalidad).
+  - Del médico: tipo y número de documento.
+- **Pagadores del consultorio** (EPS, prepagadas, ARL, SOAT, particular), con su **CUCON** y modalidad de pago, y
+  tarifas por convenio.
+- **Cuota moderadora y copago:** la secretaria los registra en la cita, porque no ve datos clínicos, y quien atiende
+  puede corregirlos en la atención.
+- **Listas de valores de SISPRO** cargadas como catálogos.
+- **Lote de RIPS:**
+  - Se elige el pagador y el período, se revisan las atenciones con avisos de lo que falta y se escribe el número de
+    la factura.
+  - Galenum valida lo que pueda validar por su cuenta y descarga el JSON.
+  - Las atenciones del lote quedan marcadas para no facturarlas dos veces.
+  - El botón "Enviar al Ministerio" queda deshabilitado.
+- Revisar la importación (`RipsParser`) contra el Documento Técnico 1 v003. Nuevos campos: CIE-11 opcional,
+  `codigoVIDA` y `registroSIRAS`.
+
+### 2. Odontología, fase 3 de los formatos
+
+- **Plan de tratamiento con presupuesto:** procedimientos (CUPS) por fases, con diente, superficie y valor de la lista
+  de precios; aceptación del paciente; y una marca en cada sesión cuando se realizan. Antes, escribir su diseño.
+- Periodontograma: profundidad de sondaje, sangrado, movilidad y recesión.
+- Consentimientos odontológicos: exodoncia, endodoncia y anestesia local.
+- Que un hallazgo del odontograma sugiera el CUPS del procedimiento.
+- Ver la diferencia de cada odontograma frente al anterior.
+
+### 3. Agenda
+
+- Recordatorios por WhatsApp o SMS.
+- Bloqueos por vacaciones y días cerrados del consultorio.
+- Vista semanal.
+
+### 4. Suscripciones
+
+- Pasarela de pagos (Wompi, PayU…), cuyo webhook haga lo mismo que "Aprobar".
+- Factura electrónica de Galenum por cada pago (obligatoria ante la DIAN).
+- Renovación automática.
+
+### 5. Historia clínica
+
+- Imagen de la firma del médico y código QR de verificación en los PDF.
+- Reporte de auditoría para el administrador.
+
+### 6. Formatos transversales (fase 4)
+
+Incapacidad, remisión y contrarreferencia, y consentimiento informado firmado por el paciente.
+
+### 7. Más adelante
+
+- **RIPS, fases 3 y 4:**
+  - Envío al MUV (API REST en Docker, tipo B, por cuenta de cada consultorio y con sus credenciales de SISPRO).
+  - Factura electrónica desde Galenum.
+- **Interoperabilidad de la historia clínica (IHCE)** del Ministerio: el RIPS ya trae `codigoVIDA` (el id de la
+  atención en la IHCE), que será obligatorio cuando el sistema entre en operación. Seguir su calendario.
 - Portal del paciente: cuenta separada que ve sus citas y fórmulas.
-- ✅ Invitaciones por correo: al crearla, Galenum envía el enlace (quién invita, consultorio, roles, vencimiento); el
-  enlace y "Copiar" quedan de respaldo. "Reenviar" crea un enlace nuevo y anula el anterior; máximo 5 envíos por hora
-  a la misma dirección.
-- ✅ MFA (TOTP): obligatoria para operadores de la plataforma y administradores de consultorio, opcional para los
-  demás; códigos de recuperación, "recordar este equipo" 30 días y restablecimiento desde la consola.
-- Suscripciones, siguiente iteración: pasarela de pagos (Wompi, PayU…) cuyo webhook haga lo mismo que "Aprobar"; factura electrónica de Galeno por cada pago (obligatoria ante la DIAN); renovación automática.
-- Partners, antes de lanzar: revisión legal y contable de las condiciones (contrato de prestación de servicios, retención en la fuente y ReteICA sobre comisiones, cuenta de cobro o factura del partner) y reportes de comisiones para contabilidad.
-- Revisión legal de los términos y de la política de datos (hoy un borrador en `/politica-datos`) antes de abrir el registro al público.
-- Catálogo CUM/INVIMA y rangos de dosis en `ValidadorFormula`.
-- Cifrado de campos sensibles.
-- Interoperabilidad de la historia clínica electrónica (IHCE) del Ministerio: el RIPS ya trae el campo `codigoVIDA`
-  (id de la atención en la IHCE), que será obligatorio cuando el sistema entre en operación. Seguir su calendario.
-- Pruebas de integración con Testcontainers.
-- Facturación electrónica: ver "RIPS: generación" (fase 4).
+- Catálogo CUM/INVIMA y rangos de dosis en las fórmulas.
+- **Registro:**
+  - Lista de dominios de correo desechable.
+  - Límite largo por IP (por ejemplo, 2 pruebas cada 30 días, en base de datos).
+  - Una prueba gratis por NIT.
+  - Normalizar los alias de Gmail. Las opciones (a) verificar en ReTHUS y (c) prueba con topes se retoman si se ve
+    abuso.
+- Técnico: cifrado de campos sensibles y pruebas de integración con Testcontainers.
+- **AWS, Capa 2 (robustez):** alarmas en CloudWatch y Sentry; WAF en CloudFront (confirmar antes que la nueva
+  experiencia lo permita); ambiente de *staging*.
+- **AWS, Capa 3 (disponibilidad):** ALB con ECS Fargate (2 tareas o más), RDS Multi-AZ y SQS para la cola de IA.
 
-### Expansión a España (idea del 3 de noviembre de 2026, después del lanzamiento en Colombia)
+## Pendientes que dependen del usuario (no de código)
+
+- **IA en producción (Bedrock):**
+  - Hoy está bloqueada. Haiku 5.5 solo tiene cuotas entre regiones (perfil `us.`), y AWS las dejó en 0 y negó la
+    primera solicitud.
+  - Hay un caso abierto en Soporte pidiendo 100.000 tokens por minuto en la cuota L-47520EB7 (US).
+  - Al aprobarlo: poner el id del modelo `us.` y hacer una invocación de prueba, para ver si las políticas del proyecto
+    permiten la inferencia entre regiones.
+  - Plan B: la API directa de Anthropic, con la clave en SSM. Exige actualizar la política de datos: Anthropic como
+    encargado y transferencia a EE. UU.
+- **Validación clínica:** que un odontólogo revise la historia odontológica v1 y el odontograma (hallazgos y colores).
+  Sus correcciones salen como v2 de cada formato.
+- **Revisión legal:**
+  - Términos y política de datos (hoy borradores en `/terminos` y `/politica-datos`), con la cláusula contra la copia.
+  - Condiciones de los partners: contrato, retención en la fuente y ReteICA, cuenta de cobro o factura. Decidir si la
+    comisión tiene tope (12 o 24 meses).
+  - Si el RIPS es obligatorio para lo que paga un particular: el art. 8 de la Res. 948 lo sugiere.
+- **Marca:** consultar en la SIC que "Galenum" esté libre en las clases 42 y 44, y registrarla.
+- **Soporte:** un número de WhatsApp para "Ayuda".
+- **Costos:** revisar el gasto real de AWS frente a lo esperado (35–50 USD al mes).
+- **Demo:** montar el consultorio demo en producción con `docs/demo/README.md`, si todavía no está.
+
+## Expansión a España (idea del 3 de noviembre de 2026, después del lanzamiento en Colombia)
+
 Es un proyecto aparte, no una configuración. Orden: validar la demanda con algunas clínicas → asesoría de un abogado
 español en protección de datos sanitarios → decidir la arquitectura → adaptar el producto.
-- **Datos en la UE.** La nueva experiencia de AWS fija una sola región por proyecto (la de Galeno es us-east-2), así que
-  España necesita su propia cuenta de AWS con región europea (p. ej., `eu-south-2`, Madrid) y un despliegue separado:
-  base de datos, S3, Bedrock y correo propios. No mezclar pacientes colombianos y españoles en la misma base. Con datos
-  en EE. UU. es legal (Marco de Privacidad UE–EE. UU.), pero las clínicas suelen exigir la UE.
-- **RGPD y LOPDGDD.** Datos de salud = categoría especial (art. 9). DPA con cada encargado (AWS, correo, Bedrock,
-  soporte), registro de actividades, evaluación de impacto (EIPD), probablemente Delegado de Protección de Datos, y
-  representante en la UE (art. 27) si la empresa sigue siendo colombiana. Términos y política de datos propios.
-- **Correo de soporte.** ImprovMX no sirve tal cual: hay que confirmar DPA y dónde procesa. Opciones: Google Workspace
-  con región de datos en Europa, o recepción con SES en la región europea.
-- **Producto.** Lo colombiano queda fuera (RIPS, CUPS, NIT, DIAN, festivos de Colombia). Falta lo español: facturación
-  con **Verifactu**, **receta médica privada electrónica** (RD 192/2023, requisitos de homologación), historia clínica
-  según la **Ley 41/2002** (conservación mínima de 5 años), CIE-10 (ya existe), euros e IVA, festivos nacionales y
-  autonómicos. Ayuda que el contenido clínico sea datos y no código (motor de formatos).
-- **Comercial y fiscal.** Facturación a clientes españoles desde Colombia o con una sociedad en España, IVA del SaaS,
+
+- **Datos en la UE:**
+  - La nueva experiencia de AWS fija una sola región por proyecto, así que España necesita su propia cuenta con región
+    europea (por ejemplo, `eu-south-2`, Madrid) y un despliegue separado.
+  - No mezclar pacientes colombianos y españoles en la misma base.
+- **RGPD y LOPDGDD:**
+  - Los datos de salud son categoría especial (art. 9).
+  - Hace falta un contrato de encargado (DPA) con cada proveedor, el registro de actividades, la evaluación de impacto
+    y, probablemente, un delegado de protección de datos.
+  - Además, un representante en la UE (art. 27) si la empresa sigue siendo colombiana.
+- **Correo de soporte:** ImprovMX no sirve tal cual. Opciones: Google Workspace con región en Europa, o recepción con
+  SES en la región europea.
+- **Producto:**
+  - Lo colombiano queda fuera: RIPS, CUPS, NIT, DIAN y festivos.
+  - Falta lo español: facturación con **Verifactu**, **receta médica privada electrónica** (RD 192/2023), historia
+    clínica según la **Ley 41/2002**, euros e IVA, y festivos nacionales y autonómicos.
+- **Comercial y fiscal:** facturar a clientes españoles desde Colombia o con una sociedad en España, IVA del SaaS y
   partners en euros.
 
-### Importación de historias desde otros sistemas (pausada: queda para el final)
-El principio: primero las fuentes masivas, todas por el mismo flujo **extraer → revisar → confirmar**.
+## Importación de historias desde otros sistemas (pausada: queda para el final)
 
-| Prioridad | Fuente | Cómo se procesa |
+Principio: primero las fuentes masivas, todas por el mismo flujo **extraer → revisar → confirmar**.
+
+| Prioridad | Fuente | Estado o cómo se procesa |
 |---|---|---|
-| ✔ | **RIPS JSON** (escrito con la Res. 2275/2023; la reemplazó la 948/2026, verificado: revisar contra su Documento Técnico 1) | Hecho: pacientes por documento y atenciones con CUPS y CIE-10. Faltan medicamentos y otros servicios |
-| ✔ | **Excel o CSV de pacientes** | Hecho: completa los pacientes que el RIPS dejó sin nombre y crea los que faltan; el mapeo se recuerda por encabezados. Falta: sugerir con IA las columnas que no se reconocen |
-| 1 | RIPS TXT antiguos (AF, US, AC, AP…) | Solo si los clientes los tienen; mismo lote y revisión que el JSON |
-| 3 | PDF en lote (ZIP, digitales o escaneados) | IA con salida estructurada, un trabajo por archivo en `ai_jobs`; procesamiento por lotes de Bedrock para migraciones grandes |
+| ✔ | **RIPS JSON** | Hecho (escrito con la Res. 2275; revisar contra el Documento Técnico 1 v003 de la 948). Faltan medicamentos y otros servicios |
+| ✔ | **Excel o CSV de pacientes** | Hecho. Falta: sugerir con IA las columnas que no se reconocen |
+| 1 | RIPS TXT antiguos (AF, US, AC, AP…) | Solo si los clientes los tienen |
+| 3 | PDF en lote (ZIP, digitales o escaneados) | IA con salida estructurada, un trabajo por archivo; procesamiento por lotes de Bedrock para migraciones grandes |
 | 4 | Texto pegado (un paciente) | El mismo extractor de IA de los PDF |
 | 5 | FHIR / RDA (Res. 866/2021) | Cuando un cliente lo pida |
 
-- **Zona de revisión.** Hecha para RIPS (ver arquitectura). Para PDF faltan el origen (archivo y página) y la confianza por registro.
-- **Deduplicación.** Primero por tipo y número de documento; si no coincide, por parecido de nombre y fecha de nacimiento.
-- **Original.** El PDF queda en S3 como documento soporte del paciente.
-- **Antes de construir el punto 3:** un piloto con 20 historias reales para medir calidad, tokens y costo.
-- **Legal.** Contrato de encargado del tratamiento (Ley 1581) que mencione la IA en AWS, auditoría de quién importó y aprobó, y conservación del original (Res. 1995).
-- **Comercial.** Ofrecer "migración asistida incluida" para el primer lote de cada cliente.
+- **Antes del punto 3:** un piloto con 20 historias reales para medir calidad, tokens y costo.
+- **Deduplicación:** primero por documento; si no coincide, por parecido de nombre y fecha de nacimiento.
+- **Legal:** contrato de encargado (Ley 1581) que mencione la IA, auditoría de quién importó y aprobó, y conservación
+  del original (Res. 1995).
+- **Comercial:** ofrecer "migración asistida incluida" para el primer lote de cada cliente.
+
+## Para retomar en un chat nuevo
+
+- **Idioma y estilo:** todas las respuestas en **español**. Nivel de ayuda HIGH (explicar cada paso, sugerir
+  alternativas y señalar riesgos).
+- **Git:** pedir permiso antes de cada commit, push o PR. Abrir los PR con la API de GitHub (no hay `gh`). Nunca subir
+  `ACCESOS-LOCAL.txt`, `infra/terraform.tfvars`, `docs/guia-operacion.pdf` ni `logingalenumverde.jfif`.
+- **AWS:** solo `aws login` con el perfil `galeno` en us-east-2; nunca pedir llaves de acceso. `terraform apply`,
+  `tools/desplegar.sh` y los comandos dentro de la instancia los ejecuta el usuario.
+- **Local:**
+  - La API corre en 8090 contra la base `galeno`, que nunca se reinicia.
+  - Las pruebas de punta a punta van contra un esquema aparte, `galeno_e2e`, con una segunda API en 8091 y el
+    frontend en 5181 (configuración `web-e2e` de `.claude/launch.json`).
+  - Los procesos se detienen por su PID.
+- **Datos de demostración:** siempre ficticios, nunca de pacientes reales.

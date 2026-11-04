@@ -11,6 +11,8 @@ import { fechaHoraCorta } from "../features/agenda/tiempo";
 import { FormatosAtencion, type Diligenciado } from "../features/formatos/FormatosAtencion";
 import { FormatoLectura } from "../features/formatos/FormatoLectura";
 import { textoFormatos, type Definicion, type Respuestas } from "../features/formatos/motor";
+import { ProcedimientosEditor, ProcedimientosLectura, type ProcedimientoForm } from "../features/rips/ProcedimientosEditor";
+import { useModuloActivo } from "../features/rips/modulos";
 
 type Atencion = Schemas["AtencionVista"];
 
@@ -47,6 +49,11 @@ function aForm(a: Atencion): Form {
   }
   return f;
 }
+
+const procedimientosDe = (a: Atencion): ProcedimientoForm[] => (a.procedimientos ?? []).map((p) => ({
+  codigoCups: p.codigoCups!, descripcion: p.descripcion, cantidad: p.cantidad ?? 1,
+  valorUnitario: p.valorUnitario ?? undefined, diente: p.diente ?? undefined, superficies: p.superficies ?? undefined,
+}));
 
 const respuestasDe = (formatos?: Diligenciado[]) =>
   Object.fromEntries((formatos ?? []).map((f) => [f.id!, (f.respuestas ?? {}) as Respuestas])) as Record<string, Respuestas>;
@@ -97,12 +104,15 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
   const [guardadoEn, setGuardadoEn] = useState<Date | null>(null);
   const [formatos, setFormatos] = useState<Diligenciado[]>(() => atencion.formatos ?? []);
   const [respuestas, setRespuestas] = useState(() => respuestasDe(atencion.formatos));
+  // Con el módulo de RIPS: lo que se hizo, con su CUPS. Sin él, no se muestra ni se envía (el servidor no lo toca)
+  const rips = useModuloActivo("RIPS");
+  const [procedimientos, setProcedimientos] = useState<ProcedimientoForm[]>(() => procedimientosDe(atencion));
 
-  const original = useMemo(() => JSON.stringify({ f: aForm(atencion), d: atencion.diagnosticos ?? [] }), [atencion]);
+  const original = useMemo(() => JSON.stringify({ f: aForm(atencion), d: atencion.diagnosticos ?? [], p: procedimientosDe(atencion) }), [atencion]);
   const [base, setBase] = useState(original);
   // Lo último guardado de cada formato (agregar o quitar uno no deja la atención "sin guardar")
   const [baseRespuestas, setBaseRespuestas] = useState(() => respuestasDe(atencion.formatos));
-  const sucio = JSON.stringify({ f: form, d: dx }) !== base || JSON.stringify(respuestas) !== JSON.stringify(baseRespuestas);
+  const sucio = JSON.stringify({ f: form, d: dx, p: procedimientos }) !== base || JSON.stringify(respuestas) !== JSON.stringify(baseRespuestas);
 
   useEffect(() => {
     if (!sucio) return;
@@ -126,11 +136,12 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
           examenFisico: txt(form.examenFisico), analisis: txt(form.analisis), plan: txt(form.plan),
           diagnosticos: dx,
           formatos: formatos.map((f) => ({ id: f.id!, respuestas: respuestas[f.id!] ?? {} })),
+          procedimientos: rips ? procedimientos.map(({ descripcion: _d, ...p }) => p) : undefined,
         },
       })),
     onSuccess: (a) => {
       setVersion(a.version ?? version);
-      setBase(JSON.stringify({ f: form, d: dx }));
+      setBase(JSON.stringify({ f: form, d: dx, p: procedimientos }));
       setBaseRespuestas(respuestas);
       setGuardadoEn(new Date());
     },
@@ -213,6 +224,12 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
         <label>Examen físico<textarea rows={4} value={form.examenFisico} onChange={set("examenFisico")} /></label>
         <h3>Diagnósticos</h3>
         <DiagnosticosEditor value={dx} onChange={setDx} paciente={paciente} />
+        {rips && (
+          <>
+            <h3>Procedimientos realizados</h3>
+            <ProcedimientosEditor value={procedimientos} onChange={setProcedimientos} />
+          </>
+        )}
         <label>Análisis<textarea rows={3} value={form.analisis} onChange={set("analisis")} /></label>
         <label>Plan<textarea rows={3} value={form.plan} onChange={set("plan")} /></label>
       </div>
@@ -317,6 +334,7 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
             </ul>
           </div>
         )}
+        <ProcedimientosLectura procedimientos={a.procedimientos ?? []} />
         <Seccion titulo="Análisis" texto={a.analisis} />
         <Seccion titulo="Plan" texto={a.plan} />
       </div>

@@ -38,6 +38,8 @@ import com.galeno.formatos.FormatosService.RespuestasFormato;
 import com.galeno.historia.HistoriaService.Archivo;
 import com.galeno.historia.HistoriaService.AtencionVista;
 import com.galeno.historia.HistoriaService.Cie10Vista;
+import com.galeno.historia.HistoriaService.CupsVista;
+import com.galeno.historia.HistoriaService.ProcedimientoNuevo;
 import com.galeno.historia.HistoriaService.DocumentoVista;
 import com.galeno.historia.HistoriaService.EventoHistoria;
 
@@ -97,7 +99,10 @@ public class HistoriaController {
                 r.frecuenciaRespiratoria(), r.temperatura(), r.saturacionO2(), r.pesoKg(), r.tallaCm(),
                 r.examenFisico(), r.analisis(), r.plan(), dx),
                 r.formatos() == null ? null : r.formatos().stream()
-                        .map(f -> new RespuestasFormato(f.id(), f.respuestas())).toList());
+                        .map(f -> new RespuestasFormato(f.id(), f.respuestas())).toList(),
+                r.procedimientos() == null ? null : r.procedimientos().stream()
+                        .map(p -> new ProcedimientoNuevo(p.codigoCups(), p.cantidad(), p.valorUnitario(), p.diente(),
+                                p.superficies())).toList());
     }
 
     /** Agrega al borrador un formato activo del consultorio, con su última versión. */
@@ -159,6 +164,12 @@ public class HistoriaController {
         return historia.anularDocumento(id, r.motivo());
     }
 
+    /** Buscador de CUPS, con el precio del consultorio. Solo con el módulo de RIPS activo. */
+    @GetMapping("/cups")
+    public List<CupsVista> cups(@RequestParam String q) {
+        return historia.buscarCups(q);
+    }
+
     @GetMapping("/cie10")
     public List<Cie10Vista> cie10(@RequestParam String q) {
         return historia.buscarCie10(q);
@@ -196,7 +207,15 @@ public class HistoriaController {
                                   @Size(max = 20000) String analisis,
                                   @Size(max = 20000) String plan,
                                   @NotNull @Size(max = 20) List<@Valid DiagnosticoRequest> diagnosticos,
-                                  @Size(max = 10) List<@Valid RespuestasFormatoRequest> formatos) {
+                                  @Size(max = 10) List<@Valid RespuestasFormatoRequest> formatos,
+                                  @Size(max = 50) List<@Valid ProcedimientoRequest> procedimientos) {
+    }
+
+    /** @param procedimientos {@code null} si la pantalla no los muestra (sin el módulo de RIPS): no cambian */
+    public record ProcedimientoRequest(@NotBlank @Size(max = 10) String codigoCups,
+                                       @Min(1) @Max(99) int cantidad,
+                                       @DecimalMin("0.00") @DecimalMax("999999999.99") BigDecimal valorUnitario,
+                                       @Size(max = 2) String diente, @Size(max = 5) String superficies) {
     }
 
     public record NuevoFormato(@NotNull UUID formatoId) {

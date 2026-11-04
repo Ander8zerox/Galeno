@@ -135,6 +135,12 @@ public class Atencion {
     @OrderColumn(name = "orden")
     private List<Diagnostico> diagnosticos = new ArrayList<>();
 
+    /** Con su CUPS; solo se registran con el módulo de RIPS activo (ver HistoriaService). */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "atencion_procedimientos", joinColumns = @JoinColumn(name = "atencion_id"))
+    @OrderColumn(name = "orden")
+    private List<Procedimiento> procedimientos = new ArrayList<>();
+
     @Column(name = "lote_importacion_id", updatable = false)
     private UUID loteImportacionId;
 
@@ -217,6 +223,13 @@ public class Atencion {
         this.plan = c.plan();
         this.diagnosticos.clear();
         this.diagnosticos.addAll(c.diagnosticos());
+        this.actualizadaEn = Instant.now();
+    }
+
+    void registrarProcedimientos(List<Procedimiento> nuevos) {
+        exigirBorrador();
+        this.procedimientos.clear();
+        this.procedimientos.addAll(nuevos);
         this.actualizadaEn = Instant.now();
     }
 
@@ -360,6 +373,10 @@ public class Atencion {
 
     public List<Diagnostico> getDiagnosticos() {
         return diagnosticos;
+    }
+
+    public List<Procedimiento> getProcedimientos() {
+        return procedimientos;
     }
 
     public UUID getLoteImportacionId() {
