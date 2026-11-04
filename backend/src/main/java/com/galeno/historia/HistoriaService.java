@@ -21,6 +21,8 @@ import com.galeno.formatos.FormatosService.FormatoDiligenciado;
 import com.galeno.formatos.FormatosService.RespuestasFormato;
 import com.galeno.historia.AccesoHistoria.Accion;
 import com.galeno.identidad.IdentidadService;
+import com.galeno.modulos.Modulo;
+import com.galeno.modulos.ModulosService;
 import com.galeno.pacientes.Paciente;
 import com.galeno.pacientes.PacienteService;
 import com.galeno.shared.pdf.NombreArchivo;
@@ -48,11 +50,15 @@ public class HistoriaService {
     private final AgendaPublica agenda;
     private final PdfRenderer pdf;
     private final FormatosService formatos;
+    private final CupsRepository cups;
+    private final ModulosService modulos;
+    private final ListaPrecios precios;
 
     HistoriaService(AtencionRepository atenciones, NotaAclaratoriaRepository notas,
                     DocumentoClinicoRepository documentos, AccesoHistoriaRepository accesos, Cie10Repository cie10,
                     AlmacenDocumentos almacen, PacienteService pacientes, IdentidadService identidad,
-                    AgendaPublica agenda, PdfRenderer pdf, FormatosService formatos) {
+                    AgendaPublica agenda, PdfRenderer pdf, FormatosService formatos, CupsRepository cups,
+                    ModulosService modulos, java.util.Optional<ListaPrecios> precios) {
         this.atenciones = atenciones;
         this.notas = notas;
         this.documentos = documentos;
@@ -64,6 +70,9 @@ public class HistoriaService {
         this.agenda = agenda;
         this.pdf = pdf;
         this.formatos = formatos;
+        this.cups = cups;
+        this.modulos = modulos;
+        this.precios = precios.orElse(codigos -> java.util.Map.of());
     }
 
     // --- línea de tiempo ---
@@ -101,8 +110,13 @@ public class HistoriaService {
                 throw ApiProblem.conflict("La cita ya no está abierta");
             }
         }
-        Atencion atencion = atenciones.save(Atencion.nueva(pacienteId, yo.membresiaId(), yo.id(), yo.nombre(), citaId,
-                paciente.getAntecedentes()));
+        Atencion nueva = Atencion.nueva(pacienteId, yo.membresiaId(), yo.id(), yo.nombre(), citaId,
+                paciente.getAntecedentes());
+        // Antes de guardarla: así nace con la consulta y con la versión que recibe la pantalla
+        if (modulos.activo(Modulo.RIPS)) {
+            consultaSugerida(pacienteId, yo.id()).ifPresent(p -> nueva.registrarProcedimientos(List.of(p)));
+        }
+        Atencion atencion = atenciones.save(nueva);
         formatos.agregarPorDefecto(atencion.getId(), yo.id(), firmadasRecientes(pacienteId));
         auditar(pacienteId, Accion.CREAR_ATENCION, atencion.getId());
         return vista(atencion);
@@ -115,10 +129,13 @@ public class HistoriaService {
         return vista(atencion);
     }
 
-    /** @param respuestasFormatos {@code null}: los formatos no cambian */
+    /**
+     * @param respuestasFormatos {@code null}: los formatos no cambian
+     * @param procedimientos {@code null}: no cambian (así llega sin el módulo de RIPS)
+     */
     @Transactional
     public AtencionVista guardar(UUID atencionId, long version, Atencion.Contenido contenido,
-                                 List<RespuestasFormato> respuestasFormatos) {
+                                 List<RespuestasFormato> respuestasFormatos, List<ProcedimientoNuevo> procedimientos) {
         Atencion atencion = propia(atencionId);
         if (atencion.getVersion() != version) {
             throw ApiProblem.conflict("La atención cambió en otra pestaña o equipo. Recargue para ver la última versión.");
@@ -126,6 +143,10 @@ public class HistoriaService {
         atencion.actualizar(contenido);
         if (respuestasFormatos != null) {
             formatos.guardar(atencionId, respuestasFormatos);
+        }
+        if (procedimientos != null) {
+            modulos.exigir(Modulo.RIPS);
+            atencion.registrarProcedimientos(procedimientos(procedimientos));
         }
         atenciones.flush(); // incrementa la versión antes de responder
         return vista(atencion);
@@ -244,6 +265,67 @@ public class HistoriaService {
                 .filter(Diagnostico::isPrincipal)
                 .map(d -> d.getCodigoCie10() + " " + d.getDescripcion())
                 .findFirst();
+    }
+
+    // --- procedimientos (CUPS) ---
+
+    /** Con la descripción del catálogo: un código que no está en CUPS se rechaza. */
+    private List<Procedimiento> procedimientos(List<ProcedimientoNuevo> nuevos) {
+        java.util.Map<String, String> nombres = nombresCups(nuevos.stream()
+                .map(p -> p.codigoCups() == null ? "" : p.codigoCups().strip().toUpperCase()).toList());
+        return nuevos.stream().map(p -> {
+            String codigo = p.codigoCups() == null ? "" : p.codigoCups().strip().toUpperCase();
+            String nombre = nombres.get(codigo);
+            if (nombre == null) {
+                throw ApiProblem.badRequest("El código " + p.codigoCups() + " no está en el catálogo CUPS");
+            }
+            return new Procedimiento(codigo, nombre, p.cantidad(), p.valorUnitario(), p.diente(), p.superficies());
+        }).toList();
+    }
+
+    /**
+     * La consulta del día: de primera vez si el paciente no tiene atenciones firmadas en el consultorio, si no de
+     * control; por medicina general, odontología u otras especialidades según el perfil de quien atiende.
+     */
+    java.util.Optional<Procedimiento> consultaSugerida(UUID pacienteId, UUID medicoUsuarioId) {
+        boolean primeraVez = atenciones.firmadas(pacienteId).isEmpty();
+        String especialidad = identidad.profesional(medicoUsuarioId).especialidad();
+        String codigo = (primeraVez ? "8902" : "8903") + sufijoConsulta(especialidad);
+        return cups.findById(codigo).map(c -> new Procedimiento(c.getCodigo(), c.getDescripcion(), 1,
+                precios.precios(List.of(c.getCodigo())).get(c.getCodigo()), null, null));
+    }
+
+    /** 01 medicina general, 03 odontología general, 02 otras especialidades médicas (sufijos CUPS 8902xx / 8903xx). */
+    static String sufijoConsulta(String especialidad) {
+        String e = especialidad == null ? "" : java.text.Normalizer.normalize(especialidad, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").toLowerCase(java.util.Locale.ROOT);
+        if (e.contains("odont")) {
+            return "03";
+        }
+        if (e.isBlank() || e.contains("general")) {
+            return "01";
+        }
+        return "02";
+    }
+
+    /** Buscador de CUPS para la atención, con el precio del consultorio si lo tiene. Solo con el módulo de RIPS. */
+    @Transactional(readOnly = true)
+    public List<CupsVista> buscarCups(String q) {
+        modulos.exigir(Modulo.RIPS);
+        String texto = q == null ? "" : q.strip();
+        if (texto.length() < 2) {
+            return List.of();
+        }
+        List<Cups> encontrados = cups.buscar(texto, PageRequest.of(0, 20));
+        java.util.Map<String, java.math.BigDecimal> conPrecio = precios.precios(encontrados.stream().map(Cups::getCodigo).toList());
+        return encontrados.stream().map(c -> new CupsVista(c.getCodigo(), c.getDescripcion(), conPrecio.get(c.getCodigo()))).toList();
+    }
+
+    /** Descripción CUPS de cada código conocido (los desconocidos no aparecen en el mapa). */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, String> nombresCups(java.util.Collection<String> codigos) {
+        return cups.findAllById(codigos).stream()
+                .collect(java.util.stream.Collectors.toMap(Cups::getCodigo, Cups::getDescripcion));
     }
 
     // --- importación (la usa el módulo de importación) ---
@@ -443,6 +525,26 @@ public class HistoriaService {
     public record NotaVista(UUID id, String autorNombre, String texto, Instant creadaEn) {
     }
 
+    /** @param valorUnitario el precio del consultorio para ese CUPS, si lo tiene */
+    public record CupsVista(String codigo, String descripcion, java.math.BigDecimal valorUnitario) {
+    }
+
+    /** Lo que envía la pantalla; la descripción sale del catálogo. */
+    public record ProcedimientoNuevo(String codigoCups, int cantidad, java.math.BigDecimal valorUnitario, String diente,
+                                     String superficies) {
+    }
+
+    /** @param consulta va en "consultas" del RIPS (CUPS 890…); si no, en "procedimientos" */
+    public record ProcedimientoVista(String codigoCups, String descripcion, int cantidad,
+                                     java.math.BigDecimal valorUnitario, String diente, String superficies,
+                                     boolean consulta) {
+
+        static ProcedimientoVista de(Procedimiento p) {
+            return new ProcedimientoVista(p.getCodigoCups(), p.getDescripcion(), p.getCantidad(), p.getValorUnitario(),
+                    p.getDiente(), p.getSuperficies(), p.esConsulta());
+        }
+    }
+
     public record DiagnosticoVista(String codigoCie10, String descripcion, boolean principal, Diagnostico.Tipo tipo) {
     }
 
@@ -467,8 +569,9 @@ public class HistoriaService {
                                 Integer frecuenciaRespiratoria, java.math.BigDecimal temperatura,
                                 Integer saturacionO2, java.math.BigDecimal pesoKg, java.math.BigDecimal tallaCm,
                                 String examenFisico, String analisis, String plan,
-                                List<DiagnosticoVista> diagnosticos, List<NotaVista> notas,
-                                List<DocumentoVista> documentos, List<FormatoDiligenciado> formatos) {
+                                List<DiagnosticoVista> diagnosticos, List<ProcedimientoVista> procedimientos,
+                                List<NotaVista> notas, List<DocumentoVista> documentos,
+                                List<FormatoDiligenciado> formatos) {
 
         static AtencionVista de(Atencion a, boolean propia, List<NotaVista> notas, List<DocumentoVista> documentos,
                                 List<FormatoDiligenciado> formatos) {
@@ -479,7 +582,8 @@ public class HistoriaService {
                     a.getFrecuenciaRespiratoria(), a.getTemperatura(), a.getSaturacionO2(), a.getPesoKg(),
                     a.getTallaCm(), a.getExamenFisico(), a.getAnalisis(), a.getPlan(),
                     a.getDiagnosticos().stream().map(d -> new DiagnosticoVista(d.getCodigoCie10(), d.getDescripcion(),
-                            d.isPrincipal(), d.getTipo())).toList(), notas, documentos, formatos);
+                            d.isPrincipal(), d.getTipo())).toList(),
+                    a.getProcedimientos().stream().map(ProcedimientoVista::de).toList(), notas, documentos, formatos);
         }
     }
 

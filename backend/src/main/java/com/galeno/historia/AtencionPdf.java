@@ -70,6 +70,17 @@ final class AtencionPdf {
             }
             b.append("</table>");
         }
+        if (!a.getProcedimientos().isEmpty()) {
+            // Sin valores: la historia clínica es registro clínico, no de cobro
+            b.append("<h2>Procedimientos realizados</h2><table class=\"grilla\"><tr><th>CUPS</th><th>Descripción</th><th>Cant.</th><th>Diente</th></tr>");
+            for (Procedimiento p : a.getProcedimientos()) {
+                b.append("<tr><td>").append(esc(p.getCodigoCups())).append("</td><td>").append(esc(p.getDescripcion()))
+                        .append("</td><td>").append(p.getCantidad()).append("</td><td>")
+                        .append(p.getDiente() == null ? "" : esc(p.getDiente() + (p.getSuperficies() == null ? "" : " " + p.getSuperficies())))
+                        .append("</td></tr>");
+            }
+            b.append("</table>");
+        }
         seccion(b, "Análisis", a.getAnalisis());
         seccion(b, "Plan", a.getPlan());
 

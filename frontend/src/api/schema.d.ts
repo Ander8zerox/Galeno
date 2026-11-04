@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/v1/rips/precios/{codigoCups}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["fijar"];
+        post?: never;
+        delete: operations["quitar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plataforma/planes/{codigo}": {
         parameters: {
             query?: never;
@@ -84,6 +100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modulos/{modulo}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["activar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/importaciones/{id}/registros": {
         parameters: {
             query?: never;
@@ -156,7 +188,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["activar"];
+        put: operations["activar_1"];
         post?: never;
         delete?: never;
         options?: never;
@@ -701,7 +733,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["activar_1"];
+        post: operations["activar_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1172,6 +1204,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rips/precios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plataforma/planes": {
         parameters: {
             query?: never;
@@ -1332,6 +1380,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/modulos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listar_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/mfa": {
         parameters: {
             query?: never;
@@ -1355,7 +1419,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar"];
+        get: operations["listar_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1420,6 +1484,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["descargar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/historia/cups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cups"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1515,7 +1595,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar_1"];
+        get: operations["listar_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1720,6 +1800,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        Precio: {
+            valor: number;
+        };
+        PrecioVista: {
+            codigoCups?: string;
+            descripcion?: string;
+            valor?: number;
+            /** Format: date-time */
+            actualizadoEn?: string;
+        };
         CambioPlan: {
             nombre: string;
             /** Format: int64 */
@@ -1822,6 +1912,16 @@ export interface components {
             alergias?: string;
             antecedentes?: string;
             datosIncompletos?: boolean;
+        };
+        Activacion: {
+            activo: boolean;
+        };
+        ModuloVista: {
+            /** @enum {string} */
+            modulo?: "RIPS";
+            nombre?: string;
+            descripcion?: string;
+            activo?: boolean;
         };
         Inclusion: {
             incluido?: boolean;
@@ -1967,6 +2067,15 @@ export interface components {
             plan?: string;
             diagnosticos: components["schemas"]["DiagnosticoRequest"][];
             formatos?: components["schemas"]["RespuestasFormatoRequest"][];
+            procedimientos?: components["schemas"]["ProcedimientoRequest"][];
+        };
+        ProcedimientoRequest: {
+            codigoCups: string;
+            /** Format: int32 */
+            cantidad?: number;
+            valorUnitario?: number;
+            diente?: string;
+            superficies?: string;
         };
         RespuestasFormatoRequest: {
             /** Format: uuid */
@@ -2016,6 +2125,7 @@ export interface components {
             analisis?: string;
             plan?: string;
             diagnosticos?: components["schemas"]["DiagnosticoVista"][];
+            procedimientos?: components["schemas"]["ProcedimientoVista"][];
             notas?: components["schemas"]["NotaVista"][];
             documentos?: components["schemas"]["DocumentoVista"][];
             formatos?: components["schemas"]["FormatoDiligenciado"][];
@@ -2071,6 +2181,16 @@ export interface components {
             /** Format: date-time */
             creadaEn?: string;
         };
+        ProcedimientoVista: {
+            codigoCups?: string;
+            descripcion?: string;
+            /** Format: int32 */
+            cantidad?: number;
+            valorUnitario?: number;
+            diente?: string;
+            superficies?: string;
+            consulta?: boolean;
+        };
         PorDefecto: {
             porDefecto: boolean;
         };
@@ -2081,9 +2201,6 @@ export interface components {
             nombre?: string;
             especialidad?: string;
             porDefecto?: boolean;
-        };
-        Activacion: {
-            activo: boolean;
         };
         FormatoCatalogo: {
             /** Format: uuid */
@@ -2686,6 +2803,11 @@ export interface components {
             autor?: string;
             anulacion?: string;
         };
+        CupsVista: {
+            codigo?: string;
+            descripcion?: string;
+            valorUnitario?: number;
+        };
         Cie10Vista: {
             codigo?: string;
             descripcion?: string;
@@ -2740,7 +2862,7 @@ export interface components {
             /** Format: uuid */
             membresiaId?: string;
             roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
-            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR" | "FORMATOS_GESTIONAR")[];
+            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR" | "FORMATOS_GESTIONAR" | "MODULOS_GESTIONAR" | "RIPS_GESTIONAR")[];
             /** Format: int32 */
             totalConsultorios?: number;
         };
@@ -2759,30 +2881,30 @@ export interface components {
             finalizadoEn?: string;
         };
         JsonNode: {
+            short?: boolean;
+            binary?: boolean;
+            double?: boolean;
+            int?: boolean;
+            object?: boolean;
+            long?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            pojo?: boolean;
+            boolean?: boolean;
+            string?: boolean;
             array?: boolean;
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            short?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            long?: boolean;
-            pojo?: boolean;
-            int?: boolean;
-            double?: boolean;
-            boolean?: boolean;
-            binary?: boolean;
-            string?: boolean;
-            object?: boolean;
             number?: boolean;
             floatingPointNumber?: boolean;
-            integralNumber?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             missingNode?: boolean;
             valueNode?: boolean;
-            bigDecimal?: boolean;
             container?: boolean;
+            integralNumber?: boolean;
+            bigDecimal?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             bigInteger?: boolean;
             embeddedValue?: boolean;
         };
@@ -2839,6 +2961,52 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    fijar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigoCups: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Precio"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrecioVista"];
+                };
+            };
+        };
+    };
+    quitar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                codigoCups: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     actualizarPlan: {
         parameters: {
             query?: never;
@@ -3007,6 +3175,32 @@ export interface operations {
             };
         };
     };
+    activar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                modulo: "RIPS";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Activacion"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ModuloVista"][];
+                };
+            };
+        };
+    };
     incluirTodos: {
         parameters: {
             query?: never;
@@ -3154,7 +3348,7 @@ export interface operations {
             };
         };
     };
-    activar: {
+    activar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4051,7 +4245,7 @@ export interface operations {
             };
         };
     };
-    activar_1: {
+    activar_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -4813,6 +5007,26 @@ export interface operations {
             };
         };
     };
+    listar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrecioVista"][];
+                };
+            };
+        };
+    };
     planes: {
         parameters: {
             query?: never;
@@ -5021,6 +5235,26 @@ export interface operations {
             };
         };
     };
+    listar_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ModuloVista"][];
+                };
+            };
+        };
+    };
     estado_1: {
         parameters: {
             query?: never;
@@ -5041,7 +5275,7 @@ export interface operations {
             };
         };
     };
-    listar: {
+    listar_2: {
         parameters: {
             query?: {
                 page?: number;
@@ -5176,6 +5410,28 @@ export interface operations {
             };
         };
     };
+    cups: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CupsVista"][];
+                };
+            };
+        };
+    };
     cie10: {
         parameters: {
             query: {
@@ -5282,7 +5538,7 @@ export interface operations {
             };
         };
     };
-    listar_1: {
+    listar_3: {
         parameters: {
             query?: never;
             header?: never;

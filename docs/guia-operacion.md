@@ -441,7 +441,7 @@ galeno-api-1`. Para el día a día bastan los logs de CloudWatch.
 
 ### Siguiente en el producto
 
-El detalle está en [plan.md](plan.md), sección "Siguiente". Lo primero es el **motor de formatos clínicos**,
-empezando por **odontología** (odontograma, periodontograma, plan de tratamiento, consentimientos). Después vienen
-los demás pendientes: invitaciones por correo, pasarela de pagos y factura electrónica, recordatorios de citas,
-portal del paciente, RIPS y facturación electrónica.
+El detalle y el orden están en [plan.md](plan.md): primero la **fase 2 de RIPS** (datos y generación del JSON para
+facturar a EPS y prepagadas), después el **plan de tratamiento** de odontología, los recordatorios de la agenda y la
+pasarela de pagos. La IA en producción depende de que AWS apruebe la cuota de Bedrock (ver "Pendientes que dependen
+del usuario" en el plan).

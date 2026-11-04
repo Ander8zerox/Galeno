@@ -1,7 +1,7 @@
 # Diseño: generación de RIPS (y los CUPS en la atención)
 
-Estado: **decisiones tomadas** (4 de noviembre de 2026). Norma vigente verificada: Res. 948 de 2026, con su Documento
-Técnico 1 versión 003. Listo para construir la fase 1.
+Estado: **fase 1 construida** (4 de noviembre de 2026; ver "Cómo quedó la fase 1" al final). Norma vigente verificada:
+Res. 948 de 2026, con su Documento Técnico 1 versión 003.
 
 ## Problema
 
@@ -197,3 +197,24 @@ Los lotes contienen datos clínicos (diagnósticos), así que su consulta queda 
 - Cargar las listas de valores de SISPRO como catálogos (fase 2) y revisar `RipsParser` contra el Documento Técnico 1
   versión 003.
 - Confirmar en la revisión legal si el RIPS es obligatorio para lo que paga un particular.
+
+## Cómo quedó la fase 1
+
+- **Módulos:** `com.galeno.modulos` (tabla `modulos_consultorio`, V21). `ModulosService.exigir(Modulo.RIPS)` responde 404
+  si el módulo no está activo. Cualquier miembro lee `GET /api/v1/modulos` (la pantalla decide qué mostrar) y solo
+  `MODULOS_GESTIONAR` (ADMIN) los activa.
+- **Procedimientos:** en la historia clínica (`Atencion.procedimientos`, tabla `atencion_procedimientos`), con CUPS
+  validado contra el catálogo (la descripción sale del catálogo), cantidad de 1 a 99, valor, diente FDI y superficies
+  V L M D O. Viajan en el mismo `PUT` de la atención. Si el campo no viene, no cambian; si viene y el módulo está
+  apagado, el servidor responde 404. Al firmar quedan inmutables.
+- **Consulta sugerida:** al crear la atención con el módulo activo, Galenum agrega la consulta: 8902xx (primera vez, si
+  el paciente no tiene atenciones firmadas) o 8903xx (control), con sufijo 01 medicina general, 03 odontología o 02
+  otras especialidades, según el perfil del médico. Lleva el precio de la lista.
+- **Catálogo CUPS:** pasó de `importacion` a `historia` (como el CIE-10). Lo busca quien ve la historia y quien tiene
+  `RIPS_GESTIONAR` (no es dato clínico).
+- **Lista de precios:** `com.galeno.rips` (tabla `precios_cups`), con `RIPS_GESTIONAR`. La historia la consulta con la
+  interfaz `ListaPrecios`, que implementa el módulo de RIPS: la historia no depende de RIPS.
+- **PDF:** la atención muestra "Procedimientos realizados" con CUPS, cantidad y diente, **sin valores** (la historia
+  clínica es registro clínico, no de cobro).
+- **Permisos nuevos:** `MODULOS_GESTIONAR` y `RIPS_GESTIONAR`, los dos del administrador. Van en el token: quien tenga
+  la sesión abierta antes del despliegue ve los menús nuevos después de volver a ingresar.

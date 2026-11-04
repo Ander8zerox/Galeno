@@ -1,4 +1,4 @@
-package com.galeno.importacion;
+package com.galeno.historia;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

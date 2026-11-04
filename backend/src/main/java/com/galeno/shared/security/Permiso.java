@@ -24,5 +24,9 @@ public enum Permiso {
     /** Ver la suscripción del consultorio, elegir plan y reportar pagos. */
     SUSCRIPCION_GESTIONAR,
     /** Activar y desactivar formatos clínicos en el consultorio. */
-    FORMATOS_GESTIONAR
+    FORMATOS_GESTIONAR,
+    /** Activar y desactivar módulos opcionales (p. ej. RIPS) en el consultorio. */
+    MODULOS_GESTIONAR,
+    /** Lista de precios por CUPS y, en la fase 2, pagadores y lotes de RIPS. Exige además el módulo activo. */
+    RIPS_GESTIONAR
 }

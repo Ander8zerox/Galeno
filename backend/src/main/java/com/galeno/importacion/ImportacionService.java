@@ -52,7 +52,6 @@ public class ImportacionService {
 
     private final LoteImportacionRepository lotes;
     private final RegistroImportacionRepository registros;
-    private final CupsRepository cups;
     private final PacienteService pacientes;
     private final HistoriaService historia;
     private final FormulasPublica formulas;
@@ -62,14 +61,13 @@ public class ImportacionService {
     private final RipsParser parser;
     private final ImportacionListadoService listado;
 
-    ImportacionService(LoteImportacionRepository lotes, RegistroImportacionRepository registros, CupsRepository cups,
+    ImportacionService(LoteImportacionRepository lotes, RegistroImportacionRepository registros,
                        PacienteService pacientes, HistoriaService historia, FormulasPublica formulas,
                        AgendaPublica agenda, IdentidadService identidad, JsonMapper mapper,
                        ImportacionListadoService listado) {
         this.listado = listado;
         this.lotes = lotes;
         this.registros = registros;
-        this.cups = cups;
         this.pacientes = pacientes;
         this.historia = historia;
         this.formulas = formulas;
@@ -168,10 +166,9 @@ public class ImportacionService {
         Map<String, String> nombresCie10 = historia.nombresCie10(leido.pacientes().values().stream()
                 .flatMap(p -> p.atenciones.stream()).flatMap(a -> a.diagnosticos().stream()).map(DxRips::codigo)
                 .collect(Collectors.toSet()));
-        Map<String, String> nombresCups = cups.findAllById(leido.pacientes().values().stream()
-                        .flatMap(p -> p.atenciones.stream()).map(AtencionRips::codigoCups)
-                        .filter(c -> c != null).collect(Collectors.toSet())).stream()
-                .collect(Collectors.toMap(Cups::getCodigo, Cups::getDescripcion));
+        Map<String, String> nombresCups = historia.nombresCups(leido.pacientes().values().stream()
+                .flatMap(p -> p.atenciones.stream()).map(AtencionRips::codigoCups)
+                .filter(c -> c != null).collect(Collectors.toSet()));
 
         int orden = 0;
         int totalAtenciones = 0;
