@@ -12,13 +12,30 @@ por especialidad.
 Programar a mano cada especialidad no escala. La idea es un **motor**: un formato es un **dato** (una definición en
 JSON), y un solo componente lo dibuja, lo valida, lo guarda, lo imprime en el PDF y se lo pasa a la IA.
 
+## Principio: los formatos son opcionales
+
+Odontología es solo la **primera** especialidad. Muchos consultorios (medicina general, psicología, nutrición…) no
+van a usar nunca el formato odontológico, y para ellos nada debe cambiar:
+
+- **Sin formatos activos, la atención es exactamente la de hoy.** Mismos campos, mismo PDF, mismo flujo de firma.
+  Ningún consultorio nuevo ni existente tiene formatos activos por defecto.
+- **Nada odontológico se ve si no se activa:** ni pestañas vacías, ni el odontograma, ni opciones en los menús.
+- **El motor no sabe de odontología.** Lo odontológico vive en las definiciones de formato y en dos componentes
+  especiales (`odontograma`, `periodontograma`); el resto del código es igual para cualquier especialidad.
+- **Consultorios mixtos.** Un mismo consultorio puede tener un médico general y un odontólogo (el demo es así). Por
+  eso activar un formato en el consultorio solo lo deja **disponible**: cada profesional elige cuáles usa por defecto
+  y puede agregar o quitar formatos en cada atención. Al médico general no le aparece la historia odontológica.
+- **El PDF y la IA** solo incluyen los formatos diligenciados en esa atención.
+- **RIPS, facturación y fórmula** no dependen de los formatos, así que siguen igual para todos.
+
 ## Conceptos
 
 | Concepto | Qué es |
 |---|---|
 | **Formato** | Una plantilla con nombre y especialidad ("Historia odontológica", "Escala de dolor EVA"). |
 | **Versión de formato** | La definición concreta (secciones y campos). Una vez publicada **no cambia nunca**; para corregirla se publica la versión siguiente. |
-| **Activación** | El consultorio elige qué formatos usa. Desactivar no borra nada de lo ya diligenciado. |
+| **Activación** | El consultorio elige qué formatos tiene disponibles. Desactivar no borra nada de lo ya diligenciado. |
+| **Formatos por defecto del profesional** | Entre los disponibles, los que se agregan solos a las atenciones de ese profesional. |
 | **Formato diligenciado** | Las respuestas de un formato dentro de una atención. Apunta a la versión exacta con la que se llenó. |
 
 ### Quién crea los formatos
@@ -71,6 +88,7 @@ anterior, y la IA y los reportes encuentran el mismo dato en todas las versiones
 formatos              id, codigo (único, p. ej. "odonto.historia"), nombre, especialidad, activo
 formato_versiones     id, formato_id, version, definicion JSON, publicada_en      (inmutable)
 formatos_consultorio  tenant_id, formato_id, activo, orden                        (activación)
+formatos_profesional  tenant_id, usuario_id, formato_id                           (por defecto)
 atencion_formatos     id, tenant_id, atencion_id, formato_version_id, respuestas JSON, orden
 ```
 
@@ -139,6 +157,7 @@ Tiene tablas propias y se diseña en detalle al llegar a esa fase.
 | Acción | Quién |
 |---|---|
 | Activar o desactivar formatos en el consultorio | ADMIN |
+| Elegir sus formatos por defecto | Cada MÉDICO, entre los activos del consultorio |
 | Diligenciar formatos en una atención | MÉDICO (el dueño de la atención, como hoy) |
 | Ver los formatos diligenciados | Quien hoy puede ver la historia clínica (la secretaria no) |
 | Crear o publicar formatos del catálogo | Operador de la plataforma (o migración) |
@@ -154,7 +173,8 @@ Tiene tablas propias y se diseña en detalle al llegar a esa fase.
 3. **Periodontograma, plan de tratamiento con presupuesto, consentimientos odontológicos y CUPS de odontología.**
 4. **Formatos transversales:** incapacidad, remisión y contrarreferencia, y consentimiento firmado por el paciente.
 
-Cada fase se puede desplegar sola y ya le sirve a un consultorio.
+Cada fase se puede desplegar sola y ya le sirve a un consultorio. Las fases 1 a 3 solo le sirven a quien activa
+odontología; la fase 4 le sirve a todos (ver la decisión 5).
 
 ## Decisiones abiertas
 
@@ -163,3 +183,7 @@ Cada fase se puede desplegar sola y ya le sirve a un consultorio.
 3. **¿Ocultar campos generales por consultorio** (revisión por sistemas, signos vitales) desde la fase 1, o después?
 4. **¿Quién arma el contenido clínico** de la historia odontológica? Hace falta un odontólogo que revise los campos;
    el motor no sirve si el formato no es el que usa un consultorio real.
+5. **¿Adelantar formatos transversales?** Como no todos los consultorios son odontológicos, una opción es construir
+   el motor (fase 1) estrenándolo con algo que sirva a todos, como incapacidad y remisión, y dejar odontología para
+   después. Gana: todos los clientes ven valor desde la primera entrega. Pierde: se demora la especialidad que
+   motivó el motor y que más nos diferencia frente a la competencia.
