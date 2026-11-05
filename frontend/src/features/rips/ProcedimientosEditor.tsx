@@ -1,14 +1,25 @@
 import { type Schemas } from "../../api/client";
+import { useAuth } from "../../auth/AuthContext";
 import { BuscadorCups } from "./BuscadorCups";
 import { pesos } from "./modulos";
 
 export type ProcedimientoForm = Schemas["ProcedimientoRequest"] & { descripcion?: string };
 
-/** Lo que se hizo en la atención, con su CUPS. El diente y las superficies son opcionales (odontología). */
-/** @param atencionId para proponer la tarifa del pagador de la atención (si no tiene, la lista general) */
+/** Odontología general o especializada, con o sin tilde (como sufijoConsulta en el servidor). */
+const esOdontologia = (especialidad?: string) =>
+  (especialidad ?? "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().includes("odont");
+
+/**
+ * Lo que se hizo en la atención, con su CUPS. El diente y las superficies (odontología) se muestran solo a quien es
+ * odontólogo según su perfil, o si algún procedimiento ya trae diente. Quien edita un borrador es siempre su autor.
+ *
+ * @param atencionId para proponer la tarifa del pagador de la atención (si no tiene, la lista general)
+ */
 export function ProcedimientosEditor({ value, onChange, atencionId }: {
   value: ProcedimientoForm[]; onChange: (p: ProcedimientoForm[]) => void; atencionId?: string;
 }) {
+  const { me } = useAuth();
+  const dental = esOdontologia(me?.especialidad) || value.some((p) => p.diente);
   const actualizar = (i: number, cambio: Partial<ProcedimientoForm>) => onChange(value.map((p, j) => (j === i ? { ...p, ...cambio } : p)));
   const total = value.reduce((s, p) => s + (p.valorUnitario ?? 0) * (p.cantidad ?? 1), 0);
   const numero = (v: string) => (v.trim() === "" ? undefined : Number(v.replace(/[.\s]/g, "").replace(",", ".")));
@@ -18,7 +29,7 @@ export function ProcedimientosEditor({ value, onChange, atencionId }: {
       {!!value.length && (
         <div className="table-wrap">
           <table className="tabla-procedimientos">
-            <thead><tr><th>CUPS</th><th>Cant.</th><th>Valor unitario</th><th>Diente</th><th>Superficies</th><th /></tr></thead>
+            <thead><tr><th>CUPS</th><th>Cant.</th><th>Valor unitario</th>{dental && <><th>Diente</th><th>Superficies</th></>}<th /></tr></thead>
             <tbody>
               {value.map((p, i) => (
                 <tr key={`${p.codigoCups}-${i}`}>
@@ -27,10 +38,14 @@ export function ProcedimientosEditor({ value, onChange, atencionId }: {
                     onChange={(e) => actualizar(i, { cantidad: Math.max(1, Number(e.target.value) || 1) })} /></td>
                   <td><input aria-label="Valor unitario" className="campo-medio" inputMode="numeric" value={p.valorUnitario ?? ""} placeholder="Sin precio"
                     onChange={(e) => actualizar(i, { valorUnitario: numero(e.target.value) })} /></td>
-                  <td><input aria-label="Diente" className="campo-corto" maxLength={2} inputMode="numeric" value={p.diente ?? ""} placeholder="—"
-                    onChange={(e) => actualizar(i, { diente: e.target.value.replace(/\D/g, "") || undefined })} /></td>
-                  <td><input aria-label="Superficies" className="campo-corto" maxLength={5} value={p.superficies ?? ""} placeholder="—" title="V, L, M, D u O"
-                    disabled={!p.diente} onChange={(e) => actualizar(i, { superficies: e.target.value.toUpperCase().replace(/[^VLMDO]/g, "") || undefined })} /></td>
+                  {dental && (
+                    <>
+                      <td><input aria-label="Diente" className="campo-corto" maxLength={2} inputMode="numeric" value={p.diente ?? ""} placeholder="—"
+                        onChange={(e) => actualizar(i, { diente: e.target.value.replace(/\D/g, "") || undefined })} /></td>
+                      <td><input aria-label="Superficies" className="campo-corto" maxLength={5} value={p.superficies ?? ""} placeholder="—" title="V, L, M, D u O"
+                        disabled={!p.diente} onChange={(e) => actualizar(i, { superficies: e.target.value.toUpperCase().replace(/[^VLMDO]/g, "") || undefined })} /></td>
+                    </>
+                  )}
                   <td><button type="button" className="btn-link danger" onClick={() => onChange(value.filter((_, j) => j !== i))}>Quitar</button></td>
                 </tr>
               ))}
