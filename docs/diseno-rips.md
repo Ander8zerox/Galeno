@@ -506,5 +506,15 @@ MUV sigue en espera (botón deshabilitado).
 - **Auditoría:** ver, generar o descargar un lote queda en `accesos_historia` de cada paciente (`VER_RIPS`,
   `GENERAR_RIPS`), porque el lote muestra diagnósticos.
 - **Permisos:** `RIPS_GESTIONAR` y el módulo activo. El NIT, también `RIPS_GESTIONAR`.
-- **Pendiente:** notas crédito, débito y de ajuste; el registro SIRAS; confirmar con el MUV qué `numNota` lleva un RIPS
-  sin factura (hoy va nulo); envío al MUV (fase 3).
+- **Pendiente:** notas crédito, débito y de ajuste; confirmar con el MUV qué `numNota` lleva un RIPS sin factura
+  (hoy va nulo); envío al MUV (fase 3).
+
+## Registro SIRAS (6 de noviembre de 2026)
+
+- Es el radicado de la plataforma SIRAS de la ADRES al reportar la atención de una víctima de accidente de tránsito
+  (campo U12). El DT1 lo hace obligatorio con tipo de usuario 10 (SOAT) o 14 (lesionado sin SOAT).
+- Va en el cobro (`rips_cobros.registro_siras`, V28), como la autorización: es dato del pagador. El formulario del
+  cobro (cita y atención) lo muestra si el pagador es SOAT o el paciente es tipo 10 o 14 (`CobroVista.pideSiras`); si no
+  aplica, se descarta al guardar. Hasta 60 letras, números o guiones.
+- En el lote: con tipo 10 o 14 y sin SIRAS es **rechazo** (RVC095 es notificación, pero el campo es obligatorio). El RIPS
+  lleva uno por usuario: el de la primera atención que lo tenga; si hay distintos, avisa.

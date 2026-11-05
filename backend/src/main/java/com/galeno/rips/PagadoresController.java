@@ -118,9 +118,10 @@ public class PagadoresController {
     public record RegistroCobro(@NotNull UUID pagadorId, @Size(max = 30) String numeroAutorizacion,
                         @Size(max = 2) String conceptoRecaudo,
                         @DecimalMin("0.00") @DecimalMax("999999999.99") BigDecimal valorPagoModerador,
-                        @Size(max = 20) String facturaPagoModerador) {
+                        @Size(max = 20) String facturaPagoModerador, @Size(max = 60) String registroSiras) {
         DatosCobro datos() {
-            return new DatosCobro(pagadorId, numeroAutorizacion, conceptoRecaudo, valorPagoModerador, facturaPagoModerador);
+            return new DatosCobro(pagadorId, numeroAutorizacion, conceptoRecaudo, valorPagoModerador, facturaPagoModerador,
+                    registroSiras);
         }
     }
 }

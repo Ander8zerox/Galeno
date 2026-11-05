@@ -118,7 +118,9 @@ Detalle en `docs/aws-capa-1.md` y operación en `docs/guia-operacion.md`.
 - ✅ **Entrega 3 (lote y JSON):** pestaña Lotes (pagador y período, revisión con rechazos y avisos, ajustes por
   atención, XML de la factura opcional, generar, descargar y anular), catálogo CUPSRips, incapacidad en la atención,
   RIPS sin factura para particulares y NIT del consultorio en Prestador. Ver "Cómo quedó la fase 2, entrega 3" en
-  `docs/diseno-rips.md`. Pendientes: notas crédito, débito y ajuste, y el registro SIRAS.
+  `docs/diseno-rips.md`. Pendientes: notas crédito, débito y ajuste.
+- ✅ **Registro SIRAS:** en el cobro, para accidentes de tránsito (pagador SOAT o tipo de usuario 10 o 14); el lote lo
+  exige y lo lleva al RIPS.
 - ⏳ **Por decidir:** activar el módulo RIPS por defecto en los consultorios nuevos (la Res. 948 parece exigir RIPS
   también por particulares; ver "¿Particulares también?" en `docs/diseno-rips.md`).
 
