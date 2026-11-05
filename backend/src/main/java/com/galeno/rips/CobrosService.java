@@ -42,6 +42,9 @@ public class CobrosService {
     private static final String SUBSIDIADO = "04";
     private static final Pattern AUTORIZACION = Pattern.compile("[A-Za-z0-9-]{1,30}");
     private static final Pattern FACTURA = Pattern.compile("[A-Za-z0-9-]{1,20}");
+    private static final Pattern SIRAS = Pattern.compile("[A-Za-z0-9-]{1,60}");
+    /** Tipos de usuario que piden el registro SIRAS (U12): 10 SOAT y 14 lesionado sin SOAT. */
+    static final Set<String> CON_SIRAS = Set.of("10", "14");
 
     private final CobroRepository cobros;
     private final RipsPacienteRepository pacientesRips;
@@ -71,7 +74,7 @@ public class CobrosService {
     public CobroVista cita(UUID citaId) {
         modulos.exigir(Modulo.RIPS);
         CitaResumen cita = cita0(citaId);
-        return cobros.findByCitaId(citaId).map(c -> vista(c, Origen.CITA)).orElseGet(() -> porDefecto(cita.pacienteId()));
+        return cobros.findByCitaId(citaId).map(c -> vista(c, Origen.CITA, cita.pacienteId())).orElseGet(() -> porDefecto(cita.pacienteId()));
     }
 
     /** Solo con la cita abierta: después, el cobro se corrige en la atención. */
@@ -84,7 +87,7 @@ public class CobrosService {
         }
         Cobro c = cobros.findByCitaId(citaId).orElseGet(() -> Cobro.deCita(citaId));
         aplicar(c, datos, cita.pacienteId());
-        return vista(cobros.saveAndFlush(c), Origen.CITA);
+        return vista(cobros.saveAndFlush(c), Origen.CITA, cita.pacienteId());
     }
 
     /** Para la agenda: el cobro de cada una de esas citas (guardado o el que se propone), en una sola consulta. */
@@ -95,7 +98,7 @@ public class CobrosService {
         Map<UUID, Cobro> guardados = cobros.findByCitaIdIn(encontradas.stream().map(CitaResumen::id).toList()).stream()
                 .collect(Collectors.toMap(Cobro::getCitaId, Function.identity()));
         return encontradas.stream().map(cita -> new CobroCita(cita.id(), Optional.ofNullable(guardados.get(cita.id()))
-                .map(c -> vista(c, Origen.CITA)).orElseGet(() -> porDefecto(cita.pacienteId())))).toList();
+                .map(c -> vista(c, Origen.CITA, cita.pacienteId())).orElseGet(() -> porDefecto(cita.pacienteId())))).toList();
     }
 
     private CitaResumen cita0(UUID citaId) {
@@ -120,7 +123,7 @@ public class CobrosService {
         }
         Cobro c = cobros.findByAtencionId(atencionId).orElseGet(() -> Cobro.deAtencion(atencionId));
         aplicar(c, datos, a.pacienteId());
-        return vista(cobros.saveAndFlush(c), Origen.ATENCION);
+        return vista(cobros.saveAndFlush(c), Origen.ATENCION, a.pacienteId());
     }
 
     private AtencionReferencia atencion0(UUID atencionId) {
@@ -129,8 +132,8 @@ public class CobrosService {
 
     /** El cobro que vale para la atención: el suyo, si no el de su cita, si no el propuesto con el pagador del paciente. */
     CobroVista vigente(AtencionReferencia a) {
-        return cobros.findByAtencionId(a.id()).map(c -> vista(c, Origen.ATENCION))
-                .or(() -> Optional.ofNullable(a.citaId()).flatMap(cobros::findByCitaId).map(c -> vista(c, Origen.CITA)))
+        return cobros.findByAtencionId(a.id()).map(c -> vista(c, Origen.ATENCION, a.pacienteId()))
+                .or(() -> Optional.ofNullable(a.citaId()).flatMap(cobros::findByCitaId).map(c -> vista(c, Origen.CITA, a.pacienteId())))
                 .orElseGet(() -> porDefecto(a.pacienteId()));
     }
 
@@ -163,7 +166,7 @@ public class CobrosService {
         String concepto = d.conceptoRecaudo() == null || d.conceptoRecaudo().isBlank() ? NO_APLICA : d.conceptoRecaudo().strip();
         referencias.validar("concepto_recaudo", concepto, "Concepto del cobro");
         BigDecimal valor = d.valorPagoModerador() == null ? BigDecimal.ZERO : d.valorPagoModerador();
-        String tipoUsuario = pacientesRips.findById(pacienteId).map(RipsPaciente::getTipoUsuario).orElse(null);
+        String tipoUsuario = tipoUsuario(pacienteId);
         validar(pagador.getTipo(), concepto, valor, tipoUsuario);
         String autorizacion = texto(d.numeroAutorizacion());
         if (autorizacion != null && !AUTORIZACION.matcher(autorizacion).matches()) {
@@ -176,7 +179,23 @@ public class CobrosService {
         if (NO_APLICA.equals(concepto)) {
             factura = null;
         }
-        c.actualizar(pagador.getId(), autorizacion, concepto, valor, factura);
+        String siras = texto(d.registroSiras());
+        if (siras != null && !SIRAS.matcher(siras).matches()) {
+            throw ApiProblem.badRequest("Registro SIRAS: hasta 60 letras, números o guiones");
+        }
+        if (!pideSiras(pagador.getTipo(), tipoUsuario)) {
+            siras = null;
+        }
+        c.actualizar(pagador.getId(), autorizacion, concepto, valor, factura, siras);
+    }
+
+    /** Accidente de tránsito: pagador SOAT, o paciente amparado por SOAT (10) o lesionado sin SOAT (14). */
+    static boolean pideSiras(Pagador.Tipo tipoPagador, String tipoUsuario) {
+        return tipoPagador == Pagador.Tipo.SOAT || (tipoUsuario != null && CON_SIRAS.contains(tipoUsuario));
+    }
+
+    private String tipoUsuario(UUID pacienteId) {
+        return pacientesRips.findById(pacienteId).map(RipsPaciente::getTipoUsuario).orElse(null);
     }
 
     /** Reglas del Documento Técnico 1 (campos C18 y C19) que se pueden revisar con lo que sabe Galenum. */
@@ -213,29 +232,33 @@ public class CobrosService {
                 .map(pagadores::get);
         return new CobroVista(Origen.PACIENTE, false, pagador.map(Pagador::getId).orElse(null),
                 pagador.map(Pagador::getNombre).orElse(null), pagador.map(Pagador::getTipo).orElse(null),
-                pagador.map(Pagador::isExigeAutorizacion).orElse(false), null, NO_APLICA, BigDecimal.ZERO, null);
+                pagador.map(Pagador::isExigeAutorizacion).orElse(false), null, NO_APLICA, BigDecimal.ZERO, null, null,
+                pideSiras(pagador.map(Pagador::getTipo).orElse(null), tipoUsuario(pacienteId)));
     }
 
-    private CobroVista vista(Cobro c, Origen origen) {
+    private CobroVista vista(Cobro c, Origen origen, UUID pacienteId) {
         Pagador p = pagadores.get(c.getPagadorId());
         return new CobroVista(origen, true, p.getId(), p.getNombre(), p.getTipo(), p.isExigeAutorizacion(),
-                c.getNumeroAutorizacion(), c.getConceptoRecaudo(), c.getValorPagoModerador(), c.getFacturaPagoModerador());
+                c.getNumeroAutorizacion(), c.getConceptoRecaudo(), c.getValorPagoModerador(), c.getFacturaPagoModerador(),
+                c.getRegistroSiras(), pideSiras(p.getTipo(), tipoUsuario(pacienteId)));
     }
 
     /** De dónde sale el cobro que se muestra: de la atención, de su cita o (sin registrar) del pagador del paciente. */
     public enum Origen { ATENCION, CITA, PACIENTE }
 
     public record DatosCobro(UUID pagadorId, String numeroAutorizacion, String conceptoRecaudo,
-                             BigDecimal valorPagoModerador, String facturaPagoModerador) {
+                             BigDecimal valorPagoModerador, String facturaPagoModerador, String registroSiras) {
     }
 
     /**
      * @param guardado falso cuando es lo que se propone (pagador del paciente, sin cobro)
      * @param exigeAutorizacion el pagador pide número de autorización: la pantalla avisa si falta
+     * @param pideSiras accidente de tránsito (pagador SOAT o tipo de usuario 10 o 14): el RIPS exige el registro SIRAS
      */
     public record CobroVista(Origen origen, boolean guardado, UUID pagadorId, String pagadorNombre, Pagador.Tipo pagadorTipo,
                              boolean exigeAutorizacion, String numeroAutorizacion, String conceptoRecaudo,
-                             BigDecimal valorPagoModerador, String facturaPagoModerador) {
+                             BigDecimal valorPagoModerador, String facturaPagoModerador, String registroSiras,
+                             boolean pideSiras) {
     }
 
     public record CobroCita(UUID citaId, CobroVista cobro) {

@@ -49,6 +49,10 @@ class Cobro {
     @Column(name = "factura_pago_moderador", length = 20)
     private String facturaPagoModerador;
 
+    /** Radicado de la plataforma SIRAS (ADRES) para víctimas de accidentes de tránsito. */
+    @Column(name = "registro_siras", length = 60)
+    private String registroSiras;
+
     @Column(name = "actualizado_en", nullable = false)
     private Instant actualizadoEn;
 
@@ -68,8 +72,9 @@ class Cobro {
     }
 
     void actualizar(UUID pagadorId, String numeroAutorizacion, String conceptoRecaudo, BigDecimal valorPagoModerador,
-                    String facturaPagoModerador) {
+                    String facturaPagoModerador, String registroSiras) {
         this.pagadorId = pagadorId;
+        this.registroSiras = registroSiras;
         this.numeroAutorizacion = numeroAutorizacion;
         this.conceptoRecaudo = conceptoRecaudo;
         this.valorPagoModerador = valorPagoModerador.setScale(2, java.math.RoundingMode.HALF_UP);
@@ -99,5 +104,9 @@ class Cobro {
 
     String getFacturaPagoModerador() {
         return facturaPagoModerador;
+    }
+
+    String getRegistroSiras() {
+        return registroSiras;
     }
 }

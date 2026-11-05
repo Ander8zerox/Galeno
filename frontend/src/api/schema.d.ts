@@ -2354,6 +2354,7 @@ export interface components {
             conceptoRecaudo?: string;
             valorPagoModerador?: number;
             facturaPagoModerador?: string;
+            registroSiras?: string;
         };
         CobroVista: {
             /** @enum {string} */
@@ -2369,6 +2370,8 @@ export interface components {
             conceptoRecaudo?: string;
             valorPagoModerador?: number;
             facturaPagoModerador?: string;
+            registroSiras?: string;
+            pideSiras?: boolean;
         };
         CambioPlan: {
             nombre: string;
@@ -3500,27 +3503,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            missingNode?: boolean;
             number?: boolean;
-            container?: boolean;
-            bigDecimal?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            valueNode?: boolean;
-            integralNumber?: boolean;
-            bigInteger?: boolean;
-            boolean?: boolean;
-            int?: boolean;
+            object?: boolean;
             string?: boolean;
+            pojo?: boolean;
             double?: boolean;
-            long?: boolean;
+            int?: boolean;
             /** @deprecated */
             textual?: boolean;
-            object?: boolean;
-            short?: boolean;
-            floatingPointNumber?: boolean;
-            pojo?: boolean;
             binary?: boolean;
+            boolean?: boolean;
+            short?: boolean;
+            long?: boolean;
+            floatingPointNumber?: boolean;
+            missingNode?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            bigDecimal?: boolean;
+            bigInteger?: boolean;
+            integralNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {

@@ -51,7 +51,7 @@ class ArmadorRipsTest {
 
     private static CobroVista cobro(String concepto, String valor) {
         return new CobroVista(CobrosService.Origen.ATENCION, true, PAGADOR, "Nueva EPS", Pagador.Tipo.EPS, false, "AUT-1",
-                concepto, new BigDecimal(valor), null);
+                concepto, new BigDecimal(valor), null, null, false);
     }
 
     private static ProcedimientoVista proc(String codigo, int cantidad, String valor) {
@@ -157,7 +157,7 @@ class ArmadorRipsTest {
     @Test
     void elRipsSinFacturaVaConTipoDeNotaRsYElValorPagadoPorElPaciente() {
         var c = new CobroVista(CobrosService.Origen.PACIENTE, false, PAGADOR, "Particular", Pagador.Tipo.PARTICULAR, false,
-                null, "05", BigDecimal.ZERO, null);
+                null, "05", BigDecimal.ZERO, null, null, false);
         var r = armar(particular(), true, null, atencion(paciente("12"), c, dx("J029"), proc("890201", 1, "60000")));
 
         assertThat(r.json()).containsEntry("numFactura", null).containsEntry("tipoNota", "RS");
@@ -182,7 +182,7 @@ class ArmadorRipsTest {
     @Test
     void conElParticularElPacienteVaComoTipo12AunqueLaFichaDigaOtro() {
         var c = new CobroVista(CobrosService.Origen.ATENCION, true, PAGADOR, "Particular", Pagador.Tipo.PARTICULAR, false,
-                null, "05", BigDecimal.ZERO, null);
+                null, "05", BigDecimal.ZERO, null, null, false);
         var afiliado = atencion(paciente("01"), c, dx("J029"), proc("890201", 1, "60000"));
         var r = armar(particular(), false, null, afiliado);
         assertThat(r.hayRechazos()).isFalse();
@@ -193,6 +193,25 @@ class ArmadorRipsTest {
                 null, "170", "11001", "01", "170", List.of("Tipo de usuario"));
         assertThat(armar(particular(), false, null, atencion(p, c, dx("J029"), proc("890201", 1, "60000"))).hayRechazos())
                 .isFalse();
+    }
+
+    @Test
+    void elLesionadoDeTransitoLlevaElRegistroSiras() {
+        var soat = new ArmadorRips.PagadorRips(PAGADOR, "Aseguradora SOAT", Pagador.Tipo.SOAT, "04", "04");
+        var sin = new CobroVista(CobrosService.Origen.ATENCION, true, PAGADOR, "Aseguradora SOAT", Pagador.Tipo.SOAT, false,
+                null, "05", BigDecimal.ZERO, null, null, true);
+        var r = armar(soat, false, null, atencion(paciente("10"), sin, dx("S000"), proc("890201", 1, "50000")));
+        assertThat(r.hallazgos()).anyMatch(h -> "RVC095".equals(h.regla()) && h.nivel() == Nivel.RECHAZO);
+
+        var con = new CobroVista(CobrosService.Origen.ATENCION, true, PAGADOR, "Aseguradora SOAT", Pagador.Tipo.SOAT, false,
+                null, "05", BigDecimal.ZERO, null, "SIRAS-321abc", true);
+        r = armar(soat, false, null, atencion(paciente("10"), con, dx("S000"), proc("890201", 1, "50000")));
+        assertThat(r.hayRechazos()).isFalse();
+        assertThat(usuario(r, 0)).containsEntry("registroSIRAS", "SIRAS-321abc");
+
+        // Sin accidente de tránsito no va, aunque el cobro lo traiga
+        assertThat(usuario(armar(eps("04"), false, null, atencion(paciente("01"), cobro("05", "0"), dx("J029"),
+                proc("890201", 1, "50000"))), 0)).containsEntry("registroSIRAS", null);
     }
 
     @Test

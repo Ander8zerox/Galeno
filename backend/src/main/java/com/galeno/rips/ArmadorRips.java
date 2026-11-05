@@ -33,8 +33,8 @@ final class ArmadorRips {
     static final String POR_EVENTO = "04";
     private static final String NO_APLICA = CobrosService.NO_APLICA;
     private static final DateTimeFormatter FECHA_HORA = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    /** Tipos de usuario SOAT y lesionado sin SOAT: piden el registro SIRAS (RVC095). */
-    private static final Set<String> CON_SIRAS = Set.of("10", "14");
+    /** Tipos de usuario SOAT y lesionado sin SOAT: piden el registro SIRAS (U12, RVC095). */
+    private static final Set<String> CON_SIRAS = CobrosService.CON_SIRAS;
 
     /**
      * Numeral 1.8 del DT1: por cobertura o plan de beneficios, las modalidades de pago, los tipos de usuario y los
@@ -200,7 +200,8 @@ final class ArmadorRips {
             u.put("codZonaTerritorialResidencia", p.zonaResidencia());
             u.put("incapacidad", delPaciente.stream().anyMatch(a -> a.atencion().incapacidad()) ? "SI" : "NO");
             u.put("codPaisOrigen", p.paisOrigen());
-            u.put("registroSIRAS", null);
+            boolean conSiras = p.tipoUsuario() != null && CON_SIRAS.contains(p.tipoUsuario());
+            u.put("registroSIRAS", conSiras ? siras(delPaciente, h) : null);
             u.put("servicios", servicios);
             usuarios.add(u);
         }
@@ -459,15 +460,32 @@ final class ArmadorRips {
                         + " no corresponde a su edad (" + edad + " años)");
             }
         }
-        if (p.tipoUsuario() != null && CON_SIRAS.contains(p.tipoUsuario())) {
-            r.aviso("RVC095", Donde.PACIENTE, "El tipo de usuario " + p.tipoUsuario() + " pide el registro SIRAS, que "
-                    + "Galenum todavía no registra");
+        if (p.tipoUsuario() != null && CON_SIRAS.contains(p.tipoUsuario())
+                && atenciones.stream().allMatch(a -> a.cobro() == null || a.cobro().registroSiras() == null)) {
+            // El DT1 lo hace obligatorio en el campo U12, aunque la regla RVC095 sea de notificación
+            r.rechazo("RVC095", Donde.COBRO, "Falta el registro SIRAS de " + p.nombre() + " (tipo de usuario "
+                    + p.tipoUsuario() + "): regístrelo en el cobro de la atención");
         }
         Cruce c = CRUCES.get(e.pagador().cobertura());
         if (c != null && p.tipoUsuario() != null && !c.tiposUsuario().contains(p.tipoUsuario())) {
             r.rechazo(null, Donde.PACIENTE, "El tipo de usuario " + p.tipoUsuario() + " de " + p.nombre() + " no se "
                     + "reporta con la cobertura " + e.pagador().cobertura() + " del pagador (numeral 1.8 del DT1)");
         }
+    }
+
+    /**
+     * El registro SIRAS del usuario: uno por usuario en el RIPS, el de la primera atención que lo tenga. Si sus atenciones
+     * traen registros distintos (dos accidentes en la misma factura), avisa.
+     */
+    private static String siras(List<AtencionLote> atenciones, List<HallazgoRips> h) {
+        List<String> distintos = atenciones.stream().map(a -> a.cobro() == null ? null : a.cobro().registroSiras())
+                .filter(java.util.Objects::nonNull).distinct().toList();
+        if (distintos.size() > 1) {
+            PacienteRips p = atenciones.get(0).paciente();
+            new Revision(null, p.id(), h).aviso("RVC095", Donde.COBRO, p.nombre() + " tiene registros SIRAS distintos ("
+                    + String.join(", ", distintos) + "): el RIPS lleva uno por usuario y se reporta " + distintos.get(0));
+        }
+        return distintos.isEmpty() ? null : distintos.get(0);
     }
 
     /** RVC007: RC hasta 7 años, TI de 7 a 17, CC desde 18, con un año de tolerancia. Los demás documentos no se revisan. */

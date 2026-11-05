@@ -20,10 +20,13 @@ export function CobroForm({ donde, id, cobro, onGuardado, onCancelar }: {
     valor: cobro.valorPagoModerador ? String(cobro.valorPagoModerador) : "",
     numeroAutorizacion: cobro.numeroAutorizacion ?? "",
     facturaPagoModerador: cobro.facturaPagoModerador ?? "",
+    registroSiras: cobro.registroSiras ?? "",
   });
   const pagador = pagadores.data?.find((p) => p.id === form.pagadorId);
   const particular = pagador?.tipo === "PARTICULAR";
   const sinCobro = form.conceptoRecaudo === NO_APLICA || particular;
+  // Accidente de tránsito: el RIPS exige el radicado de SIRAS (ADRES). Con otro pagador el servidor lo descarta
+  const pideSiras = pagador?.tipo === "SOAT" || (cobro.pideSiras && pagador?.id === cobro.pagadorId);
   const guardar = useMutation({
     mutationFn: async () => {
       const body = {
@@ -32,6 +35,7 @@ export function CobroForm({ donde, id, cobro, onGuardado, onCancelar }: {
         valorPagoModerador: sinCobro ? 0 : numero(form.valor),
         numeroAutorizacion: form.numeroAutorizacion.trim() || undefined,
         facturaPagoModerador: sinCobro ? undefined : form.facturaPagoModerador.trim() || undefined,
+        registroSiras: pideSiras ? form.registroSiras.trim() || undefined : undefined,
       };
       return donde === "cita"
         ? unwrap(await api.PUT("/api/v1/rips/cobros/citas/{citaId}", { params: { path: { citaId: id } }, body }))
@@ -75,6 +79,12 @@ export function CobroForm({ donde, id, cobro, onGuardado, onCancelar }: {
           <input value={form.facturaPagoModerador} maxLength={20} onChange={(e) => setForm({ ...form, facturaPagoModerador: e.target.value.replace(/[^A-Za-z0-9-]/g, "") })} />
         </label>
       )}
+      {pideSiras && (
+        <label>Registro SIRAS <span className="muted small">(accidente de tránsito)</span>
+          <input value={form.registroSiras} maxLength={60} placeholder="Radicado de la ADRES"
+            onChange={(e) => setForm({ ...form, registroSiras: e.target.value.replace(/[^A-Za-z0-9-]/g, "") })} />
+        </label>
+      )}
       {particular && <p className="muted small wide">El particular paga el servicio: no hay copago ni cuota moderadora.</p>}
       <div className="wide row">
         <button className="btn" disabled={guardar.isPending || !form.pagadorId}>Guardar</button>
@@ -93,6 +103,7 @@ export function resumenCobro(c: Cobro, conceptos?: { codigo?: string; nombre?: s
     partes.push(`${nombrePropio(nombre).toLowerCase() || "cobro"} ${pesos(c.valorPagoModerador)}`);
   }
   if (c.numeroAutorizacion) partes.push(`aut. ${c.numeroAutorizacion}`);
+  if (c.registroSiras) partes.push(`SIRAS ${c.registroSiras}`);
   return partes.join(" · ");
 }
 
