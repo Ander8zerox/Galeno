@@ -219,6 +219,103 @@ Los lotes contienen datos clínicos (diagnósticos), así que su consulta queda 
 - **Permisos nuevos:** `MODULOS_GESTIONAR` y `RIPS_GESTIONAR`, los dos del administrador. Van en el token: quien tenga
   la sesión abierta antes del despliegue ve los menús nuevos después de volver a ingresar.
 
+## Fase 2, entrega 2: pagadores y cobro en la cita (diseño, 4 de noviembre de 2026)
+
+### Decisiones
+
+1. **Aseguradoras:** se precarga el catálogo oficial de SISPRO (código y NIT de cada entidad) para elegirlas de una
+   lista. Trae EPS, prepagadas, ARL y aseguradoras SOAT; lo que no esté se crea a mano.
+2. **Tarifas por convenio:** sí, opcionales. Si el pagador no tiene tarifa para un CUPS, se usa la lista general.
+3. **Pagador:** cada paciente tiene un pagador principal; cada cita lo hereda y se puede cambiar.
+4. **En la cita:** concepto del cobro, valor y número de autorización. Quien atiende puede corregirlos en la atención.
+
+### Qué dice la norma
+
+- **El JSON del RIPS no lleva el pagador** (va en la factura). Por cada consulta o procedimiento lleva:
+  - `numAutorizacion`: de 0 a 30 caracteres; nulo si el servicio no requiere autorización.
+  - `conceptoRecaudo` (tabla `conceptoRecaudo`, ya cargada): 01 copago, 02 cuota moderadora, 03 pagos compartidos en
+    planes voluntarios, 04 anticipo y 05 no aplica. El 04 solo va en la factura, nunca en el RIPS.
+  - `valorPagoModerador`: 0 si no aplica; al menos 1 si es cuota moderadora o bono de plan voluntario.
+  - `numFEVPagoModerador`: la factura con la que se cobró el pago moderador, si la hubo.
+  - La cuota moderadora solo se cobra a afiliados del régimen contributivo; al subsidiado no se le reportan pagos de
+    planes voluntarios.
+- **La factura de salud (Documento Técnico 2)** lleva código del prestador, modalidad de pago, cobertura o plan de
+  beneficios, número de contrato (**CUCON**) o de póliza, "factura sin contrato" cuando no hay contrato, los pagos
+  moderadores recibidos y el período facturado. Los escribe el facturador del consultorio; Galenum los guarda en el
+  pagador para entregárselos y, en la entrega 3, para comparar el lote con el XML de la factura.
+- **Validaciones cruzadas** (Documento Técnico 1, numeral 1.8): qué conceptos de recaudo admite cada combinación de
+  cobertura, modalidad de pago y tipo de usuario. Se transcriben del PDF (páginas 8 y 9) en la entrega 3; el texto
+  extraído pierde las columnas.
+
+### Facturación: sistema externo
+
+Galenum **no emite la factura electrónica**: la emite un sistema autorizado por la DIAN (proveedor tecnológico o
+software propio del consultorio) que soporte la **factura del sector salud**. El MUV recibe el RIPS y el XML de esa
+factura juntos y los cruza (número, NIT, valores, servicios). Por eso, en la entrega 3, el lote permitirá **cargar el
+XML** de la factura para validar los totales antes de descargar. Emitir la factura desde Galenum sigue siendo la fase 4
+opcional (integración con un proveedor, con costo por documento).
+
+### Catálogo de aseguradoras
+
+- Tabla `CodigoEAPByNit` de SISPRO (1.717 entidades, 1.401 habilitadas): código, nombre, NIT con dígito de
+  verificación, régimen y tipo. Se carga en `rips_referencias` (tabla `eapb`) con una migración nueva, igual que las
+  demás: sin costo en producción, porque la búsqueda va a la base de Galenum.
+- Tipos que trae (noviembre de 2026): EPS del régimen contributivo (47) y subsidiado (48), medicina prepagada (25), ARL
+  (20), aseguradoras en general, donde están las de SOAT (38), regímenes especiales (64), cajas de compensación (79),
+  empresas solidarias (220) y las secretarías de salud de departamentos (34) y municipios (1.141).
+- El buscador muestra primero EPS, prepagadas, ARL y aseguradoras, y solo las habilitadas (las liquidadas siguen en la
+  tabla para las atenciones viejas). El tipo de la entidad sugiere el tipo de pagador.
+- Ojo al actualizar: la consulta responde `CoberturaPlanBeneficios` con mayúscula inicial; el script debe aceptar el
+  nombre sin importar mayúsculas.
+- Se cargan también `coberturaPlanBeneficios` (01 plan de beneficios con UPC, 02 presupuesto máximo, 03 prima EPS o no
+  asegurados SOAT, 04 póliza SOAT, 05 ARL, 06 ADRES…) y `facturaSinContrato`.
+
+### Pagadores del consultorio (`rips_pagadores`)
+
+| Campo | Para qué |
+|---|---|
+| Nombre y tipo | EPS, prepagada o plan voluntario, ARL, SOAT, entidad territorial o ADRES, particular |
+| Código de la entidad y NIT | Del catálogo (o a mano si no está) |
+| Cobertura o plan de beneficios | Para la factura y las validaciones cruzadas |
+| Modalidad de pago | Evento, capitación, global prospectivo, paquete |
+| CUCON (hasta 64 caracteres) o número de póliza | Para la factura |
+| Factura sin contrato | Código de `facturaSinContrato` cuando no hay contrato |
+| ¿Exige autorización? | Si es sí, la cita avisa cuando falta el número |
+| Activo | Se desactiva en vez de borrar: las atenciones viejas lo siguen nombrando |
+
+- El pagador **"Particular"** existe siempre (se crea solo al activar el módulo): concepto 05 y valor moderador 0.
+- Pestaña **Pagadores** en el menú RIPS, con `RIPS_GESTIONAR`.
+
+### Tarifas por convenio (`rips_tarifas`)
+
+- Pagador, CUPS y valor. Se editan dentro de cada pagador, con el mismo buscador de CUPS de la lista de precios.
+- El precio de un procedimiento es la tarifa del pagador de la atención; si no la tiene, el de la lista general. La
+  historia lo sigue pidiendo por la interfaz `ListaPrecios`, que ahora recibe la atención; el módulo busca su pagador.
+
+### Pagador del paciente
+
+- `rips_pacientes` gana el pagador principal. Se elige en la tarjeta "Datos para RIPS", que lo avisa si falta.
+- Al elegirlo, se **sugiere el tipo de usuario**: EPS contributiva → 01, subsidiada → 04, particular → 12. Se puede
+  cambiar.
+
+### Cobro de la cita (`rips_cobros`)
+
+- Una fila por cita, del módulo y no de la agenda (la agenda no sabe que RIPS existe): pagador (el del paciente por
+  defecto), número de autorización, concepto de recaudo, valor y factura del pago moderador (opcional).
+- **Validaciones:**
+  - El concepto 04 (anticipo) no se acepta: no va en el RIPS.
+  - El 02 (cuota moderadora) solo con tipo de usuario contributivo (01, 02 o 03) y valor de al menos 1.
+  - El 05 (no aplica) lleva valor 0.
+- **En la agenda:** botón "Cobro" en cada cita abierta (con el módulo activo). La etiqueta de la cita avisa si el
+  pagador exige autorización y falta el número.
+- **En la atención:** tarjeta "Pagador y cobro" con lo de la cita. Si la atención no viene de una cita, se registra
+  ahí. Como el cobro no es dato clínico, se puede corregir aun con la atención firmada, **hasta que entre en un lote**.
+- **Permisos:** en la cita, quien gestiona la agenda (también la secretaria); en la atención, quien la registra.
+
+### Qué no entra
+
+El lote, el JSON y sus validaciones (entrega 3), la emisión de la factura y el envío al MUV.
+
 ## Cómo quedó la fase 2, entrega 1 (datos para el RIPS)
 
 - **Tablas de referencia de SISPRO** en `rips_referencias` (V22): tipo de usuario, país, departamento, municipio,
