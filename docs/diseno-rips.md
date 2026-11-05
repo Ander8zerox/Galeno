@@ -316,6 +316,81 @@ opcional (integración con un proveedor, con costo por documento).
 
 El lote, el JSON y sus validaciones (entrega 3), la emisión de la factura y el envío al MUV.
 
+## Fase 2, entrega 3: lote y JSON (diseño, 5 de noviembre de 2026)
+
+Genera el archivo del RIPS de una factura, validado con lo que Galenum puede revisar sin el Ministerio. El envío al
+MUV sigue en espera (botón deshabilitado).
+
+### Qué dice la norma (Documento Técnico 1 v003 y ejemplos oficiales)
+
+- **Estructura:** `numDocumentoIdObligado` (NIT), `numFactura`, `tipoNota`, `numNota` y `usuarios`. Cada usuario lleva
+  sus datos (U01 a U12) y `servicios` con `consultas` y `procedimientos` (urgencias, hospitalización, recién nacidos,
+  medicamentos y otros servicios no aplican a un consultorio).
+- **Consulta** (C01 a C30): prestador (12 caracteres), fecha y hora (`AAAA-MM-DD HH:MM`), autorización, CUPS, modalidad,
+  grupo, servicio (numérico), finalidad, causa, diagnóstico principal y hasta 3 relacionados (CIE-10, con los pares
+  CIE-11 nulos), tipo de diagnóstico principal, documento del profesional, valor, concepto y valor del pago moderador,
+  factura del pago moderador, `codigoVIDA` (nulo) y consecutivo.
+- **Procedimiento** (P01 a P27): parecido, con `idMIPRES`, vía de ingreso, un diagnóstico relacionado y la complicación.
+  No tiene cantidad: un CUPS con cantidad 2 son dos registros.
+- **Usuario:** `incapacidad` es `SI`/`NO` (tabla `LstSiNo`); `registroSIRAS`, obligatorio con tipo de usuario 10 o 14.
+- **Consecutivos:** de usuarios y de cada lista de servicios, desde 1 y sin repetir.
+- **Tipo de nota** (`TipoNota`): NC nota crédito, ND nota débito, NA nota ajuste RIPS y **RS RIPS sin factura**
+  (profesional independiente no obligado a facturar, RVC091).
+- **97 reglas de validación** (RVC001 a RVC098). Las que Galenum puede revisar por su cuenta:
+  - Fechas: nacimiento y servicio no futuros (RVC006, RVC013) ni el servicio antes del nacimiento (RVC079).
+  - Edad y tipo de documento (RVC007): RC hasta 7 años, TI de 7 a 18, CC desde 18, con un año de tolerancia.
+  - CUPS: que exista en `CUPSRips` (RVC096), que sea de consulta o de procedimiento (RVC015, RVC020), que aplique al sexo
+    (RVC016), y que no se repita el mismo día para el mismo paciente (RVC018).
+  - CIE-10: sexo y edad (RVC028); los relacionados no repiten el principal ni entre sí (RVC086, RVC087); el principal de
+    un procedimiento no es de síntomas (R00-R99) ni de factores Z (RVC032, RVC033).
+  - Valor del servicio: mayor que 0 si la modalidad de pago es "por evento", 0 en las demás (RVC034, rechazo).
+  - Pagos moderadores (RVC035, RVC037, RVC060, RVC061, RVC092): ya los valida el cobro de la entrega 2.
+  - SIRAS con SOAT o lesionado sin SOAT (RVC095).
+  - Con el XML de la factura: NIT (RVC001), número (RVC004), período (RVC014) y suma de pagos moderadores (RVC036).
+  - Validaciones cruzadas del numeral 1.8 (cobertura × modalidad × tipo de usuario × concepto): se transcriben de las
+    páginas 8 y 9 del PDF.
+  - Las demás dependen de tablas del Ministerio (habilitación, MIPRES, RUAF) o de servicios que Galenum no maneja: las
+    revisa el MUV.
+
+### Propuesta
+
+- **Lote** (`rips_lotes` y `rips_lote_atenciones`): las atenciones firmadas de **un pagador** en **un período** que van en
+  **una factura**.
+  - Se crea eligiendo pagador y fechas; Galenum trae las atenciones firmadas con ese pagador (el del cobro de la
+    atención, de su cita o del paciente) que no estén en otro lote, y se pueden quitar las que no van.
+  - **Revisión:** por atención, lo que falta o no pasa una regla, con enlace para corregirlo (datos del paciente, del
+    prestador, del profesional, el cobro). Los avisos que el MUV trata como notificación no bloquean; los de rechazo
+    sí.
+  - Se escribe el **número de la factura** emitida en el facturador del consultorio y se **genera**: el JSON queda
+    guardado tal cual (no cambia si después se corrige un dato) y se descarga como `RIPS_<factura>.json`.
+  - Estados: **borrador** (se edita), **generado** (atenciones y cobros bloqueados) y **anulado** (con motivo; libera las
+    atenciones para otro lote).
+  - Botón **"Enviar al Ministerio"** deshabilitado, con el aviso de que viene después.
+- **Armado:** de cada atención salen una consulta (los CUPS de consulta) y los procedimientos (uno por unidad).
+  - Finalidad, causa, modalidad, grupo, servicio y vía de ingreso: los valores por defecto del prestador, que se
+    pueden cambiar por atención en la revisión.
+  - Diagnósticos: el principal y hasta 3 relacionados de la atención (en el procedimiento, el principal y uno
+    relacionado); el tipo sale del tipo del diagnóstico (impresión 01, confirmado nuevo 02, confirmado repetido 03).
+  - Profesional: el documento guardado en la pestaña Profesionales.
+  - Valores: el de cada procedimiento, o 0 si la modalidad del pagador no es "por evento"; el pago moderador va en
+    el primer servicio de la atención.
+- **Catálogo `CUPSRips`:** cargar sus columnas (uso consulta o procedimiento, sexo, ámbito, cobertura, máximo por día)
+  junto a nuestro catálogo CUPS. La descarga pasa unas mil páginas de la consulta pública, una sola vez.
+- **Permisos:** `RIPS_GESTIONAR`. Ver un lote muestra diagnósticos, así que queda en la auditoría como la historia.
+
+### Decisiones (5 de noviembre de 2026)
+
+1. **Servicios:** solo consultas y procedimientos, que es lo que registra un consultorio.
+2. **XML de la factura:** opcional. Si se carga, Galenum cruza NIT, número, período y pagos moderadores antes de
+   generar; si no, esas reglas quedan para el MUV, que igual exige el XML al enviar.
+3. **Incapacidad:** un campo `SI`/`NO` en la atención que marca el médico (por defecto NO), porque es quien la expide.
+   El lote la toma de ahí; si un paciente tiene varias atenciones en el lote, va `SI` si alguna la tiene.
+4. **RIPS sin factura (RS):** opción del lote para el profesional independiente no obligado a facturar que atiende
+   particulares. El lote RS no lleva número de factura ni XML, y el valor de cada servicio es lo que pagó el paciente
+   (RVC091), no el 0 de las modalidades que no son "por evento".
+5. **Notas crédito, débito y ajuste:** para una entrega posterior. Mientras tanto, un lote generado se anula (con motivo)
+   y se genera otro.
+
 ## Cómo quedó la fase 2, entrega 1 (datos para el RIPS)
 
 - **Tablas de referencia de SISPRO** en `rips_referencias` (V22): tipo de usuario, país, departamento, municipio,
