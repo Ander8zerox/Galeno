@@ -60,6 +60,10 @@ class Lote {
     @Column(name = "numero_factura", length = 20)
     private String numeroFactura;
 
+    /** RIPS sin factura: el número de envío (numNota), propio del consultorio. Se asigna al generar. */
+    @Column(name = "numero_envio")
+    private Integer numeroEnvio;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Estado estado;
@@ -165,6 +169,11 @@ class Lote {
         tocar();
     }
 
+    void asignarEnvio(int numero) {
+        exigirBorrador();
+        this.numeroEnvio = numero;
+    }
+
     void generar(String json, UUID usuarioId) {
         exigirBorrador();
         this.json = json;
@@ -230,6 +239,10 @@ class Lote {
 
     String getNumeroFactura() {
         return numeroFactura;
+    }
+
+    Integer getNumeroEnvio() {
+        return numeroEnvio;
     }
 
     Estado getEstado() {

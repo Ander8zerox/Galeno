@@ -11,6 +11,10 @@ interface LoteRepository extends JpaRepository<Lote, UUID> {
 
     List<Lote> findAllByOrderByCreadoEnDesc();
 
+    /** El último número de envío de un RIPS sin factura del consultorio (0 si no hay). */
+    @Query("select coalesce(max(l.numeroEnvio), 0) from Lote l")
+    int ultimoEnvio();
+
     /** De esas atenciones, las que ya están en un lote que no está anulado. */
     @Query("""
             select la.atencionId from Lote l join l.atenciones la

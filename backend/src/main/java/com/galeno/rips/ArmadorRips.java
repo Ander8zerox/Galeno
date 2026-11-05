@@ -141,7 +141,8 @@ final class ArmadorRips {
      * @param cupsRips filas de CUPSRips por código; {@code finalidades}, de la tabla de finalidades
      * @param xml {@code null} si no se cargó
      */
-    record Entrada(String nitObligado, boolean sinFactura, String numeroFactura, PagadorRips pagador,
+    /** @param numeroEnvio del RIPS sin factura (numNota): se asigna al generar; en la revisión, {@code null} */
+    record Entrada(String nitObligado, boolean sinFactura, String numeroFactura, Integer numeroEnvio, PagadorRips pagador,
                    PrestadorRips prestador, List<AtencionLote> atenciones, Map<String, Fila> cupsRips,
                    Map<String, Cie10Vista> cie10, Map<String, Fila> finalidades, DatosXml xml, ZoneId zona,
                    Instant ahora) {
@@ -211,7 +212,8 @@ final class ArmadorRips {
         json.put("numDocumentoIdObligado", obligado);
         json.put("numFactura", e.sinFactura() ? null : texto(e.numeroFactura()));
         json.put("tipoNota", e.sinFactura() ? "RS" : null);
-        json.put("numNota", null);
+        // Sin factura, un número propio del prestador y único por envío (lineamientos del Ministerio, numeral 4.4.2)
+        json.put("numNota", e.sinFactura() && e.numeroEnvio() != null ? String.valueOf(e.numeroEnvio()) : null);
         json.put("usuarios", usuarios);
         return new Resultado(json, h);
     }
@@ -226,7 +228,8 @@ final class ArmadorRips {
         }
         List<AtencionLote> atenciones = e.atenciones().stream().map(a -> new AtencionLote(a.atencion(),
                 a.paciente().particular(), a.cobro(), a.profesional(), a.ajustes(), a.precios())).toList();
-        return new Entrada(e.nitObligado(), e.sinFactura(), e.numeroFactura(), e.pagador(), e.prestador(), atenciones,
+        return new Entrada(e.nitObligado(), e.sinFactura(), e.numeroFactura(), e.numeroEnvio(), e.pagador(), e.prestador(),
+                atenciones,
                 e.cupsRips(), e.cie10(), e.finalidades(), e.xml(), e.zona(), e.ahora());
     }
 

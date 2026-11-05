@@ -79,7 +79,7 @@ class ArmadorRipsTest {
     private static ArmadorRips.Resultado armar(ArmadorRips.PagadorRips pagador, boolean sinFactura,
                                                ArmadorRips.DatosXml xml, AtencionLote... atenciones) {
         return ArmadorRips.armar(new ArmadorRips.Entrada("900123456-7", sinFactura, sinFactura ? null : "FE-100",
-                pagador, PRESTADOR, List.of(atenciones), CUPS, Map.of(), Map.of(), xml, BOGOTA, AHORA));
+                sinFactura ? 7 : null, pagador, PRESTADOR, List.of(atenciones), CUPS, Map.of(), Map.of(), xml, BOGOTA, AHORA));
     }
 
     @SuppressWarnings("unchecked")
@@ -160,7 +160,7 @@ class ArmadorRipsTest {
                 null, "05", BigDecimal.ZERO, null, null, false);
         var r = armar(particular(), true, null, atencion(paciente("12"), c, dx("J029"), proc("890201", 1, "60000")));
 
-        assertThat(r.json()).containsEntry("numFactura", null).containsEntry("tipoNota", "RS");
+        assertThat(r.json()).containsEntry("numFactura", null).containsEntry("tipoNota", "RS").containsEntry("numNota", "7");
         assertThat(lista(r, 0, "consultas").get(0)).containsEntry("vrServicio", 60000L);
         assertThat(r.hayRechazos()).isFalse();
     }
