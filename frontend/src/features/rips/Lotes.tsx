@@ -231,7 +231,11 @@ function Factura({ lote: l, onCambio }: { lote: Lote; onCambio: (l: Lote) => voi
           <input className="campo-medio" maxLength={20} value={numero} placeholder="Ej.: FE1234"
             onChange={(e) => setNumero(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))} />
         </label>
-        <button className="btn-link" disabled={guardar.isPending || numero === (l.numeroFactura ?? "")}>Guardar</button>
+        <button className="btn btn-secondary" disabled={guardar.isPending || numero === (l.numeroFactura ?? "")}>
+          {guardar.isPending ? "Guardando…" : "Guardar número"}
+        </button>
+        {numero !== (l.numeroFactura ?? "") ? <span className="badge badge-warn">Sin guardar</span>
+          : guardar.isSuccess && <span className="muted small">Guardado</span>}
       </form>
       <div className="row">
         {l.xml ? (
