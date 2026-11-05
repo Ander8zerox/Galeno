@@ -518,3 +518,67 @@ MUV sigue en espera (botón deshabilitado).
   aplica, se descarta al guardar. Hasta 60 letras, números o guiones.
 - En el lote: con tipo 10 o 14 y sin SIRAS es **rechazo** (RVC095 es notificación, pero el campo es obligatorio). El RIPS
   lleva uno por usuario: el de la primera atención que lo tenga; si hay distintos, avisa.
+
+## Notas crédito, débito y de ajuste (diseño, 6 de noviembre de 2026)
+
+Corrigen una factura ya radicada: la factura no se cambia ni se anula, se le hace una nota. La nota crédito y la débito
+las emite el facturador del consultorio ante la DIAN, igual que la factura; Galenum genera el **JSON del RIPS** de la
+nota. La de ajuste RIPS no lleva documento de la DIAN: es solo el RIPS corregido.
+
+### Qué dice la norma
+
+Fuentes: DT1 v003 (campos T03 y T04, y las observaciones del valor del servicio y de los pagos moderadores) y los
+*Lineamientos para la generación, validación y envío del RIPS* del Ministerio (v3.2, mayo de 2025, numerales 2.2.2 a
+2.2.7 y 4.4.2 a 4.4.3; son de la Res. 2275, pero el DT1 v003 no cambia el manejo de las notas).
+
+- **Transacción:** `numFactura` es el de la factura afectada, `tipoNota` NC, ND o NA, y `numNota` el número de la nota
+  (de la DIAN en NC y ND).
+- **Qué lleva:** solo los usuarios y servicios **objeto del ajuste**, con su registro completo y **el mismo
+  consecutivo** que tenían en el RIPS de la factura.
+- **Nota crédito parcial (glosa aceptada):** cada servicio lleva el valor glosado y la suma debe coincidir con el valor
+  de la NC (XML). El valor de un servicio no puede pasar el que se reportó en la factura. Los **pagos moderadores van en
+  0**.
+- **Nota crédito al 100%** (factura devuelta y aceptada): se valida en el MUV **sin RIPS**; los RIPS de la factura
+  quedan marcados como afectados. Galenum no genera JSON.
+- **Nota débito:** por la diferencia de valor o de cantidad de servicios ya facturados (mismo consecutivo, modificando
+  solo el valor o la cantidad), o con servicios que no se facturaron (nuevos registros que siguen la numeración). Para
+  esto último la norma también deja expedir una factura nueva.
+- **Nota de ajuste RIPS:** glosas por la calidad de los datos que no cambian el valor (diagnóstico, finalidad,
+  autorización…). No lleva documento de la DIAN.
+- **Glosa de valor y de datos a la vez:** se reporta como **NC** y en el mismo registro se corrigen los datos.
+- **RIPS sin factura:** `numFactura` nulo y `numNota` un **número propio del prestador, único para cada envío**. El
+  lineamiento lo llama "SF"; la tabla TipoNota del DT1 v003 lo llama "RS". Además, es para quien **no tiene contrato con
+  ningún pagador** y se transmite **dentro de los 5 primeros días del mes siguiente**. **Hoy Galenum lo genera con
+  `numNota` nulo: hay que corregirlo.**
+
+### Propuesta
+
+- **Nota** (`rips_notas`): pertenece a un lote **generado**. Tipo (NC, ND, NA), número, motivo, estado (borrador,
+  generada, anulada) y el JSON generado. Un lote puede tener varias notas.
+- **Se arma sobre el JSON guardado del lote**, no sobre los datos de hoy: así el consecutivo y los valores son los que
+  recibió la EPS. En la pantalla del lote, "Nueva nota" lista los servicios del RIPS (paciente, CUPS, fecha y valor) y se
+  marcan los afectados.
+  - **NC:** por servicio, el valor glosado aceptado (de $1 al valor reportado, menos lo que ya hayan acreditado otras
+    notas). Se pueden corregir datos en el mismo registro (glosa mixta).
+  - **ND:** por servicio, el valor que se suma (mayor que 0).
+  - **NA:** por servicio, los datos que se corrigen (diagnósticos, finalidad, causa, modalidad, grupo, servicio, vía de
+    ingreso, autorización); el valor queda como estaba.
+  - Pagos moderadores en 0 en las tres.
+- **Revisión:** las mismas reglas del lote que apliquen, y además: la suma de la NC o de la ND no puede ser 0, la NC no
+  puede pasar lo facturado y la NA no puede quedar sin cambios.
+- **XML de la nota** (opcional, como el de la factura): cruza número, factura referenciada y valor.
+- **Descarga:** `RIPS_<factura>_<NC|ND|NA><número>.json`.
+- **Generada:** queda guardada tal cual; se anula con motivo. Las notas no desbloquean el lote: los datos de la
+  atención siguen como se generaron.
+
+### Decisiones (6 de noviembre de 2026)
+
+1. **Alcance:** NC parcial, ND por mayor valor y NA. La ND con servicios nuevos queda fuera: para eso se expide una
+   factura nueva, que la norma también permite.
+2. **NC al 100%:** se registra en el lote (número y motivo), sin JSON. El lote queda "afectado al 100%" y sus atenciones
+   no se vuelven a facturar.
+3. **Glosa mixta:** dentro de la NC se pueden corregir datos del mismo registro, como dicen los lineamientos.
+4. **CUPS en la NA:** no se cambia, porque cambiar el procedimiento cambia lo facturado (eso va por NC o ND).
+5. **RIPS sin factura:** se corrige **antes** que las notas, en un PR corto. El `numNota` pasa a ser un consecutivo
+   propio del consultorio (1, 2, 3…, único por envío), y la pantalla avisa que es para quien no tiene contrato con
+   ningún pagador y que se envía en los 5 primeros días del mes siguiente.
