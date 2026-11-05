@@ -33,4 +33,14 @@ interface AtencionRepository extends JpaRepository<Atencion, UUID> {
             order by a.fechaAtencion
             """)
     List<Atencion> firmadas(UUID pacienteId);
+
+    /** Para el RIPS: las firmadas en Galenum (no las importadas) entre esas fechas. */
+    @Query("""
+            select a from Atencion a
+            where a.estado = com.galeno.historia.Atencion.Estado.FIRMADA
+              and a.origen = com.galeno.historia.Atencion.Origen.GALENO
+              and a.fechaAtencion >= :desde and a.fechaAtencion < :hasta
+            order by a.fechaAtencion
+            """)
+    List<Atencion> firmadasEntre(java.time.Instant desde, java.time.Instant hasta);
 }

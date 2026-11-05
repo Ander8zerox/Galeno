@@ -141,6 +141,10 @@ public class Atencion {
     @OrderColumn(name = "orden")
     private List<Procedimiento> procedimientos = new ArrayList<>();
 
+    /** Expidió incapacidad (campo "incapacidad" del usuario en el RIPS). */
+    @Column(nullable = false)
+    private boolean incapacidad;
+
     @Column(name = "lote_importacion_id", updatable = false)
     private UUID loteImportacionId;
 
@@ -230,6 +234,12 @@ public class Atencion {
         exigirBorrador();
         this.procedimientos.clear();
         this.procedimientos.addAll(nuevos);
+        this.actualizadaEn = Instant.now();
+    }
+
+    void marcarIncapacidad(boolean incapacidad) {
+        exigirBorrador();
+        this.incapacidad = incapacidad;
         this.actualizadaEn = Instant.now();
     }
 
@@ -377,6 +387,10 @@ public class Atencion {
 
     public List<Procedimiento> getProcedimientos() {
         return procedimientos;
+    }
+
+    public boolean isIncapacidad() {
+        return incapacidad;
     }
 
     public UUID getLoteImportacionId() {

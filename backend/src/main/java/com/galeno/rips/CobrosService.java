@@ -50,10 +50,12 @@ public class CobrosService {
     private final ModulosService modulos;
     private final AgendaPublica agenda;
     private final HistoriaService historia;
+    private final LoteRepository lotes;
 
     CobrosService(CobroRepository cobros, RipsPacienteRepository pacientesRips, PagadoresService pagadores,
                   ReferenciasService referencias, ModulosService modulos, AgendaPublica agenda,
-                  @Lazy HistoriaService historia) {
+                  @Lazy HistoriaService historia, LoteRepository lotes) {
+        this.lotes = lotes;
         this.cobros = cobros;
         this.pacientesRips = pacientesRips;
         this.pagadores = pagadores;
@@ -108,11 +110,14 @@ public class CobrosService {
         return vigente(atencion0(atencionId));
     }
 
-    /** Se puede corregir aun con la atención firmada: el cobro no es dato clínico (en la entrega 3, hasta el lote). */
+    /** Se puede corregir aun con la atención firmada (el cobro no es dato clínico), hasta que su lote se genere. */
     @Transactional
     public CobroVista guardarAtencion(UUID atencionId, DatosCobro datos) {
         modulos.exigir(Modulo.RIPS);
         AtencionReferencia a = atencion0(atencionId);
+        if (lotes.enLoteGenerado(atencionId)) {
+            throw ApiProblem.conflict("La atención ya está en un RIPS generado: para corregir el cobro, anule ese lote");
+        }
         Cobro c = cobros.findByAtencionId(atencionId).orElseGet(() -> Cobro.deAtencion(atencionId));
         aplicar(c, datos, a.pacienteId());
         return vista(cobros.saveAndFlush(c), Origen.ATENCION);
@@ -122,7 +127,8 @@ public class CobrosService {
         return historia.referencia(atencionId).orElseThrow(() -> ApiProblem.notFound("Atención no encontrada"));
     }
 
-    private CobroVista vigente(AtencionReferencia a) {
+    /** El cobro que vale para la atención: el suyo, si no el de su cita, si no el propuesto con el pagador del paciente. */
+    CobroVista vigente(AtencionReferencia a) {
         return cobros.findByAtencionId(a.id()).map(c -> vista(c, Origen.ATENCION))
                 .or(() -> Optional.ofNullable(a.citaId()).flatMap(cobros::findByCitaId).map(c -> vista(c, Origen.CITA)))
                 .orElseGet(() -> porDefecto(a.pacienteId()));
@@ -158,7 +164,7 @@ public class CobrosService {
         referencias.validar("concepto_recaudo", concepto, "Concepto del cobro");
         BigDecimal valor = d.valorPagoModerador() == null ? BigDecimal.ZERO : d.valorPagoModerador();
         String tipoUsuario = pacientesRips.findById(pacienteId).map(RipsPaciente::getTipoUsuario).orElse(null);
-        validar(pagador, concepto, valor, tipoUsuario);
+        validar(pagador.getTipo(), concepto, valor, tipoUsuario);
         String autorizacion = texto(d.numeroAutorizacion());
         if (autorizacion != null && !AUTORIZACION.matcher(autorizacion).matches()) {
             throw ApiProblem.badRequest("Número de autorización: hasta 30 letras, números o guiones");
@@ -174,7 +180,7 @@ public class CobrosService {
     }
 
     /** Reglas del Documento Técnico 1 (campos C18 y C19) que se pueden revisar con lo que sabe Galenum. */
-    static void validar(Pagador pagador, String concepto, BigDecimal valor, String tipoUsuario) {
+    static void validar(Pagador.Tipo tipoPagador, String concepto, BigDecimal valor, String tipoUsuario) {
         if (valor.signum() < 0) {
             throw ApiProblem.badRequest("El valor cobrado no puede ser negativo");
         }
@@ -187,7 +193,7 @@ public class CobrosService {
         if (!NO_APLICA.equals(concepto) && valor.compareTo(BigDecimal.ONE) < 0) {
             throw ApiProblem.badRequest("Con copago, cuota moderadora o pago compartido el valor es de al menos $1 (si no se cobró nada, el concepto es \"no aplica\")");
         }
-        if (pagador.getTipo() == Pagador.Tipo.PARTICULAR && !NO_APLICA.equals(concepto)) {
+        if (tipoPagador == Pagador.Tipo.PARTICULAR && !NO_APLICA.equals(concepto)) {
             throw ApiProblem.badRequest("Un particular no paga copago ni cuota moderadora: paga el servicio");
         }
         if (CUOTA_MODERADORA.equals(concepto) && tipoUsuario != null && !CONTRIBUTIVO.contains(tipoUsuario)) {

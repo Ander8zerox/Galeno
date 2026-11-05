@@ -70,7 +70,13 @@ public class DatosRipsController {
     @PutMapping("/prestador")
     public Prestador guardarPrestador(@Valid @RequestBody DatosPrestador r) {
         return datos.guardarPrestador(new Prestador(r.codigoHabilitacion(), r.servicio(), r.modalidadAtencion(),
-                r.grupoServicios(), r.finalidad(), r.causaExterna(), r.viaIngreso(), true));
+                r.grupoServicios(), r.finalidad(), r.causaExterna(), r.viaIngreso(), true, null));
+    }
+
+    /** El NIT del consultorio, si no lo dio al registrarse: el RIPS lo exige. Una vez fijado no cambia desde aquí. */
+    @PutMapping("/prestador/nit")
+    public Prestador fijarNit(@Valid @RequestBody NitConsultorio r) {
+        return datos.fijarNit(r.nit());
     }
 
     @GetMapping("/profesionales")
@@ -86,6 +92,9 @@ public class DatosRipsController {
     public record DatosPaciente(@Size(max = 2) String tipoUsuario, @Size(max = 3) String paisResidencia,
                                 @Size(max = 5) String municipioResidencia, @Size(max = 2) String zonaResidencia,
                                 @Size(max = 3) String paisOrigen, UUID pagadorId) {
+    }
+
+    public record NitConsultorio(@jakarta.validation.constraints.NotBlank @Size(max = 20) String nit) {
     }
 
     public record DatosPrestador(@Size(max = 12) String codigoHabilitacion, @Size(max = 4) String servicio,

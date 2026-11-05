@@ -33,7 +33,9 @@ public class AccesoHistoria {
         IMPRIMIR_HISTORIA,
         IMPRIMIR_FORMULA,
         IMPORTAR_ATENCIONES,
-        DESHACER_IMPORTACION
+        DESHACER_IMPORTACION,
+        VER_RIPS,
+        GENERAR_RIPS
     }
 
     @Id

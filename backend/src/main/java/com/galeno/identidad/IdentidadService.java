@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.galeno.shared.security.Permiso;
 import com.galeno.shared.security.SesionVerifier;
+import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
 /** API pública del módulo de identidad para los demás módulos. */
 @Service
@@ -69,6 +70,29 @@ public class IdentidadService implements SesionVerifier {
     @Transactional(readOnly = true)
     public ZoneId zonaHoraria(UUID consultorioId) {
         return consultorios.findById(consultorioId).map(c -> ZoneId.of(c.getZonaHoraria())).orElse(ZoneId.of("America/Bogota"));
+    }
+
+    /**
+     * El NIT del consultorio, si no lo dio al registrarse (el RIPS lo exige). Ya fijado no se cambia aquí: identifica
+     * al consultorio y evita registrar el mismo dos veces; para corregirlo, soporte.
+     */
+    @Transactional
+    public String fijarNit(UUID consultorioId, String nit) {
+        Consultorio c = consultorios.findById(consultorioId).orElseThrow();
+        if (c.getNit() != null) {
+            throw ApiProblem.conflict("El consultorio ya tiene NIT (" + c.getNit() + "). Para corregirlo, escriba a soporte.");
+        }
+        String normalizado;
+        try {
+            normalizado = Nit.normalizar(nit);
+        } catch (IllegalArgumentException e) {
+            throw ApiProblem.badRequest(e.getMessage());
+        }
+        if (consultorios.existsByNit(normalizado)) {
+            throw ApiProblem.conflict("Ya hay un consultorio registrado en Galenum con este NIT. Si es otra sede, escriba a soporte.");
+        }
+        c.fijarNit(normalizado);
+        return normalizado;
     }
 
     @Transactional(readOnly = true)

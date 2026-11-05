@@ -102,7 +102,8 @@ public class HistoriaController {
                         .map(f -> new RespuestasFormato(f.id(), f.respuestas())).toList(),
                 r.procedimientos() == null ? null : r.procedimientos().stream()
                         .map(p -> new ProcedimientoNuevo(p.codigoCups(), p.cantidad(), p.valorUnitario(), p.diente(),
-                                p.superficies())).toList());
+                                p.superficies())).toList(),
+                r.incapacidad());
     }
 
     /** Agrega al borrador un formato activo del consultorio, con su última versión. */
@@ -192,7 +193,10 @@ public class HistoriaController {
                                      Diagnostico.Tipo tipo) {
     }
 
-    /** @param version la que se leyó; si otra pestaña guardó antes, responde 409 */
+    /**
+     * @param version la que se leyó; si otra pestaña guardó antes, responde 409
+     * @param incapacidad si expidió incapacidad (va en el RIPS); {@code null} si la pantalla no la muestra: no cambia
+     */
     public record GuardarAtencion(long version,
                                   @Size(max = 1000) String motivoConsulta,
                                   @Size(max = 20000) String enfermedadActual,
@@ -211,7 +215,8 @@ public class HistoriaController {
                                   @Size(max = 20000) String plan,
                                   @NotNull @Size(max = 20) List<@Valid DiagnosticoRequest> diagnosticos,
                                   @Size(max = 10) List<@Valid RespuestasFormatoRequest> formatos,
-                                  @Size(max = 50) List<@Valid ProcedimientoRequest> procedimientos) {
+                                  @Size(max = 50) List<@Valid ProcedimientoRequest> procedimientos,
+                                  Boolean incapacidad) {
     }
 
     /** @param procedimientos {@code null} si la pantalla no los muestra (sin el módulo de RIPS): no cambian */
