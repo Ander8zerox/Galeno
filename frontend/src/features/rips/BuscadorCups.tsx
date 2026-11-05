@@ -5,13 +5,16 @@ import { pesos } from "./modulos";
 
 export type Cups = Schemas["CupsVista"];
 
-/** Busca en el catálogo CUPS por código o por nombre; muestra el precio del consultorio si lo tiene. */
-export function BuscadorCups({ etiqueta, onElegir }: { etiqueta: string; onElegir: (c: Cups) => void }) {
+/**
+ * Busca en el catálogo CUPS por código o por nombre; muestra el precio del consultorio si lo tiene (desde una atención,
+ * la tarifa de su pagador).
+ */
+export function BuscadorCups({ etiqueta, onElegir, atencionId }: { etiqueta: string; onElegir: (c: Cups) => void; atencionId?: string }) {
   const [q, setQ] = useState("");
   const busqueda = useQuery({
-    queryKey: ["cups", q],
+    queryKey: ["cups", q, atencionId],
     enabled: q.trim().length >= 2,
-    queryFn: async () => unwrap(await api.GET("/api/v1/historia/cups", { params: { query: { q } } })),
+    queryFn: async () => unwrap(await api.GET("/api/v1/historia/cups", { params: { query: { q, atencionId } } })),
   });
   return (
     <div className="stack-sm">

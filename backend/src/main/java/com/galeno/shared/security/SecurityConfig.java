@@ -88,6 +88,13 @@ public class SecurityConfig {
                         // edita pacientes (también la secretaria). El resto del módulo, quien gestiona RIPS.
                         .requestMatchers(HttpMethod.GET, "/api/v1/rips/referencias/**").hasAuthority(TokenService.MIEMBRO)
                         .requestMatchers("/api/v1/rips/pacientes/**").hasAuthority(Permiso.PACIENTE_GESTIONAR.name())
+                        // La lista de pagadores la usan la cita y la ficha. El cobro de la cita, quien gestiona la agenda
+                        // (también la secretaria); el de la atención, quien la ve o la registra.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/rips/pagadores").hasAuthority(TokenService.MIEMBRO)
+                        .requestMatchers("/api/v1/rips/cobros/citas/**", "/api/v1/rips/cobros/citas")
+                                .hasAuthority(Permiso.AGENDA_GESTIONAR.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/rips/cobros/atenciones/**").hasAuthority(Permiso.HISTORIA_VER.name())
+                        .requestMatchers("/api/v1/rips/cobros/atenciones/**").hasAuthority(Permiso.HISTORIA_REGISTRAR.name())
                         .requestMatchers("/api/v1/rips/**").hasAuthority(Permiso.RIPS_GESTIONAR.name())
                         .requestMatchers("/api/v1/formatos/consultorio/**").hasAuthority(Permiso.FORMATOS_GESTIONAR.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/formatos/**").hasAuthority(Permiso.HISTORIA_VER.name())

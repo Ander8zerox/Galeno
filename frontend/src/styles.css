@@ -228,6 +228,8 @@ input::placeholder, textarea::placeholder { color: #667180; }
 .badge-danger { background: var(--danger-bg); color: var(--danger); }
 .badge-boton { border: 0; cursor: pointer; font-family: inherit; }
 .badge-boton:hover { filter: brightness(.95); }
+.card.inactivo { opacity: .65; }
+.cobro { margin-top: .5rem; }
 
 /* --- Login y páginas públicas --- */
 /* Capas de arriba hacia abajo: velo para que la tarjeta resalte, la foto y, debajo (o mientras no hay foto), un

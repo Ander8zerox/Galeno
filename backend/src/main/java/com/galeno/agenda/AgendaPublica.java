@@ -1,6 +1,8 @@
 package com.galeno.agenda;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,6 +25,14 @@ public class AgendaPublica {
                 .map(c -> new CitaResumen(c.getId(), c.getPacienteId(), c.getMedicoMembresiaId(), c.getInicio(), c.getEstado()));
     }
 
+    /** Las del consultorio entre esas (las de otro consultorio no aparecen). */
+    @Transactional(readOnly = true)
+    public List<CitaResumen> citas(Collection<UUID> citaIds) {
+        return citas.findAllById(citaIds).stream()
+                .map(c -> new CitaResumen(c.getId(), c.getPacienteId(), c.getMedicoMembresiaId(), c.getInicio(), c.getEstado()))
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public long citasDelPaciente(UUID pacienteId) {
         return citas.countByPacienteId(pacienteId);
@@ -37,5 +47,10 @@ public class AgendaPublica {
     }
 
     public record CitaResumen(UUID id, UUID pacienteId, UUID medicoMembresiaId, Instant inicio, Cita.Estado estado) {
+
+        /** Programada o confirmada: todavía no se atendió, ni se canceló. */
+        public boolean abierta() {
+            return Cita.Estado.ABIERTOS.contains(estado);
+        }
     }
 }

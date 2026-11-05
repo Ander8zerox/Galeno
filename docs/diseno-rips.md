@@ -352,3 +352,39 @@ El lote, el JSON y sus validaciones (entrega 3), la emisión de la factura y el 
   - Los datos del paciente, `PACIENTE_GESTIONAR`.
   - El prestador y los profesionales, `RIPS_GESTIONAR`.
   - Todo exige el módulo activo.
+
+## Cómo quedó la fase 2, entrega 2 (pagadores y cobro)
+
+- **Catálogos** (V24, generada con `tools/rips/generar-migracion.mjs … V24 …`): `eapb` (1.717 entidades de
+  `CodigoEAPByNit`, con régimen, NIT, población y tipo; sin los correos), `cobertura` (15) y `factura_sin_contrato` (7).
+  El generador ahora agrupa las tablas por migración; la descarga acepta el nombre de la tabla sin importar mayúsculas.
+  - `GET /rips/referencias/eapb?q=` busca por código o nombre y ordena EPS, prepagadas, ARL, aseguradoras y regímenes
+    especiales antes que las secretarías de salud. Sin texto no lista nada (son 1.700).
+- **Pagadores** (`rips_pagadores`, V25): pestaña **Pagadores** del menú RIPS. Al elegir la entidad del catálogo se
+  llenan nombre, NIT, código, tipo y la cobertura más común. El **particular** se crea solo la primera vez que se
+  consultan los pagadores (cobertura 15, factura sin contrato 07, por evento); no se desactiva ni cambia de tipo. Los
+  demás se desactivan en vez de borrarse.
+- **Tarifas** (`rips_tarifas`): en cada pagador. `ListaPrecios.precios(codigos, contexto)` recibe paciente, cita y
+  atención: el módulo busca el pagador (el de la atención, si no el de la cita, si no el del paciente) y sus tarifas
+  reemplazan la lista general. Así la consulta sugerida y el buscador de CUPS de la atención
+  (`GET /historia/cups?q=&atencionId=`) traen el precio del convenio. Cambiar de pagador no cambia los valores ya
+  registrados en la atención.
+- **Pagador del paciente:** `rips_pacientes.pagador_id`; la tarjeta "Datos para RIPS" lo pide (cuenta en los
+  faltantes) y sugiere el tipo de usuario: EPS contributiva 01, subsidiada 04, particular 12, ARL 09, SOAT 10,
+  prepagada 11.
+- **Cobro** (`rips_cobros`): una fila por cita o por atención (lo garantiza `CobrosService`; MySQL no admite el CHECK
+  con el borrado en cascada de la atención).
+  - Agenda: cada cita abierta muestra pagador y cobro, la etiqueta "Falta autorización" si el pagador la exige, y el
+    botón **Cobro**. Los cobros del día salen en una consulta (`GET /rips/cobros/citas?ids=`). Con la cita ya
+    atendida o cancelada, responde 409: se corrige en la atención.
+  - Atención: tarjeta **Pagador y cobro** (también en la atención firmada, para quien la registra), con el origen: de
+    la cita, de la atención o el pagador del paciente sin registrar.
+  - Reglas: sin anticipo (04); "no aplica" (05) con valor 0; copago, cuota moderadora o pago compartido con al menos
+    $1 (si no se cobró, es "no aplica": decisión de Galenum, más estricta que el documento técnico); el particular
+    solo "no aplica"; cuota moderadora solo a contributivos (01, 02, 03); pagos compartidos nunca a subsidiados (04).
+    Autorización hasta 30 caracteres y factura del pago moderador hasta 20 (letras, números y guiones).
+- **Permisos:** la lista de pagadores, cualquier miembro (la usan la cita y la ficha); crearlos y sus tarifas,
+  `RIPS_GESTIONAR`; el cobro de la cita, `AGENDA_GESTIONAR`; el de la atención, `HISTORIA_VER` para verlo y
+  `HISTORIA_REGISTRAR` para cambiarlo. Todo exige el módulo activo.
+- **Interfaces nuevas de otros módulos:** `HistoriaService.referencia(atencionId)` (paciente, cita y estado, sin
+  contenido clínico ni auditoría) y `AgendaPublica.citas(ids)`.

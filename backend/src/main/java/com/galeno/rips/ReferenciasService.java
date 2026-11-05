@@ -22,9 +22,14 @@ public class ReferenciasService {
     /** Las que se pueden consultar desde la pantalla. */
     static final Set<String> TABLAS = Set.of("tipo_usuario", "pais", "departamento", "municipio", "zona", "finalidad",
             "causa_externa", "modalidad_atencion", "grupo_servicios", "servicio", "via_ingreso", "concepto_recaudo",
-            "modalidad_pago", "tipo_diagnostico");
+            "modalidad_pago", "tipo_diagnostico", "eapb", "cobertura", "factura_sin_contrato");
     /** Estas se buscan por texto (son largas); las demás se devuelven completas. */
-    private static final Set<String> CON_BUSQUEDA = Set.of("municipio", "pais", "servicio");
+    private static final Set<String> CON_BUSQUEDA = Set.of("municipio", "pais", "servicio", "eapb");
+    /**
+     * Aseguradoras: primero las que suelen pagar consultas (EPS, prepagadas, ARL, SOAT, regímenes especiales) y al final
+     * las secretarías de salud, que son la mayoría de la tabla. Es el número con que empieza su "tipo" en SISPRO.
+     */
+    private static final List<String> ORDEN_EAPB = List.of("7", "5", "8", "6", "10", "9", "3", "4", "2", "1");
     static final String COLOMBIA = "170";
 
     private static final JsonMapper JSON = JsonMapper.builder().build();
@@ -45,12 +50,31 @@ public class ReferenciasService {
             throw ApiProblem.notFound("Tabla de referencia desconocida: " + tabla);
         }
         String texto = q == null ? "" : q.strip();
+        if (tabla.equals("eapb") && texto.length() < 2) {
+            return List.of(); // son 1.700: solo por búsqueda
+        }
         List<Referencia> filas = CON_BUSQUEDA.contains(tabla) && !texto.isEmpty()
-                ? referencias.buscar(tabla, texto, PageRequest.of(0, 30))
+                ? referencias.buscar(tabla, texto, PageRequest.of(0, tabla.equals("eapb") ? 200 : 30))
                 : referencias.findByTablaAndHabilitadoTrueOrderByCodigo(tabla);
+        if (tabla.equals("eapb")) {
+            filas = filas.stream().sorted(java.util.Comparator.comparingInt(ReferenciasService::ordenEapb)).limit(30).toList();
+        }
         Map<String, String> departamentos = tabla.equals("municipio") ? nombres("departamento") : Map.of();
         return filas.stream().map(r -> new ReferenciaVista(r.getCodigo(), r.getNombre(),
                 tabla.equals("municipio") ? departamentos.get(extra(r).get("Departamento")) : null, extra(r))).toList();
+    }
+
+    /** Una fila por su código (habilitada o no: un pagador viejo puede nombrar una entidad liquidada). */
+    @Transactional(readOnly = true)
+    public java.util.Optional<ReferenciaVista> porCodigo(String tabla, String codigo) {
+        return referencias.findById(new Referencia.Clave(tabla, codigo))
+                .map(r -> new ReferenciaVista(r.getCodigo(), r.getNombre(), null, extra(r)));
+    }
+
+    private static int ordenEapb(Referencia r) {
+        String tipo = extra(r).getOrDefault("tipo", "");
+        int i = ORDEN_EAPB.indexOf(tipo.contains(".") ? tipo.substring(0, tipo.indexOf('.')) : tipo);
+        return i < 0 ? ORDEN_EAPB.size() : i;
     }
 
     @Transactional(readOnly = true)

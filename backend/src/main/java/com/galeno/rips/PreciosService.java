@@ -16,17 +16,24 @@ import com.galeno.modulos.Modulo;
 import com.galeno.modulos.ModulosService;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
-/** Lista de precios por CUPS del consultorio (fase 1 de RIPS). Las tarifas por pagador llegan en la fase 2. */
+/**
+ * Lista de precios por CUPS del consultorio (fase 1 de RIPS). Con un pagador que tenga tarifa para el CUPS, vale la
+ * tarifa (convenio); si no, la lista general.
+ */
 @Service
 public class PreciosService implements ListaPrecios {
 
     private final PrecioCupsRepository precios;
     private final HistoriaService historia;
     private final ModulosService modulos;
+    private final PagadoresService pagadores;
+    private final CobrosService cobros;
 
     PreciosService(PrecioCupsRepository precios, @org.springframework.context.annotation.Lazy HistoriaService historia,
-                   ModulosService modulos) {
+                   ModulosService modulos, PagadoresService pagadores, CobrosService cobros) {
         this.precios = precios;
+        this.pagadores = pagadores;
+        this.cobros = cobros;
         this.historia = historia;
         this.modulos = modulos;
     }
@@ -34,12 +41,16 @@ public class PreciosService implements ListaPrecios {
     /** Para la historia: sin el módulo activo no hay precios que proponer. */
     @Override
     @Transactional(readOnly = true)
-    public Map<String, BigDecimal> precios(Collection<String> codigosCups) {
+    public Map<String, BigDecimal> precios(Collection<String> codigosCups, Contexto contexto) {
         if (codigosCups.isEmpty() || !modulos.activo(Modulo.RIPS)) {
             return Map.of();
         }
-        return precios.findByCodigoCupsIn(codigosCups).stream()
-                .collect(Collectors.toMap(PrecioCups::getCodigoCups, PrecioCups::getValor));
+        Map<String, BigDecimal> resultado = new java.util.HashMap<>(precios.findByCodigoCupsIn(codigosCups).stream()
+                .collect(Collectors.toMap(PrecioCups::getCodigoCups, PrecioCups::getValor)));
+        if (contexto != null) {
+            cobros.pagador(contexto).ifPresent(pagadorId -> resultado.putAll(pagadores.tarifas(pagadorId, codigosCups)));
+        }
+        return resultado;
     }
 
     @Transactional(readOnly = true)

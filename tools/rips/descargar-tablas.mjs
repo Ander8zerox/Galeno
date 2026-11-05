@@ -36,7 +36,7 @@ function campos(html) {
 function filas(html, t) {
   return [...html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)]
     .map((m) => [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((c) => texto(c[1])))
-    .filter((f) => f.length > 3 && f[0] === t);
+    .filter((f) => f.length > 3 && f[0].toLowerCase() === t.toLowerCase()); // a veces responde con otra mayúscula
 }
 
 for (const t of tablas) {

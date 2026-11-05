@@ -5,7 +5,10 @@ import { pesos } from "./modulos";
 export type ProcedimientoForm = Schemas["ProcedimientoRequest"] & { descripcion?: string };
 
 /** Lo que se hizo en la atención, con su CUPS. El diente y las superficies son opcionales (odontología). */
-export function ProcedimientosEditor({ value, onChange }: { value: ProcedimientoForm[]; onChange: (p: ProcedimientoForm[]) => void }) {
+/** @param atencionId para proponer la tarifa del pagador de la atención (si no tiene, la lista general) */
+export function ProcedimientosEditor({ value, onChange, atencionId }: {
+  value: ProcedimientoForm[]; onChange: (p: ProcedimientoForm[]) => void; atencionId?: string;
+}) {
   const actualizar = (i: number, cambio: Partial<ProcedimientoForm>) => onChange(value.map((p, j) => (j === i ? { ...p, ...cambio } : p)));
   const total = value.reduce((s, p) => s + (p.valorUnitario ?? 0) * (p.cantidad ?? 1), 0);
   const numero = (v: string) => (v.trim() === "" ? undefined : Number(v.replace(/[.\s]/g, "").replace(",", ".")));
@@ -36,7 +39,7 @@ export function ProcedimientosEditor({ value, onChange }: { value: Procedimiento
         </div>
       )}
       {!!value.length && <span className="small">Total: <strong>{pesos(total)}</strong></span>}
-      <BuscadorCups etiqueta="Agregar procedimiento (código o nombre CUPS)" onElegir={(c) =>
+      <BuscadorCups etiqueta="Agregar procedimiento (código o nombre CUPS)" atencionId={atencionId} onElegir={(c) =>
         onChange([...value, { codigoCups: c.codigo!, descripcion: c.descripcion, cantidad: 1, valorUnitario: c.valorUnitario ?? undefined }])} />
     </div>
   );

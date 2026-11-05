@@ -164,10 +164,13 @@ public class HistoriaController {
         return historia.anularDocumento(id, r.motivo());
     }
 
-    /** Buscador de CUPS, con el precio del consultorio. Solo con el módulo de RIPS activo. */
+    /**
+     * Buscador de CUPS, con el precio del consultorio. Solo con el módulo de RIPS activo. Desde una atención, con la
+     * tarifa de su pagador si la tiene.
+     */
     @GetMapping("/cups")
-    public List<CupsVista> cups(@RequestParam String q) {
-        return historia.buscarCups(q);
+    public List<CupsVista> cups(@RequestParam String q, @RequestParam(required = false) UUID atencionId) {
+        return historia.buscarCups(q, atencionId);
     }
 
     @GetMapping("/cie10")
