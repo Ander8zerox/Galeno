@@ -3,6 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
+import { DatosRipsPaciente } from "../rips/DatosRipsPaciente";
+import { useModuloActivo } from "../rips/modulos";
+import { useFaltantesRips } from "../rips/referencias";
 import { AgendarForm } from "./AgendarForm";
 import { hora } from "./tiempo";
 
@@ -37,6 +40,10 @@ export function AgendaDia({ medicoId, fecha, zona }: { medicoId: string; fecha: 
   ].sort((a, b) => a.inicio.localeCompare(b.inicio) || (a.tipo === "cita" ? -1 : 1));
 
   const activas = (citas.data ?? []).filter((c) => c.estado !== "CANCELADA").length;
+  // Con RIPS activo, se avisa en la cita lo que le falta al paciente para que la secretaria lo complete al recibirlo
+  const { puede } = useAuth();
+  const rips = useModuloActivo("RIPS") && puede("PACIENTE_GESTIONAR");
+  const faltantes = useFaltantesRips((citas.data ?? []).filter(abierta).map((c) => c.pacienteId!), rips);
 
   return (
     <div className="stack">
@@ -63,21 +70,23 @@ export function AgendaDia({ medicoId, fecha, zona }: { medicoId: string; fecha: 
             <span className="slot-accion">Agendar</span>
           </button>
         ) : (
-          <CitaFila key={f.cita.id} cita={f.cita} zona={zona} />
+          <CitaFila key={f.cita.id} cita={f.cita} zona={zona} faltanRips={faltantes.data?.get(f.cita.pacienteId!)} />
         ))}
       </div>
     </div>
   );
 }
 
-function CitaFila({ cita, zona }: { cita: Cita; zona: string }) {
+const abierta = (c: Cita) => c.estado === "PROGRAMADA" || c.estado === "CONFIRMADA";
+
+function CitaFila({ cita, zona, faltanRips }: { cita: Cita; zona: string; faltanRips?: string[] }) {
   const { me, puede } = useAuth();
   const queryClient = useQueryClient();
   const [cancelando, setCancelando] = useState(false);
   const [marcandoInasistencia, setMarcandoInasistencia] = useState(false);
   const [motivo, setMotivo] = useState("");
+  const [completandoRips, setCompletandoRips] = useState(false);
   const diferida = useAccionDiferida();
-  const abierta = cita.estado === "PROGRAMADA" || cita.estado === "CONFIRMADA";
   const esMiCita = cita.medicoId === me?.membresiaId;
   const navigate = useNavigate();
   const atender = useMutation({
@@ -106,6 +115,10 @@ function CitaFila({ cita, zona }: { cita: Cita; zona: string }) {
           <Link to={`/pacientes/${cita.pacienteId}`}><strong>{cita.pacienteNombre}</strong></Link>
           <span className={`badge ${ESTADO_CLASE[cita.estado!]}`}>{ESTADO_NOMBRE[cita.estado!]}</span>
           {cita.sobrecupo && <span className="badge badge-warn">Sobrecupo</span>}
+          {abierta(cita) && !!faltanRips?.length && (
+            <button className="badge badge-warn badge-boton" title={`Falta: ${faltanRips.join(", ").toLowerCase()}`}
+              onClick={() => setCompletandoRips((v) => !v)}>RIPS: faltan {faltanRips.length}</button>
+          )}
         </div>
         <div className="muted small">
           {hora(cita.inicio!, zona)}–{hora(cita.fin!, zona)} · {cita.pacienteDocumento}
@@ -113,6 +126,7 @@ function CitaFila({ cita, zona }: { cita: Cita; zona: string }) {
           {cita.motivo && ` · ${cita.motivo}`}
           {cita.motivoCancelacion && ` · Cancelada: ${cita.motivoCancelacion}`}
         </div>
+        {completandoRips && abierta(cita) && <DatosRipsPaciente pacienteId={cita.pacienteId!} editar />}
         {cancelando && (
           <div className="stack-sm confirmar">
             <span className="small">¿Cancelar la cita de {cuando}?</span>
@@ -138,7 +152,7 @@ function CitaFila({ cita, zona }: { cita: Cita; zona: string }) {
         )}
         {(cambiar.error || atender.error) && <p className="alert alert-error">{(cambiar.error ?? atender.error)?.message}</p>}
       </div>
-      {abierta && !cancelando && !marcandoInasistencia && !diferida.pendiente && (
+      {abierta(cita) && !cancelando && !marcandoInasistencia && !diferida.pendiente && (
         <div className="row acciones">
           {cita.estado === "PROGRAMADA" && <button className="btn-link" onClick={() => diferida.programar("Confirmando la cita", () => cambiar.mutate({ estado: "CONFIRMADA" }))}>Confirmar</button>}
           {puede("HISTORIA_REGISTRAR") && esMiCita && <button className="btn" disabled={atender.isPending} onClick={() => diferida.programar("Abriendo la atención", () => atender.mutate())}>Atender</button>}

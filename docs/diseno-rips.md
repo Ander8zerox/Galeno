@@ -218,3 +218,40 @@ Los lotes contienen datos clínicos (diagnósticos), así que su consulta queda 
   clínica es registro clínico, no de cobro).
 - **Permisos nuevos:** `MODULOS_GESTIONAR` y `RIPS_GESTIONAR`, los dos del administrador. Van en el token: quien tenga
   la sesión abierta antes del despliegue ve los menús nuevos después de volver a ingresar.
+
+## Cómo quedó la fase 2, entrega 1 (datos para el RIPS)
+
+- **Tablas de referencia de SISPRO** en `rips_referencias` (V22): tipo de usuario, país, departamento, municipio,
+  zona, finalidad, causa externa, modalidad de atención, grupo de servicios, servicio, vía de ingreso, concepto de
+  recaudo, modalidad de pago y tipo de diagnóstico (1.683 filas). Se toman de la consulta pública de SISPRO
+  (`ConsultarDetalleReferenciaBasica.aspx`) pasando sus páginas, porque "Exportar a Excel" exige sesión.
+  - Para actualizarlas: `node tools/rips/descargar-tablas.mjs <carpeta> <tablas…>`, luego
+    `node tools/rips/generar-migracion.mjs <carpeta> <archivo.sql>`, y publicar el resultado como una migración nueva.
+  - Las columnas "Extra" quedan en JSON. Por ejemplo, el departamento del municipio, o si una finalidad aplica a
+    consultas o procedimientos (con sus límites de sexo y edad, para validar en la entrega 3).
+  - La fuente trae algunos caracteres perdidos ("tr nsito", "?" por un guion largo); el generador los corrige.
+- **Paciente** (`rips_pacientes`, V23):
+  - Tipo de usuario, país, municipio y zona de residencia, y país de origen. Fuera de Colombia, municipio y zona no
+    aplican.
+  - Se edita en la tarjeta "Datos para RIPS" de la ficha, que también ve la secretaria, y avisa lo que falta.
+  - En la agenda, cada cita abierta con datos pendientes muestra "RIPS: faltan N"; al hacer clic se completan ahí
+    mismo. Los faltantes de todas las citas del día salen en una sola consulta (`GET /rips/pacientes/faltantes`,
+    hasta 200 pacientes). No hace falta llenar a todos los pacientes al activar el módulo: solo a los que se atienden.
+  - El sexo y el tipo de documento ya coinciden con los de SISPRO (M, F, I y TipoIdPISIS).
+- **Prestador** (`rips_prestador`): código de habilitación de 12 dígitos, servicio habilitado y valores por defecto
+  (modalidad, grupo, finalidad y causa que apliquen a consultas, y vía de ingreso). Sin configurar, sugiere
+  intramural, consulta externa, enfermedad general y "derivado de consulta externa".
+- **Profesionales** (`rips_profesionales`): tipo y número de documento de cada médico activo, por consultorio.
+- **Pantalla:** el menú RIPS (antes "Precios"), con las pestañas Prestador, Profesionales y Precios; `/precios` lleva a
+  la pestaña Precios.
+- **¿Particulares también?** La Res. 948 (art. 2) incluye a los profesionales independientes, y el art. 8 pide
+  RIPS de "todas las atenciones" como soporte de la factura electrónica de salud, sin excluir por pagador. No menciona a
+  los particulares ni el pago directo del usuario, así que la lectura más probable es que también lleven RIPS (tipo de
+  usuario 12), pero no está explícito. Las excepciones escritas (art. 2, parágrafo 1) son centros de reconocimiento de
+  conductores, centros de investigación, y estética y medicina alternativa sin recursos públicos. Pendiente confirmarlo
+  con la mesa de ayuda del Ministerio antes de activar el módulo por defecto.
+- **Permisos:**
+  - Las listas de SISPRO, cualquier miembro.
+  - Los datos del paciente, `PACIENTE_GESTIONAR`.
+  - El prestador y los profesionales, `RIPS_GESTIONAR`.
+  - Todo exige el módulo activo.

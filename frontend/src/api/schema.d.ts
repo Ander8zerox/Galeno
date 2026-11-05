@@ -4,6 +4,38 @@
  */
 
 export interface paths {
+    "/api/v1/rips/profesionales/{usuarioId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["guardarProfesional"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/prestador": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["prestador"];
+        put: operations["guardarPrestador"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rips/precios/{codigoCups}": {
         parameters: {
             query?: never;
@@ -15,6 +47,22 @@ export interface paths {
         put: operations["fijar"];
         post?: never;
         delete: operations["quitar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/pacientes/{pacienteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["paciente"];
+        put: operations["guardarPaciente"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1204,6 +1252,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rips/referencias/{tabla}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["referencias"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/profesionales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["profesionales"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rips/precios": {
         parameters: {
             query?: never;
@@ -1212,6 +1292,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["listar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/pacientes/faltantes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["faltantes"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1800,6 +1896,36 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        DocumentoProfesional: {
+            tipoDocumento: string;
+            numeroDocumento: string;
+        };
+        Profesional: {
+            /** Format: uuid */
+            usuarioId?: string;
+            nombre?: string;
+            tipoDocumento?: string;
+            numeroDocumento?: string;
+        };
+        DatosPrestador: {
+            codigoHabilitacion?: string;
+            servicio?: string;
+            modalidadAtencion?: string;
+            grupoServicios?: string;
+            finalidad?: string;
+            causaExterna?: string;
+            viaIngreso?: string;
+        };
+        Prestador: {
+            codigoHabilitacion?: string;
+            servicio?: string;
+            modalidadAtencion?: string;
+            grupoServicios?: string;
+            finalidad?: string;
+            causaExterna?: string;
+            viaIngreso?: string;
+            guardado?: boolean;
+        };
         Precio: {
             valor: number;
         };
@@ -1809,6 +1935,23 @@ export interface components {
             valor?: number;
             /** Format: date-time */
             actualizadoEn?: string;
+        };
+        DatosPaciente: {
+            tipoUsuario?: string;
+            paisResidencia?: string;
+            municipioResidencia?: string;
+            zonaResidencia?: string;
+            paisOrigen?: string;
+        };
+        PacienteRips: {
+            tipoUsuario?: string;
+            paisResidencia?: string;
+            municipioResidencia?: string;
+            municipioNombre?: string;
+            departamento?: string;
+            zonaResidencia?: string;
+            paisOrigen?: string;
+            faltantes?: string[];
         };
         CambioPlan: {
             nombre: string;
@@ -2700,6 +2843,19 @@ export interface components {
             /** Format: int64 */
             precioConDescuento?: number;
         };
+        ReferenciaVista: {
+            codigo?: string;
+            nombre?: string;
+            detalle?: string;
+            extra?: {
+                [key: string]: string;
+            };
+        };
+        Faltantes: {
+            /** Format: uuid */
+            pacienteId?: string;
+            faltantes?: string[];
+        };
         Panel: {
             partner?: components["schemas"]["PartnerVista"];
             /** Format: int32 */
@@ -2881,31 +3037,31 @@ export interface components {
             finalizadoEn?: string;
         };
         JsonNode: {
-            short?: boolean;
-            binary?: boolean;
-            double?: boolean;
-            int?: boolean;
-            object?: boolean;
-            long?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            pojo?: boolean;
-            boolean?: boolean;
-            string?: boolean;
             array?: boolean;
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            number?: boolean;
-            floatingPointNumber?: boolean;
             missingNode?: boolean;
-            valueNode?: boolean;
-            container?: boolean;
-            integralNumber?: boolean;
-            bigDecimal?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            bigDecimal?: boolean;
             bigInteger?: boolean;
+            container?: boolean;
+            valueNode?: boolean;
+            integralNumber?: boolean;
+            floatingPointNumber?: boolean;
+            object?: boolean;
+            binary?: boolean;
+            string?: boolean;
+            short?: boolean;
+            int?: boolean;
+            long?: boolean;
+            double?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            boolean?: boolean;
+            pojo?: boolean;
+            number?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -2961,6 +3117,76 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    guardarProfesional: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                usuarioId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentoProfesional"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Profesional"];
+                };
+            };
+        };
+    };
+    prestador: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Prestador"];
+                };
+            };
+        };
+    };
+    guardarPrestador: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatosPrestador"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Prestador"];
+                };
+            };
+        };
+    };
     fijar: {
         parameters: {
             query?: never;
@@ -3004,6 +3230,54 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    paciente: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PacienteRips"];
+                };
+            };
+        };
+    };
+    guardarPaciente: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatosPaciente"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PacienteRips"];
+                };
             };
         };
     };
@@ -5007,6 +5281,50 @@ export interface operations {
             };
         };
     };
+    referencias: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path: {
+                tabla: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReferenciaVista"][];
+                };
+            };
+        };
+    };
+    profesionales: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Profesional"][];
+                };
+            };
+        };
+    };
     listar: {
         parameters: {
             query?: never;
@@ -5023,6 +5341,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PrecioVista"][];
+                };
+            };
+        };
+    };
+    faltantes: {
+        parameters: {
+            query: {
+                ids: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Faltantes"][];
                 };
             };
         };
