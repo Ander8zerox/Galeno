@@ -493,6 +493,8 @@ MUV sigue en espera (botón deshabilitado).
     procedimiento. Sin valor en la atención, el precio vigente (tarifa del pagador o lista general). Fuera de pago por
     evento, el valor es 0; en el RIPS sin factura, lo que pagó el paciente (RVC091). El pago moderador va en el primer
     servicio de la atención. `codSexo` es el de la ficha (M, F, I: columna Extra III de la tabla Sexo).
+    Con el pagador particular, el tipo de usuario va como 12 aunque la ficha diga otro (un afiliado a una EPS que
+    paga de su bolsillo es particular en esa factura; la cobertura 15 solo admite el 12).
   - **Generar** guarda el JSON tal cual (no cambia si después cambia un dato) y bloquea el cobro de esas atenciones
     (409). Se descarga como `RIPS_<factura>.json` o `RIPS_sin_factura_<desde>_<hasta>.json`. **Anular** pide motivo,
     conserva el JSON y libera las atenciones. Un borrador se elimina. "Enviar al Ministerio" queda deshabilitado

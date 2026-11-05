@@ -166,17 +166,32 @@ class ArmadorRipsTest {
 
     @Test
     void revisaLosCrucesDelNumeral18() {
-        // Un subsidiado (04) no se reporta con la cobertura de particulares (15)
-        var c = new CobroVista(CobrosService.Origen.ATENCION, true, PAGADOR, "Particular", Pagador.Tipo.PARTICULAR, false,
-                null, "05", BigDecimal.ZERO, null);
-        var r = armar(particular(), false, null, atencion(paciente("04"), c, dx("J029"), proc("890201", 1, "60000")));
-        assertThat(r.hallazgos()).anyMatch(h -> h.nivel() == Nivel.RECHAZO && h.mensaje().contains("tipo de usuario 04"));
+        // Un cotizante (01) no se reporta con la cobertura de ARL (05)
+        var arl = new ArmadorRips.PagadorRips(PAGADOR, "ARL", Pagador.Tipo.ARL, "05", "04");
+        var r = armar(arl, false, null, atencion(paciente("01"), cobro("05", "0"), dx("J029"), proc("890201", 1, "60000")));
+        assertThat(r.hallazgos()).anyMatch(h -> h.nivel() == Nivel.RECHAZO && h.mensaje().contains("tipo de usuario 01"));
 
         // Presupuesto máximo (02) solo admite pago por evento
         var pm = new ArmadorRips.PagadorRips(PAGADOR, "EPS", Pagador.Tipo.EPS, "02", "03");
         assertThat(armar(pm, false, null, atencion(paciente("01"), cobro("05", "0"), dx("J029"),
                 proc("890201", 1, "1"))).hallazgos())
                 .anyMatch(h -> h.nivel() == Nivel.RECHAZO && h.mensaje().contains("modalidad de pago 03"));
+    }
+
+    @Test
+    void conElParticularElPacienteVaComoTipo12AunqueLaFichaDigaOtro() {
+        var c = new CobroVista(CobrosService.Origen.ATENCION, true, PAGADOR, "Particular", Pagador.Tipo.PARTICULAR, false,
+                null, "05", BigDecimal.ZERO, null);
+        var afiliado = atencion(paciente("01"), c, dx("J029"), proc("890201", 1, "60000"));
+        var r = armar(particular(), false, null, afiliado);
+        assertThat(r.hayRechazos()).isFalse();
+        assertThat(usuario(r, 0)).containsEntry("tipoUsuario", "12");
+
+        // Ni siquiera hace falta tenerlo en la ficha
+        var p = new ArmadorRips.PacienteRips(UUID.randomUUID(), "Sin Tipo", "CC", "1000000003", LocalDate.of(1990, 5, 1), "F",
+                null, "170", "11001", "01", "170", List.of("Tipo de usuario"));
+        assertThat(armar(particular(), false, null, atencion(p, c, dx("J029"), proc("890201", 1, "60000"))).hayRechazos())
+                .isFalse();
     }
 
     @Test

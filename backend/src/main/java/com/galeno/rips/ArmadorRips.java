@@ -98,7 +98,17 @@ final class ArmadorRips {
     record PacienteRips(UUID id, String nombre, String tipoDocumento, String numeroDocumento, LocalDate fechaNacimiento,
                         String sexo, String tipoUsuario, String paisResidencia, String municipioResidencia,
                         String zonaResidencia, String paisOrigen, List<String> faltantes) {
+
+        /** Como particular: tipo de usuario 12, y ya no falta. */
+        PacienteRips particular() {
+            return new PacienteRips(id, nombre, tipoDocumento, numeroDocumento, fechaNacimiento, sexo, PARTICULAR,
+                    paisResidencia, municipioResidencia, zonaResidencia, paisOrigen,
+                    faltantes.stream().filter(f -> !f.equals("Tipo de usuario")).toList());
+        }
     }
+
+    /** Tipo de usuario 12: el único que admite la cobertura 15 (particular) en el numeral 1.8. */
+    static final String PARTICULAR = "12";
 
     record ProfesionalRips(String tipoDocumento, String numeroDocumento) {
     }
@@ -149,7 +159,8 @@ final class ArmadorRips {
 
     // --- armado ---
 
-    static Resultado armar(Entrada e) {
+    static Resultado armar(Entrada entrada) {
+        Entrada e = comoParticular(entrada);
         List<HallazgoRips> h = new ArrayList<>();
         String obligado = nitSinDigito(e.nitObligado());
         revisarLote(e, obligado, h);
@@ -201,6 +212,20 @@ final class ArmadorRips {
         json.put("numNota", null);
         json.put("usuarios", usuarios);
         return new Resultado(json, h);
+    }
+
+    /**
+     * Con el pagador particular, todos van como tipo de usuario 12 aunque la ficha diga otro: un afiliado a una EPS
+     * (01) que paga una consulta de su bolsillo es particular en esa factura. La ficha queda como está.
+     */
+    private static Entrada comoParticular(Entrada e) {
+        if (e.pagador().tipo() != Pagador.Tipo.PARTICULAR) {
+            return e;
+        }
+        List<AtencionLote> atenciones = e.atenciones().stream().map(a -> new AtencionLote(a.atencion(),
+                a.paciente().particular(), a.cobro(), a.profesional(), a.ajustes(), a.precios())).toList();
+        return new Entrada(e.nitObligado(), e.sinFactura(), e.numeroFactura(), e.pagador(), e.prestador(), atenciones,
+                e.cupsRips(), e.cie10(), e.finalidades(), e.xml(), e.zona(), e.ahora());
     }
 
     /** Agrega los servicios de la atención y devuelve el pago moderador que reportó (va en su primer servicio). */
