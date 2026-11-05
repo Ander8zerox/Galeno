@@ -115,8 +115,10 @@ Detalle en `docs/aws-capa-1.md` y operación en `docs/guia-operacion.md`.
   cobertura y tarifas por convenio), pagador del paciente que sugiere el tipo de usuario, y cobro en la cita y en la
   atención (concepto, valor y autorización) con las reglas del Documento Técnico 1. Ver "Cómo quedó la fase 2,
   entrega 2" en `docs/diseno-rips.md`.
-- **Entrega 3 (lote y JSON):** además de lo de abajo, cargar el XML de la factura emitida por el facturador externo
-  para cruzar totales antes de descargar, y aplicar las validaciones cruzadas del numeral 1.8 del Documento Técnico 1.
+- ✅ **Entrega 3 (lote y JSON):** pestaña Lotes (pagador y período, revisión con rechazos y avisos, ajustes por
+  atención, XML de la factura opcional, generar, descargar y anular), catálogo CUPSRips, incapacidad en la atención,
+  RIPS sin factura para particulares y NIT del consultorio en Prestador. Ver "Cómo quedó la fase 2, entrega 3" en
+  `docs/diseno-rips.md`. Pendientes: notas crédito, débito y ajuste, y el registro SIRAS.
 - ⏳ **Por decidir:** activar el módulo RIPS por defecto en los consultorios nuevos (la Res. 948 parece exigir RIPS
   también por particulares; ver "¿Particulares también?" en `docs/diseno-rips.md`).
 

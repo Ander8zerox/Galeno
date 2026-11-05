@@ -71,6 +71,14 @@ public class ReferenciasService {
                 .map(r -> new ReferenciaVista(r.getCodigo(), r.getNombre(), null, extra(r)));
     }
 
+    /** Esas filas de la tabla (habilitadas o no), con sus columnas extra; los códigos que no están, no aparecen. */
+    @Transactional(readOnly = true)
+    Map<String, ArmadorRips.Fila> filas(String tabla, java.util.Collection<String> codigos) {
+        return referencias.findAllById(codigos.stream().distinct().map(c -> new Referencia.Clave(tabla, c)).toList())
+                .stream().collect(Collectors.toMap(Referencia::getCodigo,
+                        r -> new ArmadorRips.Fila(r.isHabilitado(), extra(r))));
+    }
+
     private static int ordenEapb(Referencia r) {
         String tipo = extra(r).getOrDefault("tipo", "");
         int i = ORDEN_EAPB.indexOf(tipo.contains(".") ? tipo.substring(0, tipo.indexOf('.')) : tipo);

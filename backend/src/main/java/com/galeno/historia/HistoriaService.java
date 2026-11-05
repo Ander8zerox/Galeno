@@ -132,10 +132,12 @@ public class HistoriaService {
     /**
      * @param respuestasFormatos {@code null}: los formatos no cambian
      * @param procedimientos {@code null}: no cambian (así llega sin el módulo de RIPS)
+     * @param incapacidad {@code null}: no cambia (igual)
      */
     @Transactional
     public AtencionVista guardar(UUID atencionId, long version, Atencion.Contenido contenido,
-                                 List<RespuestasFormato> respuestasFormatos, List<ProcedimientoNuevo> procedimientos) {
+                                 List<RespuestasFormato> respuestasFormatos, List<ProcedimientoNuevo> procedimientos,
+                                 Boolean incapacidad) {
         Atencion atencion = propia(atencionId);
         if (atencion.getVersion() != version) {
             throw ApiProblem.conflict("La atención cambió en otra pestaña o equipo. Recargue para ver la última versión.");
@@ -147,6 +149,9 @@ public class HistoriaService {
         if (procedimientos != null) {
             modulos.exigir(Modulo.RIPS);
             atencion.registrarProcedimientos(procedimientos(procedimientos));
+        }
+        if (incapacidad != null) {
+            atencion.marcarIncapacidad(incapacidad);
         }
         atenciones.flush(); // incrementa la versión antes de responder
         return vista(atencion);
@@ -340,6 +345,45 @@ public class HistoriaService {
     }
 
     public record AtencionReferencia(UUID id, UUID pacienteId, UUID citaId, UUID medicoUsuarioId, boolean firmada) {
+    }
+
+    /**
+     * Para el lote del RIPS: las atenciones firmadas en Galenum entre esas fechas ({@code hasta} excluida). Llevan
+     * diagnósticos: quien arma el lote registra el acceso con {@link #registrarAcceso}.
+     */
+    @Transactional(readOnly = true)
+    public List<AtencionRips> atencionesRips(Instant desde, Instant hasta) {
+        return atenciones.firmadasEntre(desde, hasta).stream().map(AtencionRips::de).toList();
+    }
+
+    /** Las mismas, por id (solo las firmadas en Galenum). */
+    @Transactional(readOnly = true)
+    public List<AtencionRips> atencionesRips(java.util.Collection<UUID> ids) {
+        return atenciones.findAllById(ids).stream()
+                .filter(a -> a.firmada() && a.getOrigen() == Atencion.Origen.GALENO)
+                .sorted(Comparator.comparing(Atencion::getFechaAtencion)).map(AtencionRips::de).toList();
+    }
+
+    /** Sexo y edades de cada código CIE-10 conocido (para la regla RVC028 del RIPS). */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Cie10Vista> cie10(java.util.Collection<String> codigos) {
+        return cie10.findAllById(codigos).stream().collect(java.util.stream.Collectors.toMap(Cie10::getCodigo,
+                c -> new Cie10Vista(c.getCodigo(), c.getDescripcion(), c.getSexo(), c.getEdadMin(), c.getEdadMax(),
+                        c.getCapitulo())));
+    }
+
+    /** Lo que el RIPS toma de una atención firmada. */
+    public record AtencionRips(UUID id, UUID pacienteId, UUID citaId, UUID medicoUsuarioId, String medicoNombre,
+                               Instant fecha, boolean incapacidad, List<DiagnosticoVista> diagnosticos,
+                               List<ProcedimientoVista> procedimientos) {
+
+        static AtencionRips de(Atencion a) {
+            return new AtencionRips(a.getId(), a.getPacienteId(), a.getCitaId(), a.getMedicoUsuarioId(),
+                    a.getMedicoNombre(), a.getFechaAtencion(), a.isIncapacidad(),
+                    a.getDiagnosticos().stream().map(d -> new DiagnosticoVista(d.getCodigoCie10(), d.getDescripcion(),
+                            d.isPrincipal(), d.getTipo())).toList(),
+                    a.getProcedimientos().stream().map(ProcedimientoVista::de).toList());
+        }
     }
 
     /** Descripción CUPS de cada código conocido (los desconocidos no aparecen en el mapa). */
@@ -591,7 +635,7 @@ public class HistoriaService {
                                 Integer saturacionO2, java.math.BigDecimal pesoKg, java.math.BigDecimal tallaCm,
                                 String examenFisico, String analisis, String plan,
                                 List<DiagnosticoVista> diagnosticos, List<ProcedimientoVista> procedimientos,
-                                List<NotaVista> notas, List<DocumentoVista> documentos,
+                                boolean incapacidad, List<NotaVista> notas, List<DocumentoVista> documentos,
                                 List<FormatoDiligenciado> formatos) {
 
         static AtencionVista de(Atencion a, boolean propia, List<NotaVista> notas, List<DocumentoVista> documentos,
@@ -604,7 +648,8 @@ public class HistoriaService {
                     a.getTallaCm(), a.getExamenFisico(), a.getAnalisis(), a.getPlan(),
                     a.getDiagnosticos().stream().map(d -> new DiagnosticoVista(d.getCodigoCie10(), d.getDescripcion(),
                             d.isPrincipal(), d.getTipo())).toList(),
-                    a.getProcedimientos().stream().map(ProcedimientoVista::de).toList(), notas, documentos, formatos);
+                    a.getProcedimientos().stream().map(ProcedimientoVista::de).toList(), a.isIncapacidad(), notas,
+                    documentos, formatos);
         }
     }
 

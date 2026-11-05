@@ -2,7 +2,7 @@
 //
 // Uso:
 //   1. node tools/rips/descargar-tablas.mjs <carpeta> <Tabla> [Tabla...]   (las de la migración, en MIGRACIONES)
-//   2. node tools/rips/generar-migracion.mjs <carpeta> <V22|V24> <archivo-sql>
+//   2. node tools/rips/generar-migracion.mjs <carpeta> <V22|V24|V26> <archivo-sql>
 //
 // La V22 crea la tabla; las siguientes solo agregan filas. Para actualizar una tabla ya cargada, generar con sus
 // tablas y publicar el resultado como una migración nueva (borrando antes las filas de esas tablas).
@@ -34,7 +34,10 @@ const V24 = {
   CoberturaPlanBeneficios: "cobertura",
   facturaSinContrato: "factura_sin_contrato",
 };
-export const MIGRACIONES = { V22, V24 };
+const V26 = {
+  CUPSRips: "cups_rips",
+};
+export const MIGRACIONES = { V22, V24, V26 };
 
 /**
  * En CodigoEAPByNit las celdas no coinciden con los encabezados (el NIT llega partido en número y dígito), así que se
@@ -42,6 +45,9 @@ export const MIGRACIONES = { V22, V24 };
  */
 const EXTRA = {
   eapb: (f) => ({ regimen: f[8], nit: f[12], poblacion: f[15], tipo: f[16].replace(/^(\d+)\.\s*/, "$1. ") }),
+  // De CUPSRips, lo que revisa el lote: uso (AC consulta, AP procedimiento, AT otros servicios), sexo (Z ambos), ámbito,
+  // cuántas veces por paciente y día, y cobertura. Las inhabilitadas traen "N" en todo: se guardan sin extra.
+  cups_rips: (f) => (f[4] === "SI" ? { uso: f[8], sexo: f[13], ambito: f[14], maximo: f[11], cobertura: f[16] } : {}),
 };
 
 /** La fuente trae algunos caracteres perdidos (una tilde, un guion largo como "?"): se corrigen aquí. */

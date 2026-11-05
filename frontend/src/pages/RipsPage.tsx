@@ -3,16 +3,20 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { api, unwrap, type Schemas } from "../api/client";
 import { ListaPrecios } from "../features/rips/ListaPrecios";
+import { Lotes } from "../features/rips/Lotes";
 import { Pagadores } from "../features/rips/ListaPagadores";
 import { nombrePropio, useBusquedaReferencia, useReferencia, type Referencia } from "../features/rips/referencias";
 
-type Pestana = "prestador" | "profesionales" | "pagadores" | "precios";
-const PESTANAS: [Pestana, string][] = [["prestador", "Prestador"], ["profesionales", "Profesionales"], ["pagadores", "Pagadores"], ["precios", "Precios"]];
+type Pestana = "lotes" | "prestador" | "profesionales" | "pagadores" | "precios";
+const PESTANAS: [Pestana, string][] = [["lotes", "Lotes"], ["prestador", "Prestador"], ["profesionales", "Profesionales"], ["pagadores", "Pagadores"], ["precios", "Precios"]];
 
-/** Configuración del módulo de RIPS: el consultorio como prestador, el documento de cada médico, los pagadores y los precios. */
+/**
+ * Módulo de RIPS: los lotes (el archivo de cada factura) y su configuración: el consultorio como prestador, el documento
+ * de cada médico, los pagadores y los precios.
+ */
 export function RipsPage() {
   const [params, setParams] = useSearchParams();
-  const pestana = (PESTANAS.find(([p]) => p === params.get("pestana"))?.[0] ?? "prestador") as Pestana;
+  const pestana = (PESTANAS.find(([p]) => p === params.get("pestana"))?.[0] ?? "lotes") as Pestana;
   return (
     <section className="stack">
       <div className="page-header"><h1>RIPS</h1></div>
@@ -21,6 +25,7 @@ export function RipsPage() {
           <button key={p} className={pestana === p ? "active" : ""} onClick={() => setParams({ pestana: p })}>{nombre}</button>
         ))}
       </nav>
+      {pestana === "lotes" && <Lotes loteId={params.get("lote")} onAbrir={(id) => setParams(id ? { pestana: "lotes", lote: id } : { pestana: "lotes" })} />}
       {pestana === "prestador" && <DatosPrestador />}
       {pestana === "profesionales" && <Profesionales />}
       {pestana === "pagadores" && <Pagadores />}
@@ -50,7 +55,36 @@ function DatosPrestador() {
   const prestador = useQuery({ queryKey: ["rips-prestador"], queryFn: async () => unwrap(await api.GET("/api/v1/rips/prestador")) });
   if (prestador.isLoading) return <p className="muted">Cargando…</p>;
   if (prestador.error || !prestador.data) return <p className="alert alert-error">{prestador.error?.message}</p>;
-  return <FormularioPrestador inicial={prestador.data} onGuardado={(p) => queryClient.setQueryData(["rips-prestador"], p)} />;
+  const poner = (p: Schemas["Prestador"]) => queryClient.setQueryData(["rips-prestador"], p);
+  return (
+    <div className="stack">
+      <NitConsultorio nit={prestador.data.nit} onGuardado={poner} />
+      <FormularioPrestador inicial={prestador.data} onGuardado={poner} />
+    </div>
+  );
+}
+
+/** El NIT del consultorio va en cada RIPS. Si no se dio al registrarse, se escribe aquí una vez. */
+function NitConsultorio({ nit, onGuardado }: { nit?: string; onGuardado: (p: Schemas["Prestador"]) => void }) {
+  const [valor, setValor] = useState("");
+  const guardar = useMutation({
+    mutationFn: async () => unwrap(await api.PUT("/api/v1/rips/prestador/nit", { body: { nit: valor } })),
+    onSuccess: onGuardado,
+  });
+  if (nit) return <p className="card small">NIT del consultorio: <strong>{nit}</strong> <span className="muted">(para corregirlo, escriba a soporte)</span></p>;
+  return (
+    <form className="card stack-sm" onSubmit={(e) => { e.preventDefault(); guardar.mutate(); }}>
+      <p className="alert alert-warn">El consultorio no tiene NIT registrado y el RIPS lo exige. Escríbalo con su dígito de verificación; después no se puede cambiar desde aquí.</p>
+      <div className="row">
+        <label>NIT
+          <input className="campo-medio" required maxLength={20} value={valor} placeholder="900123456-7"
+            onChange={(e) => setValor(e.target.value.replace(/[^0-9.-]/g, ""))} />
+        </label>
+        <button className="btn" disabled={guardar.isPending || !valor}>Guardar NIT</button>
+      </div>
+      {guardar.error && <span className="field-error">{guardar.error.message}</span>}
+    </form>
+  );
 }
 
 function FormularioPrestador({ inicial, onGuardado }: { inicial: Schemas["Prestador"]; onGuardado: (p: Schemas["Prestador"]) => void }) {
@@ -78,7 +112,7 @@ function FormularioPrestador({ inicial, onGuardado }: { inicial: Schemas["Presta
         <label>Código de habilitación (12 dígitos)
           <input inputMode="numeric" maxLength={12} value={form.codigoHabilitacion}
             onChange={(e) => set("codigoHabilitacion")(e.target.value.replace(/\D/g, ""))} />
-          <span className="muted small">El del REPS con la sede (p. ej. 050010000001)</span>
+          <span className="muted small">El que aparece en el REPS para la sede: 10 dígitos del prestador y 2 de la sede</span>
         </label>
         <div className="stack-sm">
           <label>Servicio habilitado

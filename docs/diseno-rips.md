@@ -463,3 +463,48 @@ MUV sigue en espera (botón deshabilitado).
   `HISTORIA_REGISTRAR` para cambiarlo. Todo exige el módulo activo.
 - **Interfaces nuevas de otros módulos:** `HistoriaService.referencia(atencionId)` (paciente, cita y estado, sin
   contenido clínico ni auditoría) y `AgendaPublica.citas(ids)`.
+
+## Cómo quedó la fase 2, entrega 3 (lote y JSON)
+
+- **Catálogo CUPSRips** (V26, `tools/rips/generar-migracion.mjs … V26 …`): las 13.640 filas, con lo que revisa el
+  lote (uso AC/AP/AT, sexo, ámbito, máximo por día y cobertura). La descarga pide 2.000 filas por página (el máximo de
+  la consulta pública): son 7 páginas y no 1.364.
+- **Incapacidad** (`atenciones.incapacidad`, V27): casilla "Expidió incapacidad" en el editor de la atención, con el
+  módulo activo. Es parte de lo que se firma; sin el módulo llega nula y no cambia.
+- **Lotes** (`rips_lotes`, `rips_lote_atenciones`, V27): pestaña **Lotes** del menú RIPS (la primera).
+  - Se crea con pagador y fechas: entran las atenciones firmadas en Galenum (no las importadas) cuyo pagador vigente
+    (el de la atención, su cita o el paciente) es ese y que no estén en otro lote vivo. `vigente` repite el id de la
+    atención mientras el lote no esté anulado y su UNIQUE impide los dos lotes. Hasta un año y 2.000 atenciones.
+  - **Revisión** (`ArmadorRips`, sin acceso a la base): cada hallazgo es **rechazo** (impide generar) o **aviso** (lo
+    que el MUV solo notifica), con la regla y dónde corregirlo (paciente, prestador, NIT, profesional, pagador,
+    precios, atención). Se puede quitar una atención o ajustar para ella finalidad, causa, modalidad, grupo, servicio
+    y vía de ingreso.
+  - **Reglas propias:** fechas (RVC006, RVC013), edad y documento (RVC007), CUPSRips (RVC096, uso, sexo RVC016, veces
+    por día RVC018), CIE-10 por sexo y edad (RVC028), finalidad por sexo y edad (RVC051), principal de procedimiento
+    R o Z (RVC032, RVC033), valor por evento (RVC034), SIRAS (RVC095, aviso: Galenum aún no lo registra), las reglas
+    del cobro y la tabla del **numeral 1.8** (cobertura × modalidad × tipo de usuario × concepto). Los relacionados
+    repetidos (RVC086, RVC087) no se reportan: se quitan al armar.
+  - **Numeral 1.8:** el DT1 v003 marca la cobertura 01 como inactiva y la reparte en 16 (contributivo) y 17
+    (subsidiado), pero SISPRO todavía publica la 01 y no las nuevas. Mientras tanto la 01 admite lo de las dos.
+  - **XML de la factura** (opcional, `FacturaXml`): AttachedDocument de la DIAN o la factura sola, sin DTD ni entidades
+    externas. Cruza NIT (RVC001), número (RVC004), período (RVC014) y la suma de `PrepaidPayment` con schemeID 01 a 03
+    (RVC036). Si el lote no tiene número, toma el del XML.
+  - **Armado:** un usuario por paciente; por cada unidad de un CUPS, una consulta (uso AC; sin CUPSRips, los 890…) o un
+    procedimiento. Sin valor en la atención, el precio vigente (tarifa del pagador o lista general). Fuera de pago por
+    evento, el valor es 0; en el RIPS sin factura, lo que pagó el paciente (RVC091). El pago moderador va en el primer
+    servicio de la atención. `codSexo` es el de la ficha (M, F, I: columna Extra III de la tabla Sexo).
+    Con el pagador particular, el tipo de usuario va como 12 aunque la ficha diga otro (un afiliado a una EPS que
+    paga de su bolsillo es particular en esa factura; la cobertura 15 solo admite el 12).
+  - **Generar** guarda el JSON tal cual (no cambia si después cambia un dato) y bloquea el cobro de esas atenciones
+    (409). Se descarga como `RIPS_<factura>.json` o `RIPS_sin_factura_<desde>_<hasta>.json`. **Anular** pide motivo,
+    conserva el JSON y libera las atenciones. Un borrador se elimina. "Enviar al Ministerio" queda deshabilitado
+    (fase 3).
+  - **RIPS sin factura:** solo con el pagador particular; tipo de nota RS, sin número de factura ni XML.
+- **NIT del consultorio:** es el `numDocumentoIdObligado` y solo se pedía (opcional) al registrarse. La pestaña
+  Prestador lo muestra y, si falta, deja escribirlo una vez (con dígito de verificación y sin repetir el de otro
+  consultorio). Ya fijado no se cambia desde la app, porque identifica al consultorio en las pruebas gratuitas.
+- **Auditoría:** ver, generar o descargar un lote queda en `accesos_historia` de cada paciente (`VER_RIPS`,
+  `GENERAR_RIPS`), porque el lote muestra diagnósticos.
+- **Permisos:** `RIPS_GESTIONAR` y el módulo activo. El NIT, también `RIPS_GESTIONAR`.
+- **Pendiente:** notas crédito, débito y de ajuste; el registro SIRAS; confirmar con el MUV qué `numNota` lleva un RIPS
+  sin factura (hoy va nulo); envío al MUV (fase 3).

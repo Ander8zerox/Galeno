@@ -16,6 +16,7 @@ import com.galeno.identidad.IdentidadService.MedicoResumen;
 import com.galeno.modulos.Modulo;
 import com.galeno.modulos.ModulosService;
 import com.galeno.pacientes.PacienteService;
+import com.galeno.shared.security.AuthUser;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
 /**
@@ -136,7 +137,8 @@ public class DatosRipsService {
     @Transactional(readOnly = true)
     public Prestador prestador() {
         modulos.exigir(Modulo.RIPS);
-        return prestadores.findFirstBy().map(DatosRipsService::vista).orElse(Prestador.SUGERIDO);
+        String nit = nitConsultorio();
+        return prestadores.findFirstBy().map(p -> vista(p, nit)).orElse(Prestador.SUGERIDO.conNit(nit));
     }
 
     @Transactional
@@ -158,12 +160,24 @@ public class DatosRipsService {
                 referencias.validar("grupo_servicios", datos.grupoServicios(), "Grupo de servicios"),
                 finalidad, causa,
                 referencias.validar("via_ingreso", datos.viaIngreso(), "Vía de ingreso"));
-        return vista(prestadores.saveAndFlush(p));
+        return vista(prestadores.saveAndFlush(p), nitConsultorio());
     }
 
-    private static Prestador vista(RipsPrestador p) {
+    /** El NIT del consultorio (numDocumentoIdObligado del RIPS), si no lo dio al registrarse. Ya fijado, no cambia. */
+    @Transactional
+    public Prestador fijarNit(String nit) {
+        modulos.exigir(Modulo.RIPS);
+        identidad.fijarNit(AuthUser.current().tenantId(), nit == null ? "" : nit);
+        return prestador();
+    }
+
+    private String nitConsultorio() {
+        return identidad.consultorio(AuthUser.current().tenantId()).nit();
+    }
+
+    private static Prestador vista(RipsPrestador p, String nit) {
         return new Prestador(p.getCodigoHabilitacion(), p.getServicio(), p.getModalidadAtencion(), p.getGrupoServicios(),
-                p.getFinalidad(), p.getCausaExterna(), p.getViaIngreso(), true);
+                p.getFinalidad(), p.getCausaExterna(), p.getViaIngreso(), true, nit);
     }
 
     // --- profesionales ---
@@ -211,12 +225,20 @@ public class DatosRipsService {
                                UUID pagadorId, String pagadorNombre, List<String> faltantes) {
     }
 
-    /** @param guardado falso: el consultorio no lo ha configurado y estos son los valores sugeridos */
+    /**
+     * @param guardado falso: el consultorio no lo ha configurado y estos son los valores sugeridos
+     * @param nit el del consultorio (de solo lectura aquí: se fija aparte, una vez)
+     */
     public record Prestador(String codigoHabilitacion, String servicio, String modalidadAtencion, String grupoServicios,
-                            String finalidad, String causaExterna, String viaIngreso, boolean guardado) {
+                            String finalidad, String causaExterna, String viaIngreso, boolean guardado, String nit) {
 
         /** Intramural, consulta externa, enfermedad general y derivado de consulta externa (lo más común). */
-        static final Prestador SUGERIDO = new Prestador(null, null, "01", "01", null, "38", "02", false);
+        static final Prestador SUGERIDO = new Prestador(null, null, "01", "01", null, "38", "02", false, null);
+
+        Prestador conNit(String nit) {
+            return new Prestador(codigoHabilitacion, servicio, modalidadAtencion, grupoServicios, finalidad, causaExterna,
+                    viaIngreso, guardado, nit);
+        }
     }
 
     public record Profesional(UUID usuarioId, String nombre, String tipoDocumento, String numeroDocumento) {

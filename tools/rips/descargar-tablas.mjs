@@ -1,5 +1,6 @@
 // Descarga completas las tablas de referencia de SISPRO que usa el RIPS (Res. 948 de 2026), pasando las páginas de su
-// consulta pública (10 filas por página; "Exportar a Excel" exige sesión en SISPRO).
+// consulta pública ("Exportar a Excel" exige sesión en SISPRO). Pide 2000 filas por página, el máximo que ofrece: así
+// CUPSRips (unas 13.600 filas) son 7 páginas y no 1.364.
 // Uso: node tools/rips/descargar-tablas.mjs <carpeta de salida> <Tabla> [Tabla...]
 import fs from "node:fs";
 import path from "node:path";
@@ -10,6 +11,7 @@ const BASE = "https://web.sispro.gov.co/WebPublico/Consultas/ConsultarDetalleRef
 const decode = (s) => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 const texto = (s) => decode(s.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, "")).replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).trim();
 const SIGUIENTE = "ctl00$cntContenido$dpggrvTablaReferencia$imgNext";
+const TAMANO = "ctl00$cntContenido$dpggrvTablaReferencia$ddlPageSize";
 
 /** La consulta no siempre manda UTF-8: si salen caracteres de reemplazo, se lee como Windows-1252. */
 async function leerHtml(r) {
@@ -43,6 +45,17 @@ for (const t of tablas) {
   let r = await fetch(BASE + t);
   let cookies = (r.headers.getSetCookie?.() ?? []).map((c) => c.split(";")[0]).join("; ");
   let html = await leerHtml(r);
+  const enviar = async (evento, cambios = {}) => {
+    const f = campos(html);
+    f.set("__EVENTTARGET", evento);
+    f.set("__EVENTARGUMENT", "");
+    for (const [k, v] of Object.entries(cambios)) f.set(k, v);
+    r = await fetch(BASE + t, { method: "POST", body: f, headers: { Cookie: cookies, Referer: BASE + t, "Content-Type": "application/x-www-form-urlencoded" } });
+    const nuevasCookies = (r.headers.getSetCookie?.() ?? []).map((c) => c.split(";")[0]);
+    if (nuevasCookies.length) cookies = nuevasCookies.join("; ");
+    html = await leerHtml(r);
+  };
+  if (html.includes(TAMANO)) await enviar(TAMANO, { [TAMANO]: "2000" });
   const encabezados = [...html.matchAll(/<th[^>]*>([\s\S]*?)<\/th>/g)].map((m) => texto(m[1]));
   const todas = new Map();
   for (let pagina = 1; pagina <= 400; pagina++) {
@@ -50,13 +63,7 @@ for (const t of tablas) {
     let agregadas = 0;
     for (const f of nuevas) if (!todas.has(f[1])) { todas.set(f[1], f); agregadas++; }
     if (!agregadas || !html.includes(SIGUIENTE.replaceAll("$", "$"))) break;
-    const f = campos(html);
-    f.set("__EVENTTARGET", SIGUIENTE);
-    f.set("__EVENTARGUMENT", "");
-    r = await fetch(BASE + t, { method: "POST", body: f, headers: { Cookie: cookies, Referer: BASE + t, "Content-Type": "application/x-www-form-urlencoded" } });
-    const nuevasCookies = (r.headers.getSetCookie?.() ?? []).map((c) => c.split(";")[0]);
-    if (nuevasCookies.length) cookies = nuevasCookies.join("; ");
-    html = await leerHtml(r);
+    await enviar(SIGUIENTE);
     if (r.status !== 200) { console.log(`${t}: página ${pagina + 1} respondió ${r.status}`); break; }
   }
   const lista = [...todas.values()];

@@ -230,6 +230,9 @@ input::placeholder, textarea::placeholder { color: #667180; }
 .badge-boton:hover { filter: brightness(.95); }
 .card.inactivo { opacity: .65; }
 .cobro { margin-top: .5rem; }
+.hallazgos { margin: .4rem 0 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .25rem; }
+.hallazgos li { font-size: .9rem; }
+.card.con-rechazo { border-left: 4px solid var(--danger-line); }
 
 /* --- Login y páginas públicas --- */
 /* Capas de arriba hacia abajo: velo para que la tarjeta resalte, la foto y, debajo (o mientras no hay foto), un

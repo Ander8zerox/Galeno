@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rips/prestador/nit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["fijarNit"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rips/precios/{codigoCups}": {
         parameters: {
             query?: never;
@@ -95,6 +111,38 @@ export interface paths {
         put: operations["guardarPaciente"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/lotes/{id}/factura": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["cambiarFactura"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/lotes/{id}/atenciones/{atencionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ajustar"];
+        post?: never;
+        delete: operations["quitarAtencion"];
         options?: never;
         head?: never;
         patch?: never;
@@ -420,6 +468,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rips/lotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listar"];
+        put?: never;
+        post: operations["crear_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/lotes/{id}/xml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cargarXml"];
+        delete: operations["quitarXml"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/lotes/{id}/generacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["generar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/lotes/{id}/anulacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/registro": {
         parameters: {
             query?: never;
@@ -701,7 +813,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["anular"];
+        post: operations["anular_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1021,7 +1133,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["crear_1"];
+        post: operations["crear_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1371,7 +1483,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar"];
+        get: operations["listar_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1404,6 +1516,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["faltantes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/lotes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["obtener_1"];
+        put?: never;
+        post?: never;
+        delete: operations["eliminar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/lotes/{id}/json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["descargar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1595,7 +1739,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar_1"];
+        get: operations["listar_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1627,7 +1771,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar_2"];
+        get: operations["listar_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1643,7 +1787,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["obtener_1"];
+        get: operations["obtener_2"];
         put?: never;
         post?: never;
         delete: operations["descartar"];
@@ -1691,7 +1835,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["descargar"];
+        get: operations["descargar_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1803,7 +1947,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar_3"];
+        get: operations["listar_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2037,6 +2181,10 @@ export interface components {
             causaExterna?: string;
             viaIngreso?: string;
             guardado?: boolean;
+            nit?: string;
+        };
+        NitConsultorio: {
+            nit: string;
         };
         Precio: {
             valor: number;
@@ -2100,6 +2248,104 @@ export interface components {
             pagadorId?: string;
             pagadorNombre?: string;
             faltantes?: string[];
+        };
+        NumeroFactura: {
+            numeroFactura?: string;
+        };
+        Ajustes: {
+            finalidad?: string;
+            causaExterna?: string;
+            modalidadAtencion?: string;
+            grupoServicios?: string;
+            servicio?: string;
+            viaIngreso?: string;
+        };
+        AtencionDelLote: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            pacienteId?: string;
+            pacienteNombre?: string;
+            documento?: string;
+            /** Format: date-time */
+            fecha?: string;
+            medicoNombre?: string;
+            servicios?: string[];
+            conceptoRecaudo?: string;
+            valorPagoModerador?: number;
+            numeroAutorizacion?: string;
+            incapacidad?: boolean;
+            ajustes?: components["schemas"]["Ajustes"];
+            hallazgos?: components["schemas"]["HallazgoRips"][];
+        };
+        DatosXml: {
+            nit?: string;
+            numero?: string;
+            /** Format: date */
+            desde?: string;
+            /** Format: date */
+            hasta?: string;
+            pagosModeradores?: number;
+        };
+        HallazgoRips: {
+            /** Format: uuid */
+            atencionId?: string;
+            /** Format: uuid */
+            pacienteId?: string;
+            /** @enum {string} */
+            nivel?: "RECHAZO" | "AVISO";
+            regla?: string;
+            /** @enum {string} */
+            donde?: "LOTE" | "CONSULTORIO" | "PRESTADOR" | "PROFESIONAL" | "PACIENTE" | "PAGADOR" | "COBRO" | "ATENCION" | "PRECIOS";
+            mensaje?: string;
+        };
+        LoteRipsVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            pagadorId?: string;
+            pagadorNombre?: string;
+            sinFactura?: boolean;
+            /** Format: date */
+            desde?: string;
+            /** Format: date */
+            hasta?: string;
+            numeroFactura?: string;
+            /** @enum {string} */
+            estado?: "BORRADOR" | "GENERADO" | "ANULADO";
+            xml?: components["schemas"]["DatosXml"];
+            /** Format: date-time */
+            creadoEn?: string;
+            /** Format: date-time */
+            generadoEn?: string;
+            /** Format: date-time */
+            anuladoEn?: string;
+            motivoAnulacion?: string;
+            totales?: components["schemas"]["Totales"];
+            atenciones?: components["schemas"]["AtencionDelLote"][];
+            hallazgos?: components["schemas"]["HallazgoRips"][];
+            /** Format: int64 */
+            rechazos?: number;
+            /** Format: int64 */
+            avisos?: number;
+        };
+        Totales: {
+            /** Format: int32 */
+            usuarios?: number;
+            /** Format: int32 */
+            consultas?: number;
+            /** Format: int32 */
+            procedimientos?: number;
+            valorServicios?: number;
+            pagosModeradores?: number;
+        };
+        AjustesAtencion: {
+            finalidad?: string;
+            causaExterna?: string;
+            modalidadAtencion?: string;
+            grupoServicios?: string;
+            servicio?: string;
+            viaIngreso?: string;
         };
         RegistroCobro: {
             /** Format: uuid */
@@ -2382,6 +2628,7 @@ export interface components {
             diagnosticos: components["schemas"]["DiagnosticoRequest"][];
             formatos?: components["schemas"]["RespuestasFormatoRequest"][];
             procedimientos?: components["schemas"]["ProcedimientoRequest"][];
+            incapacidad?: boolean;
         };
         ProcedimientoRequest: {
             codigoCups: string;
@@ -2440,6 +2687,7 @@ export interface components {
             plan?: string;
             diagnosticos?: components["schemas"]["DiagnosticoVista"][];
             procedimientos?: components["schemas"]["ProcedimientoVista"][];
+            incapacidad?: boolean;
             notas?: components["schemas"]["NotaVista"][];
             documentos?: components["schemas"]["DocumentoVista"][];
             formatos?: components["schemas"]["FormatoDiligenciado"][];
@@ -2624,6 +2872,18 @@ export interface components {
             periodoDesde?: string;
             /** Format: date-time */
             periodoHasta?: string;
+        };
+        NuevoLote: {
+            /** Format: uuid */
+            pagadorId: string;
+            /** Format: date */
+            desde: string;
+            /** Format: date */
+            hasta: string;
+            sinFactura?: boolean;
+        };
+        Anulacion: {
+            motivo: string;
         };
         SolicitudRegistro: {
             consultorioNombre: string;
@@ -3027,6 +3287,29 @@ export interface components {
             pacienteId?: string;
             faltantes?: string[];
         };
+        LoteRipsResumen: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            pagadorId?: string;
+            pagadorNombre?: string;
+            sinFactura?: boolean;
+            /** Format: date */
+            desde?: string;
+            /** Format: date */
+            hasta?: string;
+            numeroFactura?: string;
+            /** @enum {string} */
+            estado?: "BORRADOR" | "GENERADO" | "ANULADO";
+            /** Format: int32 */
+            atenciones?: number;
+            /** Format: date-time */
+            creadoEn?: string;
+            /** Format: date-time */
+            generadoEn?: string;
+            /** Format: date-time */
+            anuladoEn?: string;
+        };
         CobroCita: {
             /** Format: uuid */
             citaId?: string;
@@ -3217,27 +3500,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            long?: boolean;
-            double?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            boolean?: boolean;
-            binary?: boolean;
-            pojo?: boolean;
-            short?: boolean;
-            object?: boolean;
-            string?: boolean;
-            int?: boolean;
-            bigDecimal?: boolean;
             missingNode?: boolean;
-            valueNode?: boolean;
+            number?: boolean;
             container?: boolean;
-            bigInteger?: boolean;
+            bigDecimal?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            valueNode?: boolean;
             integralNumber?: boolean;
+            bigInteger?: boolean;
+            boolean?: boolean;
+            int?: boolean;
+            string?: boolean;
+            double?: boolean;
+            long?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            object?: boolean;
+            short?: boolean;
             floatingPointNumber?: boolean;
-            number?: boolean;
+            pojo?: boolean;
+            binary?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -3349,6 +3632,30 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["DatosPrestador"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Prestador"];
+                };
+            };
+        };
+    };
+    fijarNit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NitConsultorio"];
             };
         };
         responses: {
@@ -3527,6 +3834,82 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PacienteRips"];
+                };
+            };
+        };
+    };
+    cambiarFactura: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NumeroFactura"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteRipsVista"];
+                };
+            };
+        };
+    };
+    ajustar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                atencionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AjustesAtencion"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteRipsVista"];
+                };
+            };
+        };
+    };
+    quitarAtencion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                atencionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteRipsVista"];
                 };
             };
         };
@@ -4238,6 +4621,149 @@ export interface operations {
             };
         };
     };
+    listar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteRipsResumen"][];
+                };
+            };
+        };
+    };
+    crear_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NuevoLote"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteRipsVista"];
+                };
+            };
+        };
+    };
+    cargarXml: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archivo: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteRipsVista"];
+                };
+            };
+        };
+    };
+    quitarXml: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteRipsVista"];
+                };
+            };
+        };
+    };
+    generar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteRipsVista"];
+                };
+            };
+        };
+    };
+    anular: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Anulacion"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteRipsVista"];
+                };
+            };
+        };
+    };
     solicitar: {
         parameters: {
             query?: never;
@@ -4650,7 +5176,7 @@ export interface operations {
             };
         };
     };
-    anular: {
+    anular_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -5165,7 +5691,7 @@ export interface operations {
             };
         };
     };
-    crear_1: {
+    crear_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -5715,7 +6241,7 @@ export interface operations {
             };
         };
     };
-    listar: {
+    listar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -5775,6 +6301,70 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Faltantes"][];
+                };
+            };
+        };
+    };
+    obtener_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteRipsVista"];
+                };
+            };
+        };
+    };
+    eliminar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    descargar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
                 };
             };
         };
@@ -6009,7 +6599,7 @@ export interface operations {
             };
         };
     };
-    listar_1: {
+    listar_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -6049,7 +6639,7 @@ export interface operations {
             };
         };
     };
-    listar_2: {
+    listar_3: {
         parameters: {
             query?: {
                 page?: number;
@@ -6072,7 +6662,7 @@ export interface operations {
             };
         };
     };
-    obtener_1: {
+    obtener_2: {
         parameters: {
             query?: {
                 estado?: "NUEVO" | "EXISTENTE" | "ERROR";
@@ -6162,7 +6752,7 @@ export interface operations {
             };
         };
     };
-    descargar: {
+    descargar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -6313,7 +6903,7 @@ export interface operations {
             };
         };
     };
-    listar_3: {
+    listar_4: {
         parameters: {
             query?: never;
             header?: never;

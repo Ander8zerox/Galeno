@@ -108,12 +108,13 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
   // Con el módulo de RIPS: lo que se hizo, con su CUPS. Sin él, no se muestra ni se envía (el servidor no lo toca)
   const rips = useModuloActivo("RIPS");
   const [procedimientos, setProcedimientos] = useState<ProcedimientoForm[]>(() => procedimientosDe(atencion));
+  const [incapacidad, setIncapacidad] = useState(!!atencion.incapacidad);
 
-  const original = useMemo(() => JSON.stringify({ f: aForm(atencion), d: atencion.diagnosticos ?? [], p: procedimientosDe(atencion) }), [atencion]);
+  const original = useMemo(() => JSON.stringify({ f: aForm(atencion), d: atencion.diagnosticos ?? [], p: procedimientosDe(atencion), i: !!atencion.incapacidad }), [atencion]);
   const [base, setBase] = useState(original);
   // Lo último guardado de cada formato (agregar o quitar uno no deja la atención "sin guardar")
   const [baseRespuestas, setBaseRespuestas] = useState(() => respuestasDe(atencion.formatos));
-  const sucio = JSON.stringify({ f: form, d: dx, p: procedimientos }) !== base || JSON.stringify(respuestas) !== JSON.stringify(baseRespuestas);
+  const sucio = JSON.stringify({ f: form, d: dx, p: procedimientos, i: incapacidad }) !== base || JSON.stringify(respuestas) !== JSON.stringify(baseRespuestas);
 
   useEffect(() => {
     if (!sucio) return;
@@ -138,11 +139,12 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
           diagnosticos: dx,
           formatos: formatos.map((f) => ({ id: f.id!, respuestas: respuestas[f.id!] ?? {} })),
           procedimientos: rips ? procedimientos.map(({ descripcion: _d, ...p }) => p) : undefined,
+          incapacidad: rips ? incapacidad : undefined,
         },
       })),
     onSuccess: (a) => {
       setVersion(a.version ?? version);
-      setBase(JSON.stringify({ f: form, d: dx, p: procedimientos }));
+      setBase(JSON.stringify({ f: form, d: dx, p: procedimientos, i: incapacidad }));
       setBaseRespuestas(respuestas);
       setGuardadoEn(new Date());
     },
@@ -229,6 +231,10 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
           <>
             <h3>Procedimientos realizados</h3>
             <ProcedimientosEditor value={procedimientos} onChange={setProcedimientos} atencionId={atencion.id!} />
+            <label className="check">
+              <input type="checkbox" checked={incapacidad} onChange={(e) => setIncapacidad(e.target.checked)} />
+              Expidió incapacidad <span className="muted small">(va en el RIPS)</span>
+            </label>
           </>
         )}
         <label>Análisis<textarea rows={3} value={form.analisis} onChange={set("analisis")} /></label>
@@ -339,6 +345,7 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
           </div>
         )}
         <ProcedimientosLectura procedimientos={a.procedimientos ?? []} />
+        {a.incapacidad && <p><strong>Incapacidad:</strong> expidió incapacidad</p>}
         <Seccion titulo="Análisis" texto={a.analisis} />
         <Seccion titulo="Plan" texto={a.plan} />
       </div>

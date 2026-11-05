@@ -51,6 +51,11 @@ public class Consultorio {
         this.creadoEn = Instant.now();
     }
 
+    /** Solo si no lo tiene: el NIT identifica al consultorio (un consultorio por NIT) y no se cambia desde la app. */
+    void fijarNit(String nit) {
+        this.nit = nit;
+    }
+
     void aceptarTerminos(String version, Instant aceptadosEn, UUID usuarioId) {
         this.terminosVersion = version;
         this.terminosAceptadosEn = aceptadosEn;
