@@ -84,6 +84,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/historia/**").hasAuthority(Permiso.HISTORIA_REGISTRAR.name())
                         .requestMatchers("/api/v1/importaciones/**").hasAuthority(Permiso.IMPORTAR_HISTORIAS.name())
                         .requestMatchers(HttpMethod.PUT, "/api/v1/modulos/**").hasAuthority(Permiso.MODULOS_GESTIONAR.name())
+                        // Las listas de SISPRO las usa cualquier pantalla del módulo; los datos del paciente, quien
+                        // edita pacientes (también la secretaria). El resto del módulo, quien gestiona RIPS.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/rips/referencias/**").hasAuthority(TokenService.MIEMBRO)
+                        .requestMatchers("/api/v1/rips/pacientes/**").hasAuthority(Permiso.PACIENTE_GESTIONAR.name())
                         .requestMatchers("/api/v1/rips/**").hasAuthority(Permiso.RIPS_GESTIONAR.name())
                         .requestMatchers("/api/v1/formatos/consultorio/**").hasAuthority(Permiso.FORMATOS_GESTIONAR.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/formatos/**").hasAuthority(Permiso.HISTORIA_VER.name())

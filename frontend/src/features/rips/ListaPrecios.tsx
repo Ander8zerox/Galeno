@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, expectOk, unwrap, type Schemas } from "../api/client";
-import { BuscadorCups, type Cups } from "../features/rips/BuscadorCups";
-import { pesos } from "../features/rips/modulos";
+import { api, expectOk, unwrap, type Schemas } from "../../api/client";
+import { BuscadorCups, type Cups } from "./BuscadorCups";
+import { pesos } from "./modulos";
 
 type Precio = Schemas["PrecioVista"];
 const fecha = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" });
 const numero = (v: string) => Number(v.replace(/[.\s$]/g, "").replace(",", "."));
 
 /** Lista de precios por CUPS: se propone el valor al registrar el procedimiento en la atención. */
-export function PreciosPage() {
+export function ListaPrecios() {
   const queryClient = useQueryClient();
   const precios = useQuery({ queryKey: ["precios"], queryFn: async () => unwrap(await api.GET("/api/v1/rips/precios")) });
   const [nuevo, setNuevo] = useState<Cups | null>(null);
@@ -22,7 +22,6 @@ export function PreciosPage() {
 
   return (
     <section className="stack">
-      <div className="page-header"><h1>Lista de precios</h1></div>
       <p className="muted">
         El precio de cada procedimiento (CUPS) en el consultorio. Al registrarlo en una atención se propone este valor y
         el médico lo puede cambiar. Cambiar un precio no modifica las atenciones ya registradas.

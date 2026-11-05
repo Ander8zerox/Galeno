@@ -9,6 +9,8 @@ import { ApoyoDiagnostico } from "../features/apoyo/ApoyoDiagnostico";
 import { ProximasCitas } from "../features/agenda/ProximasCitas";
 import { LineaHistoria } from "../features/historia/LineaHistoria";
 import { PacienteForm } from "../features/pacientes/PacienteForm";
+import { DatosRipsPaciente } from "../features/rips/DatosRipsPaciente";
+import { useModuloActivo } from "../features/rips/modulos";
 
 type Tab = "historia" | "formula" | "diagnostico" | "historial";
 
@@ -17,6 +19,7 @@ export function PacientePage() {
   const { puede } = useAuth();
   const [tab, setTab] = useState<Tab>("historia");
   const [editando, setEditando] = useState(false);
+  const rips = useModuloActivo("RIPS");
   const paciente = useQuery({
     queryKey: ["paciente", id],
     queryFn: async () => unwrap(await api.GET("/api/v1/pacientes/{id}", { params: { path: { id: id! } } })),
@@ -53,6 +56,8 @@ export function PacientePage() {
       </div>
 
       {editando && <PacienteForm key={p.id} paciente={p} onGuardado={() => setEditando(false)} />}
+
+      {rips && <DatosRipsPaciente pacienteId={p.id!} />}
 
       {puede("AGENDA_GESTIONAR") && <ProximasCitas pacienteId={p.id!} />}
 

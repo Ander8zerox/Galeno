@@ -226,6 +226,8 @@ input::placeholder, textarea::placeholder { color: #667180; }
 .badge-warn { background: var(--warn-bg); color: var(--warn); }
 .aviso-precio { flex-basis: 100%; color: var(--warn); }
 .badge-danger { background: var(--danger-bg); color: var(--danger); }
+.badge-boton { border: 0; cursor: pointer; font-family: inherit; }
+.badge-boton:hover { filter: brightness(.95); }
 
 /* --- Login y páginas públicas --- */
 /* Capas de arriba hacia abajo: velo para que la tarjeta resalte, la foto y, debajo (o mientras no hay foto), un

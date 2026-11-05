@@ -22,7 +22,7 @@ import { AtencionPage } from "./pages/AtencionPage";
 import { ImportarPage, LoteImportacionPage } from "./pages/ImportarPage";
 import { FormatosPage } from "./pages/FormatosPage";
 import { ModulosPage } from "./pages/ModulosPage";
-import { PreciosPage } from "./pages/PreciosPage";
+import { RipsPage } from "./pages/RipsPage";
 import { useModuloActivo } from "./features/rips/modulos";
 
 export function App() {
@@ -54,7 +54,7 @@ export function App() {
     ...(puede("EQUIPO_GESTIONAR") ? [{ etiqueta: "Equipo", icono: UsersRound, to: "/equipo" }] : []),
     ...(puede("IMPORTAR_HISTORIAS") ? [{ etiqueta: "Importar", icono: FileUp, to: "/importar" }] : []),
     ...(puede("FORMATOS_GESTIONAR") ? [{ etiqueta: "Formatos", icono: ClipboardList, to: "/formatos" }] : []),
-    ...(rips && puede("RIPS_GESTIONAR") ? [{ etiqueta: "Precios", icono: ReceiptText, to: "/precios" }] : []),
+    ...(rips && puede("RIPS_GESTIONAR") ? [{ etiqueta: "RIPS", icono: ReceiptText, to: "/rips" }] : []),
     ...(puede("MODULOS_GESTIONAR") ? [{ etiqueta: "Módulos", icono: Blocks, to: "/modulos" }] : []),
     ...(puede("SUSCRIPCION_GESTIONAR") ? [{ etiqueta: "Suscripción", icono: CreditCard, to: "/suscripcion" }] : []),
     { etiqueta: "Seguridad", icono: ShieldCheck, to: "/seguridad" },
@@ -74,8 +74,9 @@ export function App() {
           {puede("SUSCRIPCION_GESTIONAR") && <Route path="/suscripcion" element={<SuscripcionPage />} />}
           {puede("FORMATOS_GESTIONAR") && <Route path="/formatos" element={<FormatosPage />} />}
           {puede("MODULOS_GESTIONAR") && <Route path="/modulos" element={<ModulosPage />} />}
-          {/* Sin esperar a los módulos: al recargar /precios todavía no se han cargado (el servidor exige el módulo activo) */}
-          {puede("RIPS_GESTIONAR") && <Route path="/precios" element={<PreciosPage />} />}
+          {/* Sin esperar a los módulos: al recargar /rips todavía no se han cargado (el servidor exige el módulo activo) */}
+          {puede("RIPS_GESTIONAR") && <Route path="/rips" element={<RipsPage />} />}
+          {puede("RIPS_GESTIONAR") && <Route path="/precios" element={<Navigate to="/rips?pestana=precios" replace />} />}
           {puede("AGENDA_GESTIONAR") && <Route path="/agenda" element={<AgendaPage />} />}
           <Route path="/seguridad" element={<SeguridadPage />} />
           <Route path="*" element={<Navigate to={puede("AGENDA_GESTIONAR") ? "/agenda" : "/pacientes"} replace />} />

@@ -108,6 +108,13 @@ Detalle en `docs/aws-capa-1.md` y operación en `docs/guia-operacion.md`.
 
 ### 1. RIPS, fase 2: datos y generación del JSON
 
+- ✅ **Entrega 1 (datos):** tablas de SISPRO, datos del paciente para RIPS (tarjeta en la ficha), prestador y documento
+  de los profesionales (menú RIPS) y aviso "RIPS: faltan N" en cada cita de la agenda para completarlos al recibir al
+  paciente. Siguen la entrega 2 (pagadores y cobro en la cita) y la 3 (lote y JSON).
+- ⏳ **Por decidir:** activar el módulo RIPS por defecto en los consultorios nuevos (la Res. 948 parece exigir RIPS
+  también por particulares; ver "¿Particulares también?" en `docs/diseno-rips.md`).
+
+
 Prioridad: los consultorios objetivo facturan sobre todo a EPS y prepagadas, y sin RIPS no cobran. La norma vigente es
 la **Res. 948 de 2026**, con el Documento Técnico 1 v003 y el 2 v001, ambos del 15 de julio de 2026 (ver
 `docs/diseno-rips.md`).

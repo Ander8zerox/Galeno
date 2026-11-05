@@ -36,7 +36,7 @@ function ModuloCard({ modulo: m }: { modulo: Schemas["ModuloVista"] }) {
       </div>
       <p className="muted small">{m.descripcion}</p>
       {m.modulo === "RIPS" && m.activo && (
-        <p className="small">Siguiente paso: arme la <Link to="/precios">lista de precios por CUPS</Link>. Los médicos verán "Procedimientos realizados" en cada atención.</p>
+        <p className="small">Siguiente paso: complete los <Link to="/rips">datos del prestador</Link> y la <Link to="/rips?pestana=precios">lista de precios por CUPS</Link>. Los médicos verán "Procedimientos realizados" en cada atención.</p>
       )}
       {activar.error && <p className="alert alert-error">{activar.error.message}</p>}
     </div>
