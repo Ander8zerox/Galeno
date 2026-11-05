@@ -36,10 +36,12 @@ public class DatosRipsService {
     private final ModulosService modulos;
     private final PacienteService pacientes;
     private final IdentidadService identidad;
+    private final PagadoresService pagadores;
 
     DatosRipsService(RipsPacienteRepository pacientesRips, RipsPrestadorRepository prestadores,
                      RipsProfesionalRepository profesionales, ReferenciasService referencias, ModulosService modulos,
-                     PacienteService pacientes, IdentidadService identidad) {
+                     PacienteService pacientes, IdentidadService identidad, PagadoresService pagadores) {
+        this.pagadores = pagadores;
         this.pacientesRips = pacientesRips;
         this.prestadores = prestadores;
         this.profesionales = profesionales;
@@ -72,7 +74,8 @@ public class DatosRipsService {
                 pais,
                 colombia ? referencias.validar("municipio", datos.municipioResidencia(), "Municipio de residencia") : null,
                 colombia ? referencias.validar("zona", datos.zonaResidencia(), "Zona de residencia") : null,
-                referencias.validar("pais", datos.paisOrigen(), "País de origen"));
+                referencias.validar("pais", datos.paisOrigen(), "País de origen"),
+                datos.pagadorId() == null ? null : pagadores.activo(datos.pagadorId()).getId());
         return vista(pacientesRips.saveAndFlush(p));
     }
 
@@ -107,6 +110,9 @@ public class DatosRipsService {
         if (p.getPaisOrigen() == null) {
             faltan.add("País de origen");
         }
+        if (p.getPagadorId() == null) {
+            faltan.add("Pagador");
+        }
         return faltan;
     }
 
@@ -121,7 +127,8 @@ public class DatosRipsService {
             departamento = m.map(ReferenciasService.ReferenciaVista::detalle).orElse(null);
         }
         return new PacienteRips(p.getTipoUsuario(), p.getPaisResidencia(), p.getMunicipioResidencia(), municipio,
-                departamento, p.getZonaResidencia(), p.getPaisOrigen(), faltan);
+                departamento, p.getZonaResidencia(), p.getPaisOrigen(), p.getPagadorId(),
+                p.getPagadorId() == null ? null : pagadores.get(p.getPagadorId()).getNombre(), faltan);
     }
 
     // --- prestador ---
@@ -201,7 +208,7 @@ public class DatosRipsService {
      */
     public record PacienteRips(String tipoUsuario, String paisResidencia, String municipioResidencia,
                                String municipioNombre, String departamento, String zonaResidencia, String paisOrigen,
-                               List<String> faltantes) {
+                               UUID pagadorId, String pagadorNombre, List<String> faltantes) {
     }
 
     /** @param guardado falso: el consultorio no lo ha configurado y estos son los valores sugeridos */

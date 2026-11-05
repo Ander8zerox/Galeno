@@ -3,9 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
+import { CobroForm, faltaAutorizacion, resumenCobro } from "../rips/CobroForm";
 import { DatosRipsPaciente } from "../rips/DatosRipsPaciente";
 import { useModuloActivo } from "../rips/modulos";
-import { useFaltantesRips } from "../rips/referencias";
+import { useCobrosCitas, type Cobro } from "../rips/pagadores";
+import { useFaltantesRips, useReferencia } from "../rips/referencias";
 import { AgendarForm } from "./AgendarForm";
 import { hora } from "./tiempo";
 
@@ -42,8 +44,12 @@ export function AgendaDia({ medicoId, fecha, zona }: { medicoId: string; fecha: 
   const activas = (citas.data ?? []).filter((c) => c.estado !== "CANCELADA").length;
   // Con RIPS activo, se avisa en la cita lo que le falta al paciente para que la secretaria lo complete al recibirlo
   const { puede } = useAuth();
-  const rips = useModuloActivo("RIPS") && puede("PACIENTE_GESTIONAR");
-  const faltantes = useFaltantesRips((citas.data ?? []).filter(abierta).map((c) => c.pacienteId!), rips);
+  const modulo = useModuloActivo("RIPS");
+  const rips = modulo && puede("PACIENTE_GESTIONAR");
+  const abiertas = (citas.data ?? []).filter(abierta);
+  const faltantes = useFaltantesRips(abiertas.map((c) => c.pacienteId!), rips);
+  // Y el pagador y el cobro de cada una, que la secretaria registra al recibir al paciente
+  const cobros = useCobrosCitas(abiertas.map((c) => c.id!), modulo && puede("AGENDA_GESTIONAR"));
 
   return (
     <div className="stack">
@@ -70,7 +76,8 @@ export function AgendaDia({ medicoId, fecha, zona }: { medicoId: string; fecha: 
             <span className="slot-accion">Agendar</span>
           </button>
         ) : (
-          <CitaFila key={f.cita.id} cita={f.cita} zona={zona} faltanRips={faltantes.data?.get(f.cita.pacienteId!)} />
+          <CitaFila key={f.cita.id} cita={f.cita} zona={zona} faltanRips={faltantes.data?.get(f.cita.pacienteId!)}
+            cobro={cobros.data?.get(f.cita.id!)} />
         ))}
       </div>
     </div>
@@ -79,13 +86,15 @@ export function AgendaDia({ medicoId, fecha, zona }: { medicoId: string; fecha: 
 
 const abierta = (c: Cita) => c.estado === "PROGRAMADA" || c.estado === "CONFIRMADA";
 
-function CitaFila({ cita, zona, faltanRips }: { cita: Cita; zona: string; faltanRips?: string[] }) {
+function CitaFila({ cita, zona, faltanRips, cobro }: { cita: Cita; zona: string; faltanRips?: string[]; cobro?: Cobro }) {
   const { me, puede } = useAuth();
   const queryClient = useQueryClient();
   const [cancelando, setCancelando] = useState(false);
   const [marcandoInasistencia, setMarcandoInasistencia] = useState(false);
   const [motivo, setMotivo] = useState("");
   const [completandoRips, setCompletandoRips] = useState(false);
+  const [registrandoCobro, setRegistrandoCobro] = useState(false);
+  const conceptos = useReferencia("concepto_recaudo");
   const diferida = useAccionDiferida();
   const esMiCita = cita.medicoId === me?.membresiaId;
   const navigate = useNavigate();
@@ -119,6 +128,9 @@ function CitaFila({ cita, zona, faltanRips }: { cita: Cita; zona: string; faltan
             <button className="badge badge-warn badge-boton" title={`Falta: ${faltanRips.join(", ").toLowerCase()}`}
               onClick={() => setCompletandoRips((v) => !v)}>RIPS: faltan {faltanRips.length}</button>
           )}
+          {abierta(cita) && faltaAutorizacion(cobro) && (
+            <button className="badge badge-warn badge-boton" onClick={() => setRegistrandoCobro(true)}>Falta autorización</button>
+          )}
         </div>
         <div className="muted small">
           {hora(cita.inicio!, zona)}–{hora(cita.fin!, zona)} · {cita.pacienteDocumento}
@@ -126,6 +138,12 @@ function CitaFila({ cita, zona, faltanRips }: { cita: Cita; zona: string; faltan
           {cita.motivo && ` · ${cita.motivo}`}
           {cita.motivoCancelacion && ` · Cancelada: ${cita.motivoCancelacion}`}
         </div>
+        {abierta(cita) && cobro?.pagadorId && !registrandoCobro && (
+          <div className="small">{resumenCobro(cobro, conceptos.data)}{!cobro.guardado && <span className="muted"> (pagador del paciente, sin registrar)</span>}</div>
+        )}
+        {registrandoCobro && cobro && abierta(cita) && (
+          <CobroForm donde="cita" id={cita.id!} cobro={cobro} onGuardado={() => setRegistrandoCobro(false)} onCancelar={() => setRegistrandoCobro(false)} />
+        )}
         {completandoRips && abierta(cita) && <DatosRipsPaciente pacienteId={cita.pacienteId!} editar />}
         {cancelando && (
           <div className="stack-sm confirmar">
@@ -155,6 +173,7 @@ function CitaFila({ cita, zona, faltanRips }: { cita: Cita; zona: string; faltan
       {abierta(cita) && !cancelando && !marcandoInasistencia && !diferida.pendiente && (
         <div className="row acciones">
           {cita.estado === "PROGRAMADA" && <button className="btn-link" onClick={() => diferida.programar("Confirmando la cita", () => cambiar.mutate({ estado: "CONFIRMADA" }))}>Confirmar</button>}
+          {cobro && !registrandoCobro && <button className="btn-link" onClick={() => setRegistrandoCobro(true)}>Cobro</button>}
           {puede("HISTORIA_REGISTRAR") && esMiCita && <button className="btn" disabled={atender.isPending} onClick={() => diferida.programar("Abriendo la atención", () => atender.mutate())}>Atender</button>}
           <button className="btn-link" onClick={() => setMarcandoInasistencia(true)}>No asistió</button>
           <button className="btn-link danger" onClick={() => setCancelando(true)}>Cancelar</button>

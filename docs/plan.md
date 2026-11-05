@@ -111,9 +111,10 @@ Detalle en `docs/aws-capa-1.md` y operación en `docs/guia-operacion.md`.
 - ✅ **Entrega 1 (datos):** tablas de SISPRO, datos del paciente para RIPS (tarjeta en la ficha), prestador y documento
   de los profesionales (menú RIPS) y aviso "RIPS: faltan N" en cada cita de la agenda para completarlos al recibir al
   paciente. Siguen la entrega 2 (pagadores y cobro en la cita) y la 3 (lote y JSON).
-- 📝 **Entrega 2 (pagadores y cobro), diseñada:** catálogo de aseguradoras de SISPRO, pagadores del consultorio con
-  CUCON y modalidad, tarifas por convenio, pagador del paciente y cobro en la cita (concepto, valor y autorización).
-  Ver "Fase 2, entrega 2" en `docs/diseno-rips.md`.
+- ✅ **Entrega 2 (pagadores y cobro):** catálogo de aseguradoras de SISPRO, pestaña Pagadores (con CUCON, modalidad,
+  cobertura y tarifas por convenio), pagador del paciente que sugiere el tipo de usuario, y cobro en la cita y en la
+  atención (concepto, valor y autorización) con las reglas del Documento Técnico 1. Ver "Cómo quedó la fase 2,
+  entrega 2" en `docs/diseno-rips.md`.
 - **Entrega 3 (lote y JSON):** además de lo de abajo, cargar el XML de la factura emitida por el facturador externo
   para cruzar totales antes de descargar, y aplicar las validaciones cruzadas del numeral 1.8 del Documento Técnico 1.
 - ⏳ **Por decidir:** activar el módulo RIPS por defecto en los consultorios nuevos (la Res. 948 parece exigir RIPS

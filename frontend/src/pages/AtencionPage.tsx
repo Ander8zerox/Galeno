@@ -11,6 +11,7 @@ import { fechaHoraCorta } from "../features/agenda/tiempo";
 import { FormatosAtencion, type Diligenciado } from "../features/formatos/FormatosAtencion";
 import { FormatoLectura } from "../features/formatos/FormatoLectura";
 import { textoFormatos, type Definicion, type Respuestas } from "../features/formatos/motor";
+import { CobroAtencion } from "../features/rips/CobroAtencion";
 import { ProcedimientosEditor, ProcedimientosLectura, type ProcedimientoForm } from "../features/rips/ProcedimientosEditor";
 import { useModuloActivo } from "../features/rips/modulos";
 
@@ -227,12 +228,14 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
         {rips && (
           <>
             <h3>Procedimientos realizados</h3>
-            <ProcedimientosEditor value={procedimientos} onChange={setProcedimientos} />
+            <ProcedimientosEditor value={procedimientos} onChange={setProcedimientos} atencionId={atencion.id!} />
           </>
         )}
         <label>Análisis<textarea rows={3} value={form.analisis} onChange={set("analisis")} /></label>
         <label>Plan<textarea rows={3} value={form.plan} onChange={set("plan")} /></label>
       </div>
+
+      {rips && <CobroAtencion atencionId={atencion.id!} editable />}
 
       {error && <p className="alert alert-error">{error.message}</p>}
       <div className="card row between acciones-atencion">
@@ -280,6 +283,7 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
 
 function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
   const { me, puede } = useAuth();
+  const rips = useModuloActivo("RIPS");
   const zona = me?.zonaHoraria ?? "America/Bogota";
   const queryClient = useQueryClient();
   const [nota, setNota] = useState("");
@@ -350,6 +354,8 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
           ))}</ul>
         </div>
       )}
+
+      {rips && a.origen !== "IMPORTADA" && <CobroAtencion atencionId={a.id!} editable={puede("HISTORIA_REGISTRAR")} />}
 
       <DocumentosAtencion atencion={a} editable={false} />
 

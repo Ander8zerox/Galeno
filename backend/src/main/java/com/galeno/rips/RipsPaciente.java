@@ -38,6 +38,10 @@ class RipsPaciente {
     @Column(name = "pais_origen", length = 3)
     private String paisOrigen;
 
+    /** Pagador principal (EPS, prepagada, particular…): cada cita lo hereda. */
+    @Column(name = "pagador_id")
+    private UUID pagadorId;
+
     @Column(name = "actualizado_en", nullable = false)
     private Instant actualizadoEn;
 
@@ -49,7 +53,8 @@ class RipsPaciente {
     }
 
     void actualizar(String tipoUsuario, String paisResidencia, String municipioResidencia, String zonaResidencia,
-                    String paisOrigen) {
+                    String paisOrigen, UUID pagadorId) {
+        this.pagadorId = pagadorId;
         this.tipoUsuario = tipoUsuario;
         this.paisResidencia = paisResidencia;
         this.municipioResidencia = municipioResidencia;
@@ -80,5 +85,9 @@ class RipsPaciente {
 
     String getPaisOrigen() {
         return paisOrigen;
+    }
+
+    UUID getPagadorId() {
+        return pagadorId;
     }
 }

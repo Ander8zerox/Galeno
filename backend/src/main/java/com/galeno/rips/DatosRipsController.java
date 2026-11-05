@@ -59,7 +59,7 @@ public class DatosRipsController {
     @PutMapping("/pacientes/{pacienteId}")
     public PacienteRips guardarPaciente(@PathVariable UUID pacienteId, @Valid @RequestBody DatosPaciente r) {
         return datos.guardarPaciente(pacienteId, new PacienteRips(r.tipoUsuario(), r.paisResidencia(),
-                r.municipioResidencia(), null, null, r.zonaResidencia(), r.paisOrigen(), List.of()));
+                r.municipioResidencia(), null, null, r.zonaResidencia(), r.paisOrigen(), r.pagadorId(), null, List.of()));
     }
 
     @GetMapping("/prestador")
@@ -85,7 +85,7 @@ public class DatosRipsController {
 
     public record DatosPaciente(@Size(max = 2) String tipoUsuario, @Size(max = 3) String paisResidencia,
                                 @Size(max = 5) String municipioResidencia, @Size(max = 2) String zonaResidencia,
-                                @Size(max = 3) String paisOrigen) {
+                                @Size(max = 3) String paisOrigen, UUID pagadorId) {
     }
 
     public record DatosPrestador(@Size(max = 12) String codigoHabilitacion, @Size(max = 4) String servicio,

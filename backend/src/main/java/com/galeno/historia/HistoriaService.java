@@ -72,7 +72,7 @@ public class HistoriaService {
         this.formatos = formatos;
         this.cups = cups;
         this.modulos = modulos;
-        this.precios = precios.orElse(codigos -> java.util.Map.of());
+        this.precios = precios.orElse((codigos, contexto) -> java.util.Map.of());
     }
 
     // --- línea de tiempo ---
@@ -114,7 +114,7 @@ public class HistoriaService {
                 paciente.getAntecedentes());
         // Antes de guardarla: así nace con la consulta y con la versión que recibe la pantalla
         if (modulos.activo(Modulo.RIPS)) {
-            consultaSugerida(pacienteId, yo.id()).ifPresent(p -> nueva.registrarProcedimientos(List.of(p)));
+            consultaSugerida(pacienteId, citaId, yo.id()).ifPresent(p -> nueva.registrarProcedimientos(List.of(p)));
         }
         Atencion atencion = atenciones.save(nueva);
         formatos.agregarPorDefecto(atencion.getId(), yo.id(), firmadasRecientes(pacienteId));
@@ -287,12 +287,13 @@ public class HistoriaService {
      * La consulta del día: de primera vez si el paciente no tiene atenciones firmadas en el consultorio, si no de
      * control; por medicina general, odontología u otras especialidades según el perfil de quien atiende.
      */
-    java.util.Optional<Procedimiento> consultaSugerida(UUID pacienteId, UUID medicoUsuarioId) {
+    java.util.Optional<Procedimiento> consultaSugerida(UUID pacienteId, UUID citaId, UUID medicoUsuarioId) {
         boolean primeraVez = atenciones.firmadas(pacienteId).isEmpty();
         String especialidad = identidad.profesional(medicoUsuarioId).especialidad();
         String codigo = (primeraVez ? "8902" : "8903") + sufijoConsulta(especialidad);
         return cups.findById(codigo).map(c -> new Procedimiento(c.getCodigo(), c.getDescripcion(), 1,
-                precios.precios(List.of(c.getCodigo())).get(c.getCodigo()), null, null));
+                precios.precios(List.of(c.getCodigo()), new ListaPrecios.Contexto(pacienteId, citaId, null)).get(c.getCodigo()),
+                null, null));
     }
 
     /** 01 medicina general, 03 odontología general, 02 otras especialidades médicas (sufijos CUPS 8902xx / 8903xx). */
@@ -308,17 +309,37 @@ public class HistoriaService {
         return "02";
     }
 
-    /** Buscador de CUPS para la atención, con el precio del consultorio si lo tiene. Solo con el módulo de RIPS. */
+    /**
+     * Buscador de CUPS, con el precio del consultorio si lo tiene. Solo con el módulo de RIPS.
+     *
+     * @param atencionId desde una atención: el precio es la tarifa de su pagador, si la tiene; nulo, la lista general
+     */
     @Transactional(readOnly = true)
-    public List<CupsVista> buscarCups(String q) {
+    public List<CupsVista> buscarCups(String q, UUID atencionId) {
         modulos.exigir(Modulo.RIPS);
         String texto = q == null ? "" : q.strip();
         if (texto.length() < 2) {
             return List.of();
         }
         List<Cups> encontrados = cups.buscar(texto, PageRequest.of(0, 20));
-        java.util.Map<String, java.math.BigDecimal> conPrecio = precios.precios(encontrados.stream().map(Cups::getCodigo).toList());
+        ListaPrecios.Contexto contexto = atencionId == null ? null : atenciones.findById(atencionId)
+                .map(a -> new ListaPrecios.Contexto(a.getPacienteId(), a.getCitaId(), a.getId())).orElse(null);
+        java.util.Map<String, java.math.BigDecimal> conPrecio = precios.precios(
+                encontrados.stream().map(Cups::getCodigo).toList(), contexto);
         return encontrados.stream().map(c -> new CupsVista(c.getCodigo(), c.getDescripcion(), conPrecio.get(c.getCodigo()))).toList();
+    }
+
+    /**
+     * Para otros módulos (RIPS): de quién es la atención y de qué cita viene, sin su contenido clínico (por eso no queda
+     * en la auditoría de accesos).
+     */
+    @Transactional(readOnly = true)
+    public Optional<AtencionReferencia> referencia(UUID atencionId) {
+        return atenciones.findById(atencionId).map(a -> new AtencionReferencia(a.getId(), a.getPacienteId(), a.getCitaId(),
+                a.getMedicoUsuarioId(), a.getEstado() == Atencion.Estado.FIRMADA));
+    }
+
+    public record AtencionReferencia(UUID id, UUID pacienteId, UUID citaId, UUID medicoUsuarioId, boolean firmada) {
     }
 
     /** Descripción CUPS de cada código conocido (los desconocidos no aparecen en el mapa). */

@@ -3,12 +3,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { api, unwrap, type Schemas } from "../api/client";
 import { ListaPrecios } from "../features/rips/ListaPrecios";
+import { Pagadores } from "../features/rips/ListaPagadores";
 import { nombrePropio, useBusquedaReferencia, useReferencia, type Referencia } from "../features/rips/referencias";
 
-type Pestana = "prestador" | "profesionales" | "precios";
-const PESTANAS: [Pestana, string][] = [["prestador", "Prestador"], ["profesionales", "Profesionales"], ["precios", "Precios"]];
+type Pestana = "prestador" | "profesionales" | "pagadores" | "precios";
+const PESTANAS: [Pestana, string][] = [["prestador", "Prestador"], ["profesionales", "Profesionales"], ["pagadores", "Pagadores"], ["precios", "Precios"]];
 
-/** Configuración del módulo de RIPS: el consultorio como prestador, el documento de cada médico y los precios. */
+/** Configuración del módulo de RIPS: el consultorio como prestador, el documento de cada médico, los pagadores y los precios. */
 export function RipsPage() {
   const [params, setParams] = useSearchParams();
   const pestana = (PESTANAS.find(([p]) => p === params.get("pestana"))?.[0] ?? "prestador") as Pestana;
@@ -22,6 +23,7 @@ export function RipsPage() {
       </nav>
       {pestana === "prestador" && <DatosPrestador />}
       {pestana === "profesionales" && <Profesionales />}
+      {pestana === "pagadores" && <Pagadores />}
       {pestana === "precios" && <ListaPrecios />}
     </section>
   );

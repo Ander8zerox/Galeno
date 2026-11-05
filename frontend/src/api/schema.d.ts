@@ -52,6 +52,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rips/pagadores/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["actualizar"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/pagadores/{id}/tarifas/{codigoCups}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["fijarTarifa"];
+        post?: never;
+        delete: operations["quitarTarifa"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rips/pacientes/{pacienteId}": {
         parameters: {
             query?: never;
@@ -61,6 +93,38 @@ export interface paths {
         };
         get: operations["paciente"];
         put: operations["guardarPaciente"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/cobros/citas/{citaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cobroCita"];
+        put: operations["guardarCobroCita"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/cobros/atenciones/{atencionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cobroAtencion"];
+        put: operations["guardarCobroAtencion"];
         post?: never;
         delete?: never;
         options?: never;
@@ -252,7 +316,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["actualizar"];
+        put: operations["actualizar_1"];
         post?: never;
         delete?: never;
         options?: never;
@@ -334,6 +398,22 @@ export interface paths {
         get: operations["pagos"];
         put?: never;
         post: operations["reportar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/pagadores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pagadores"];
+        put?: never;
+        post: operations["crear"];
         delete?: never;
         options?: never;
         head?: never;
@@ -941,7 +1021,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["crear"];
+        post: operations["crear_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1300,6 +1380,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rips/pagadores/{id}/tarifas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tarifas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rips/pacientes/faltantes": {
         parameters: {
             query?: never;
@@ -1308,6 +1404,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["faltantes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/cobros/citas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["cobrosCitas"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1936,12 +2048,45 @@ export interface components {
             /** Format: date-time */
             actualizadoEn?: string;
         };
+        DatosPagador: {
+            nombre: string;
+            /** @enum {string} */
+            tipo: "EPS" | "PREPAGADA" | "ARL" | "SOAT" | "ENTIDAD_TERRITORIAL" | "REGIMEN_ESPECIAL" | "OTRO" | "PARTICULAR";
+            codigoEntidad?: string;
+            nit?: string;
+            cobertura?: string;
+            modalidadPago?: string;
+            cucon?: string;
+            numeroPoliza?: string;
+            facturaSinContrato?: string;
+            exigeAutorizacion?: boolean;
+            activo?: boolean;
+        };
+        PagadorVista: {
+            /** Format: uuid */
+            id?: string;
+            nombre?: string;
+            /** @enum {string} */
+            tipo?: "EPS" | "PREPAGADA" | "ARL" | "SOAT" | "ENTIDAD_TERRITORIAL" | "REGIMEN_ESPECIAL" | "OTRO" | "PARTICULAR";
+            codigoEntidad?: string;
+            nit?: string;
+            cobertura?: string;
+            modalidadPago?: string;
+            cucon?: string;
+            numeroPoliza?: string;
+            facturaSinContrato?: string;
+            exigeAutorizacion?: boolean;
+            activo?: boolean;
+            regimen?: string;
+        };
         DatosPaciente: {
             tipoUsuario?: string;
             paisResidencia?: string;
             municipioResidencia?: string;
             zonaResidencia?: string;
             paisOrigen?: string;
+            /** Format: uuid */
+            pagadorId?: string;
         };
         PacienteRips: {
             tipoUsuario?: string;
@@ -1951,7 +2096,33 @@ export interface components {
             departamento?: string;
             zonaResidencia?: string;
             paisOrigen?: string;
+            /** Format: uuid */
+            pagadorId?: string;
+            pagadorNombre?: string;
             faltantes?: string[];
+        };
+        RegistroCobro: {
+            /** Format: uuid */
+            pagadorId: string;
+            numeroAutorizacion?: string;
+            conceptoRecaudo?: string;
+            valorPagoModerador?: number;
+            facturaPagoModerador?: string;
+        };
+        CobroVista: {
+            /** @enum {string} */
+            origen?: "ATENCION" | "CITA" | "PACIENTE";
+            guardado?: boolean;
+            /** Format: uuid */
+            pagadorId?: string;
+            pagadorNombre?: string;
+            /** @enum {string} */
+            pagadorTipo?: "EPS" | "PREPAGADA" | "ARL" | "SOAT" | "ENTIDAD_TERRITORIAL" | "REGIMEN_ESPECIAL" | "OTRO" | "PARTICULAR";
+            exigeAutorizacion?: boolean;
+            numeroAutorizacion?: string;
+            conceptoRecaudo?: string;
+            valorPagoModerador?: number;
+            facturaPagoModerador?: string;
         };
         CambioPlan: {
             nombre: string;
@@ -2856,6 +3027,11 @@ export interface components {
             pacienteId?: string;
             faltantes?: string[];
         };
+        CobroCita: {
+            /** Format: uuid */
+            citaId?: string;
+            cobro?: components["schemas"]["CobroVista"];
+        };
         Panel: {
             partner?: components["schemas"]["PartnerVista"];
             /** Format: int32 */
@@ -3041,26 +3217,26 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            missingNode?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            bigDecimal?: boolean;
-            bigInteger?: boolean;
-            container?: boolean;
-            valueNode?: boolean;
-            integralNumber?: boolean;
-            floatingPointNumber?: boolean;
-            object?: boolean;
-            binary?: boolean;
-            string?: boolean;
-            short?: boolean;
-            int?: boolean;
             long?: boolean;
             double?: boolean;
             /** @deprecated */
             textual?: boolean;
             boolean?: boolean;
+            binary?: boolean;
             pojo?: boolean;
+            short?: boolean;
+            object?: boolean;
+            string?: boolean;
+            int?: boolean;
+            bigDecimal?: boolean;
+            missingNode?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
+            bigInteger?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            integralNumber?: boolean;
+            floatingPointNumber?: boolean;
             number?: boolean;
             embeddedValue?: boolean;
         };
@@ -3233,6 +3409,80 @@ export interface operations {
             };
         };
     };
+    actualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatosPagador"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagadorVista"];
+                };
+            };
+        };
+    };
+    fijarTarifa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                codigoCups: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Precio"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrecioVista"];
+                };
+            };
+        };
+    };
+    quitarTarifa: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                codigoCups: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     paciente: {
         parameters: {
             query?: never;
@@ -3277,6 +3527,102 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PacienteRips"];
+                };
+            };
+        };
+    };
+    cobroCita: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                citaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CobroVista"];
+                };
+            };
+        };
+    };
+    guardarCobroCita: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                citaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistroCobro"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CobroVista"];
+                };
+            };
+        };
+    };
+    cobroAtencion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                atencionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CobroVista"];
+                };
+            };
+        };
+    };
+    guardarCobroAtencion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                atencionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegistroCobro"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CobroVista"];
                 };
             };
         };
@@ -3648,7 +3994,7 @@ export interface operations {
             };
         };
     };
-    actualizar: {
+    actualizar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3844,6 +4190,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PagoVista"];
+                };
+            };
+        };
+    };
+    pagadores: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagadorVista"][];
+                };
+            };
+        };
+    };
+    crear: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatosPagador"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagadorVista"];
                 };
             };
         };
@@ -4775,7 +5165,7 @@ export interface operations {
             };
         };
     };
-    crear: {
+    crear_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -5345,6 +5735,28 @@ export interface operations {
             };
         };
     };
+    tarifas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PrecioVista"][];
+                };
+            };
+        };
+    };
     faltantes: {
         parameters: {
             query: {
@@ -5363,6 +5775,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Faltantes"][];
+                };
+            };
+        };
+    };
+    cobrosCitas: {
+        parameters: {
+            query: {
+                ids: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CobroCita"][];
                 };
             };
         };
@@ -5754,6 +6188,7 @@ export interface operations {
         parameters: {
             query: {
                 q: string;
+                atencionId?: string;
             };
             header?: never;
             path?: never;
