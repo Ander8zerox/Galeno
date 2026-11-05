@@ -2311,6 +2311,8 @@ export interface components {
             /** Format: date */
             hasta?: string;
             numeroFactura?: string;
+            /** Format: int32 */
+            numeroEnvio?: number;
             /** @enum {string} */
             estado?: "BORRADOR" | "GENERADO" | "ANULADO";
             xml?: components["schemas"]["DatosXml"];
@@ -3302,6 +3304,8 @@ export interface components {
             /** Format: date */
             hasta?: string;
             numeroFactura?: string;
+            /** Format: int32 */
+            numeroEnvio?: number;
             /** @enum {string} */
             estado?: "BORRADOR" | "GENERADO" | "ANULADO";
             /** Format: int32 */
@@ -3505,25 +3509,25 @@ export interface components {
             float?: boolean;
             number?: boolean;
             object?: boolean;
-            string?: boolean;
-            pojo?: boolean;
             double?: boolean;
-            int?: boolean;
+            long?: boolean;
+            boolean?: boolean;
+            string?: boolean;
+            short?: boolean;
             /** @deprecated */
             textual?: boolean;
             binary?: boolean;
-            boolean?: boolean;
-            short?: boolean;
-            long?: boolean;
-            floatingPointNumber?: boolean;
+            pojo?: boolean;
+            int?: boolean;
+            container?: boolean;
             missingNode?: boolean;
             valueNode?: boolean;
-            container?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             bigDecimal?: boolean;
             bigInteger?: boolean;
             integralNumber?: boolean;
+            floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {

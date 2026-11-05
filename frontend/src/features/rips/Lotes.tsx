@@ -53,7 +53,7 @@ function ListaLotes({ onAbrir }: { onAbrir: (id: string) => void }) {
                 <tr key={l.id}>
                   <td>{l.pagadorNombre}</td>
                   <td>{fecha(l.desde)} a {fecha(l.hasta)}</td>
-                  <td>{l.sinFactura ? <span className="muted">Sin factura</span> : l.numeroFactura ?? <span className="muted">—</span>}</td>
+                  <td>{l.sinFactura ? <span className="muted">Sin factura{l.numeroEnvio ? ` · envío ${l.numeroEnvio}` : ""}</span> : l.numeroFactura ?? <span className="muted">—</span>}</td>
                   <td>{l.atenciones}</td>
                   <td><span className={`badge ${ESTADO[l.estado!][1]}`}>{ESTADO[l.estado!][0]}</span></td>
                   <td><button className="btn-link" onClick={() => onAbrir(l.id!)}>Abrir</button></td>
@@ -102,6 +102,13 @@ function NuevoLote({ onCreado }: { onCreado: (id: string) => void }) {
           RIPS sin factura <span className="muted small">(profesional independiente no obligado a facturar)</span>
         </label>
       )}
+      {pagador?.tipo === "PARTICULAR" && form.sinFactura && (
+        <p className="alert alert-warn small">
+          Solo para el profesional independiente que no está obligado a facturar y no tiene contrato con ninguna EPS,
+          prepagada u otro pagador. Se envía al Ministerio en los 5 primeros días del mes siguiente a la atención.
+          Al generarlo, Galenum le asigna su número de envío.
+        </p>
+      )}
       <div className="row">
         <button className="btn" disabled={crear.isPending}>{crear.isPending ? "Buscando atenciones…" : "Crear lote"}</button>
         {crear.error && <span className="field-error">{crear.error.message}</span>}
@@ -141,7 +148,7 @@ function DetalleLote({ id, onVolver }: { id: string; onVolver: () => void }) {
   const l = lote.data;
   const borrador = l.estado === "BORRADOR";
   const t = l.totales!;
-  const archivo = l.sinFactura ? `RIPS_sin_factura_${l.desde}_${l.hasta}.json` : `RIPS_${l.numeroFactura}.json`;
+  const archivo = l.sinFactura ? `RIPS_sin_factura_${l.numeroEnvio}.json` : `RIPS_${l.numeroFactura}.json`;
 
   return (
     <div className="stack">
@@ -150,7 +157,7 @@ function DetalleLote({ id, onVolver }: { id: string; onVolver: () => void }) {
         <span className={`badge ${ESTADO[l.estado!][1]}`}>{ESTADO[l.estado!][0]}</span>
       </div>
       <div className="card stack-sm">
-        <h3>{l.pagadorNombre} · {fecha(l.desde)} a {fecha(l.hasta)}{l.sinFactura && <span className="badge badge-info">RIPS sin factura</span>}</h3>
+        <h3>{l.pagadorNombre} · {fecha(l.desde)} a {fecha(l.hasta)}{l.sinFactura && <span className="badge badge-info">RIPS sin factura{l.numeroEnvio ? ` · envío ${l.numeroEnvio}` : ""}</span>}</h3>
         <p className="small">
           {t.usuarios} {t.usuarios === 1 ? "paciente" : "pacientes"} · {t.consultas} {t.consultas === 1 ? "consulta" : "consultas"} ·{" "}
           {t.procedimientos} {t.procedimientos === 1 ? "procedimiento" : "procedimientos"} · servicios {pesos(t.valorServicios)} · pagos

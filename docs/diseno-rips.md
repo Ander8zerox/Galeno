@@ -499,7 +499,10 @@ MUV sigue en espera (botón deshabilitado).
     (409). Se descarga como `RIPS_<factura>.json` o `RIPS_sin_factura_<desde>_<hasta>.json`. **Anular** pide motivo,
     conserva el JSON y libera las atenciones. Un borrador se elimina. "Enviar al Ministerio" queda deshabilitado
     (fase 3).
-  - **RIPS sin factura:** solo con el pagador particular; tipo de nota RS, sin número de factura ni XML.
+  - **RIPS sin factura:** solo con el pagador particular; tipo de nota RS, sin número de factura ni XML. El `numNota`
+    es el número de envío del consultorio (`rips_lotes.numero_envio`, V29): se asigna al generar (1, 2, 3…), no se
+    reutiliza ni de lotes anulados, y si la generación falla no se gasta. La pantalla avisa que es para quien no tiene
+    contrato con ningún pagador y que se envía en los 5 primeros días del mes siguiente.
 - **NIT del consultorio:** es el `numDocumentoIdObligado` y solo se pedía (opcional) al registrarse. La pestaña
   Prestador lo muestra y, si falta, deja escribirlo una vez (con dígito de verificación y sin repetir el de otro
   consultorio). Ya fijado no se cambia desde la app, porque identifica al consultorio en las pruebas gratuitas.
@@ -548,8 +551,7 @@ Fuentes: DT1 v003 (campos T03 y T04, y las observaciones del valor del servicio 
 - **Glosa de valor y de datos a la vez:** se reporta como **NC** y en el mismo registro se corrigen los datos.
 - **RIPS sin factura:** `numFactura` nulo y `numNota` un **número propio del prestador, único para cada envío**. El
   lineamiento lo llama "SF"; la tabla TipoNota del DT1 v003 lo llama "RS". Además, es para quien **no tiene contrato con
-  ningún pagador** y se transmite **dentro de los 5 primeros días del mes siguiente**. **Hoy Galenum lo genera con
-  `numNota` nulo: hay que corregirlo.**
+  ningún pagador** y se transmite **dentro de los 5 primeros días del mes siguiente**. Corregido con V29 (ver "Cómo quedó la fase 2, entrega 3").
 
 ### Propuesta
 

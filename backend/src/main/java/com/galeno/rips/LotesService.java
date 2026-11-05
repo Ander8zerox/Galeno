@@ -92,7 +92,7 @@ public class LotesService {
         Map<UUID, String> nombres = new java.util.HashMap<>();
         return lotes.findAllByOrderByCreadoEnDesc().stream().map(l -> new LoteRipsResumen(l.getId(), l.getPagadorId(),
                 nombres.computeIfAbsent(l.getPagadorId(), id -> pagadores.get(id).getNombre()), l.isSinFactura(), l.getDesde(), l.getHasta(), l.getNumeroFactura(),
-                l.getEstado(), l.getAtenciones().size(), l.getCreadoEn(), l.getGeneradoEn(), l.getAnuladoEn())).toList();
+                l.getNumeroEnvio(), l.getEstado(), l.getAtenciones().size(), l.getCreadoEn(), l.getGeneradoEn(), l.getAnuladoEn())).toList();
     }
 
     /**
@@ -205,6 +205,10 @@ public class LotesService {
         modulos.exigir(Modulo.RIPS);
         Lote lote = lote(loteId);
         lote.exigirBorrador();
+        if (lote.isSinFactura()) {
+            // Si no se genera (rechazos), la transacción se revierte y el número no se gasta
+            lote.asignarEnvio(lotes.ultimoEnvio() + 1);
+        }
         Armado armado = armar(lote);
         long rechazos = armado.resultado().hallazgos().stream().filter(h -> h.nivel() == ArmadorRips.Nivel.RECHAZO).count();
         if (rechazos > 0) {
@@ -242,7 +246,7 @@ public class LotesService {
         }
         historia.atencionesRips(ids(lote)).stream().map(AtencionRips::pacienteId).distinct()
                 .forEach(p -> historia.registrarAcceso(p, Accion.VER_RIPS, lote.getId()));
-        String nombre = lote.isSinFactura() ? "RIPS_sin_factura_" + lote.getDesde() + "_" + lote.getHasta()
+        String nombre = lote.isSinFactura() ? "RIPS_sin_factura_" + lote.getNumeroEnvio()
                 : "RIPS_" + lote.getNumeroFactura();
         return new Archivo(nombre + ".json", lote.getJson().getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
@@ -316,7 +320,7 @@ public class LotesService {
         Set<String> cie10 = ats.stream().flatMap(a -> a.diagnosticos().stream()).map(DiagnosticoVista::codigoCie10)
                 .collect(Collectors.toSet());
         var resultado = ArmadorRips.armar(new ArmadorRips.Entrada(consultorio.nit(), lote.isSinFactura(),
-                lote.getNumeroFactura(), pagador, prestador, entrada, referencias.filas("cups_rips", cups),
+                lote.getNumeroFactura(), lote.getNumeroEnvio(), pagador, prestador, entrada, referencias.filas("cups_rips", cups),
                 historia.cie10(cie10), referencias.filas("finalidad", finalidades), lote.xml(), consultorio.zona(),
                 Instant.now()));
         return new Armado(entrada, resultado);
@@ -360,7 +364,8 @@ public class LotesService {
                 : JSON.readValue(lote.getJson(), new tools.jackson.core.type.TypeReference<Map<String, Object>>() {
                 });
         return new LoteRipsVista(lote.getId(), lote.getPagadorId(), pagadores.get(lote.getPagadorId()).getNombre(),
-                lote.isSinFactura(), lote.getDesde(), lote.getHasta(), lote.getNumeroFactura(), lote.getEstado(),
+                lote.isSinFactura(), lote.getDesde(), lote.getHasta(), lote.getNumeroFactura(), lote.getNumeroEnvio(),
+                lote.getEstado(),
                 lote.xml(), lote.getCreadoEn(), lote.getGeneradoEn(), lote.getAnuladoEn(), lote.getMotivoAnulacion(),
                 totales(json), lista, delLote,
                 hallazgos.stream().filter(h -> h.nivel() == ArmadorRips.Nivel.RECHAZO).count(),
@@ -408,7 +413,7 @@ public class LotesService {
     }
 
     public record LoteRipsResumen(UUID id, UUID pagadorId, String pagadorNombre, boolean sinFactura, LocalDate desde,
-                              LocalDate hasta, String numeroFactura, Lote.Estado estado, int atenciones,
+                              LocalDate hasta, String numeroFactura, Integer numeroEnvio, Lote.Estado estado, int atenciones,
                               Instant creadoEn, Instant generadoEn, Instant anuladoEn) {
     }
 
@@ -422,7 +427,8 @@ public class LotesService {
      * @param rechazos cuántos impiden generar
      */
     public record LoteRipsVista(UUID id, UUID pagadorId, String pagadorNombre, boolean sinFactura, LocalDate desde,
-                            LocalDate hasta, String numeroFactura, Lote.Estado estado, ArmadorRips.DatosXml xml,
+                            LocalDate hasta, String numeroFactura, Integer numeroEnvio, Lote.Estado estado,
+                            ArmadorRips.DatosXml xml,
                             Instant creadoEn, Instant generadoEn, Instant anuladoEn, String motivoAnulacion,
                             Totales totales, List<AtencionDelLote> atenciones, List<HallazgoRips> hallazgos,
                             long rechazos, long avisos) {
