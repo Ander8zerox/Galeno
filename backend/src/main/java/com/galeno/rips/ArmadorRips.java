@@ -188,6 +188,8 @@ final class ArmadorRips {
                 servicios.put("procedimientos", procedimientos);
             }
             Map<String, Object> u = new LinkedHashMap<>();
+            // En el orden del ejemplo oficial del DT1 (el MUV no depende del orden, pero así se compara a ojo)
+            u.put("consecutivo", usuarios.size() + 1);
             u.put("tipoDocumentoIdentificacion", p.tipoDocumento());
             u.put("numDocumentoIdentificacion", p.numeroDocumento());
             u.put("tipoUsuario", p.tipoUsuario());
@@ -197,7 +199,6 @@ final class ArmadorRips {
             u.put("codMunicipioResidencia", p.municipioResidencia());
             u.put("codZonaTerritorialResidencia", p.zonaResidencia());
             u.put("incapacidad", delPaciente.stream().anyMatch(a -> a.atencion().incapacidad()) ? "SI" : "NO");
-            u.put("consecutivo", usuarios.size() + 1);
             u.put("codPaisOrigen", p.paisOrigen());
             u.put("registroSIRAS", null);
             u.put("servicios", servicios);

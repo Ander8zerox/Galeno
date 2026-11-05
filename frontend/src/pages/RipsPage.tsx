@@ -112,7 +112,7 @@ function FormularioPrestador({ inicial, onGuardado }: { inicial: Schemas["Presta
         <label>Código de habilitación (12 dígitos)
           <input inputMode="numeric" maxLength={12} value={form.codigoHabilitacion}
             onChange={(e) => set("codigoHabilitacion")(e.target.value.replace(/\D/g, ""))} />
-          <span className="muted small">El del REPS con la sede (p. ej. 050010000001)</span>
+          <span className="muted small">El que aparece en el REPS para la sede: 10 dígitos del prestador y 2 de la sede</span>
         </label>
         <div className="stack-sm">
           <label>Servicio habilitado

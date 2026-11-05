@@ -104,6 +104,7 @@ class ArmadorRipsTest {
         Map<String, Object> u = usuario(r, 0);
         assertThat(u).containsEntry("tipoUsuario", "01").containsEntry("codSexo", "F").containsEntry("incapacidad", "NO")
                 .containsEntry("consecutivo", 1).containsEntry("registroSIRAS", null);
+        assertThat(u.keySet()).first().isEqualTo("consecutivo"); // como en el ejemplo oficial
         Map<String, Object> c = lista(r, 0, "consultas").get(0);
         assertThat(c).containsEntry("codPrestador", "110010000101").containsEntry("fechaInicioAtencion", "2026-11-03 09:30")
                 .containsEntry("codConsulta", "890201").containsEntry("codServicio", 328)
