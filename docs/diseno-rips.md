@@ -584,3 +584,30 @@ Fuentes: DT1 v003 (campos T03 y T04, y las observaciones del valor del servicio 
 5. **RIPS sin factura:** se corrige **antes** que las notas, en un PR corto. El `numNota` pasa a ser un consecutivo
    propio del consultorio (1, 2, 3…, único por envío), y la pantalla avisa que es para quien no tiene contrato con
    ningún pagador y que se envía en los 5 primeros días del mes siguiente.
+
+## Cómo quedaron las notas (6 de noviembre de 2026)
+
+- **Tabla** `rips_notas` (V30): tipo (NC, ND, NA), si es NC al 100%, número, motivo, estado (borrador, generada,
+  anulada), los servicios afectados en JSON (clave, valor y datos corregidos), lo leído del XML y el JSON generado.
+- **Pantalla:** en un lote generado (con factura), la tarjeta **Notas** lista las notas y tiene "Nueva nota" (tipo,
+  número, motivo; en la NC, "Por el 100% de la factura"). El editor lista los servicios del RIPS del lote (con lo ya
+  acreditado o sumado), y en cada uno marcado se escribe el valor (NC y ND) o se corrigen los datos (NA, o NC con
+  glosa mixta), con lo que decía antes.
+- **Armado** (`ArmadorNota`, sin acceso a la base): se arma sobre el JSON guardado del lote. Van solo los usuarios y
+  servicios marcados, con su consecutivo y registro completo; en la NC y la ND, `vrServicio` es el valor de la nota y
+  los pagos moderadores van en 0 (concepto 05); la NA deja los valores de la factura. La clave de un servicio es
+  "usuario-lista-consecutivo".
+- **Reglas:** número de hasta 20 letras, números o guiones y sin repetir en el lote; NC de $1 a lo que queda por
+  acreditar (lo facturado menos otras NC generadas); ND de al menos $1 y sin datos; NA con al menos un cambio. Datos
+  corregibles: diagnósticos (que existan en CIE-10, sin repetir el principal ni entre sí: RVC086 y RVC087), tipo de
+  diagnóstico, finalidad, causa, modalidad, grupo, servicio, vía de ingreso y autorización. El CUPS no.
+- **XML de la nota** (opcional, NC y ND): CreditNote o DebitNote, o el AttachedDocument de la DIAN. Cruza el número, la
+  factura que referencia (BillingReference) y el valor (PayableAmount de LegalMonetaryTotal o RequestedMonetaryTotal).
+- **NC al 100%:** nace generada, sin servicios ni JSON. Después de ella el lote no admite más notas, y no se puede
+  registrar si ya hay notas generadas.
+- **Generada:** se descarga como `RIPS_<factura>_<tipo><número>.json` y se anula con motivo. Mientras el lote tenga
+  notas generadas no se puede anular (409).
+- **Auditoría:** ver, generar o descargar una nota queda en la historia de los pacientes afectados (`VER_RIPS`,
+  `GENERAR_RIPS`, con el id de la nota).
+- **Fuera de alcance:** la ND con servicios nuevos (se expide una factura nueva) y corregir datos del usuario (tipo de
+  usuario, residencia) en la NA.

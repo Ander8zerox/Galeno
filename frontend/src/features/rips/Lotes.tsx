@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, expectOk, subirArchivo, unwrap, type Schemas } from "../../api/client";
 import { BotonArchivo } from "../historia/Documentos";
 import { pesos } from "./modulos";
+import { NotasLote } from "./Notas";
 import { usePagadores } from "./pagadores";
 import { nombrePropio, useReferencia } from "./referencias";
 
@@ -173,7 +174,9 @@ function DetalleLote({ id, onVolver }: { id: string; onVolver: () => void }) {
         {l.atenciones?.map((a) => <FilaAtencion key={a.id} lote={l} atencion={a} onCambio={poner} />)}
       </div>
 
-      <div className="card row between acciones-atencion">
+      {!borrador && !l.sinFactura && <NotasLote loteId={l.id!} activo={l.estado === "GENERADO"} />}
+
+      <div className={`card row between ${borrador ? "acciones-atencion" : ""}`}>
         {borrador ? (
           <div className="row">
             <button className="btn" disabled={generar.isPending || (l.rechazos ?? 0) > 0} onClick={() => generar.mutate()}>
@@ -184,9 +187,9 @@ function DetalleLote({ id, onVolver }: { id: string; onVolver: () => void }) {
           </div>
         ) : (
           <div className="row">
-            {l.estado === "GENERADO" && <BotonArchivo ruta={`/api/v1/rips/lotes/${id}/json`} nombre={archivo} className="btn">Descargar JSON</BotonArchivo>}
+            {l.estado === "GENERADO" && <BotonArchivo ruta={`/api/v1/rips/lotes/${id}/json`} nombre={archivo} className="btn">Descargar JSON del lote</BotonArchivo>}
             <button className="btn btn-secondary" disabled title="El envío al Ministerio (MUV) llega en la siguiente fase">Enviar al Ministerio</button>
-            {l.estado === "GENERADO" && !anulando && <button className="btn-link danger" onClick={() => setAnulando(true)}>Anular</button>}
+            {l.estado === "GENERADO" && !anulando && <button className="btn-link danger" onClick={() => setAnulando(true)}>Anular lote</button>}
           </div>
         )}
         {(generar.error || eliminar.error || anular.error) && <span className="field-error">{(generar.error ?? eliminar.error ?? anular.error)!.message}</span>}

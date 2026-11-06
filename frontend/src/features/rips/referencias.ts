@@ -4,9 +4,11 @@ import { api, unwrap, type Schemas } from "../../api/client";
 export type Referencia = Schemas["ReferenciaVista"];
 
 /** Tabla de referencia de SISPRO completa (no cambian durante el día: se guardan en caché una hora). */
-export function useReferencia(tabla: string) {
+/** @param activo falso: no consulta (para un campo que a veces no usa tabla) */
+export function useReferencia(tabla: string, activo = true) {
   return useQuery({
     queryKey: ["rips-referencia", tabla],
+    enabled: activo,
     queryFn: async () => unwrap(await api.GET("/api/v1/rips/referencias/{tabla}", { params: { path: { tabla } } })),
     staleTime: 60 * 60_000,
   });

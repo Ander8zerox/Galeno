@@ -57,6 +57,28 @@ class FacturaXmlTest {
     }
 
     @Test
+    void leeLaNotaCreditoYLaDebito() {
+        String nc = """
+                <CreditNote xmlns="urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2"
+                    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+                    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
+                  <cbc:ID>NC-7</cbc:ID>
+                  <cac:BillingReference><cac:InvoiceDocumentReference><cbc:ID>FE-100</cbc:ID></cac:InvoiceDocumentReference></cac:BillingReference>
+                  <cac:LegalMonetaryTotal><cbc:PayableAmount currencyID="COP">20000.00</cbc:PayableAmount></cac:LegalMonetaryTotal>
+                </CreditNote>
+                """;
+        var x = FacturaXml.leerNota(nc.getBytes(StandardCharsets.UTF_8));
+        assertThat(x.numero()).isEqualTo("NC-7");
+        assertThat(x.factura()).isEqualTo("FE-100");
+        assertThat(x.valor()).isEqualByComparingTo("20000");
+
+        String nd = nc.replace("CreditNote", "DebitNote").replace("LegalMonetaryTotal", "RequestedMonetaryTotal");
+        assertThat(FacturaXml.leerNota(nd.getBytes(StandardCharsets.UTF_8)).valor()).isEqualByComparingTo("20000");
+        assertThatThrownBy(() -> FacturaXml.leerNota(FACTURA.getBytes(StandardCharsets.UTF_8)))
+                .hasMessageContaining("no es una nota");
+    }
+
+    @Test
     void rechazaEntidadesExternasYArchivosQueNoSonFacturas() {
         String xxe = "<?xml version=\"1.0\"?><!DOCTYPE x [<!ENTITY e SYSTEM \"file:///etc/passwd\">]><Invoice>&e;</Invoice>";
         assertThatThrownBy(() -> FacturaXml.leer(xxe.getBytes(StandardCharsets.UTF_8))).hasMessageContaining("XML válido");
