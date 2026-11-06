@@ -595,7 +595,7 @@ final class ArmadorRips {
     }
 
     /** Pesos enteros como número entero; con centavos, con dos decimales. */
-    private static Number numero(BigDecimal v) {
+    static Number numero(BigDecimal v) {
         BigDecimal s = v.setScale(2, java.math.RoundingMode.HALF_UP);
         return s.remainder(BigDecimal.ONE).signum() == 0 ? (Number) s.longValueExact() : s;
     }

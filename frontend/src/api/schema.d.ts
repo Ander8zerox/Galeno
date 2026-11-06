@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rips/notas/{notaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["obtener"];
+        put: operations["guardar"];
+        post?: never;
+        delete: operations["eliminar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rips/lotes/{id}/factura": {
         parameters: {
             query?: never;
@@ -315,8 +331,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["obtener"];
-        put: operations["guardar"];
+        get: operations["obtener_1"];
+        put: operations["guardar_1"];
         post?: never;
         delete: operations["eliminarBorrador"];
         options?: never;
@@ -468,6 +484,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rips/notas/{notaId}/xml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cargarXml"];
+        delete: operations["quitarXml"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/notas/{notaId}/generacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["generar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/notas/{notaId}/anulacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["anular"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rips/lotes": {
         parameters: {
             query?: never;
@@ -493,8 +557,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["cargarXml"];
-        delete: operations["quitarXml"];
+        post: operations["cargarXml_1"];
+        delete: operations["quitarXml_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/lotes/{id}/notas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listar_1"];
+        put?: never;
+        post: operations["crear_2"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -509,7 +589,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["generar"];
+        post: operations["generar_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -525,7 +605,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["anular"];
+        post: operations["anular_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -813,7 +893,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["anular_1"];
+        post: operations["anular_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1133,7 +1213,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["crear_2"];
+        post: operations["crear_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1483,7 +1563,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar_1"];
+        get: operations["listar_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1524,6 +1604,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/rips/notas/{notaId}/json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["descargar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rips/lotes/{id}": {
         parameters: {
             query?: never;
@@ -1531,10 +1627,26 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["obtener_1"];
+        get: operations["obtener_2"];
         put?: never;
         post?: never;
-        delete: operations["eliminar"];
+        delete: operations["eliminar_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rips/lotes/{id}/servicios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["servicios"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1547,7 +1659,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["descargar"];
+        get: operations["descargar_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1739,7 +1851,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar_2"];
+        get: operations["listar_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1771,7 +1883,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar_3"];
+        get: operations["listar_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1787,7 +1899,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["obtener_2"];
+        get: operations["obtener_3"];
         put?: never;
         post?: never;
         delete: operations["descartar"];
@@ -1835,7 +1947,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["descargar_1"];
+        get: operations["descargar_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1947,7 +2059,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listar_4"];
+        get: operations["listar_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2248,6 +2360,63 @@ export interface components {
             pagadorId?: string;
             pagadorNombre?: string;
             faltantes?: string[];
+        };
+        DatosNotaRips: {
+            numero: string;
+            motivo: string;
+            servicios?: components["schemas"]["ServicioNota"][];
+        };
+        ServicioNota: {
+            clave: string;
+            valor?: number;
+            datos?: {
+                [key: string]: string;
+            };
+        };
+        HallazgoNota: {
+            /** @enum {string} */
+            nivel?: "RECHAZO" | "AVISO";
+            clave?: string;
+            mensaje?: string;
+        };
+        ItemNota: {
+            clave?: string;
+            valor?: number;
+            datos?: {
+                [key: string]: string;
+            };
+        };
+        NotaRipsVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            loteId?: string;
+            numeroFactura?: string;
+            /** @enum {string} */
+            tipo?: "NC" | "ND" | "NA";
+            total?: boolean;
+            numero?: string;
+            motivo?: string;
+            /** @enum {string} */
+            estado?: "BORRADOR" | "GENERADA" | "ANULADA";
+            servicios?: components["schemas"]["ItemNota"][];
+            valor?: number;
+            xml?: components["schemas"]["XmlNota"];
+            hallazgos?: components["schemas"]["HallazgoNota"][];
+            /** Format: int64 */
+            rechazos?: number;
+            /** Format: date-time */
+            creadoEn?: string;
+            /** Format: date-time */
+            generadoEn?: string;
+            /** Format: date-time */
+            anuladoEn?: string;
+            motivoAnulacion?: string;
+        };
+        XmlNota: {
+            numero?: string;
+            factura?: string;
+            valor?: number;
         };
         NumeroFactura: {
             numeroFactura?: string;
@@ -2878,6 +3047,9 @@ export interface components {
             /** Format: date-time */
             periodoHasta?: string;
         };
+        AnulacionNota: {
+            motivo: string;
+        };
         NuevoLote: {
             /** Format: uuid */
             pagadorId: string;
@@ -2886,6 +3058,13 @@ export interface components {
             /** Format: date */
             hasta: string;
             sinFactura?: boolean;
+        };
+        NuevaNotaRips: {
+            /** @enum {string} */
+            tipo: "NC" | "ND" | "NA";
+            total?: boolean;
+            numero: string;
+            motivo: string;
         };
         Anulacion: {
             motivo: string;
@@ -3317,6 +3496,38 @@ export interface components {
             /** Format: date-time */
             anuladoEn?: string;
         };
+        ServicioVista: {
+            clave?: string;
+            lista?: string;
+            codigo?: string;
+            fecha?: string;
+            documento?: string;
+            paciente?: string;
+            valor?: number;
+            acreditado?: number;
+            debitado?: number;
+            datos?: {
+                [key: string]: unknown;
+            };
+        };
+        NotaRipsResumen: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            tipo?: "NC" | "ND" | "NA";
+            total?: boolean;
+            numero?: string;
+            motivo?: string;
+            /** @enum {string} */
+            estado?: "BORRADOR" | "GENERADA" | "ANULADA";
+            valor?: number;
+            /** Format: date-time */
+            creadoEn?: string;
+            /** Format: date-time */
+            generadoEn?: string;
+            /** Format: date-time */
+            anuladoEn?: string;
+        };
         CobroCita: {
             /** Format: uuid */
             citaId?: string;
@@ -3508,26 +3719,26 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            object?: boolean;
-            double?: boolean;
-            long?: boolean;
-            boolean?: boolean;
             string?: boolean;
+            object?: boolean;
+            pojo?: boolean;
             short?: boolean;
             /** @deprecated */
             textual?: boolean;
-            binary?: boolean;
-            pojo?: boolean;
             int?: boolean;
-            container?: boolean;
+            boolean?: boolean;
+            binary?: boolean;
+            long?: boolean;
+            double?: boolean;
+            floatingPointNumber?: boolean;
             missingNode?: boolean;
-            valueNode?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             bigDecimal?: boolean;
             bigInteger?: boolean;
+            container?: boolean;
             integralNumber?: boolean;
-            floatingPointNumber?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            valueNode?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -3842,6 +4053,74 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["PacienteRips"];
                 };
+            };
+        };
+    };
+    obtener: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotaRipsVista"];
+                };
+            };
+        };
+    };
+    guardar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatosNotaRips"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotaRipsVista"];
+                };
+            };
+        };
+    };
+    eliminar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -4264,7 +4543,7 @@ export interface operations {
             };
         };
     };
-    obtener: {
+    obtener_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4286,7 +4565,7 @@ export interface operations {
             };
         };
     };
-    guardar: {
+    guardar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4628,6 +4907,105 @@ export interface operations {
             };
         };
     };
+    cargarXml: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archivo: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotaRipsVista"];
+                };
+            };
+        };
+    };
+    quitarXml: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotaRipsVista"];
+                };
+            };
+        };
+    };
+    generar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotaRipsVista"];
+                };
+            };
+        };
+    };
+    anular: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnulacionNota"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotaRipsVista"];
+                };
+            };
+        };
+    };
     listar: {
         parameters: {
             query?: never;
@@ -4672,7 +5050,7 @@ export interface operations {
             };
         };
     };
-    cargarXml: {
+    cargarXml_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4701,7 +5079,7 @@ export interface operations {
             };
         };
     };
-    quitarXml: {
+    quitarXml_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4723,7 +5101,55 @@ export interface operations {
             };
         };
     };
-    generar: {
+    listar_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotaRipsResumen"][];
+                };
+            };
+        };
+    };
+    crear_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NuevaNotaRips"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotaRipsVista"];
+                };
+            };
+        };
+    };
+    generar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4745,7 +5171,7 @@ export interface operations {
             };
         };
     };
-    anular: {
+    anular_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -5183,7 +5609,7 @@ export interface operations {
             };
         };
     };
-    anular_1: {
+    anular_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -5698,7 +6124,7 @@ export interface operations {
             };
         };
     };
-    crear_2: {
+    crear_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -6248,7 +6674,7 @@ export interface operations {
             };
         };
     };
-    listar_1: {
+    listar_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -6312,7 +6738,29 @@ export interface operations {
             };
         };
     };
-    obtener_1: {
+    descargar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    obtener_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -6334,7 +6782,7 @@ export interface operations {
             };
         };
     };
-    eliminar: {
+    eliminar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -6354,7 +6802,29 @@ export interface operations {
             };
         };
     };
-    descargar: {
+    servicios: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ServicioVista"][];
+                };
+            };
+        };
+    };
+    descargar_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -6606,7 +7076,7 @@ export interface operations {
             };
         };
     };
-    listar_2: {
+    listar_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -6646,7 +7116,7 @@ export interface operations {
             };
         };
     };
-    listar_3: {
+    listar_4: {
         parameters: {
             query?: {
                 page?: number;
@@ -6669,7 +7139,7 @@ export interface operations {
             };
         };
     };
-    obtener_2: {
+    obtener_3: {
         parameters: {
             query?: {
                 estado?: "NUEVO" | "EXISTENTE" | "ERROR";
@@ -6759,7 +7229,7 @@ export interface operations {
             };
         };
     };
-    descargar_1: {
+    descargar_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -6910,7 +7380,7 @@ export interface operations {
             };
         };
     };
-    listar_4: {
+    listar_5: {
         parameters: {
             query?: never;
             header?: never;

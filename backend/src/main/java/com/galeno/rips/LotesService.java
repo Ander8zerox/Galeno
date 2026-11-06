@@ -53,6 +53,7 @@ public class LotesService {
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
     private final LoteRepository lotes;
+    private final NotaRepository notas;
     private final PagadoresService pagadores;
     private final CobrosService cobros;
     private final DatosRipsService datos;
@@ -66,12 +67,13 @@ public class LotesService {
     private final IdentidadService identidad;
     private final ModulosService modulos;
 
-    LotesService(LoteRepository lotes, PagadoresService pagadores, CobrosService cobros, DatosRipsService datos,
+    LotesService(LoteRepository lotes, NotaRepository notas, PagadoresService pagadores, CobrosService cobros, DatosRipsService datos,
                  ReferenciasService referencias, RipsPacienteRepository pacientesRips,
                  RipsPrestadorRepository prestadores, RipsProfesionalRepository profesionales, PreciosService precios,
                  HistoriaService historia, PacienteService pacientes, IdentidadService identidad,
                  ModulosService modulos) {
         this.lotes = lotes;
+        this.notas = notas;
         this.pagadores = pagadores;
         this.cobros = cobros;
         this.datos = datos;
@@ -231,6 +233,9 @@ public class LotesService {
         Lote lote = lote(loteId);
         if (lote.getEstado() == Lote.Estado.BORRADOR) {
             throw ApiProblem.conflict("Un lote en borrador no se anula: elimínelo");
+        }
+        if (notas.hayVigentes(loteId)) {
+            throw ApiProblem.conflict("El lote tiene notas generadas: anúlelas primero (la factura ya se corrigió con ellas)");
         }
         lote.anular(motivo.strip(), AuthUser.current().id());
         return vista(lotes.saveAndFlush(lote), false);

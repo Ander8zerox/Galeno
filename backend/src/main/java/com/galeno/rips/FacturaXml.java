@@ -34,18 +34,7 @@ final class FacturaXml {
     }
 
     static ArmadorRips.DatosXml leer(byte[] contenido) {
-        if (contenido == null || contenido.length == 0 || contenido.length > MAX_BYTES) {
-            throw ApiProblem.badRequest("El XML de la factura debe pesar entre 1 byte y 5 MB");
-        }
-        Element raiz = documento(new InputSource(new ByteArrayInputStream(contenido))).getDocumentElement();
-        if ("AttachedDocument".equals(raiz.getLocalName())) {
-            // La factura va como texto dentro de Attachment/ExternalReference/Description
-            Element descripcion = primero(primero(primero(raiz, "Attachment"), "ExternalReference"), "Description");
-            if (descripcion == null || descripcion.getTextContent().isBlank()) {
-                throw ApiProblem.badRequest("El AttachedDocument no trae la factura");
-            }
-            raiz = documento(new InputSource(new StringReader(descripcion.getTextContent().strip()))).getDocumentElement();
-        }
+        Element raiz = raiz(contenido, "la factura");
         if (!"Invoice".equals(raiz.getLocalName())) {
             throw ApiProblem.badRequest("El archivo no es una factura electrónica (se esperaba Invoice o AttachedDocument)");
         }
@@ -68,6 +57,44 @@ final class FacturaXml {
         }
         return new ArmadorRips.DatosXml(nit, numero, fecha(texto(primero(periodo, "StartDate"))),
                 fecha(texto(primero(periodo, "EndDate"))), moderadores);
+    }
+
+    /**
+     * Número, factura que referencia (BillingReference) y valor de una nota crédito o débito electrónica. El valor es el
+     * PayableAmount: en la nota crédito va en LegalMonetaryTotal y en la débito, en RequestedMonetaryTotal.
+     */
+    static ArmadorNota.XmlNota leerNota(byte[] contenido) {
+        Element raiz = raiz(contenido, "la nota");
+        if (!"CreditNote".equals(raiz.getLocalName()) && !"DebitNote".equals(raiz.getLocalName())) {
+            throw ApiProblem.badRequest("El archivo no es una nota crédito o débito electrónica (se esperaba CreditNote, "
+                    + "DebitNote o AttachedDocument)");
+        }
+        Element referencia = primero(primero(raiz, "BillingReference"), "InvoiceDocumentReference");
+        Element totales = hijo(raiz, "CreditNote".equals(raiz.getLocalName()) ? "LegalMonetaryTotal" : "RequestedMonetaryTotal");
+        String valor = texto(hijo(totales, "PayableAmount"));
+        try {
+            return new ArmadorNota.XmlNota(texto(hijo(raiz, "ID")), texto(hijo(referencia, "ID")),
+                    valor == null ? null : new BigDecimal(valor));
+        } catch (NumberFormatException e) {
+            throw ApiProblem.badRequest("Valor de la nota no válido en el XML: " + valor);
+        }
+    }
+
+    /** El documento electrónico: el que viene dentro del AttachedDocument de la DIAN, o el archivo mismo. */
+    private static Element raiz(byte[] contenido, String que) {
+        if (contenido == null || contenido.length == 0 || contenido.length > MAX_BYTES) {
+            throw ApiProblem.badRequest("El XML de " + que + " debe pesar entre 1 byte y 5 MB");
+        }
+        Element raiz = documento(new InputSource(new ByteArrayInputStream(contenido))).getDocumentElement();
+        if ("AttachedDocument".equals(raiz.getLocalName())) {
+            // El documento va como texto dentro de Attachment/ExternalReference/Description
+            Element descripcion = primero(primero(primero(raiz, "Attachment"), "ExternalReference"), "Description");
+            if (descripcion == null || descripcion.getTextContent().isBlank()) {
+                throw ApiProblem.badRequest("El AttachedDocument no trae " + que);
+            }
+            raiz = documento(new InputSource(new StringReader(descripcion.getTextContent().strip()))).getDocumentElement();
+        }
+        return raiz;
     }
 
     /** Sin DTD ni entidades externas (XXE). */
