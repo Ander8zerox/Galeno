@@ -61,6 +61,14 @@ producción en AWS, en https://galenum.com.co.
     - En el PDF va como cuadrícula con colores y lista de hallazgos.
 - **Consultorio de demostración:** archivos de pacientes y RIPS ficticios en `docs/demo` y guía para montarlo en
   producción.
+- **RIPS, fase 1:**
+  - **Módulos opcionales por consultorio** (menú Módulos). El primero es "RIPS y facturación", incluido en todos los
+    planes. Apagado, no se ve nada y el servidor rechaza sus servicios.
+  - Procedimientos con CUPS en la atención (cantidad, valor, diente FDI y superficies), firmados con la atención y en el
+    PDF, sin valores.
+  - Consulta del día sugerida (primera vez o control) y lista de precios por CUPS.
+  - Permisos nuevos del administrador: `MODULOS_GESTIONAR` y `RIPS_GESTIONAR`.
+- **RIPS, fase 2:** ver abajo, en "Siguiente", lo que quedó hecho (en producción desde el 6 de noviembre de 2026).
 
 ### Infraestructura en AWS (producción)
 
@@ -91,22 +99,37 @@ Detalle en `docs/aws-capa-1.md` y operación en `docs/guia-operacion.md`.
 - `docs/diseno-formatos.md`: fases 1 y 2 construidas.
 - `docs/diseno-rips.md`: fase 1 construida; la norma vigente quedó verificada.
 
-## En curso
-
-### RIPS, fase 1 (rama `feature/rips-fase1`, lista para su PR)
-
-- **Módulos opcionales por consultorio** (menú Módulos del administrador). El primero es "RIPS y facturación",
-  incluido en todos los planes. Apagado, no se ve nada y el servidor rechaza sus servicios.
-- **Procedimientos realizados con CUPS en la atención:** cantidad, valor, diente FDI y superficies. Quedan firmados con
-  la atención y salen en el PDF, sin valores.
-- **Consulta del día sugerida:** primera vez o control, según la especialidad del médico.
-- **Lista de precios por CUPS** (menú Precios).
-- Permisos nuevos del administrador: `MODULOS_GESTIONAR` y `RIPS_GESTIONAR`. Tras desplegar, se ven después de volver
-  a ingresar.
-
 ## Siguiente (en orden)
 
-### 1. RIPS, fase 2: datos y generación del JSON
+### 1. Agenda (observaciones de un consultorio odontológico, 6 de noviembre de 2026)
+
+El consultorio de prueba tiene una secretaria que maneja la agenda de 5 odontólogos.
+
+- **Entrega 1, rápida (un PR):**
+  - **QR de la verificación en dos pasos:** hoy la app se menciona en una línea del paso 1 y no se nota. Poner antes
+    del QR un recuadro "Primero descargue Google Authenticator", con enlaces a Play Store y App Store.
+  - **Registrar un paciente mientras se agenda:** botón "Registrar paciente nuevo" en la búsqueda, con documento,
+    nombres, apellidos y teléfono. Queda elegido para la cita y marcado "Datos incompletos".
+  - **Citas largas en un cupo normal**, por ejemplo 3 horas para un tratamiento: duración en múltiplos del cupo del
+    médico. Se revisa que los cupos seguidos estén libres y la cita se ve como un solo bloque. La API ya acepta hasta
+    240 minutos; hoy la pantalla solo deja cambiar la duración en el sobrecupo, y como máximo 60. Más adelante:
+    tipos de cita con su duración (control 20 minutos, endodoncia 3 horas).
+- **Entrega 2, vistas:**
+  - Vista **semanal** con la cuadrícula de cupos de los 7 días.
+  - Vista **mensual** con los cupos libres de cada día.
+  - **"Todos los médicos"** en el día: una columna por médico, para la secretaria que maneja varias agendas. Hoy se
+    ve un médico a la vez, con el selector.
+  - **"Buscar el próximo espacio libre de X minutos"**, con un médico o con cualquiera.
+- **Entrega 3, cancelaciones (escribir su diseño antes):**
+  - Hoy, al cancelar, el cupo queda libre de inmediato y se puede agendar a otro paciente ahí.
+  - **Lista de espera:** pacientes que quieren una cita antes. Al cancelarse una cita, Galenum sugiere a quién llamar.
+  - **"Adelantar citas":** sugerir mover las citas de más tarde al hueco, para que los espacios libres queden al final
+    del día. La secretaria confirma cada cambio después de hablar con el paciente; nada se mueve solo.
+- **Ya planeado:**
+  - Recordatorios por WhatsApp o SMS. También servirán para avisar las citas adelantadas.
+  - Bloqueos por vacaciones y días cerrados del consultorio.
+
+### 2. RIPS, fase 2: datos y generación del JSON
 
 - ✅ **Entrega 1 (datos):** tablas de SISPRO, datos del paciente para RIPS (tarjeta en la ficha), prestador y documento
   de los profesionales (menú RIPS) y aviso "RIPS: faltan N" en cada cita de la agenda para completarlos al recibir al
@@ -150,7 +173,7 @@ la **Res. 948 de 2026**, con el Documento Técnico 1 v003 y el 2 v001, ambos del
 - Revisar la importación (`RipsParser`) contra el Documento Técnico 1 v003. Nuevos campos: CIE-11 opcional,
   `codigoVIDA` y `registroSIRAS`.
 
-### 2. Odontología, fase 3 de los formatos
+### 3. Odontología, fase 3 de los formatos
 
 - **Plan de tratamiento con presupuesto:** procedimientos (CUPS) por fases, con diente, superficie y valor de la lista
   de precios; aceptación del paciente; y una marca en cada sesión cuando se realizan. Antes, escribir su diseño.
@@ -158,12 +181,6 @@ la **Res. 948 de 2026**, con el Documento Técnico 1 v003 y el 2 v001, ambos del
 - Consentimientos odontológicos: exodoncia, endodoncia y anestesia local.
 - Que un hallazgo del odontograma sugiera el CUPS del procedimiento.
 - Ver la diferencia de cada odontograma frente al anterior.
-
-### 3. Agenda
-
-- Recordatorios por WhatsApp o SMS.
-- Bloqueos por vacaciones y días cerrados del consultorio.
-- Vista semanal.
 
 ### 4. Suscripciones
 
