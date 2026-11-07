@@ -26,7 +26,17 @@ final class Disponibilidad {
     /** Cupos libres de un día: se recorre cada bloque en pasos de la duración de la cita. */
     static List<Intervalo> cupos(LocalDate fecha, ZoneId zona, List<Bloque> bloques, int duracionMinutos,
                                  List<Intervalo> ocupados, Instant ahora) {
-        Duration duracion = Duration.ofMinutes(duracionMinutos);
+        return espacios(fecha, zona, bloques, duracionMinutos, duracionMinutos, ocupados, ahora);
+    }
+
+    /**
+     * Espacios libres de {@code minutos} en un día. Empiezan donde empieza un cupo (en pasos de la duración del cupo,
+     * como los ofrece la agenda) y caben completos dentro de una franja del horario, sin cruzarse con otra cita.
+     */
+    static List<Intervalo> espacios(LocalDate fecha, ZoneId zona, List<Bloque> bloques, int duracionCupo, int minutos,
+                                    List<Intervalo> ocupados, Instant ahora) {
+        Duration paso = Duration.ofMinutes(duracionCupo);
+        Duration largo = Duration.ofMinutes(minutos);
         List<Intervalo> libres = new ArrayList<>();
         bloques.stream()
                 .filter(b -> b.dia() == fecha.getDayOfWeek())
@@ -34,12 +44,12 @@ final class Disponibilidad {
                 .forEach(b -> {
                     ZonedDateTime cursor = fecha.atTime(b.getHoraInicio()).atZone(zona);
                     ZonedDateTime finBloque = fecha.atTime(b.getHoraFin()).atZone(zona);
-                    while (!cursor.plus(duracion).isAfter(finBloque)) {
-                        Intervalo cupo = new Intervalo(cursor.toInstant(), cursor.plus(duracion).toInstant());
-                        if (cupo.inicio().isAfter(ahora) && ocupados.stream().noneMatch(cupo::cruzaCon)) {
-                            libres.add(cupo);
+                    while (!cursor.plus(largo).isAfter(finBloque)) {
+                        Intervalo espacio = new Intervalo(cursor.toInstant(), cursor.plus(largo).toInstant());
+                        if (espacio.inicio().isAfter(ahora) && ocupados.stream().noneMatch(espacio::cruzaCon)) {
+                            libres.add(espacio);
                         }
-                        cursor = cursor.plus(duracion);
+                        cursor = cursor.plus(paso);
                     }
                 });
         return libres;

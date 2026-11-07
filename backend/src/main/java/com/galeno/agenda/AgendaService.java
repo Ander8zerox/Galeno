@@ -41,6 +41,9 @@ class AgendaService {
     private static final Duration MAX_RANGO = Duration.ofDays(42);
     /** Margen para agendar "ahora mismo" sin que el reloj del navegador haga fallar la petición. */
     private static final Duration TOLERANCIA_PASADO = Duration.ofMinutes(5);
+    private static final int DIAS_BUSQUEDA = 60;
+    private static final int ESPACIOS_POR_DIA = 3;
+    private static final int MAX_ESPACIOS = 8;
 
     private final AgendaMedicoRepository agendas;
     private final CitaRepository citas;
@@ -119,6 +122,78 @@ class AgendaService {
         List<Intervalo> ocupados = citas.cruces(medicoId, inicioDia, finDia).stream()
                 .map(c -> new Intervalo(c.getInicio(), c.getFin())).toList();
         return Disponibilidad.cupos(fecha, zona, agenda.getBloques(), agenda.getDuracionMinutos(), ocupados, Instant.now());
+    }
+
+    /** Cupos libres de cada día de un rango (vistas de semana y mes), con las citas leídas en una sola consulta. */
+    @Transactional
+    public List<DiaDisponible> disponibilidadDias(UUID medicoId, LocalDate desde, LocalDate hasta) {
+        verificarAcceso(medicoId);
+        if (hasta.isBefore(desde) || desde.plusDays(MAX_RANGO.toDays() - 1).isBefore(hasta)) {
+            throw ApiProblem.badRequest("El rango debe ser de máximo 6 semanas");
+        }
+        AgendaMedico agenda = obtenerOCrear(medicoId);
+        ZoneId zona = zona();
+        List<Intervalo> ocupados = ocupados(medicoId, desde, hasta, zona);
+        Instant ahora = Instant.now();
+        return desde.datesUntil(hasta.plusDays(1)).map(fecha -> {
+            String festivo = FestivosColombia.en(fecha).map(Festivo::nombre).orElse(null);
+            List<Intervalo> libres = festivo != null && !agenda.isAtiendeFestivos() ? List.of()
+                    : Disponibilidad.cupos(fecha, zona, agenda.getBloques(), agenda.getDuracionMinutos(), ocupados, ahora);
+            return new DiaDisponible(fecha, festivo, libres);
+        }).toList();
+    }
+
+    /**
+     * Los primeros espacios libres de {@code minutos} seguidos desde una fecha, con un médico o con cualquiera de los
+     * que ve quien busca. A lo sumo {@value #ESPACIOS_POR_DIA} por médico y día, para que la lista no sea un solo
+     * médico a las 9:00, 9:20, 9:40…; y se busca hasta {@value #DIAS_BUSQUEDA} días adelante.
+     */
+    @Transactional
+    public List<Espacio> buscarEspacios(int minutos, UUID medicoId, LocalDate desde) {
+        if (minutos < 5 || minutos > 240) {
+            throw ApiProblem.badRequest("La duración debe estar entre 5 y 240 minutos");
+        }
+        List<MedicoResumen> medicos;
+        if (medicoId != null) {
+            verificarAcceso(medicoId);
+            medicos = gestionables(AuthUser.current()).stream().filter(m -> m.membresiaId().equals(medicoId)).toList();
+        } else {
+            medicos = gestionables(AuthUser.current());
+        }
+        ZoneId zona = zona();
+        LocalDate hoy = LocalDate.now(zona);
+        LocalDate inicio = desde == null || desde.isBefore(hoy) ? hoy : desde;
+        LocalDate fin = inicio.plusDays(DIAS_BUSQUEDA - 1);
+        Map<UUID, AgendaMedico> porMedico = new java.util.LinkedHashMap<>();
+        Map<UUID, List<Intervalo>> ocupadosPorMedico = new java.util.HashMap<>();
+        for (MedicoResumen m : medicos) {
+            porMedico.put(m.membresiaId(), obtenerOCrear(m.membresiaId()));
+            ocupadosPorMedico.put(m.membresiaId(), ocupados(m.membresiaId(), inicio, fin, zona));
+        }
+        Instant ahora = Instant.now();
+        List<Espacio> encontrados = new java.util.ArrayList<>();
+        for (LocalDate fecha = inicio; !fecha.isAfter(fin) && encontrados.size() < MAX_ESPACIOS; fecha = fecha.plusDays(1)) {
+            boolean festivo = FestivosColombia.en(fecha).isPresent();
+            for (MedicoResumen m : medicos) {
+                AgendaMedico agenda = porMedico.get(m.membresiaId());
+                if (festivo && !agenda.isAtiendeFestivos()) {
+                    continue;
+                }
+                Disponibilidad.espacios(fecha, zona, agenda.getBloques(), agenda.getDuracionMinutos(), minutos,
+                                ocupadosPorMedico.get(m.membresiaId()), ahora).stream()
+                        .limit(ESPACIOS_POR_DIA)
+                        .forEach(e -> encontrados.add(new Espacio(m.membresiaId(), m.nombre(), e.inicio(), e.fin())));
+            }
+        }
+        return encontrados.stream()
+                .sorted(Comparator.comparing(Espacio::inicio).thenComparing(Espacio::medicoNombre))
+                .limit(MAX_ESPACIOS).toList();
+    }
+
+    /** Lo que ocupa tiempo en la agenda del médico entre dos fechas (todas las citas menos las canceladas). */
+    private List<Intervalo> ocupados(UUID medicoId, LocalDate desde, LocalDate hasta, ZoneId zona) {
+        return citas.cruces(medicoId, desde.atStartOfDay(zona).toInstant(), hasta.plusDays(1).atStartOfDay(zona).toInstant())
+                .stream().map(c -> new Intervalo(c.getInicio(), c.getFin())).toList();
     }
 
     @Transactional
@@ -287,6 +362,13 @@ class AgendaService {
     // --- respuestas ---
 
     public record MedicoAgenda(UUID membresiaId, String nombre, boolean puedeEditarHorario) {
+    }
+
+    /** @param festivo nombre del festivo de Colombia, o null */
+    public record DiaDisponible(LocalDate fecha, String festivo, List<Intervalo> libres) {
+    }
+
+    public record Espacio(UUID medicoId, String medicoNombre, Instant inicio, Instant fin) {
     }
 
     public record Horario(UUID medicoId, int duracionMinutos, List<BloqueVista> bloques, boolean atiendeFestivos) {

@@ -34,6 +34,35 @@ export function aIso(fecha: string, horaLocal: string, zona: string): string {
   return `${fecha}T${horaLocal}:00${offset}`;
 }
 
+/** La fecha ("2026-11-09") de un instante, en la zona del consultorio. */
+export function fechaEn(iso: string, zona: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: zona }).format(new Date(iso));
+}
+
+/** El lunes de la semana de la fecha. */
+export function lunesDe(fecha: string): string {
+  const dia = new Date(`${fecha}T12:00:00Z`).getUTCDay(); // 0 = domingo
+  return sumarDias(fecha, -((dia + 6) % 7));
+}
+
+/** El día 1 del mes de la fecha, movido `meses` meses. */
+export function primeroDelMes(fecha: string, meses = 0): string {
+  const [a, m] = fecha.split("-").map(Number);
+  return new Date(Date.UTC(a, m - 1 + meses, 1, 12)).toISOString().slice(0, 10);
+}
+
+/** "lun 9 nov" */
+export function fechaCorta(fecha: string): string {
+  return new Intl.DateTimeFormat("es-CO", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" })
+    .format(new Date(`${fecha}T12:00:00Z`)).replace(/\./g, "");
+}
+
+/** "noviembre de 2026" */
+export function mesLargo(fecha: string): string {
+  return new Intl.DateTimeFormat("es-CO", { timeZone: "UTC", month: "long", year: "numeric" })
+    .format(new Date(`${fecha}T12:00:00Z`));
+}
+
 /** Las horas de la API pueden venir como "08:00" o "08:00:00". */
 export const hhmm = (t?: string) => (t ?? "").slice(0, 5);
 

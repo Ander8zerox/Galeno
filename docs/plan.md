@@ -115,12 +115,16 @@ El consultorio de prueba tiene una secretaria que maneja la agenda de 5 odontól
     del fin de la franja (no atraviesa el almuerzo; para eso, sobrecupo). La cita se ve como un solo bloque. El
     sobrecupo ofrece hasta 4 horas. Más adelante: tipos de cita con su duración (control 20 minutos, endodoncia 3
     horas).
-- **Entrega 2, vistas:**
-  - Vista **semanal** con la cuadrícula de cupos de los 7 días.
-  - Vista **mensual** con los cupos libres de cada día.
-  - **"Todos los médicos"** en el día: una columna por médico, para la secretaria que maneja varias agendas. Hoy se
-    ve un médico a la vez, con el selector.
-  - **"Buscar el próximo espacio libre de X minutos"**, con un médico o con cualquiera.
+- ✅ **Entrega 2, vistas:**
+  - **Día | Semana | Mes** en Agenda (la vista elegida se recuerda en el navegador).
+  - **Semana:** 7 columnas con las citas y los cupos libres; un cupo abre Agendar en ese día y hora.
+  - **Mes:** cupos libres y citas de cada día, con los festivos; un día abre su vista.
+  - **"Todos los médicos (día)"** en el selector: una columna por médico; un cupo agenda con ese médico.
+  - **"Buscar espacio libre":** duración, médico o cualquiera, y desde qué fecha. Los 8 primeros espacios de los
+    próximos 60 días (a lo sumo 3 por médico y día), con las mismas reglas que valida el servidor al agendar;
+    "Agendar" abre el formulario con la duración elegida.
+  - Las acciones sobre una cita (confirmar, cobro, cancelar) siguen en la vista del día.
+  - API: `GET /agenda/medicos/{id}/disponibilidad/dias` (hasta 6 semanas) y `GET /agenda/espacios`.
 - **Entrega 3, cancelaciones (escribir su diseño antes):**
   - Hoy, al cancelar, el cupo queda libre de inmediato y se puede agendar a otro paciente ahí.
   - **Lista de espera:** pacientes que quieren una cita antes. Al cancelarse una cita, Galenum sugiere a quién llamar.

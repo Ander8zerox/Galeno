@@ -2180,6 +2180,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agenda/medicos/{medicoId}/disponibilidad/dias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["disponibilidadDias"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/agenda/medicos/{medicoId}/citas": {
         parameters: {
             query?: never;
@@ -2204,6 +2220,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["festivos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/espacios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["buscarEspacios"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3718,27 +3750,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            number?: boolean;
-            string?: boolean;
-            object?: boolean;
-            pojo?: boolean;
-            short?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            int?: boolean;
-            boolean?: boolean;
-            binary?: boolean;
-            long?: boolean;
-            double?: boolean;
             floatingPointNumber?: boolean;
-            missingNode?: boolean;
-            bigDecimal?: boolean;
+            number?: boolean;
             bigInteger?: boolean;
-            container?: boolean;
+            bigDecimal?: boolean;
             integralNumber?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             valueNode?: boolean;
+            container?: boolean;
+            missingNode?: boolean;
+            object?: boolean;
+            string?: boolean;
+            int?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            double?: boolean;
+            pojo?: boolean;
+            boolean?: boolean;
+            binary?: boolean;
+            long?: boolean;
+            short?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -3753,10 +3785,25 @@ export interface components {
             /** Format: date-time */
             fin?: string;
         };
+        DiaDisponible: {
+            /** Format: date */
+            fecha?: string;
+            festivo?: string;
+            libres?: components["schemas"]["Intervalo"][];
+        };
         Festivo: {
             /** Format: date */
             fecha?: string;
             nombre?: string;
+        };
+        Espacio: {
+            /** Format: uuid */
+            medicoId?: string;
+            medicoNombre?: string;
+            /** Format: date-time */
+            inicio?: string;
+            /** Format: date-time */
+            fin?: string;
         };
         BorradorFormula: {
             items?: components["schemas"]["ItemPropuesto"][];
@@ -7548,6 +7595,31 @@ export interface operations {
             };
         };
     };
+    disponibilidadDias: {
+        parameters: {
+            query: {
+                desde: string;
+                hasta: string;
+            };
+            header?: never;
+            path: {
+                medicoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DiaDisponible"][];
+                };
+            };
+        };
+    };
     citas: {
         parameters: {
             query: {
@@ -7592,6 +7664,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Festivo"][];
+                };
+            };
+        };
+    };
+    buscarEspacios: {
+        parameters: {
+            query: {
+                minutos: number;
+                medicoId?: string;
+                desde?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Espacio"][];
                 };
             };
         };
