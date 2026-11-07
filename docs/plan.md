@@ -125,6 +125,12 @@ El consultorio de prueba tiene una secretaria que maneja la agenda de 5 odontól
   - **Lista de espera:** pacientes que quieren una cita antes. Al cancelarse una cita, Galenum sugiere a quién llamar.
   - **"Adelantar citas":** sugerir mover las citas de más tarde al hueco, para que los espacios libres queden al final
     del día. La secretaria confirma cada cambio después de hablar con el paciente; nada se mueve solo.
+- **Por analizar después: sillas o unidades compartidas.**
+  - En el consultorio de prueba cada odontólogo tiene su silla, pero en otros consultorios varios médicos comparten
+    menos sillas (por ejemplo, 5 médicos y 3 sillas).
+  - Hoy Galenum podría agendar a más médicos a la misma hora que sillas hay.
+  - Habría que manejar la silla como un recurso que también se reserva al agendar, y que fuera opcional por
+    consultorio.
 - **Ya planeado:**
   - Recordatorios por WhatsApp o SMS. También servirán para avisar las citas adelantadas.
   - Bloqueos por vacaciones y días cerrados del consultorio.
