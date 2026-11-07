@@ -59,7 +59,7 @@ export function AgendaDia({ medicoId, fecha, zona }: { medicoId: string; fecha: 
       </div>
 
       {agendando && (
-        <AgendarForm medicoId={medicoId} fecha={fecha} zona={zona} inicio={agendando.inicio} onCerrar={() => setAgendando(null)} />
+        <AgendarForm medicoId={medicoId} fecha={fecha} zona={zona} inicio={agendando.inicio} cupos={libres.data} onCerrar={() => setAgendando(null)} />
       )}
 
       {(citas.error || libres.error) && <p className="alert alert-error">{citas.error?.message ?? libres.error?.message}</p>}
