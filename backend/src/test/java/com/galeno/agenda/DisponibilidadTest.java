@@ -57,4 +57,20 @@ class DisponibilidadTest {
         assertThat(Disponibilidad.dentroDelHorario(new Intervalo(bogota(8, 50), bogota(9, 10)), BOGOTA, MANANA)).isFalse();
         assertThat(Disponibilidad.dentroDelHorario(new Intervalo(bogota(7, 40), bogota(8, 0)), BOGOTA, MANANA)).isFalse();
     }
+
+    @Test
+    void unaCitaLargaCabeEnLaFranjaPeroNoAtraviesaElAlmuerzo() {
+        List<Bloque> horario = List.of(new Bloque(1, LocalTime.of(8, 0), LocalTime.of(12, 0)),
+                new Bloque(1, LocalTime.of(14, 0), LocalTime.of(18, 0)));
+
+        // 3 horas desde las 9:00 caben en la mañana; desde las 10:00 se pasan de las 12:00
+        assertThat(Disponibilidad.dentroDelHorario(new Intervalo(bogota(9, 0), bogota(12, 0)), BOGOTA, horario)).isTrue();
+        assertThat(Disponibilidad.dentroDelHorario(new Intervalo(bogota(10, 0), bogota(13, 0)), BOGOTA, horario)).isFalse();
+        assertThat(Disponibilidad.dentroDelHorario(new Intervalo(bogota(11, 0), bogota(15, 0)), BOGOTA, horario)).isFalse();
+        // Y sus cupos dejan de ofrecerse
+        List<Intervalo> cupos = Disponibilidad.cupos(LUNES, BOGOTA, horario, 20,
+                List.of(new Intervalo(bogota(9, 0), bogota(12, 0))), ANTES);
+        assertThat(cupos).extracting(Intervalo::inicio).contains(bogota(8, 40), bogota(14, 0))
+                .doesNotContain(bogota(9, 0), bogota(10, 0), bogota(11, 40));
+    }
 }

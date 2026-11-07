@@ -126,6 +126,9 @@ export function VerificacionDosPasos<R extends { codigosRecuperacion?: string[] 
 
 // ---------------------------------------------------------------- piezas
 
+const PLAY_STORE = "https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2";
+const APP_STORE = "https://apps.apple.com/app/google-authenticator/id388497605";
+
 function PasosConfiguracion({ uri, secreto }: { uri: string; secreto: string }) {
   const [qr, setQr] = useState<string | null>(null);
   const [verClave, setVerClave] = useState(false);
@@ -134,10 +137,19 @@ function PasosConfiguracion({ uri, secreto }: { uri: string; secreto: string }) 
     QRCode.toDataURL(uri, { margin: 1, width: 200, errorCorrectionLevel: "M" }).then(setQr, () => setQr(null));
   }, [uri]);
   return (
+    <>
+    <div className="app-mfa" role="note">
+      <strong>Antes de seguir: descargue Google Authenticator en su celular</strong>
+      <span className="small">Es gratis. Le dará un código nuevo cada 30 segundos para entrar a Galenum.</span>
+      <div className="row">
+        <a className="btn btn-secondary" href={PLAY_STORE} target="_blank" rel="noopener noreferrer">Android (Play Store)</a>
+        <a className="btn btn-secondary" href={APP_STORE} target="_blank" rel="noopener noreferrer">iPhone (App Store)</a>
+      </div>
+      <span className="muted small">Si ya usa Microsoft Authenticator, 1Password o Authy, también sirven.</span>
+    </div>
     <ol className="pasos-mfa">
       <li>
-        Instale en su celular una app de autenticación: <strong>Google Authenticator</strong>, <strong>Microsoft
-        Authenticator</strong> o la que ya use (1Password, Authy…).
+        Abra la app de autenticación en su celular (si la acaba de instalar, ábrala y acepte sus pasos iniciales).
       </li>
       <li>
         En la app, agregue una cuenta y escanee este código:
@@ -150,6 +162,7 @@ function PasosConfiguracion({ uri, secreto }: { uri: string; secreto: string }) 
       </li>
       <li>Escriba abajo el código de 6 dígitos que aparece en la app.</li>
     </ol>
+    </>
   );
 }
 

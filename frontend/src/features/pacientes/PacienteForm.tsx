@@ -30,10 +30,18 @@ function desde(p: Paciente): PacienteRequest {
   };
 }
 
-/** Crea un paciente o, si recibe `paciente`, edita sus datos (el documento no se cambia). */
-export function PacienteForm({ paciente, onGuardado }: { paciente?: Paciente; onGuardado: (p: Paciente) => void }) {
+/**
+ * Crea un paciente o, si recibe `paciente`, edita sus datos (el documento no se cambia). `inicial` prellena el alta
+ * (por ejemplo, con lo que se buscó al agendar) y `onCancelar` muestra el botón para volver.
+ */
+export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
+  paciente?: Paciente;
+  inicial?: Partial<PacienteRequest>;
+  onGuardado: (p: Paciente) => void;
+  onCancelar?: () => void;
+}) {
   const clinico = useAuth().puede("HISTORIA_VER");
-  const [form, setForm] = useState<PacienteRequest>(paciente ? desde(paciente) : VACIO);
+  const [form, setForm] = useState<PacienteRequest>(paciente ? desde(paciente) : { ...VACIO, ...inicial });
   const queryClient = useQueryClient();
   const guardar = useMutation({
     mutationFn: async (body: PacienteRequest) => paciente
@@ -77,7 +85,10 @@ export function PacienteForm({ paciente, onGuardado }: { paciente?: Paciente; on
       {clinico && <Campo label="Alergias (separadas por coma)" error={errores.alergias} wide><input value={form.alergias} onChange={set("alergias")} /></Campo>}
       {clinico && <Campo label="Antecedentes" error={errores.antecedentes} wide><textarea rows={2} value={form.antecedentes} onChange={set("antecedentes")} /></Campo>}
       {guardar.error && <p className="alert alert-error wide">{guardar.error.message}</p>}
-      <div className="wide"><button className="btn" disabled={guardar.isPending}>{guardar.isPending ? "Guardando…" : paciente ? "Guardar cambios" : "Guardar paciente"}</button></div>
+      <div className="wide row">
+        <button className="btn" disabled={guardar.isPending}>{guardar.isPending ? "Guardando…" : paciente ? "Guardar cambios" : "Guardar paciente"}</button>
+        {onCancelar && <button type="button" className="btn-link" onClick={onCancelar}>Volver</button>}
+      </div>
     </form>
   );
 }

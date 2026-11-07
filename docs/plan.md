@@ -105,15 +105,16 @@ Detalle en `docs/aws-capa-1.md` y operación en `docs/guia-operacion.md`.
 
 El consultorio de prueba tiene una secretaria que maneja la agenda de 5 odontólogos.
 
-- **Entrega 1, rápida (un PR):**
-  - **QR de la verificación en dos pasos:** hoy la app se menciona en una línea del paso 1 y no se nota. Poner antes
-    del QR un recuadro "Primero descargue Google Authenticator", con enlaces a Play Store y App Store.
-  - **Registrar un paciente mientras se agenda:** botón "Registrar paciente nuevo" en la búsqueda, con documento,
-    nombres, apellidos y teléfono. Queda elegido para la cita y marcado "Datos incompletos".
-  - **Citas largas en un cupo normal**, por ejemplo 3 horas para un tratamiento: duración en múltiplos del cupo del
-    médico. Se revisa que los cupos seguidos estén libres y la cita se ve como un solo bloque. La API ya acepta hasta
-    240 minutos; hoy la pantalla solo deja cambiar la duración en el sobrecupo, y como máximo 60. Más adelante:
-    tipos de cita con su duración (control 20 minutos, endodoncia 3 horas).
+- ✅ **Entrega 1, rápida:**
+  - **QR de la verificación en dos pasos:** recuadro "Antes de seguir: descargue Google Authenticator" antes del QR,
+    con enlaces a Play Store y App Store. Sale en las tres entradas y en Seguridad.
+  - **Registrar un paciente mientras se agenda:** botón "Registrar paciente nuevo" en Agendar. Usa el mismo formulario
+    de Pacientes (el servidor exige fecha de nacimiento y sexo), prellenado con lo que se buscó, y el paciente queda
+    elegido para la cita.
+  - **Citas largas en un cupo normal:** "Duración" con los cupos seguidos que estén libres, hasta 4 horas, sin pasar
+    del fin de la franja (no atraviesa el almuerzo; para eso, sobrecupo). La cita se ve como un solo bloque. El
+    sobrecupo ofrece hasta 4 horas. Más adelante: tipos de cita con su duración (control 20 minutos, endodoncia 3
+    horas).
 - **Entrega 2, vistas:**
   - Vista **semanal** con la cuadrícula de cupos de los 7 días.
   - Vista **mensual** con los cupos libres de cada día.
