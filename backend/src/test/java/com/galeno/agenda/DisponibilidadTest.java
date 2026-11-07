@@ -73,4 +73,21 @@ class DisponibilidadTest {
         assertThat(cupos).extracting(Intervalo::inicio).contains(bogota(8, 40), bogota(14, 0))
                 .doesNotContain(bogota(9, 0), bogota(10, 0), bogota(11, 40));
     }
+
+    @Test
+    void buscaEspaciosLargosEnPasosDelCupoSinCruzarCitasNiFranjas() {
+        List<Bloque> horario = List.of(new Bloque(1, LocalTime.of(8, 0), LocalTime.of(12, 0)),
+                new Bloque(1, LocalTime.of(14, 0), LocalTime.of(18, 0)));
+        // Una cita de 8:20 a 8:40: en la mañana, 3 horas solo caben desde las 8:40 (hasta 11:40) o las 9:00 (hasta 12:00)
+        List<Intervalo> ocupados = List.of(new Intervalo(bogota(8, 20), bogota(8, 40)));
+
+        List<Intervalo> espacios = Disponibilidad.espacios(LUNES, BOGOTA, horario, 20, 180, ocupados, ANTES);
+
+        assertThat(espacios).extracting(Intervalo::inicio)
+                .containsExactly(bogota(8, 40), bogota(9, 0), bogota(14, 0), bogota(14, 20), bogota(14, 40), bogota(15, 0));
+        assertThat(espacios.getFirst().fin()).isEqualTo(bogota(11, 40));
+        // Con la duración del cupo, es lo mismo que los cupos libres
+        assertThat(Disponibilidad.espacios(LUNES, BOGOTA, horario, 20, 20, ocupados, ANTES))
+                .isEqualTo(Disponibilidad.cupos(LUNES, BOGOTA, horario, 20, ocupados, ANTES));
+    }
 }

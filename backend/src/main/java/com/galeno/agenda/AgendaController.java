@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.galeno.agenda.AgendaService.CitaVista;
+import com.galeno.agenda.AgendaService.DiaDisponible;
+import com.galeno.agenda.AgendaService.Espacio;
 import com.galeno.agenda.AgendaService.Horario;
 import com.galeno.agenda.AgendaService.MedicoAgenda;
 import com.galeno.agenda.Disponibilidad.Intervalo;
@@ -69,6 +71,24 @@ public class AgendaController {
     public List<Intervalo> disponibilidad(@PathVariable UUID medicoId,
                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
         return agenda.disponibilidad(medicoId, fecha);
+    }
+
+    /** Cupos libres de cada día del rango (máximo 6 semanas), para las vistas de semana y mes. */
+    @GetMapping("/medicos/{medicoId}/disponibilidad/dias")
+    public List<DiaDisponible> disponibilidadDias(@PathVariable UUID medicoId,
+                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        return agenda.disponibilidadDias(medicoId, desde, hasta);
+    }
+
+    /**
+     * Los primeros espacios libres de {@code minutos} seguidos (hasta 8, en los próximos 60 días). Sin {@code medicoId},
+     * con cualquiera de los médicos que ve quien busca.
+     */
+    @GetMapping("/espacios")
+    public List<Espacio> buscarEspacios(@RequestParam int minutos, @RequestParam(required = false) UUID medicoId,
+                                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde) {
+        return agenda.buscarEspacios(minutos, medicoId, desde);
     }
 
     @GetMapping("/medicos/{medicoId}/citas")

@@ -23,8 +23,14 @@ const ESTADO_CLASE: Record<Estado, string> = {
 };
 
 /** Un día de agenda: cupos libres y citas en una sola línea de tiempo. */
-export function AgendaDia({ medicoId, fecha, zona }: { medicoId: string; fecha: string; zona: string }) {
-  const [agendando, setAgendando] = useState<{ inicio?: string } | null>(null);
+/** @param abrir abre el formulario de agendar en ese cupo (desde la semana, "Todos los médicos" o la búsqueda) */
+export function AgendaDia({ medicoId, fecha, zona, abrir }: {
+  medicoId: string;
+  fecha: string;
+  zona: string;
+  abrir?: { inicio: string; duracion?: number };
+}) {
+  const [agendando, setAgendando] = useState<{ inicio?: string; duracion?: number } | null>(abrir ?? null);
   const params = { path: { medicoId } };
 
   const citas = useQuery({
@@ -59,7 +65,7 @@ export function AgendaDia({ medicoId, fecha, zona }: { medicoId: string; fecha: 
       </div>
 
       {agendando && (
-        <AgendarForm medicoId={medicoId} fecha={fecha} zona={zona} inicio={agendando.inicio} cupos={libres.data} onCerrar={() => setAgendando(null)} />
+        <AgendarForm medicoId={medicoId} fecha={fecha} zona={zona} inicio={agendando.inicio} cupos={libres.data} duracionInicial={agendando.duracion} onCerrar={() => setAgendando(null)} />
       )}
 
       {(citas.error || libres.error) && <p className="alert alert-error">{citas.error?.message ?? libres.error?.message}</p>}

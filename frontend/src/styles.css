@@ -357,6 +357,46 @@ label.row { flex-direction: row; align-items: center; }
 .cita-cancelada .slot-hora { text-decoration: line-through; color: var(--muted); }
 .cita .acciones { gap: .9rem; }
 .agendar { border-color: var(--primary); }
+
+/* Vistas de la agenda: día, semana, mes y todos los médicos */
+.barra-agenda { flex-wrap: wrap; gap: .75rem; }
+.barra-agenda > .row { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.navegar-fecha { flex-wrap: nowrap; max-width: 100%; }
+.navegar-fecha input[type="date"] { min-width: 0; flex: 1 1 9rem; }
+.segmentos { display: inline-flex; border: 1px solid var(--primary); border-radius: var(--radius-sm); overflow: hidden; }
+.segmentos button { background: var(--surface); color: var(--primary); border: 0; padding: .45rem .8rem; font: inherit; font-weight: 600; cursor: pointer; }
+.segmentos button + button { border-left: 1px solid var(--primary); }
+.segmentos button:hover { background: var(--primary-soft); }
+.segmentos button.activo { background: var(--primary); color: #fff; }
+.semana, .todos { display: grid; gap: .6rem; grid-template-columns: repeat(7, minmax(0, 1fr)); align-items: start; }
+.todos { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.semana-dia { display: flex; flex-direction: column; gap: .4rem; min-width: 0; padding: .6rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.semana-dia.hoy { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+.semana-titulo { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; background: none; border: 0; padding: 0; font: inherit; color: var(--text); cursor: pointer; text-align: left; }
+.semana-titulo strong::first-letter { text-transform: uppercase; }
+.semana-titulo:hover strong { color: var(--primary); }
+.mini-cita { display: flex; flex-direction: column; gap: .05rem; text-align: left; padding: .35rem .5rem; font: inherit; font-size: var(--fs-xs); background: var(--info-bg); border: 0; border-left: 3px solid var(--info-line); border-radius: 6px; cursor: pointer; color: var(--text); }
+.mini-cita.cita-confirmada { border-left-color: var(--primary); }
+.mini-cita.cita-atendida { border-left-color: var(--ok-line); background: var(--ok-bg); }
+.mini-cita.cita-no_asistio { border-left-color: var(--warn-line); background: var(--warn-bg); }
+.mini-cita .slot-hora { min-width: 0; font-size: var(--fs-xs); }
+.mini-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: .25rem; }
+.chip { padding: .2rem .4rem; font: inherit; font-size: var(--fs-xs); font-variant-numeric: tabular-nums; color: var(--primary); background: var(--surface); border: 1px dashed var(--neutral-line); border-radius: 6px; cursor: pointer; }
+.chip:hover { border-style: solid; border-color: var(--primary); background: var(--primary-soft); }
+.mes { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .35rem; }
+.mes-cabecera { font-size: var(--fs-xs); font-weight: 700; color: var(--muted); text-align: center; padding: .2rem 0; }
+.mes-dia { display: flex; flex-direction: column; align-items: flex-start; gap: .15rem; min-height: 4.6rem; min-width: 0; padding: .4rem .45rem; font: inherit; text-align: left; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
+.mes-dia:hover { border-color: var(--primary); background: var(--primary-soft); }
+.mes-dia.otro-mes { background: var(--surface-muted); color: var(--muted); }
+.mes-dia.hoy { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+.mes-numero { font-weight: 700; font-variant-numeric: tabular-nums; }
+.mes-libres { font-size: var(--fs-xs); font-weight: 600; color: var(--ok); background: var(--ok-bg); border-radius: 999px; padding: 0 .45rem; }
+.mes-festivo { font-size: var(--fs-xs); color: var(--warn); }
+.mes-dia .small { font-size: var(--fs-xs); }
+.espacio-libre { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1rem; padding: .55rem .75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+.espacio-libre strong { display: inline-block; }
+.espacio-libre strong::first-letter { text-transform: uppercase; }
 .resultados { display: flex; flex-direction: column; gap: .3rem; margin-top: .3rem; }
 .horario { display: flex; flex-direction: column; gap: .6rem; }
 .horario-dia { display: grid; grid-template-columns: 7rem 1fr; gap: .75rem; align-items: start; padding: .6rem 0; border-bottom: 1px solid var(--border); }
@@ -426,6 +466,11 @@ a.evento:hover { background: var(--primary-soft); box-shadow: var(--shadow-md); 
   .patient-flags { align-items: flex-start; }
   .cita { flex-wrap: wrap; }
   .horario-dia { grid-template-columns: 1fr; }
+  .semana { grid-template-columns: 1fr; }
+  .mes { gap: .2rem; }
+  .mes-dia { min-height: 3.6rem; padding: .3rem; }
+  .mes-libres { padding: 0 .3rem; }
+  .mes-texto { display: none; }
   .evento { flex-wrap: wrap; }
   .evento-fecha { min-width: 0; }
   th, td { padding: .65rem .75rem; }

@@ -19,6 +19,8 @@ interface Props {
   inicio?: string;
   /** Cupos libres del día: con ellos se ofrecen citas más largas que un cupo, si los siguientes están libres. */
   cupos?: Cupo[];
+  /** Duración ya elegida (por ejemplo, la de "Buscar espacio libre"). */
+  duracionInicial?: number;
   onCerrar: () => void;
 }
 
@@ -28,7 +30,7 @@ const DURACIONES_SOBRECUPO = [10, 15, 20, 30, 40, 60, 90, 120, 180, 240];
 
 type PacienteElegido = { id: string; nombre: string; incompleto: boolean };
 
-export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, onCerrar }: Props) {
+export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInicial, onCerrar }: Props) {
   const queryClient = useQueryClient();
   const { puede } = useAuth();
   const sobrecupo = !inicio;
@@ -38,9 +40,13 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, onCerrar }: 
   const [motivo, setMotivo] = useState("");
   const [horaManual, setHoraManual] = useState("07:00");
   const [duracionSobrecupo, setDuracionSobrecupo] = useState(20);
-  const posibles = inicio ? duracionesPosibles(inicio, cupos ?? []) : [];
-  const [duracionCupo, setDuracionCupo] = useState<number | null>(null);
-  const cupo = posibles[0];
+  const seguidos = inicio ? duracionesPosibles(inicio, cupos ?? []) : [];
+  // La duración de la búsqueda puede no ser un múltiplo del cupo (30 minutos con cupos de 20): se ofrece igual, porque
+  // la búsqueda ya comprobó que cabe
+  const posibles = duracionInicial && seguidos.length && !seguidos.includes(duracionInicial)
+    ? [...seguidos, duracionInicial].sort((a, b) => a - b) : seguidos;
+  const [duracionCupo, setDuracionCupo] = useState<number | null>(duracionInicial ?? null);
+  const cupo = seguidos[0];
   const duracion = sobrecupo ? duracionSobrecupo : duracionCupo ?? cupo;
 
   const busqueda = useQuery({
