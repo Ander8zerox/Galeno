@@ -4,6 +4,7 @@ import { api, unwrap } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { AgendaDia } from "../features/agenda/AgendaDia";
 import { HorarioEditor } from "../features/agenda/HorarioEditor";
+import { ListaEspera, useListaEspera } from "../features/agenda/ListaEspera";
 import { fechaCorta, fechaLarga, hoyEn, lunesDe, mesLargo, primeroDelMes, sumarDias } from "../features/agenda/tiempo";
 import { AgendaMes, AgendaSemana, AgendaTodos, BuscarEspacio, type AbrirDia } from "../features/agenda/VistasAgenda";
 
@@ -42,6 +43,9 @@ export function AgendaPage() {
   });
   const [editandoHorario, setEditandoHorario] = useState(false);
   const [buscando, setBuscando] = useState(false);
+  const [enEspera, setEnEspera] = useState(false);
+  const espera = useListaEspera();
+  const esperando = espera.data?.filter((e) => e.vigente).length ?? 0;
   // Cupo para abrir el formulario de agendar en la vista del día; `n` vuelve a montar la vista para que lo tome
   const [abrir, setAbrir] = useState<{ inicio: string; duracion?: number; n: number } | null>(null);
 
@@ -116,6 +120,11 @@ export function AgendaPage() {
           {!editandoHorario && (
             <button className="btn btn-secondary" onClick={() => setBuscando((v) => !v)}>Buscar espacio libre</button>
           )}
+          {!editandoHorario && (
+            <button className="btn btn-secondary" onClick={() => setEnEspera((v) => !v)}>
+              Lista de espera{esperando > 0 && <span className="badge badge-info">{esperando}</span>}
+            </button>
+          )}
           {medico?.puedeEditarHorario && !verTodos && (
             <button className="btn btn-secondary" onClick={() => setEditandoHorario((v) => !v)}>
               {editandoHorario ? "Volver a la agenda" : "Horario de atención"}
@@ -159,6 +168,10 @@ export function AgendaPage() {
       {buscando && !editandoHorario && (
         <BuscarEspacio medicos={medicos.data} medicoId={verTodos ? null : medicoId} fecha={fecha} zona={zona}
           abrirDia={abrirDia} onCerrar={() => setBuscando(false)} />
+      )}
+
+      {enEspera && !editandoHorario && (
+        <ListaEspera medicos={medicos.data} zona={zona} onCerrar={() => setEnEspera(false)} />
       )}
 
       {editandoHorario && medico?.membresiaId ? (

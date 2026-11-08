@@ -348,6 +348,10 @@ label.row { flex-direction: row; align-items: center; }
 .slot:hover { border-color: var(--primary); border-style: solid; background: var(--primary-soft); }
 .slot-hora { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--text); min-width: 3.4rem; }
 .slot-accion { margin-left: auto; color: var(--primary); font-weight: 600; }
+.slot-par { display: flex; align-items: center; gap: .75rem; }
+.slot-par .slot { flex: 1; min-width: 0; }
+.slot-par > .btn-link { white-space: nowrap; font-size: var(--fs-sm, .875rem); }
+.btn .badge { margin-left: .4rem; }
 /* El borde izquierdo de la cita repite el color de su estado */
 .cita { border-left: 4px solid var(--info-line); box-shadow: var(--shadow-sm); }
 .cita-confirmada { border-left-color: var(--primary); }

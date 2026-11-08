@@ -9,6 +9,7 @@ import { useModuloActivo } from "../rips/modulos";
 import { useCobrosCitas, type Cobro } from "../rips/pagadores";
 import { useFaltantesRips, useReferencia } from "../rips/referencias";
 import { AgendarForm } from "./AgendarForm";
+import { AnotarEspera, EspacioLiberado } from "./ListaEspera";
 import { hora } from "./tiempo";
 
 type Cita = Schemas["CitaVista"];
@@ -30,7 +31,12 @@ export function AgendaDia({ medicoId, fecha, zona, abrir }: {
   zona: string;
   abrir?: { inicio: string; duracion?: number };
 }) {
-  const [agendando, setAgendando] = useState<{ inicio?: string; duracion?: number } | null>(abrir ?? null);
+  const [agendando, setAgendandoEstado] = useState<{ inicio?: string; duracion?: number } | null>(abrir ?? null);
+  // Espacio libre para el que se buscan sugerencias (al cancelar una cita o desde "¿A quién llamar?")
+  const [hueco, setHuecoEstado] = useState<{ inicio: string; titulo: string } | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const setAgendando = (a: typeof agendando) => { setAgendandoEstado(a); if (a) { setHuecoEstado(null); setAviso(null); } };
+  const setHueco = (h: typeof hueco) => { setHuecoEstado(h); setAviso(null); if (h) setAgendandoEstado(null); };
   const params = { path: { medicoId } };
 
   const citas = useQuery({
@@ -48,6 +54,8 @@ export function AgendaDia({ medicoId, fecha, zona, abrir }: {
   ].sort((a, b) => a.inicio.localeCompare(b.inicio) || (a.tipo === "cita" ? -1 : 1));
 
   const activas = (citas.data ?? []).filter((c) => c.estado !== "CANCELADA").length;
+  // "¿A quién llamar?" solo en el primer cupo de cada tramo libre: las sugerencias cubren el tramo completo
+  const finesLibres = new Set((libres.data ?? []).map((l) => Date.parse(l.fin!)));
   // Con RIPS activo, se avisa en la cita lo que le falta al paciente para que la secretaria lo complete al recibirlo
   const { puede } = useAuth();
   const modulo = useModuloActivo("RIPS");
@@ -68,6 +76,12 @@ export function AgendaDia({ medicoId, fecha, zona, abrir }: {
         <AgendarForm medicoId={medicoId} fecha={fecha} zona={zona} inicio={agendando.inicio} cupos={libres.data} duracionInicial={agendando.duracion} onCerrar={() => setAgendando(null)} />
       )}
 
+      {aviso && <p className="alert alert-ok">{aviso}</p>}
+      {hueco && (
+        <EspacioLiberado key={hueco.inicio} medicoId={medicoId} inicio={hueco.inicio} zona={zona} titulo={hueco.titulo}
+          onListo={(t) => { setHuecoEstado(null); setAviso(t); }} onCerrar={() => setHueco(null)} />
+      )}
+
       {(citas.error || libres.error) && <p className="alert alert-error">{citas.error?.message ?? libres.error?.message}</p>}
       {(citas.isLoading || libres.isLoading) && <p className="muted">Cargando…</p>}
       {!citas.isLoading && !libres.isLoading && filas.length === 0 && (
@@ -76,14 +90,23 @@ export function AgendaDia({ medicoId, fecha, zona, abrir }: {
 
       <div className="timeline">
         {filas.map((f) => f.tipo === "libre" ? (
-          <button key={`l-${f.inicio}`} className="slot" onClick={() => setAgendando({ inicio: f.inicio })}>
-            <span className="slot-hora">{hora(f.inicio, zona)}</span>
-            <span className="muted">Disponible</span>
-            <span className="slot-accion">Agendar</span>
-          </button>
+          <div key={`l-${f.inicio}`} className="slot-par">
+            <button className="slot" onClick={() => setAgendando({ inicio: f.inicio })}>
+              <span className="slot-hora">{hora(f.inicio, zona)}</span>
+              <span className="muted">Disponible</span>
+              <span className="slot-accion">Agendar</span>
+            </button>
+            {!finesLibres.has(Date.parse(f.inicio)) && <button className="btn-link" title="Lista de espera y citas de más tarde que caben aquí"
+              onClick={() => setHueco({ inicio: f.inicio, titulo: `Espacio de las ${hora(f.inicio, zona)}` })}>¿A quién llamar?</button>}
+          </div>
         ) : (
           <CitaFila key={f.cita.id} cita={f.cita} zona={zona} faltanRips={faltantes.data?.get(f.cita.pacienteId!)}
-            cobro={cobros.data?.get(f.cita.id!)} />
+            cobro={cobros.data?.get(f.cita.id!)}
+            onCancelada={(c) => {
+              if (Date.parse(c.inicio!) > Date.now()) {
+                setHueco({ inicio: c.inicio!, titulo: `Se canceló la cita de ${c.pacienteNombre}: ¿a quién le damos el espacio?` });
+              }
+            }} />
         ))}
       </div>
     </div>
@@ -92,7 +115,11 @@ export function AgendaDia({ medicoId, fecha, zona, abrir }: {
 
 const abierta = (c: Cita) => c.estado === "PROGRAMADA" || c.estado === "CONFIRMADA";
 
-function CitaFila({ cita, zona, faltanRips, cobro }: { cita: Cita; zona: string; faltanRips?: string[]; cobro?: Cobro }) {
+function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
+  cita: Cita; zona: string; faltanRips?: string[]; cobro?: Cobro;
+  /** Para ofrecer el espacio que queda libre */
+  onCancelada: (cita: Cita) => void;
+}) {
   const { me, puede } = useAuth();
   const queryClient = useQueryClient();
   const [cancelando, setCancelando] = useState(false);
@@ -100,6 +127,7 @@ function CitaFila({ cita, zona, faltanRips, cobro }: { cita: Cita; zona: string;
   const [motivo, setMotivo] = useState("");
   const [completandoRips, setCompletandoRips] = useState(false);
   const [registrandoCobro, setRegistrandoCobro] = useState(false);
+  const [anotandoEspera, setAnotandoEspera] = useState(false);
   const conceptos = useReferencia("concepto_recaudo");
   const diferida = useAccionDiferida();
   const esMiCita = cita.medicoId === me?.membresiaId;
@@ -113,11 +141,13 @@ function CitaFila({ cita, zona, faltanRips, cobro }: { cita: Cita; zona: string;
   const cambiar = useMutation({
     mutationFn: async (body: { estado: Estado; motivoCancelacion?: string }) =>
       unwrap(await api.PUT("/api/v1/agenda/citas/{citaId}/estado", { params: { path: { citaId: cita.id! } }, body })),
-    onSuccess: () => {
+    onSuccess: (c, body) => {
       queryClient.invalidateQueries({ queryKey: ["citas"] });
       queryClient.invalidateQueries({ queryKey: ["disponibilidad"] });
+      queryClient.invalidateQueries({ queryKey: ["lista-espera"] });
       setCancelando(false);
       setMarcandoInasistencia(false);
+      if (body.estado === "CANCELADA") onCancelada(c);
     },
   });
   const cuando = `${cita.pacienteNombre} a las ${hora(cita.inicio!, zona)}`;
@@ -151,6 +181,10 @@ function CitaFila({ cita, zona, faltanRips, cobro }: { cita: Cita; zona: string;
           <CobroForm donde="cita" id={cita.id!} cobro={cobro} onGuardado={() => setRegistrandoCobro(false)} onCancelar={() => setRegistrandoCobro(false)} />
         )}
         {completandoRips && abierta(cita) && <DatosRipsPaciente pacienteId={cita.pacienteId!} editar />}
+        {anotandoEspera && abierta(cita) && (
+          <AnotarEspera medicos={[]} zona={zona} inicial={{ paciente: { id: cita.pacienteId!, nombre: cita.pacienteNombre ?? "" }, cita }}
+            onCerrar={() => setAnotandoEspera(false)} />
+        )}
         {cancelando && (
           <div className="stack-sm confirmar">
             <span className="small">¿Cancelar la cita de {cuando}?</span>
@@ -181,6 +215,10 @@ function CitaFila({ cita, zona, faltanRips, cobro }: { cita: Cita; zona: string;
           {cita.estado === "PROGRAMADA" && <button className="btn-link" onClick={() => diferida.programar("Confirmando la cita", () => cambiar.mutate({ estado: "CONFIRMADA" }))}>Confirmar</button>}
           {cobro && !registrandoCobro && <button className="btn-link" onClick={() => setRegistrandoCobro(true)}>Cobro</button>}
           {puede("HISTORIA_REGISTRAR") && esMiCita && <button className="btn" disabled={atender.isPending} onClick={() => diferida.programar("Abriendo la atención", () => atender.mutate())}>Atender</button>}
+          {Date.parse(cita.inicio!) > Date.now() && !anotandoEspera && (
+            <button className="btn-link" title="Anotarlo en la lista de espera para adelantar esta cita si se libera un espacio antes"
+              onClick={() => setAnotandoEspera(true)}>Quiere antes</button>
+          )}
           <button className="btn-link" onClick={() => setMarcandoInasistencia(true)}>No asistió</button>
           <button className="btn-link danger" onClick={() => setCancelando(true)}>Cancelar</button>
         </div>

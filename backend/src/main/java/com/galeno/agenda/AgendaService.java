@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -50,11 +51,13 @@ class AgendaService {
     private final IdentidadService identidad;
     private final PacienteService pacientes;
     private final ObjectProvider<AtencionesDeCitas> atenciones;
+    private final EnEsperaRepository espera;
 
     AgendaService(AgendaMedicoRepository agendas, CitaRepository citas, IdentidadService identidad,
-                  PacienteService pacientes, ObjectProvider<AtencionesDeCitas> atenciones) {
+                  PacienteService pacientes, ObjectProvider<AtencionesDeCitas> atenciones, EnEsperaRepository espera) {
         this.agendas = agendas;
         this.citas = citas;
+        this.espera = espera;
         this.identidad = identidad;
         this.pacientes = pacientes;
         this.atenciones = atenciones;
@@ -250,6 +253,175 @@ class AgendaService {
                 .filter(c -> visibles.contains(c.getMedicoMembresiaId())).toList());
     }
 
+    // --- lista de espera y espacios liberados ---
+
+    /** Los pacientes en espera que ve quien consulta: los de sus médicos y los que esperan a "cualquier médico". */
+    @Transactional(readOnly = true)
+    public List<EnEsperaVista> listaEspera() {
+        Set<UUID> visibles = idsGestionables();
+        return vistasEspera(espera.findByEstadoOrderByCreadaEn(EnEspera.Estado.ACTIVA).stream()
+                .filter(e -> e.getMedicoMembresiaId() == null || visibles.contains(e.getMedicoMembresiaId())).toList());
+    }
+
+    /**
+     * Anota a un paciente. Con {@code citaId} es alguien que ya tiene cita y la quiere antes: el médico y la duración
+     * son los de esa cita, y al asignarle un espacio se mueve la misma cita (no se crea otra).
+     */
+    @Transactional
+    public EnEsperaVista anotarEnEspera(UUID pacienteId, UUID medicoId, Integer duracionMinutos, EnEspera.Franja franja,
+                                        LocalDate antesDe, UUID citaId, String motivo, String nota) {
+        pacientes.get(pacienteId);
+        int duracion;
+        if (citaId != null) {
+            Cita cita = buscar(citaId);
+            if (!cita.getPacienteId().equals(pacienteId)) {
+                throw ApiProblem.badRequest("La cita no es de este paciente");
+            }
+            if (!Cita.Estado.ABIERTOS.contains(cita.getEstado()) || !cita.getInicio().isAfter(Instant.now())) {
+                throw ApiProblem.conflict("Solo se adelantan citas programadas o confirmadas que aún no han pasado");
+            }
+            medicoId = cita.getMedicoMembresiaId();
+            duracion = (int) Duration.between(cita.getInicio(), cita.getFin()).toMinutes();
+        } else {
+            if (medicoId != null) {
+                verificarAcceso(medicoId);
+            }
+            if (duracionMinutos == null || duracionMinutos < 5 || duracionMinutos > 240) {
+                throw ApiProblem.badRequest("La duración debe estar entre 5 y 240 minutos");
+            }
+            duracion = duracionMinutos;
+        }
+        if (antesDe != null && antesDe.isBefore(LocalDate.now(zona()))) {
+            throw ApiProblem.badRequest("La fecha \"antes de\" ya pasó");
+        }
+        UUID medico = medicoId;
+        boolean repetido = espera.findByPacienteIdAndEstado(pacienteId, EnEspera.Estado.ACTIVA).stream()
+                .anyMatch(e -> Objects.equals(e.getMedicoMembresiaId(), medico) && Objects.equals(e.getCitaId(), citaId));
+        if (repetido) {
+            throw ApiProblem.conflict("El paciente ya está en la lista de espera");
+        }
+        EnEspera e = espera.save(new EnEspera(pacienteId, medicoId, duracion,
+                franja != null ? franja : EnEspera.Franja.CUALQUIERA, antesDe, citaId, blankToNull(motivo),
+                blankToNull(nota), AuthUser.current().id()));
+        return vistasEspera(List.of(e)).getFirst();
+    }
+
+    @Transactional
+    public void retirarDeEspera(UUID id) {
+        buscarEspera(id).retirar();
+    }
+
+    /**
+     * A quién llamar para ocupar el espacio libre que empieza en {@code inicio}: los de la lista de espera a quienes les
+     * sirve (el que más lleva esperando primero) y las citas de más tarde ese mismo día que caben (la última primero:
+     * moverla deja el hueco al final del día con una sola llamada). Aquí no se mueve nada.
+     */
+    @Transactional
+    public Sugerencias sugerencias(UUID medicoId, Instant inicio) {
+        verificarAcceso(medicoId);
+        AgendaMedico agenda = obtenerOCrear(medicoId);
+        ZoneId zona = zona();
+        LocalDate fecha = inicio.atZone(zona).toLocalDate();
+        if (!agenda.isAtiendeFestivos() && FestivosColombia.en(fecha).isPresent()) {
+            throw ApiProblem.conflict("Es festivo y el médico no atiende festivos");
+        }
+        List<Cita> delDia = citas.cruces(medicoId, fecha.atStartOfDay(zona).toInstant(),
+                fecha.plusDays(1).atStartOfDay(zona).toInstant());
+        Intervalo hueco = Disponibilidad.hueco(inicio, zona, agenda.getBloques(),
+                        delDia.stream().map(c -> new Intervalo(c.getInicio(), c.getFin())).toList(), Instant.now())
+                .orElseThrow(() -> ApiProblem.conflict("Ese espacio ya no está libre o está fuera del horario"));
+        long libres = Duration.between(hueco.inicio(), hueco.fin()).toMinutes();
+
+        List<EnEspera> activas = espera.findByEstadoOrderByCreadaEn(EnEspera.Estado.ACTIVA);
+        Map<UUID, Cita> citasEnEspera = citas.findAllById(activas.stream().map(EnEspera::getCitaId)
+                .filter(Objects::nonNull).toList()).stream().collect(Collectors.toMap(Cita::getId, c -> c));
+        LocalDate hoy = LocalDate.now(zona);
+        List<EnEspera> candidatos = activas.stream()
+                .filter(e -> e.getDuracionMinutos() <= libres)
+                .filter(e -> Disponibilidad.enFranja(e.getFranja(), inicio, zona))
+                .filter(e -> e.getAntesDe() == null || (!fecha.isAfter(e.getAntesDe()) && !e.getAntesDe().isBefore(hoy)))
+                .filter(e -> {
+                    if (e.getCitaId() == null) {
+                        return e.getMedicoMembresiaId() == null || e.getMedicoMembresiaId().equals(medicoId);
+                    }
+                    Cita c = citasEnEspera.get(e.getCitaId());
+                    return c != null && Cita.Estado.ABIERTOS.contains(c.getEstado())
+                            && c.getMedicoMembresiaId().equals(medicoId) && c.getInicio().isAfter(inicio);
+                })
+                .toList();
+        Set<UUID> yaSugeridas = candidatos.stream().map(EnEspera::getCitaId).filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        List<Cita> adelantar = delDia.stream()
+                .filter(c -> Cita.Estado.ABIERTOS.contains(c.getEstado()) && !c.getInicio().isBefore(hueco.fin()))
+                .filter(c -> Duration.between(c.getInicio(), c.getFin()).toMinutes() <= libres)
+                .filter(c -> !yaSugeridas.contains(c.getId()))
+                .sorted(Comparator.comparing(Cita::getInicio).reversed())
+                .toList();
+        return new Sugerencias(hueco.inicio(), hueco.fin(), vistasEspera(candidatos), vistas(adelantar));
+    }
+
+    /**
+     * Da al paciente en espera el espacio que empieza en {@code inicio}, después de hablar con él: si esperaba con una
+     * cita, se mueve esa cita; si no, se le agenda una nueva. Las reglas de cupo son las de siempre.
+     */
+    @Transactional
+    public CitaVista asignarDesdeEspera(UUID id, UUID medicoId, Instant inicio) {
+        EnEspera e = buscarEspera(id);
+        if (e.getEstado() != EnEspera.Estado.ACTIVA) {
+            throw ApiProblem.conflict("El paciente ya no está en la lista de espera");
+        }
+        CitaVista cita;
+        if (e.getCitaId() != null) {
+            if (!buscar(e.getCitaId()).getMedicoMembresiaId().equals(medicoId)) {
+                throw ApiProblem.badRequest("La cita que quiere adelantar es con otro médico");
+            }
+            cita = reprogramar(e.getCitaId(), inicio, false);
+        } else {
+            if (e.getMedicoMembresiaId() != null && !e.getMedicoMembresiaId().equals(medicoId)) {
+                throw ApiProblem.badRequest("Este paciente espera cita con otro médico");
+            }
+            cita = agendar(medicoId, e.getPacienteId(), inicio, e.getDuracionMinutos(), e.getMotivo(), false);
+        }
+        e.asignar(cita.id());
+        return cita;
+    }
+
+    private EnEspera buscarEspera(UUID id) {
+        EnEspera e = espera.findById(id).orElseThrow(() -> ApiProblem.notFound("No está en la lista de espera"));
+        if (e.getMedicoMembresiaId() != null) {
+            verificarAcceso(e.getMedicoMembresiaId());
+        }
+        return e;
+    }
+
+    private Set<UUID> idsGestionables() {
+        return gestionables(AuthUser.current()).stream().map(MedicoResumen::membresiaId).collect(Collectors.toSet());
+    }
+
+    private List<EnEsperaVista> vistasEspera(List<EnEspera> lista) {
+        Map<UUID, PacienteResumen> porPaciente = pacientes.resumenes(lista.stream().map(EnEspera::getPacienteId).toList());
+        Map<UUID, String> medicos = identidad.medicosActivos().stream()
+                .collect(Collectors.toMap(MedicoResumen::membresiaId, MedicoResumen::nombre));
+        Map<UUID, Cita> porCita = citas.findAllById(lista.stream().map(EnEspera::getCitaId).filter(Objects::nonNull)
+                .toList()).stream().collect(Collectors.toMap(Cita::getId, c -> c));
+        Instant ahora = Instant.now();
+        LocalDate hoy = LocalDate.now(zona());
+        return lista.stream().map(e -> {
+            Cita c = e.getCitaId() == null ? null : porCita.get(e.getCitaId());
+            boolean citaVigente = e.getCitaId() == null
+                    || (c != null && Cita.Estado.ABIERTOS.contains(c.getEstado()) && c.getInicio().isAfter(ahora));
+            boolean vigente = e.getEstado() == EnEspera.Estado.ACTIVA && citaVigente
+                    && (e.getAntesDe() == null || !e.getAntesDe().isBefore(hoy));
+            PacienteResumen p = porPaciente.get(e.getPacienteId());
+            UUID medico = e.getMedicoMembresiaId();
+            return new EnEsperaVista(e.getId(), e.getPacienteId(), p == null ? null : p.nombre(),
+                    p == null ? null : p.tipoDocumento() + " " + p.numeroDocumento(), p == null ? null : p.telefono(),
+                    medico, medico == null ? null : medicos.get(medico), e.getDuracionMinutos(), e.getFranja(),
+                    e.getAntesDe(), e.getCitaId(), c == null ? null : c.getInicio(), e.getMotivo(), e.getNota(),
+                    e.getCreadaEn(), vigente);
+        }).toList();
+    }
+
     // --- reglas ---
 
     private void validarCupo(AgendaMedico agenda, Intervalo intervalo, boolean sobrecupo, UUID excluir) {
@@ -369,6 +541,21 @@ class AgendaService {
     }
 
     public record Espacio(UUID medicoId, String medicoNombre, Instant inicio, Instant fin) {
+    }
+
+    /**
+     * @param medicoId null: cualquier médico
+     * @param citaId la cita que quiere adelantar, o null
+     * @param vigente false si ya pasó la fecha "antes de" o la cita a adelantar ya no está abierta: no se sugiere
+     */
+    public record EnEsperaVista(UUID id, UUID pacienteId, String pacienteNombre, String pacienteDocumento,
+                                String pacienteTelefono, UUID medicoId, String medicoNombre, int duracionMinutos,
+                                EnEspera.Franja franja, LocalDate antesDe, UUID citaId, Instant citaInicio, String motivo,
+                                String nota, Instant creadaEn, boolean vigente) {
+    }
+
+    /** El espacio libre ([inicio, fin)) y a quién se le puede ofrecer. */
+    public record Sugerencias(Instant inicio, Instant fin, List<EnEsperaVista> espera, List<CitaVista> adelantar) {
     }
 
     public record Horario(UUID medicoId, int duracionMinutos, List<BloqueVista> bloques, boolean atiendeFestivos) {

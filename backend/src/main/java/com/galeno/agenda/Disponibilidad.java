@@ -55,6 +55,44 @@ final class Disponibilidad {
         return libres;
     }
 
+    /**
+     * El espacio libre que empieza en {@code inicio}: llega hasta la siguiente cita o hasta el fin de la franja del
+     * horario, lo que ocurra primero. Vacío si {@code inicio} ya pasó, está fuera del horario o cae dentro de una cita.
+     */
+    static java.util.Optional<Intervalo> hueco(Instant inicio, ZoneId zona, List<Bloque> bloques, List<Intervalo> ocupados,
+                                               Instant ahora) {
+        if (!inicio.isAfter(ahora)) {
+            return java.util.Optional.empty();
+        }
+        ZonedDateTime local = inicio.atZone(zona);
+        LocalTime t = local.toLocalTime();
+        return bloques.stream()
+                .filter(b -> b.dia() == local.getDayOfWeek() && !t.isBefore(b.getHoraInicio()) && t.isBefore(b.getHoraFin()))
+                .findFirst()
+                .flatMap(b -> {
+                    if (ocupados.stream().anyMatch(o -> !o.inicio().isAfter(inicio) && o.fin().isAfter(inicio))) {
+                        return java.util.Optional.empty();
+                    }
+                    Instant fin = local.toLocalDate().atTime(b.getHoraFin()).atZone(zona).toInstant();
+                    for (Intervalo o : ocupados) {
+                        if (o.inicio().isAfter(inicio) && o.inicio().isBefore(fin)) {
+                            fin = o.inicio();
+                        }
+                    }
+                    return java.util.Optional.of(new Intervalo(inicio, fin));
+                });
+    }
+
+    /** ¿La hora cae en la franja que prefiere el paciente? Mañana es antes de las 12:00 (hora del consultorio). */
+    static boolean enFranja(EnEspera.Franja franja, Instant inicio, ZoneId zona) {
+        boolean manana = inicio.atZone(zona).toLocalTime().isBefore(LocalTime.NOON);
+        return switch (franja) {
+            case CUALQUIERA -> true;
+            case MANANA -> manana;
+            case TARDE -> !manana;
+        };
+    }
+
     /** ¿La cita cae completa dentro de un bloque del horario? */
     static boolean dentroDelHorario(Intervalo cita, ZoneId zona, List<Bloque> bloques) {
         ZonedDateTime inicio = cita.inicio().atZone(zona);
