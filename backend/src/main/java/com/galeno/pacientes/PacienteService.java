@@ -2,6 +2,7 @@ package com.galeno.pacientes;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -133,8 +134,26 @@ public class PacienteService {
         return paciente;
     }
 
+    /**
+     * A quién escribirle sobre sus citas: el correo y el nombre, si tiene correo y no pidió dejar de recibirlos.
+     * Del consultorio actual (el filtro por tenant no trae pacientes de otro).
+     */
+    @Transactional(readOnly = true)
+    public Optional<DestinatarioCitas> destinatarioCitas(UUID pacienteId) {
+        return repository.findById(pacienteId)
+                .filter(p -> p.getEmail() != null && !p.getEmail().isBlank() && !p.isSinCorreosCitas())
+                .map(p -> new DestinatarioCitas(p.getEmail().strip(), p.isDatosIncompletos() ? null : p.getNombres()));
+    }
+
+    /** @param nombres null si el paciente se importó sin nombre */
+    public record DestinatarioCitas(String email, String nombres) {
+    }
+
     private static void apply(Paciente p, PacienteRequest r, boolean datosClinicos) {
         p.actualizarDemograficos(r.nombres(), r.apellidos(), r.fechaNacimiento(), r.sexo(), r.telefono(), r.email());
+        if (r.sinCorreosCitas() != null) {
+            p.preferirSinCorreosCitas(r.sinCorreosCitas());
+        }
         if (datosClinicos) {
             p.actualizarClinicos(r.alergias(), r.antecedentes());
         }

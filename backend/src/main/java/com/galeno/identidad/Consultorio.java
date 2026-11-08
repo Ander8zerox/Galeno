@@ -41,6 +41,21 @@ public class Consultorio {
     @Column(name = "terminos_aceptados_por")
     private UUID terminosAceptadosPor;
 
+    /** Contacto que ven los pacientes en los correos de sus citas. */
+    @Column(length = 200)
+    private String direccion;
+
+    @Column(length = 40)
+    private String telefono;
+
+    /** A dónde llegan las respuestas de los pacientes a los correos de citas. */
+    @Column(name = "correo_contacto", length = 190)
+    private String correoContacto;
+
+    /** Enviar correos a los pacientes sobre sus citas. */
+    @Column(name = "correos_pacientes", nullable = false)
+    private boolean correosPacientes;
+
     protected Consultorio() {
     }
 
@@ -49,6 +64,30 @@ public class Consultorio {
         this.nit = nit;
         this.zonaHoraria = "America/Bogota";
         this.creadoEn = Instant.now();
+        this.correosPacientes = true; // los consultorios nuevos avisan a sus pacientes desde el primer día
+    }
+
+    void actualizarContacto(String direccion, String telefono, String correoContacto, boolean correosPacientes) {
+        this.direccion = direccion;
+        this.telefono = telefono;
+        this.correoContacto = correoContacto;
+        this.correosPacientes = correosPacientes;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public String getCorreoContacto() {
+        return correoContacto;
+    }
+
+    public boolean isCorreosPacientes() {
+        return correosPacientes;
     }
 
     /** Solo si no lo tiene: el NIT identifica al consultorio (un consultorio por NIT) y no se cambia desde la app. */

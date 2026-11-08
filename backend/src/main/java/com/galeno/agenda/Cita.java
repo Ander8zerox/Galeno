@@ -74,6 +74,10 @@ public class Cita {
     @Column(name = "actualizada_en", nullable = false)
     private Instant actualizadaEn;
 
+    /** Cuándo se le recordó al paciente (o se le avisó dentro de las 24 h previas); null: falta el recordatorio. */
+    @Column(name = "recordatorio_enviado_en")
+    private Instant recordatorioEnviadoEn;
+
     protected Cita() {
     }
 
@@ -114,7 +118,20 @@ public class Cita {
         this.fin = nuevoFin;
         this.sobrecupo = sobrecupo;
         this.estado = Estado.PROGRAMADA; // hay que volver a confirmarla
+        this.recordatorioEnviadoEn = null; // la fecha nueva necesita su propio recordatorio
         this.actualizadaEn = Instant.now();
+    }
+
+    void marcarRecordatorio(Instant cuando) {
+        this.recordatorioEnviadoEn = cuando;
+    }
+
+    public Instant getRecordatorioEnviadoEn() {
+        return recordatorioEnviadoEn;
+    }
+
+    public Instant getCreadaEn() {
+        return creadaEn;
     }
 
     public UUID getId() {

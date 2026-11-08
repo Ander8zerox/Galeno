@@ -81,6 +81,48 @@ public class DatosRipsService {
     }
 
     /**
+     * Al importar RIPS de otro sistema: llena los datos del paciente con lo que trae el archivo, solo si todavía no
+     * tiene (nunca reemplaza lo que ya se digitó) y solo con el módulo activo. Un código que no está en las tablas de
+     * SISPRO se deja vacío en vez de fallar: la importación no se detiene por eso y la ficha avisa lo que falta.
+     * @return si se guardaron datos
+     */
+    @Transactional
+    public boolean completarDesdeImportacion(UUID pacienteId, DatosImportados datos) {
+        if (!modulos.activo(Modulo.RIPS) || pacientesRips.existsById(pacienteId)) {
+            return false;
+        }
+        String pais = codigo("pais", datos.paisResidencia());
+        boolean colombia = COLOMBIA.equals(pais);
+        String tipoUsuario = codigo("tipo_usuario", datos.tipoUsuario());
+        String municipio = colombia ? codigo("municipio", datos.municipioResidencia()) : null;
+        String zona = colombia ? codigo("zona", datos.zonaResidencia()) : null;
+        String origen = codigo("pais", datos.paisOrigen());
+        if (tipoUsuario == null && pais == null && origen == null) {
+            return false;
+        }
+        RipsPaciente p = new RipsPaciente(pacienteId);
+        p.actualizar(tipoUsuario, pais, municipio, zona, origen, null);
+        pacientesRips.save(p);
+        return true;
+    }
+
+    private String codigo(String tabla, String valor) {
+        return referencias.siExiste(tabla, valor);
+    }
+
+    /** Al borrar un paciente creado por una importación que se deshace: sus datos para el RIPS van primero (llave foránea). */
+    @Transactional
+    public void borrarDelPaciente(UUID pacienteId) {
+        pacientesRips.findById(pacienteId).ifPresent(pacientesRips::delete);
+        pacientesRips.flush();
+    }
+
+    /** Datos del usuario tal como vienen en el RIPS (U03, U06 a U09, U11). */
+    public record DatosImportados(String tipoUsuario, String paisResidencia, String municipioResidencia,
+                                  String zonaResidencia, String paisOrigen) {
+    }
+
+    /**
      * Lo que le falta a cada paciente, para avisarlo en la agenda sin abrir ficha por ficha. Un paciente sin registro
      * (o de otro consultorio: el filtro por tenant no lo trae) aparece con todo pendiente.
      */

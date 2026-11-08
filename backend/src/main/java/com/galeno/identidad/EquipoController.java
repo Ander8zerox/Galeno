@@ -31,9 +31,38 @@ import com.galeno.identidad.EquipoService.Miembro;
 public class EquipoController {
 
     private final EquipoService equipo;
+    private final IdentidadService identidad;
 
-    EquipoController(EquipoService equipo) {
+    EquipoController(EquipoService equipo, IdentidadService identidad) {
         this.equipo = equipo;
+        this.identidad = identidad;
+    }
+
+    /** Datos de contacto del consultorio que ven los pacientes en los correos de sus citas. */
+    @GetMapping("/consultorio")
+    public DatosConsultorio consultorio() {
+        return DatosConsultorio.de(identidad.contacto(com.galeno.shared.security.AuthUser.current().tenantId()));
+    }
+
+    @PutMapping("/consultorio")
+    public DatosConsultorio actualizarConsultorio(@Valid @RequestBody ActualizarConsultorio r) {
+        return DatosConsultorio.de(identidad.actualizarContacto(com.galeno.shared.security.AuthUser.current().tenantId(),
+                r.direccion(), r.telefono(), r.correo(), r.correosPacientes()));
+    }
+
+    /** @param correosPacientes enviar correos a los pacientes sobre sus citas (agendada, cambios y recordatorio) */
+    public record DatosConsultorio(String nombre, String direccion, String telefono, String correo,
+                                   boolean correosPacientes) {
+
+        static DatosConsultorio de(IdentidadService.ContactoConsultorio c) {
+            return new DatosConsultorio(c.nombre(), c.direccion(), c.telefono(), c.correo(), c.correosPacientes());
+        }
+    }
+
+    public record ActualizarConsultorio(@jakarta.validation.constraints.Size(max = 200) String direccion,
+                                        @jakarta.validation.constraints.Size(max = 40) String telefono,
+                                        @jakarta.validation.constraints.Size(max = 190) String correo,
+                                        boolean correosPacientes) {
     }
 
     @GetMapping

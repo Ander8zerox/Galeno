@@ -42,6 +42,15 @@ interface CitaRepository extends JpaRepository<Cita, UUID> {
             """)
     List<Cita> crucesParaReserva(UUID medicoId, Instant inicio, Instant fin);
 
+    /** Citas abiertas que empiezan en (desde, hasta] y aún no tienen recordatorio (del consultorio actual). */
+    @Query("""
+            select c from Cita c
+            where c.estado in (com.galeno.agenda.Cita.Estado.PROGRAMADA, com.galeno.agenda.Cita.Estado.CONFIRMADA)
+              and c.inicio > :desde and c.inicio <= :hasta and c.recordatorioEnviadoEn is null
+            order by c.inicio
+            """)
+    List<Cita> porRecordar(Instant desde, Instant hasta);
+
     @Query("""
             select c from Cita c
             where c.pacienteId = :pacienteId and c.inicio >= :desde

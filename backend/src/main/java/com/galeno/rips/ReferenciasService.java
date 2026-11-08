@@ -91,6 +91,19 @@ public class ReferenciasService {
                 .collect(Collectors.toMap(Referencia::getCodigo, Referencia::getNombre));
     }
 
+    /**
+     * El código si está habilitado en la tabla; si no, {@code null}. No lanza excepción: sirve dentro de otra
+     * transacción (una excepción de un método transaccional la marcaría para deshacerse aunque se atrape).
+     */
+    @Transactional(readOnly = true)
+    public String siExiste(String tabla, String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            return null;
+        }
+        return referencias.findById(new Referencia.Clave(tabla, codigo.strip())).filter(Referencia::isHabilitado)
+                .map(Referencia::getCodigo).orElse(null);
+    }
+
     /** {@code null} o vacío pasa; un código que no está habilitado en la tabla, no. */
     @Transactional(readOnly = true)
     public String validar(String tabla, String codigo, String campo) {

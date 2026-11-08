@@ -50,14 +50,19 @@ class SesEnvioCorreo implements EnvioCorreo, AutoCloseable {
             log.warn("No se envía \"{}\" a {}: la dirección rebotó o se quejó antes", correo.asunto(), correo.para());
             return;
         }
+        // A un paciente le escribe su consultorio: sin el pie de soporte de Galenum, y las respuestas van al consultorio
+        String texto = correo.aPaciente() ? correo.texto() : PieCorreo.agregar(correo.texto(), soporte);
         var req = SendEmailRequest.builder()
-                .fromEmailAddress(props.remitente())
+                .fromEmailAddress(correo.remitente(props.remitente()))
                 .destination(Destination.builder().toAddresses(correo.para()).build())
-                .replyToAddresses(soporte.correo())
                 .content(EmailContent.builder().simple(Message.builder()
                         .subject(utf8(correo.asunto()))
-                        .body(Body.builder().text(utf8(PieCorreo.agregar(correo.texto(), soporte))).build())
+                        .body(Body.builder().text(utf8(texto)).build())
                         .build()).build());
+        String responderA = correo.responderA() != null ? correo.responderA() : correo.aPaciente() ? null : soporte.correo();
+        if (responderA != null) {
+            req.replyToAddresses(responderA);
+        }
         if (props.configurationSet() != null && !props.configurationSet().isBlank()) {
             req.configurationSetName(props.configurationSet());
         }

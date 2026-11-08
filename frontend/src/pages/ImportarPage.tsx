@@ -111,6 +111,8 @@ function SubirRips() {
       <p className="muted small">
         Los archivos JSON de RIPS que su sistema anterior generó con cada factura electrónica: varios a la vez o un ZIP
         con todos (hasta 50 MB). Antes de importar podrá revisar cada paciente; nada entra a la historia hasta que confirme.
+        Con el módulo RIPS activo, los datos para el RIPS de cada paciente (tipo de usuario, país, municipio y zona) se
+        toman del archivo si el paciente aún no los tiene.
       </p>
       <div className="row">
         <input ref={input} type="file" accept=".json,.zip,application/json,application/zip" multiple

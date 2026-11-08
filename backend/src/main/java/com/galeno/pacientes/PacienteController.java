@@ -68,12 +68,13 @@ public class PacienteController {
     public record PacienteResponse(UUID id, String tipoDocumento, String numeroDocumento, String nombres,
                                    String apellidos, LocalDate fechaNacimiento, int edad, String sexo,
                                    String telefono, String email, String alergias, String antecedentes,
-                                   boolean datosIncompletos) {
+                                   boolean datosIncompletos, boolean sinCorreosCitas) {
 
         static PacienteResponse of(Paciente p, boolean clinicos) {
             return new PacienteResponse(p.getId(), p.getTipoDocumento(), p.getNumeroDocumento(), p.getNombres(),
                     p.getApellidos(), p.getFechaNacimiento(), p.edad(), p.getSexo(), p.getTelefono(), p.getEmail(),
-                    clinicos ? p.getAlergias() : null, clinicos ? p.getAntecedentes() : null, p.isDatosIncompletos());
+                    clinicos ? p.getAlergias() : null, clinicos ? p.getAntecedentes() : null, p.isDatosIncompletos(),
+                    p.isSinCorreosCitas());
         }
     }
 
