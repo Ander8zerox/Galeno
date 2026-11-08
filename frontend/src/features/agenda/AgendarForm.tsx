@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 import { PacienteForm } from "../pacientes/PacienteForm";
+import { useVigiaCorreo } from "../pacientes/VigiaCorreo";
 import { aIso, hora } from "./tiempo";
 
 interface Cupo {
@@ -32,6 +33,7 @@ type PacienteElegido = { id: string; nombre: string; incompleto: boolean };
 
 export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInicial, onCerrar }: Props) {
   const queryClient = useQueryClient();
+  const vigilarCorreo = useVigiaCorreo();
   const { puede } = useAuth();
   const sobrecupo = !inicio;
   const [q, setQ] = useState("");
@@ -68,9 +70,10 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
           sobrecupo,
         },
       })),
-    onSuccess: () => {
+    onSuccess: (cita) => {
       queryClient.invalidateQueries({ queryKey: ["citas"] });
       queryClient.invalidateQueries({ queryKey: ["disponibilidad"] });
+      vigilarCorreo(cita.pacienteId!);
       onCerrar();
     },
   });

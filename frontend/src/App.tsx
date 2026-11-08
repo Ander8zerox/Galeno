@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { Blocks, CalendarDays, ClipboardList, CreditCard, FileUp, ReceiptText, ShieldCheck, Users, UsersRound } from "lucide-react";
 import { Shell, type ItemMenu } from "./components/Shell";
+import { VigiaCorreoProvider } from "./features/pacientes/VigiaCorreo";
 import { Bienvenida } from "./components/Bienvenida";
 import { SeguridadCuenta, VerificacionDosPasos } from "./components/DosPasos";
 import { api, unwrap } from "./api/client";
@@ -62,6 +63,7 @@ export function App() {
 
   return (
     <Shell marca="Galenum" items={menu} arriba={<SelectorConsultorio />} usuario={me.nombre ?? ""} onSalir={logout}>
+      <VigiaCorreoProvider>
         <AvisoSuscripcion />
         <Bienvenida />
         <Routes>
@@ -81,6 +83,7 @@ export function App() {
           <Route path="/seguridad" element={<SeguridadPage />} />
           <Route path="*" element={<Navigate to={puede("AGENDA_GESTIONAR") ? "/agenda" : "/pacientes"} replace />} />
         </Routes>
+      </VigiaCorreoProvider>
     </Shell>
   );
 }

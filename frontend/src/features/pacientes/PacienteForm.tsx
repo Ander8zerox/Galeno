@@ -82,6 +82,12 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
       </label>
       <Campo label="Teléfono" error={errores.telefono}><input value={form.telefono} onChange={set("telefono")} /></Campo>
       <Campo label="Correo" error={errores.email}><input type="email" value={form.email} onChange={set("email")} /></Campo>
+      {paciente?.correoRechazado && (form.email ?? "").trim().toLowerCase() === (paciente.email ?? "").toLowerCase() && (
+        <p className="alert alert-warn small wide">
+          Esta dirección rechazó los correos: {paciente.correoRechazado} Corríjala. Si está seguro de que es correcta,
+          escriba a soporte para desbloquearla.
+        </p>
+      )}
       {!!form.email && (
         <label className="check wide">
           <input type="checkbox" checked={!!form.sinCorreosCitas} onChange={(e) => setForm({ ...form, sinCorreosCitas: e.target.checked })} />

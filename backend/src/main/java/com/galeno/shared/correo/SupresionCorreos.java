@@ -3,6 +3,7 @@ package com.galeno.shared.correo;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,37 @@ public class SupresionCorreos {
         TenantContext.runAs(TenantContext.SYSTEM, () -> tx.executeWithoutResult(t -> repo.findById(e).ifPresentOrElse(
                 s -> s.repetir(motivo, d),
                 () -> repo.save(new CorreoSuprimido(e, motivo, d)))));
-        log.warn("Correo suprimido por {}: {}", motivo, e);
+        log.warn("Correo suprimido por {}: {} ({})", motivo, e, d);
+    }
+
+    /** Si la dirección está suprimida, por qué, en palabras para quien la registró. */
+    public Optional<String> motivo(String email) {
+        String e = normalizar(email);
+        if (e.isEmpty()) {
+            return Optional.empty();
+        }
+        return TenantContext.callAs(TenantContext.SYSTEM, () -> repo.findById(e)).map(SupresionCorreos::explicar);
+    }
+
+    /**
+     * El motivo del rebote o la queja, para la secretaria: lo que trae SES es técnico ("Permanent NoEmail: 550 5.1.1 …").
+     */
+    static String explicar(CorreoSuprimido s) {
+        String d = s.getDetalle() == null ? "" : s.getDetalle().toLowerCase(Locale.ROOT);
+        if (s.getMotivo() == Motivo.QUEJA) {
+            return "El destinatario marcó un correo anterior como no deseado.";
+        }
+        if (d.contains("noemail") || d.contains("5.1.1") || d.contains("does not exist") || d.contains("user unknown")
+                || d.contains("no such user")) {
+            return "La dirección no existe.";
+        }
+        if (d.contains("suppress")) {
+            return "La dirección está bloqueada por un rebote anterior.";
+        }
+        if (d.contains("mailboxfull") || d.contains("5.2.2") || d.contains("quota")) {
+            return "El buzón del destinatario está lleno.";
+        }
+        return "El servidor de correo del destinatario la rechazó.";
     }
 
     public List<Suprimido> listar() {

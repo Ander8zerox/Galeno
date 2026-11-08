@@ -130,8 +130,17 @@ unas 8 veces más caro que WhatsApp y exige un código corto dedicado.
   cada 15 minutos no suma costo: corre dentro de la API, en la instancia EC2 que ya se paga, y RDS con disco gp3 no
   cobra por consulta. La frecuencia no cambia el número de correos (cada cita recibe a lo sumo un recordatorio); solo
   la precisión (llega entre 24 h y 23 h 45 min antes).
-- **Índice** \`ix_citas_inicio (tenant_id, inicio)\` (V33) para la búsqueda de cada 15 minutos: con 60.000 citas de
+- **Índice** `ix_citas_inicio (tenant_id, inicio)` (V33) para la búsqueda de cada 15 minutos: con 60.000 citas de
   prueba, la consulta lee 52 filas en vez de 30.060.
+- **Correo mal escrito (8 de noviembre de 2026):** el servidor del paciente rechaza el correo después de que SES lo
+  acepta (segundos o minutos), así que al guardar no se sabe. Tras agendar, mover o cancelar una cita, la pantalla
+  consulta la ficha del paciente unos 24 segundos y, si su correo rebotó, muestra el aviso "No pudimos entregar el
+  correo" con "Corregir el correo" (abre la ficha en edición). La ficha y el campo de correo muestran el aviso
+  permanente, con el motivo en palabras claras ("La dirección no existe."). Un correo corregido vuelve a recibir; el
+  rechazado sigue bloqueado.
+  - El log de la API ahora registra el motivo técnico del rebote.
+  - "Desbloquear" en Plataforma quita la dirección también de la lista de supresión de la cuenta de SES (si no, SES
+    la seguía bloqueando en silencio). Requiere el permiso `ses:DeleteSuppressedDestination` (infra/computo.tf).
 - **Si algún día hay más de una instancia de la API**, la tarea correría en todas y podría duplicar recordatorios:
   habría que coordinarla (por ejemplo, con un bloqueo en la base de datos).
 

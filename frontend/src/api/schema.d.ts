@@ -2776,6 +2776,7 @@ export interface components {
             antecedentes?: string;
             datosIncompletos?: boolean;
             sinCorreosCitas?: boolean;
+            correoRechazado?: string;
         };
         Activacion: {
             activo: boolean;
@@ -3927,26 +3928,26 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            bigDecimal?: boolean;
+            missingNode?: boolean;
+            floatingPointNumber?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
             bigInteger?: boolean;
+            bigDecimal?: boolean;
             integralNumber?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            object?: boolean;
-            boolean?: boolean;
             /** @deprecated */
             textual?: boolean;
-            string?: boolean;
+            boolean?: boolean;
             binary?: boolean;
+            object?: boolean;
+            double?: boolean;
+            long?: boolean;
+            string?: boolean;
             pojo?: boolean;
             short?: boolean;
-            long?: boolean;
             int?: boolean;
-            double?: boolean;
-            missingNode?: boolean;
-            container?: boolean;
-            valueNode?: boolean;
-            floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {

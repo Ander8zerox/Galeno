@@ -7,4 +7,12 @@ package com.galeno.shared.correo;
 public interface EnvioCorreo {
 
     void enviar(Correo correo);
+
+    /**
+     * Quitar la dirección de la lista de supresión del proveedor (SES tiene la suya, a nivel de cuenta, además de la
+     * de Galenum). @return si estaba en esa lista
+     */
+    default boolean quitarSupresion(String email) {
+        return false;
+    }
 }

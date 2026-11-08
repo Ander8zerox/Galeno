@@ -154,6 +154,13 @@ data "aws_iam_policy_document" "api" {
     }
   }
   statement {
+    # "Desbloquear" un correo en la plataforma también lo quita de la lista de supresión de la cuenta de SES. Esta
+    # acción no admite un recurso específico (la lista es de la cuenta).
+    sid       = "QuitarSupresionSes"
+    actions   = ["ses:DeleteSuppressedDestination"]
+    resources = ["*"]
+  }
+  statement {
     sid       = "RebotesYQuejas"
     actions   = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
     resources = [aws_sqs_queue.correo_eventos.arn]
