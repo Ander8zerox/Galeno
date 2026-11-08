@@ -150,7 +150,14 @@ El consultorio de prueba tiene una secretaria que maneja la agenda de 5 odontól
   - ✅ **Correos de citas a pacientes** (8 de noviembre de 2026): agendada, cambios, cancelación y recordatorio 24 h
     antes; datos del consultorio en Equipo. Ver "Cómo quedó: correos de citas" en `docs/diseno-recordatorios.md`.
   - Pendiente: recordatorios por WhatsApp o SMS (análisis de costos y del número por consultorio en el mismo documento).
-  - Bloqueos por vacaciones y días cerrados del consultorio.
+  - ✅ **Bloqueos de agenda** (8 de noviembre de 2026): vacaciones, capacitaciones o cierres, de un médico o de todo
+    el consultorio, por días completos o por horas (botón "Bloqueos" en Agenda).
+    - Lo crean el médico (su agenda), la secretaria (la de sus médicos) y el administrador (cualquiera y el cierre
+      del consultorio).
+    - En un bloqueo no se ofrecen cupos, "Buscar espacio libre" y las sugerencias de la lista de espera lo saltan, y
+      solo se agenda con sobrecupo, como en los festivos. El día muestra el aviso; Semana y Mes, "Bloqueado".
+    - Las citas que ya estaban no se cancelan: al bloquear se listan con el teléfono del paciente y "Ver el día".
+    - API: `GET|POST /agenda/bloqueos`, `DELETE /agenda/bloqueos/{id}`. Migración V34 (tabla `bloqueos_agenda`).
 
 ### 2. RIPS, fase 2: datos y generación del JSON
 

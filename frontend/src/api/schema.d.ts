@@ -1556,6 +1556,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agenda/bloqueos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["bloqueos"];
+        put?: never;
+        post: operations["bloquear"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/suscripcion": {
         parameters: {
             query?: never;
@@ -2383,6 +2399,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["revocar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/bloqueos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["quitarBloqueo"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3637,6 +3669,31 @@ export interface components {
             motivo?: string;
             sobrecupo?: boolean;
         };
+        NuevoBloqueo: {
+            /** Format: uuid */
+            medicoId?: string;
+            /** Format: date-time */
+            inicio: string;
+            /** Format: date-time */
+            fin: string;
+            motivo: string;
+        };
+        BloqueoCreado: {
+            bloqueo?: components["schemas"]["BloqueoVista"];
+            citasAfectadas?: components["schemas"]["CitaVista"][];
+        };
+        BloqueoVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            medicoId?: string;
+            medicoNombre?: string;
+            /** Format: date-time */
+            inicio?: string;
+            /** Format: date-time */
+            fin?: string;
+            motivo?: string;
+        };
         OpcionesPago: {
             planes?: components["schemas"]["PlanPrecio"][];
             datosPago?: string;
@@ -3927,27 +3984,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            number?: boolean;
-            missingNode?: boolean;
-            floatingPointNumber?: boolean;
-            valueNode?: boolean;
             container?: boolean;
             bigInteger?: boolean;
-            bigDecimal?: boolean;
             integralNumber?: boolean;
+            missingNode?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            bigDecimal?: boolean;
+            valueNode?: boolean;
+            number?: boolean;
+            string?: boolean;
+            object?: boolean;
+            pojo?: boolean;
+            short?: boolean;
+            int?: boolean;
+            long?: boolean;
+            double?: boolean;
             /** @deprecated */
             textual?: boolean;
             boolean?: boolean;
             binary?: boolean;
-            object?: boolean;
-            double?: boolean;
-            long?: boolean;
-            string?: boolean;
-            pojo?: boolean;
-            short?: boolean;
-            int?: boolean;
+            floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -3975,6 +4032,7 @@ export interface components {
             fecha?: string;
             festivo?: string;
             libres?: components["schemas"]["Intervalo"][];
+            bloqueo?: string;
         };
         Festivo: {
             /** Format: date */
@@ -6956,6 +7014,53 @@ export interface operations {
             };
         };
     };
+    bloqueos: {
+        parameters: {
+            query: {
+                desde: string;
+                hasta: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BloqueoVista"][];
+                };
+            };
+        };
+    };
+    bloquear: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NuevoBloqueo"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BloqueoCreado"];
+                };
+            };
+        };
+    };
     estado: {
         parameters: {
             query?: never;
@@ -8099,6 +8204,26 @@ export interface operations {
         };
     };
     revocar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    quitarBloqueo: {
         parameters: {
             query?: never;
             header?: never;

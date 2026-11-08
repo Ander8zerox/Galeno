@@ -58,6 +58,7 @@ export function AgendaSemana({ medicoId, fecha, zona, abrirDia }: { medicoId: st
               <span className="muted small">{libres.length} libre(s)</span>
             </button>
             {d.festivo && <span className="badge badge-warn">Festivo</span>}
+            {d.bloqueo && <span className="badge badge-warn" title={d.bloqueo}>Bloqueado</span>}
             {lista.map((c) => (
               <button type="button" key={c.id} className={`mini-cita cita-${c.estado!.toLowerCase()}`} onClick={() => abrirDia(d.fecha!)}>
                 <span className="slot-hora">{hora(c.inicio!, zona)}–{hora(c.fin!, zona)}</span>
@@ -73,7 +74,7 @@ export function AgendaSemana({ medicoId, fecha, zona, abrirDia }: { medicoId: st
                 ))}
               </div>
             )}
-            {!lista.length && !libres.length && !d.festivo && <span className="muted small">Sin cupos</span>}
+            {!lista.length && !libres.length && !d.festivo && !d.bloqueo && <span className="muted small">Sin cupos</span>}
           </div>
         );
       })}
@@ -108,6 +109,7 @@ export function AgendaMes({ medicoId, fecha, zona, abrirDia }: { medicoId: strin
             className={`mes-dia${otroMes ? " otro-mes" : ""}${d.fecha === hoy ? " hoy" : ""}${libres ? " con-libres" : ""}`}>
             <span className="mes-numero">{Number(d.fecha!.slice(8))}</span>
             {d.festivo && <span className="mes-festivo" title={d.festivo}>Festivo</span>}
+            {d.bloqueo && <span className="mes-festivo" title={d.bloqueo}>Bloqueado</span>}
             {libres > 0 && <span className="mes-libres" title={`${libres} cupos libres`}>{libres}<span className="mes-texto"> libre{libres === 1 ? "" : "s"}</span></span>}
             {n > 0 && <span className="muted small" title={`${n} citas`}>{n}<span className="mes-texto"> cita{n === 1 ? "" : "s"}</span></span>}
           </button>
