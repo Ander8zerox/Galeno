@@ -191,8 +191,10 @@ la **Res. 948 de 2026**, con el Documento Técnico 1 v003 y el 2 v001, ambos del
   - Galenum valida lo que pueda validar por su cuenta y descarga el JSON.
   - Las atenciones del lote quedan marcadas para no facturarlas dos veces.
   - El botón "Enviar al Ministerio" queda deshabilitado.
-- Revisar la importación (`RipsParser`) contra el Documento Técnico 1 v003. Nuevos campos: CIE-11 opcional,
-  `codigoVIDA` y `registroSIRAS`.
+- ✅ Importación (`RipsParser`) revisada contra el Documento Técnico 1 v003 (8 de noviembre de 2026): ver "Importación
+  revisada contra el DT1 v003" en `docs/diseno-rips.md`.
+- Pendiente: al importar, llenar los "Datos para RIPS" del paciente nuevo (tipo de usuario, país, municipio, zona)
+  con lo que trae el RIPS.
 
 ### 3. Odontología, fase 3 de los formatos
 
@@ -289,7 +291,7 @@ Principio: primero las fuentes masivas, todas por el mismo flujo **extraer → r
 
 | Prioridad | Fuente | Estado o cómo se procesa |
 |---|---|---|
-| ✔ | **RIPS JSON** | Hecho (escrito con la Res. 2275; revisar contra el Documento Técnico 1 v003 de la 948). Faltan medicamentos y otros servicios |
+| ✔ | **RIPS JSON** | Hecho (Res. 2275 y 948, revisado contra el Documento Técnico 1 v003). Faltan medicamentos y otros servicios |
 | ✔ | **Excel o CSV de pacientes** | Hecho. Falta: sugerir con IA las columnas que no se reconocen |
 | 1 | RIPS TXT antiguos (AF, US, AC, AP…) | Solo si los clientes los tienen |
 | 3 | PDF en lote (ZIP, digitales o escaneados) | IA con salida estructurada, un trabajo por archivo; procesamiento por lotes de Bedrock para migraciones grandes |
