@@ -91,11 +91,29 @@ public class HistoriaService {
 
     // --- atenciones ---
 
-    /** Crea un borrador. Si viene de una cita y ya tiene atención, devuelve esa (idempotente). */
+    /**
+     * Las citas abiertas de hoy del paciente con quien consulta. Antes de una "Nueva atención": si tiene cita, la
+     * atención debe ligarse a ella (si no, la cita quedaría abierta y podría terminar como "No asistió").
+     */
+    @Transactional(readOnly = true)
+    public List<CitaResumen> citasDeHoy(UUID pacienteId) {
+        pacientes.get(pacienteId);
+        AuthUser yo = AuthUser.current();
+        java.time.ZoneId zona = identidad.zonaHoraria(yo.tenantId());
+        return agenda.abiertasDelDia(pacienteId, yo.membresiaId(), java.time.LocalDate.now(zona), zona);
+    }
+
+    /**
+     * Crea un borrador. Si viene de una cita y ya tiene atención, devuelve esa (idempotente).
+     * @param registrarEnAgenda sin cita: registra en la agenda del médico una cita de ahora (sobrecupo) y la liga
+     */
     @Transactional
-    public AtencionVista crear(UUID pacienteId, UUID citaId) {
+    public AtencionVista crear(UUID pacienteId, UUID citaId, boolean registrarEnAgenda) {
         Paciente paciente = pacientes.get(pacienteId);
         AuthUser yo = AuthUser.current();
+        if (citaId == null && registrarEnAgenda) {
+            citaId = agenda.registrarCitaSinCita(pacienteId, yo.membresiaId(), yo.id());
+        }
         if (citaId != null) {
             var existente = atenciones.findByCitaId(citaId);
             if (existente.isPresent()) {
@@ -212,6 +230,9 @@ public class HistoriaService {
         documentos.findByAtencionId(atencionId).forEach(DocumentoClinico::desligarDeAtencion);
         documentos.flush();
         formatos.eliminarDeAtencion(atencionId);
+        if (atencion.getCitaId() != null) {
+            agenda.cancelarCitaSinCita(atencion.getCitaId());
+        }
         atenciones.delete(atencion);
     }
 
