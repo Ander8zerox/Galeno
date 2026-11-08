@@ -53,11 +53,13 @@ class AgendaService {
     private final ObjectProvider<AtencionesDeCitas> atenciones;
     private final EnEsperaRepository espera;
     private final org.springframework.context.ApplicationEventPublisher eventos;
+    private final BloqueoAgendaRepository bloqueos;
 
     AgendaService(AgendaMedicoRepository agendas, CitaRepository citas, IdentidadService identidad,
                   PacienteService pacientes, ObjectProvider<AtencionesDeCitas> atenciones, EnEsperaRepository espera,
-                  org.springframework.context.ApplicationEventPublisher eventos) {
+                  org.springframework.context.ApplicationEventPublisher eventos, BloqueoAgendaRepository bloqueos) {
         this.eventos = eventos;
+        this.bloqueos = bloqueos;
         this.agendas = agendas;
         this.citas = citas;
         this.espera = espera;
@@ -123,10 +125,7 @@ class AgendaService {
             return List.of();
         }
         ZoneId zona = zona();
-        Instant inicioDia = fecha.atStartOfDay(zona).toInstant();
-        Instant finDia = fecha.plusDays(1).atStartOfDay(zona).toInstant();
-        List<Intervalo> ocupados = citas.cruces(medicoId, inicioDia, finDia).stream()
-                .map(c -> new Intervalo(c.getInicio(), c.getFin())).toList();
+        List<Intervalo> ocupados = ocupados(medicoId, fecha, fecha, zona);
         return Disponibilidad.cupos(fecha, zona, agenda.getBloques(), agenda.getDuracionMinutos(), ocupados, Instant.now());
     }
 
@@ -140,12 +139,18 @@ class AgendaService {
         AgendaMedico agenda = obtenerOCrear(medicoId);
         ZoneId zona = zona();
         List<Intervalo> ocupados = ocupados(medicoId, desde, hasta, zona);
+        List<BloqueoAgenda> delRango = bloqueosDe(medicoId, desde.atStartOfDay(zona).toInstant(),
+                hasta.plusDays(1).atStartOfDay(zona).toInstant());
         Instant ahora = Instant.now();
         return desde.datesUntil(hasta.plusDays(1)).map(fecha -> {
             String festivo = FestivosColombia.en(fecha).map(Festivo::nombre).orElse(null);
             List<Intervalo> libres = festivo != null && !agenda.isAtiendeFestivos() ? List.of()
                     : Disponibilidad.cupos(fecha, zona, agenda.getBloques(), agenda.getDuracionMinutos(), ocupados, ahora);
-            return new DiaDisponible(fecha, festivo, libres);
+            Instant ini = fecha.atStartOfDay(zona).toInstant();
+            Instant fin = fecha.plusDays(1).atStartOfDay(zona).toInstant();
+            String bloqueo = delRango.stream().filter(b -> b.getInicio().isBefore(fin) && b.getFin().isAfter(ini))
+                    .map(BloqueoAgenda::getMotivo).findFirst().orElse(null);
+            return new DiaDisponible(fecha, festivo, libres, bloqueo);
         }).toList();
     }
 
@@ -196,10 +201,21 @@ class AgendaService {
                 .limit(MAX_ESPACIOS).toList();
     }
 
-    /** Lo que ocupa tiempo en la agenda del médico entre dos fechas (todas las citas menos las canceladas). */
+    /**
+     * Lo que ocupa tiempo en la agenda del médico entre dos fechas: las citas (menos las canceladas) y los bloqueos
+     * (suyos y del consultorio).
+     */
     private List<Intervalo> ocupados(UUID medicoId, LocalDate desde, LocalDate hasta, ZoneId zona) {
-        return citas.cruces(medicoId, desde.atStartOfDay(zona).toInstant(), hasta.plusDays(1).atStartOfDay(zona).toInstant())
-                .stream().map(c -> new Intervalo(c.getInicio(), c.getFin())).toList();
+        Instant ini = desde.atStartOfDay(zona).toInstant();
+        Instant fin = hasta.plusDays(1).atStartOfDay(zona).toInstant();
+        List<Intervalo> lista = new java.util.ArrayList<>(citas.cruces(medicoId, ini, fin).stream()
+                .map(c -> new Intervalo(c.getInicio(), c.getFin())).toList());
+        bloqueosDe(medicoId, ini, fin).forEach(b -> lista.add(new Intervalo(b.getInicio(), b.getFin())));
+        return lista;
+    }
+
+    private List<BloqueoAgenda> bloqueosDe(UUID medicoId, Instant desde, Instant hasta) {
+        return bloqueos.cruces(desde, hasta).stream().filter(b -> b.aplicaA(medicoId)).toList();
     }
 
     @Transactional
@@ -262,6 +278,73 @@ class AgendaService {
         Instant desde = LocalDate.now(zona()).atStartOfDay(zona()).toInstant();
         return vistas(citas.proximasDelPaciente(pacienteId, desde).stream()
                 .filter(c -> visibles.contains(c.getMedicoMembresiaId())).toList());
+    }
+
+    // --- bloqueos de agenda ---
+
+    /** Los bloqueos que ve quien consulta (de sus médicos y del consultorio) que se cruzan con el rango. */
+    @Transactional(readOnly = true)
+    public List<BloqueoVista> bloqueos(LocalDate desde, LocalDate hasta) {
+        if (hasta.isBefore(desde) || desde.plusYears(2).isBefore(hasta)) {
+            throw ApiProblem.badRequest("El rango debe ser de máximo 2 años");
+        }
+        ZoneId zona = zona();
+        Set<UUID> visibles = idsGestionables();
+        return vistasBloqueo(bloqueos.cruces(desde.atStartOfDay(zona).toInstant(), hasta.plusDays(1).atStartOfDay(zona).toInstant())
+                .stream().filter(b -> b.getMedicoMembresiaId() == null || visibles.contains(b.getMedicoMembresiaId())).toList());
+    }
+
+    /**
+     * Bloquea la agenda de un médico (quien la gestiona: el médico, su secretaria o el administrador) o, sin médico, la
+     * de todo el consultorio (solo el administrador). Las citas que ya están en el rango no se tocan: se devuelven para
+     * que la secretaria las mueva o cancele.
+     */
+    @Transactional
+    public BloqueoCreado bloquear(UUID medicoId, Instant inicio, Instant fin, String motivo) {
+        AuthUser yo = AuthUser.current();
+        if (medicoId == null) {
+            if (!yo.tieneRol("ADMIN")) {
+                throw ApiProblem.forbidden("Solo el administrador bloquea la agenda de todo el consultorio");
+            }
+        } else {
+            verificarAcceso(medicoId);
+        }
+        if (!fin.isAfter(inicio)) {
+            throw ApiProblem.badRequest("El fin del bloqueo debe ser posterior al inicio");
+        }
+        if (Duration.between(inicio, fin).toDays() > 366) {
+            throw ApiProblem.badRequest("Un bloqueo puede durar a lo sumo un año");
+        }
+        if (motivo == null || motivo.isBlank()) {
+            throw ApiProblem.badRequest("Indique el motivo del bloqueo (por ejemplo, vacaciones)");
+        }
+        BloqueoAgenda b = bloqueos.save(new BloqueoAgenda(medicoId, inicio, fin, motivo.strip(), yo.id()));
+        List<UUID> medicos = medicoId != null ? List.of(medicoId) : List.copyOf(idsGestionables());
+        List<Cita> afectadas = medicos.stream().flatMap(m -> citas.cruces(m, inicio, fin).stream())
+                .filter(c -> Cita.Estado.ABIERTOS.contains(c.getEstado()))
+                .sorted(Comparator.comparing(Cita::getInicio)).toList();
+        return new BloqueoCreado(vistasBloqueo(List.of(b)).getFirst(), vistas(afectadas));
+    }
+
+    @Transactional
+    public void quitarBloqueo(UUID id) {
+        BloqueoAgenda b = bloqueos.findById(id).orElseThrow(() -> ApiProblem.notFound("Bloqueo no encontrado"));
+        if (b.getMedicoMembresiaId() == null) {
+            if (!AuthUser.current().tieneRol("ADMIN")) {
+                throw ApiProblem.forbidden("Solo el administrador quita un bloqueo de todo el consultorio");
+            }
+        } else {
+            verificarAcceso(b.getMedicoMembresiaId());
+        }
+        bloqueos.delete(b);
+    }
+
+    private List<BloqueoVista> vistasBloqueo(List<BloqueoAgenda> lista) {
+        Map<UUID, String> medicos = identidad.medicosActivos().stream()
+                .collect(Collectors.toMap(MedicoResumen::membresiaId, MedicoResumen::nombre));
+        return lista.stream().map(b -> new BloqueoVista(b.getId(), b.getMedicoMembresiaId(),
+                b.getMedicoMembresiaId() == null ? null : medicos.get(b.getMedicoMembresiaId()), b.getInicio(), b.getFin(),
+                b.getMotivo())).toList();
     }
 
     // --- lista de espera y espacios liberados ---
@@ -338,8 +421,11 @@ class AgendaService {
         }
         List<Cita> delDia = citas.cruces(medicoId, fecha.atStartOfDay(zona).toInstant(),
                 fecha.plusDays(1).atStartOfDay(zona).toInstant());
-        Intervalo hueco = Disponibilidad.hueco(inicio, zona, agenda.getBloques(),
-                        delDia.stream().map(c -> new Intervalo(c.getInicio(), c.getFin())).toList(), Instant.now())
+        List<Intervalo> ocupadosDia = new java.util.ArrayList<>(delDia.stream()
+                .map(c -> new Intervalo(c.getInicio(), c.getFin())).toList());
+        bloqueosDe(medicoId, fecha.atStartOfDay(zona).toInstant(), fecha.plusDays(1).atStartOfDay(zona).toInstant())
+                .forEach(b -> ocupadosDia.add(new Intervalo(b.getInicio(), b.getFin())));
+        Intervalo hueco = Disponibilidad.hueco(inicio, zona, agenda.getBloques(), ocupadosDia, Instant.now())
                 .orElseThrow(() -> ApiProblem.conflict("Ese espacio ya no está libre o está fuera del horario"));
         long libres = Duration.between(hueco.inicio(), hueco.fin()).toMinutes();
 
@@ -448,6 +534,9 @@ class AgendaService {
                 throw ApiProblem.conflict("Es festivo (" + f.nombre() + "). Use sobrecupo si el médico atiende ese día.");
             });
         }
+        bloqueosDe(agenda.getMedicoMembresiaId(), intervalo.inicio(), intervalo.fin()).stream().findFirst().ifPresent(b -> {
+            throw ApiProblem.conflict("La agenda está bloqueada (" + b.getMotivo() + "). Use sobrecupo si es necesario.");
+        });
         if (!Disponibilidad.dentroDelHorario(intervalo, zona(), agenda.getBloques())) {
             throw ApiProblem.conflict("La hora está fuera del horario del médico. Use sobrecupo si es necesario.");
         }
@@ -547,8 +636,11 @@ class AgendaService {
     public record MedicoAgenda(UUID membresiaId, String nombre, boolean puedeEditarHorario) {
     }
 
-    /** @param festivo nombre del festivo de Colombia, o null */
-    public record DiaDisponible(LocalDate fecha, String festivo, List<Intervalo> libres) {
+    /**
+     * @param festivo nombre del festivo de Colombia, o null
+     * @param bloqueo motivo de un bloqueo que toca ese día (todo o parte), o null
+     */
+    public record DiaDisponible(LocalDate fecha, String festivo, List<Intervalo> libres, String bloqueo) {
     }
 
     public record Espacio(UUID medicoId, String medicoNombre, Instant inicio, Instant fin) {
@@ -563,6 +655,14 @@ class AgendaService {
                                 String pacienteTelefono, UUID medicoId, String medicoNombre, int duracionMinutos,
                                 EnEspera.Franja franja, LocalDate antesDe, UUID citaId, Instant citaInicio, String motivo,
                                 String nota, Instant creadaEn, boolean vigente) {
+    }
+
+    /** @param medicoId null: todo el consultorio */
+    public record BloqueoVista(UUID id, UUID medicoId, String medicoNombre, Instant inicio, Instant fin, String motivo) {
+    }
+
+    /** @param citasAfectadas citas abiertas dentro del bloqueo: hay que moverlas o cancelarlas */
+    public record BloqueoCreado(BloqueoVista bloqueo, List<CitaVista> citasAfectadas) {
     }
 
     /** El espacio libre ([inicio, fin)) y a quién se le puede ofrecer. */

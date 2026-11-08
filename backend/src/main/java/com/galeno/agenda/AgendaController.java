@@ -122,6 +122,31 @@ public class AgendaController {
         return agenda.proximasDelPaciente(pacienteId);
     }
 
+    /** Bloqueos (vacaciones, cierres) de los médicos que ve quien consulta y del consultorio, que tocan el rango. */
+    @GetMapping("/bloqueos")
+    public List<AgendaService.BloqueoVista> bloqueos(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+                                                     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        return agenda.bloqueos(desde, hasta);
+    }
+
+    /** Devuelve también las citas abiertas que quedaron dentro del bloqueo (no se tocan: hay que moverlas o cancelarlas). */
+    @PostMapping("/bloqueos")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AgendaService.BloqueoCreado bloquear(@Valid @RequestBody NuevoBloqueo r) {
+        return agenda.bloquear(r.medicoId(), r.inicio().toInstant(), r.fin().toInstant(), r.motivo());
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/bloqueos/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void quitarBloqueo(@PathVariable UUID id) {
+        agenda.quitarBloqueo(id);
+    }
+
+    /** @param medicoId null: todo el consultorio (solo el administrador) */
+    public record NuevoBloqueo(UUID medicoId, @NotNull OffsetDateTime inicio, @NotNull OffsetDateTime fin,
+                               @jakarta.validation.constraints.NotBlank @Size(max = 200) String motivo) {
+    }
+
     /** Pacientes en la lista de espera (activos), el que más lleva esperando primero. */
     @GetMapping("/lista-espera")
     public List<EnEsperaVista> listaEspera() {
