@@ -1988,6 +1988,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/historia/pacientes/{pacienteId}/citas-de-hoy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["citasDeHoy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/historia/documentos/{id}/archivo": {
         parameters: {
             query?: never;
@@ -3412,6 +3428,7 @@ export interface components {
             pacienteId: string;
             /** Format: uuid */
             citaId?: string;
+            registrarEnAgenda?: boolean;
         };
         NuevaNota: {
             texto: string;
@@ -3781,6 +3798,18 @@ export interface components {
             autor?: string;
             anulacion?: string;
         };
+        CitaResumen: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            pacienteId?: string;
+            /** Format: uuid */
+            medicoMembresiaId?: string;
+            /** Format: date-time */
+            inicio?: string;
+            /** @enum {string} */
+            estado?: "PROGRAMADA" | "CONFIRMADA" | "ATENDIDA" | "NO_ASISTIO" | "CANCELADA";
+        };
         CupsVista: {
             codigo?: string;
             descripcion?: string;
@@ -3863,27 +3892,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            valueNode?: boolean;
-            missingNode?: boolean;
-            container?: boolean;
-            number?: boolean;
-            bigDecimal?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            integralNumber?: boolean;
-            bigInteger?: boolean;
-            object?: boolean;
-            pojo?: boolean;
-            short?: boolean;
-            int?: boolean;
             long?: boolean;
-            double?: boolean;
-            string?: boolean;
-            binary?: boolean;
             boolean?: boolean;
+            pojo?: boolean;
             /** @deprecated */
             textual?: boolean;
+            short?: boolean;
+            object?: boolean;
+            string?: boolean;
+            int?: boolean;
+            double?: boolean;
+            binary?: boolean;
+            missingNode?: boolean;
+            bigDecimal?: boolean;
+            container?: boolean;
+            valueNode?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            bigInteger?: boolean;
+            integralNumber?: boolean;
             floatingPointNumber?: boolean;
+            number?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -7483,6 +7512,28 @@ export interface operations {
                 };
                 content: {
                     "application/pdf": string;
+                };
+            };
+        };
+    };
+    citasDeHoy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CitaResumen"][];
                 };
             };
         };

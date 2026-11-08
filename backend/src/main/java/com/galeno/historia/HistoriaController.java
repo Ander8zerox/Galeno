@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.galeno.agenda.AgendaPublica.CitaResumen;
 import com.galeno.formatos.FormatosService.RespuestasFormato;
 import com.galeno.historia.HistoriaService.Archivo;
 import com.galeno.historia.HistoriaService.AtencionVista;
@@ -62,7 +63,13 @@ public class HistoriaController {
     @PostMapping("/atenciones")
     @ResponseStatus(HttpStatus.CREATED)
     public AtencionVista crear(@Valid @RequestBody NuevaAtencion r) {
-        return historia.crear(r.pacienteId(), r.citaId());
+        return historia.crear(r.pacienteId(), r.citaId(), Boolean.TRUE.equals(r.registrarEnAgenda()));
+    }
+
+    /** Citas abiertas de hoy del paciente con el médico que consulta (para ligar la atención a su cita). */
+    @GetMapping("/pacientes/{pacienteId}/citas-de-hoy")
+    public List<CitaResumen> citasDeHoy(@PathVariable UUID pacienteId) {
+        return historia.citasDeHoy(pacienteId);
     }
 
     @GetMapping("/atenciones/{id}")
@@ -179,7 +186,8 @@ public class HistoriaController {
         return historia.buscarCie10(q);
     }
 
-    public record NuevaAtencion(@NotNull UUID pacienteId, UUID citaId) {
+    /** @param registrarEnAgenda sin cita: registrarla en la agenda del médico como cita de ahora */
+    public record NuevaAtencion(@NotNull UUID pacienteId, UUID citaId, Boolean registrarEnAgenda) {
     }
 
     public record AnularDocumento(@NotBlank @Size(max = 300) String motivo) {
