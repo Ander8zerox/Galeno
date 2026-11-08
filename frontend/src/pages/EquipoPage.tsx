@@ -17,6 +17,7 @@ export function EquipoPage() {
   return (
     <section className="stack">
       <div className="page-header"><h1>Equipo del consultorio</h1></div>
+      <DatosConsultorio />
       <Invitar />
       <Pendientes />
       <div className="stack">
@@ -26,6 +27,66 @@ export function EquipoPage() {
         {equipo.data?.map((m) => <MiembroCard key={m.membresiaId} miembro={m} medicos={medicos} />)}
       </div>
     </section>
+  );
+}
+
+/** Contacto que ven los pacientes en los correos de sus citas, y si se envían. */
+function DatosConsultorio() {
+  const queryClient = useQueryClient();
+  const datos = useQuery({
+    queryKey: ["consultorio-datos"],
+    queryFn: async () => unwrap(await api.GET("/api/v1/equipo/consultorio")),
+  });
+  if (datos.isLoading) return <p className="muted">Cargando…</p>;
+  if (datos.error) return <p className="alert alert-error">{datos.error.message}</p>;
+  return <DatosConsultorioForm key={JSON.stringify(datos.data)} inicial={datos.data!}
+    onGuardado={(d) => queryClient.setQueryData(["consultorio-datos"], d)} />;
+}
+
+function DatosConsultorioForm({ inicial, onGuardado }: {
+  inicial: Schemas["DatosConsultorio"];
+  onGuardado: (d: Schemas["DatosConsultorio"]) => void;
+}) {
+  const [form, setForm] = useState({
+    direccion: inicial.direccion ?? "", telefono: inicial.telefono ?? "", correo: inicial.correo ?? "",
+    correosPacientes: !!inicial.correosPacientes,
+  });
+  const [guardado, setGuardado] = useState(false);
+  const guardar = useMutation({
+    mutationFn: async () => unwrap(await api.PUT("/api/v1/equipo/consultorio", { body: form })),
+    onSuccess: (d) => { setGuardado(true); onGuardado(d); },
+  });
+  const set = (campo: "direccion" | "telefono" | "correo") => (e: { target: { value: string } }) => {
+    setGuardado(false);
+    setForm({ ...form, [campo]: e.target.value });
+  };
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    guardar.mutate();
+  }
+
+  return (
+    <form className="card stack" onSubmit={onSubmit}>
+      <h3>Datos del consultorio: {inicial.nombre}</h3>
+      <p className="muted small">Los ven sus pacientes en los correos de sus citas, para saber a dónde ir y cómo avisar si no pueden asistir.</p>
+      <div className="form-grid">
+        <label className="wide">Dirección<input value={form.direccion} maxLength={200} onChange={set("direccion")} placeholder="Cra 10 # 20-30, consultorio 201, Bogotá" /></label>
+        <label>Teléfono<input value={form.telefono} maxLength={40} onChange={set("telefono")} placeholder="601 555 0000" /></label>
+        <label>Correo para respuestas<input type="email" value={form.correo} maxLength={190} onChange={set("correo")} placeholder="citas@suconsultorio.com" /></label>
+      </div>
+      <label className="check">
+        <input type="checkbox" checked={form.correosPacientes}
+          onChange={(e) => { setGuardado(false); setForm({ ...form, correosPacientes: e.target.checked }); }} />
+        Enviar correos a los pacientes sobre sus citas: al agendarla, si cambia o se cancela, y un recordatorio 24 horas antes
+      </label>
+      {form.correosPacientes && !form.telefono && !form.correo && (
+        <p className="alert">Sin teléfono ni correo, el paciente no sabrá cómo avisar si no puede asistir.</p>
+      )}
+      {guardar.error && <p className="alert alert-error">{guardar.error.message}</p>}
+      {guardado && <p className="alert alert-ok">Datos guardados.</p>}
+      <div><button className="btn" disabled={guardar.isPending}>{guardar.isPending ? "Guardando…" : "Guardar"}</button></div>
+    </form>
   );
 }
 

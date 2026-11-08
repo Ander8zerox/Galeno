@@ -19,5 +19,7 @@ public record PacienteRequest(
         @Size(max = 30) String telefono,
         @Email @Size(max = 190) String email,
         @Size(max = 2000) String alergias,
-        @Size(max = 4000) String antecedentes) {
+        @Size(max = 4000) String antecedentes,
+        /** El paciente pidió no recibir correos sobre sus citas; null: se queda como estaba. */
+        Boolean sinCorreosCitas) {
 }

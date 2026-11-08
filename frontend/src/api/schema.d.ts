@@ -404,6 +404,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/equipo/consultorio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["consultorio"];
+        put: operations["actualizarConsultorio"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/agenda/medicos/{medicoId}/horario": {
         parameters: {
             query?: never;
@@ -2740,6 +2756,7 @@ export interface components {
             email?: string;
             alergias?: string;
             antecedentes?: string;
+            sinCorreosCitas?: boolean;
         };
         PacienteResponse: {
             /** Format: uuid */
@@ -2758,6 +2775,7 @@ export interface components {
             alergias?: string;
             antecedentes?: string;
             datosIncompletos?: boolean;
+            sinCorreosCitas?: boolean;
         };
         Activacion: {
             activo: boolean;
@@ -3071,6 +3089,19 @@ export interface components {
         };
         AsignarMedicos: {
             medicos: string[];
+        };
+        ActualizarConsultorio: {
+            direccion?: string;
+            telefono?: string;
+            correo?: string;
+            correosPacientes?: boolean;
+        };
+        DatosConsultorio: {
+            nombre?: string;
+            direccion?: string;
+            telefono?: string;
+            correo?: string;
+            correosPacientes?: boolean;
         };
         ActualizarHorario: {
             /** Format: int32 */
@@ -3855,6 +3886,8 @@ export interface components {
             texto?: string;
             /** Format: date-time */
             enviadoEn?: string;
+            remitenteNombre?: string;
+            responderA?: string;
         };
         MeResponse: {
             /** Format: uuid */
@@ -3893,27 +3926,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            floatingPointNumber?: boolean;
+            number?: boolean;
+            bigDecimal?: boolean;
+            bigInteger?: boolean;
+            integralNumber?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            bigInteger?: boolean;
-            valueNode?: boolean;
-            bigDecimal?: boolean;
-            integralNumber?: boolean;
-            container?: boolean;
-            missingNode?: boolean;
-            number?: boolean;
+            object?: boolean;
+            boolean?: boolean;
             /** @deprecated */
             textual?: boolean;
-            pojo?: boolean;
+            string?: boolean;
             binary?: boolean;
+            pojo?: boolean;
+            short?: boolean;
             long?: boolean;
             int?: boolean;
-            string?: boolean;
-            object?: boolean;
-            short?: boolean;
             double?: boolean;
-            boolean?: boolean;
+            missingNode?: boolean;
+            container?: boolean;
+            valueNode?: boolean;
+            floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -4906,6 +4939,50 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    consultorio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DatosConsultorio"];
+                };
+            };
+        };
+    };
+    actualizarConsultorio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActualizarConsultorio"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DatosConsultorio"];
+                };
             };
         };
     };

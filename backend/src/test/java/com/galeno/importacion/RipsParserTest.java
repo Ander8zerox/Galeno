@@ -292,6 +292,19 @@ class RipsParserTest {
     }
 
     @Test
+    void leeLosDatosDelUsuarioParaElRipsYUnArchivoSinEllosNoLosBorra() {
+        // FACTURA_2 (sin tipo de usuario ni municipio) se lee después de la de la 948
+        PacienteRips p = parser.leer(List.of(json("c.json", FACTURA_948), json("b.json", FACTURA_2)))
+                .pacientes().get("CC 1020304050");
+
+        assertThat(p.tipoUsuario).isEqualTo("01");
+        assertThat(p.paisResidencia).isEqualTo("170");
+        assertThat(p.municipio).isEqualTo("11001");
+        assertThat(p.zona).isEqualTo("02");
+        assertThat(p.paisOrigen).isEqualTo("170");
+    }
+
+    @Test
     void avisaSiUnDiagnosticoVieneSoloEnCie11() {
         PacienteRips p = parser.leer(List.of(json("c.json", FACTURA_948))).pacientes().get("CC 1020304050");
 

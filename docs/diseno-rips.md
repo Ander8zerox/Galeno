@@ -420,8 +420,10 @@ MUV sigue en espera (botón deshabilitado).
   RIPS de "todas las atenciones" como soporte de la factura electrónica de salud, sin excluir por pagador. No menciona a
   los particulares ni el pago directo del usuario, así que la lectura más probable es que también lleven RIPS (tipo de
   usuario 12), pero no está explícito. Las excepciones escritas (art. 2, parágrafo 1) son centros de reconocimiento de
-  conductores, centros de investigación, y estética y medicina alternativa sin recursos públicos. Pendiente confirmarlo
-  con la mesa de ayuda del Ministerio antes de activar el módulo por defecto.
+  conductores, centros de investigación, y estética y medicina alternativa sin recursos públicos. Se decidió (8 de noviembre de
+  2026) **activar el módulo por defecto** en los consultorios nuevos sin esperar la confirmación del Ministerio: el
+  administrador lo puede desactivar y desactivarlo no borra nada. Si la mesa de ayuda confirma que los particulares no
+  llevan RIPS, se puede volver a desactivado por defecto (`ModulosService.POR_DEFECTO`).
 - **Permisos:**
   - Las listas de SISPRO, cualquier miembro.
   - Los datos del paciente, `PACIENTE_GESTIONAR`.
@@ -630,6 +632,8 @@ de consultas y procedimientos quedaron como recursos de prueba en `backend/src/t
 - **Sin cambios:** la estructura (`numDocumentoIdObligado`, `numFactura`, `usuarios`, `servicios`), los nombres de
   los campos que ya se leían, las fechas `AAAA-MM-DD HH:MM` y los RIPS de la 2275 (se siguen leyendo igual).
 - **No se importan (como antes):** medicamentos, recién nacidos y otros servicios (se cuentan como omitidos).
-- **Pendiente:** los datos del usuario para el RIPS (`codPaisResidencia`, `codZonaTerritorialResidencia`,
-  `codPaisOrigen`, `incapacidad`, y el tipo de usuario y municipio que ya se leen) no se guardan en los "Datos para
-  RIPS" del paciente. `registroSIRAS` es de cada atención (va en el cobro), no del paciente.
+- **Datos del usuario** (8 de noviembre de 2026): con el módulo activo, al confirmar el lote se llenan los "Datos para
+  RIPS" del paciente (tipo de usuario, país de residencia, municipio, zona y país de origen) con el último valor que
+  traigan los archivos, **solo si el paciente aún no los tiene** (nunca reemplaza lo digitado). Un código que no está
+  en las tablas de SISPRO queda vacío y la ficha avisa que falta. Al deshacer un lote que creó al paciente, sus datos
+  RIPS se borran con él. `incapacidad` y `registroSIRAS` son de cada atención (van en el cobro), no del paciente.

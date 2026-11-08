@@ -73,6 +73,10 @@ public class Paciente {
     @Column(name = "lote_importacion_id")
     private UUID loteImportacionId;
 
+    /** Pidió no recibir correos sobre sus citas. */
+    @Column(name = "sin_correos_citas", nullable = false)
+    private boolean sinCorreosCitas;
+
     protected Paciente() {
     }
 
@@ -201,6 +205,15 @@ public class Paciente {
         this.email = email;
         this.datosIncompletos = false;
         this.actualizadoEn = Instant.now();
+    }
+
+    void preferirSinCorreosCitas(boolean sinCorreos) {
+        this.sinCorreosCitas = sinCorreos;
+        this.actualizadoEn = Instant.now();
+    }
+
+    public boolean isSinCorreosCitas() {
+        return sinCorreosCitas;
     }
 
     /** Solo personal con permiso HISTORIA_VER (médicos). */

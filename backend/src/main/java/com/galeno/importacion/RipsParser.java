@@ -87,8 +87,12 @@ final class RipsParser {
         String numeroDocumento;
         LocalDate fechaNacimiento;
         String sexo;
+        // Datos del usuario para el RIPS (U03, U06 a U09, U11): el último valor que venga en los archivos
         String tipoUsuario;
+        String paisResidencia;
         String municipio;
+        String zona;
+        String paisOrigen;
         final List<AtencionRips> atenciones = new ArrayList<>();
         final List<String> errores = new ArrayList<>();
         final List<String> advertencias = new ArrayList<>();
@@ -194,8 +198,12 @@ final class RipsParser {
         } else if ((nacimiento != null && !nacimiento.equals(p.fechaNacimiento)) || (sexo != null && !sexo.equals(p.sexo))) {
             p.advertencias.add("La fecha de nacimiento o el sexo cambian entre archivos; se usa el primero");
         }
-        p.tipoUsuario = texto(u, "tipoUsuario");
-        p.municipio = texto(u, "codMunicipioResidencia");
+        // Un archivo que no trae el dato no borra el que trajo otro
+        p.tipoUsuario = siViene(texto(u, "tipoUsuario"), p.tipoUsuario);
+        p.paisResidencia = siViene(texto(u, "codPaisResidencia"), p.paisResidencia);
+        p.municipio = siViene(texto(u, "codMunicipioResidencia"), p.municipio);
+        p.zona = siViene(texto(u, "codZonaTerritorialResidencia"), p.zona);
+        p.paisOrigen = siViene(texto(u, "codPaisOrigen"), p.paisOrigen);
         return p;
     }
 
@@ -288,6 +296,10 @@ final class RipsParser {
         }
         String s = v.asString().strip();
         return s.isEmpty() ? null : s;
+    }
+
+    private static String siViene(String nuevo, String actual) {
+        return nuevo != null ? nuevo : actual;
     }
 
     private static String mayus(String s) {

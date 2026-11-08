@@ -102,6 +102,36 @@ public class IdentidadService implements SesionVerifier {
                 .orElseThrow();
     }
 
+    /** Lo que ven los pacientes en los correos de sus citas, y si el consultorio los envía. */
+    @Transactional(readOnly = true)
+    public ContactoConsultorio contacto(UUID consultorioId) {
+        Consultorio c = consultorios.findById(consultorioId).orElseThrow();
+        return new ContactoConsultorio(c.getNombre(), c.getDireccion(), c.getTelefono(), c.getCorreoContacto(),
+                c.isCorreosPacientes(), ZoneId.of(c.getZonaHoraria()));
+    }
+
+    @Transactional
+    public ContactoConsultorio actualizarContacto(UUID consultorioId, String direccion, String telefono, String correo,
+                                                  boolean correosPacientes) {
+        String email = vacioANull(correo);
+        if (email != null && !email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+            throw ApiProblem.badRequest("El correo de contacto no es válido");
+        }
+        consultorios.findById(consultorioId).orElseThrow().actualizarContacto(vacioANull(direccion), vacioANull(telefono),
+                email == null ? null : email.toLowerCase(java.util.Locale.ROOT), correosPacientes);
+        return contacto(consultorioId);
+    }
+
+    /** Consultorios que envían correos a sus pacientes (para los recordatorios). */
+    @Transactional(readOnly = true)
+    public List<UUID> consultoriosConCorreosPacientes() {
+        return consultorios.findAll().stream().filter(Consultorio::isCorreosPacientes).map(Consultorio::getId).toList();
+    }
+
+    private static String vacioANull(String s) {
+        return s == null || s.isBlank() ? null : s.strip();
+    }
+
     /** Datos del profesional para documentos (fórmulas, atenciones). */
     @Transactional(readOnly = true)
     public Profesional profesional(UUID usuarioId) {
@@ -170,6 +200,11 @@ public class IdentidadService implements SesionVerifier {
     }
 
     public record MedicoResumen(UUID membresiaId, UUID usuarioId, String nombre) {
+    }
+
+    /** @param correo a dónde responden los pacientes; null: no se ofrece responder */
+    public record ContactoConsultorio(String nombre, String direccion, String telefono, String correo,
+                                      boolean correosPacientes, ZoneId zona) {
     }
 
     public record ConsultorioResumen(UUID id, String nombre, String nit, ZoneId zona) {

@@ -17,7 +17,7 @@ const TIPOS_DOCUMENTO: [string, string][] = [
 
 const VACIO: PacienteRequest = {
   tipoDocumento: "CC", numeroDocumento: "", nombres: "", apellidos: "", fechaNacimiento: "", sexo: "F",
-  telefono: "", email: "", alergias: "", antecedentes: "",
+  telefono: "", email: "", alergias: "", antecedentes: "", sinCorreosCitas: false,
 };
 
 function desde(p: Paciente): PacienteRequest {
@@ -26,7 +26,7 @@ function desde(p: Paciente): PacienteRequest {
     // Un paciente importado de RIPS trae nombres de relleno: el formulario arranca vacío para escribir los reales
     nombres: p.datosIncompletos ? "" : p.nombres!, apellidos: p.datosIncompletos ? "" : p.apellidos!,
     fechaNacimiento: p.fechaNacimiento!, sexo: p.sexo!, telefono: p.telefono ?? "", email: p.email ?? "",
-    alergias: p.alergias ?? "", antecedentes: p.antecedentes ?? "",
+    alergias: p.alergias ?? "", antecedentes: p.antecedentes ?? "", sinCorreosCitas: !!p.sinCorreosCitas,
   };
 }
 
@@ -82,6 +82,12 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
       </label>
       <Campo label="Teléfono" error={errores.telefono}><input value={form.telefono} onChange={set("telefono")} /></Campo>
       <Campo label="Correo" error={errores.email}><input type="email" value={form.email} onChange={set("email")} /></Campo>
+      {!!form.email && (
+        <label className="check wide">
+          <input type="checkbox" checked={!!form.sinCorreosCitas} onChange={(e) => setForm({ ...form, sinCorreosCitas: e.target.checked })} />
+          No enviarle correos sobre sus citas (lo pidió el paciente)
+        </label>
+      )}
       {clinico && <Campo label="Alergias (separadas por coma)" error={errores.alergias} wide><input value={form.alergias} onChange={set("alergias")} /></Campo>}
       {clinico && <Campo label="Antecedentes" error={errores.antecedentes} wide><textarea rows={2} value={form.antecedentes} onChange={set("antecedentes")} /></Campo>}
       {guardar.error && <p className="alert alert-error wide">{guardar.error.message}</p>}

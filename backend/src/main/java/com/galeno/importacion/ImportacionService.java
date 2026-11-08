@@ -29,6 +29,8 @@ import com.galeno.historia.HistoriaService;
 import com.galeno.identidad.IdentidadService;
 import com.galeno.importacion.RipsParser.AtencionRips;
 import com.galeno.importacion.RipsParser.DxRips;
+import com.galeno.rips.DatosRipsService;
+import com.galeno.rips.DatosRipsService.DatosImportados;
 import com.galeno.importacion.RipsParser.PacienteRips;
 import com.galeno.importacion.ImportacionListadoService.Columnas;
 import com.galeno.importacion.ImportacionListadoService.MapeoColumnas;
@@ -60,12 +62,14 @@ public class ImportacionService {
     private final JsonMapper mapper;
     private final RipsParser parser;
     private final ImportacionListadoService listado;
+    private final DatosRipsService datosRips;
 
     ImportacionService(LoteImportacionRepository lotes, RegistroImportacionRepository registros,
                        PacienteService pacientes, HistoriaService historia, FormulasPublica formulas,
                        AgendaPublica agenda, IdentidadService identidad, JsonMapper mapper,
-                       ImportacionListadoService listado) {
+                       ImportacionListadoService listado, DatosRipsService datosRips) {
         this.listado = listado;
+        this.datosRips = datosRips;
         this.lotes = lotes;
         this.registros = registros;
         this.pacientes = pacientes;
@@ -87,8 +91,9 @@ public class ImportacionService {
                          String profesional, String factura, List<DxDatos> diagnosticos, String codigoVida) {
     }
 
+    /** Los datos del usuario para el RIPS (país, zona, origen) son null en lotes anteriores. */
     record DatosRegistro(LocalDate fechaNacimiento, String sexo, String tipoUsuario, String municipio,
-                         List<AtencionDatos> atenciones) {
+                         List<AtencionDatos> atenciones, String paisResidencia, String zona, String paisOrigen) {
     }
 
     public enum Nivel {
@@ -208,7 +213,8 @@ public class ImportacionService {
                 }
                 totalAtenciones += atenciones.size();
             }
-            DatosRegistro datos = new DatosRegistro(p.fechaNacimiento, p.sexo, p.tipoUsuario, p.municipio, atenciones);
+            DatosRegistro datos = new DatosRegistro(p.fechaNacimiento, p.sexo, p.tipoUsuario, p.municipio, atenciones,
+                    p.paisResidencia, p.zona, p.paisOrigen);
             nuevos.add(new RegistroImportacion(lote.getId(), orden++, p.tipoDocumento, p.numeroDocumento, estado,
                     atenciones.size(), mapper.writeValueAsString(datos), mapper.writeValueAsString(mensajes), pacienteId));
         }
@@ -336,6 +342,9 @@ public class ImportacionService {
                 creados++;
             }
             r.importadoComo(paciente.getId());
+            // Con el módulo RIPS activo, los datos del paciente para el RIPS salen del archivo (si aún no los tiene)
+            datosRips.completarDesdeImportacion(paciente.getId(), new DatosImportados(datos.tipoUsuario(),
+                    datos.paisResidencia(), datos.municipio(), datos.zona(), datos.paisOrigen()));
             int deEste = 0;
             for (AtencionDatos a : datos.atenciones()) {
                 boolean creada = historia.importarAtencion(paciente.getId(), a.fecha().atZone(zona).toInstant(),
@@ -390,6 +399,7 @@ public class ImportacionService {
             boolean sinActividad = historia.actividadClinica(pacienteId) == 0 && formulas.delPaciente(pacienteId) == 0
                     && agenda.citasDelPaciente(pacienteId) == 0;
             if (sinActividad) {
+                datosRips.borrarDelPaciente(pacienteId);
                 pacientes.eliminarImportado(pacienteId, loteId);
                 borrados++;
             } else {

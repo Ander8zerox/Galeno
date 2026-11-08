@@ -147,7 +147,9 @@ El consultorio de prueba tiene una secretaria que maneja la agenda de 5 odontól
   - Habría que manejar la silla como un recurso que también se reserva al agendar, y que fuera opcional por
     consultorio.
 - **Ya planeado:**
-  - Recordatorios por WhatsApp o SMS. También servirán para avisar las citas adelantadas.
+  - ✅ **Correos de citas a pacientes** (8 de noviembre de 2026): agendada, cambios, cancelación y recordatorio 24 h
+    antes; datos del consultorio en Equipo. Ver "Cómo quedó: correos de citas" en `docs/diseno-recordatorios.md`.
+  - Pendiente: recordatorios por WhatsApp o SMS (análisis de costos y del número por consultorio en el mismo documento).
   - Bloqueos por vacaciones y días cerrados del consultorio.
 
 ### 2. RIPS, fase 2: datos y generación del JSON
@@ -167,8 +169,9 @@ El consultorio de prueba tiene una secretaria que maneja la agenda de 5 odontól
   100% sin RIPS), con el XML de la nota opcional. RIPS sin factura con su número de envío. Ver "Cómo quedaron las notas".
 - ✅ **Registro SIRAS:** en el cobro, para accidentes de tránsito (pagador SOAT o tipo de usuario 10 o 14); el lote lo
   exige y lo lleva al RIPS.
-- ⏳ **Por decidir:** activar el módulo RIPS por defecto en los consultorios nuevos (la Res. 948 parece exigir RIPS
-  también por particulares; ver "¿Particulares también?" en `docs/diseno-rips.md`).
+- ✅ **Módulo RIPS activo por defecto** en los consultorios nuevos (decidido el 8 de noviembre de 2026): la Res. 948
+  parece exigir RIPS también por particulares (ver "¿Particulares también?" en `docs/diseno-rips.md`). El
+  administrador lo puede desactivar; los consultorios que ya existían no cambian.
 
 
 Prioridad: los consultorios objetivo facturan sobre todo a EPS y prepagadas, y sin RIPS no cobran. La norma vigente es
@@ -193,8 +196,8 @@ la **Res. 948 de 2026**, con el Documento Técnico 1 v003 y el 2 v001, ambos del
   - El botón "Enviar al Ministerio" queda deshabilitado.
 - ✅ Importación (`RipsParser`) revisada contra el Documento Técnico 1 v003 (8 de noviembre de 2026): ver "Importación
   revisada contra el DT1 v003" en `docs/diseno-rips.md`.
-- Pendiente: al importar, llenar los "Datos para RIPS" del paciente nuevo (tipo de usuario, país, municipio, zona)
-  con lo que trae el RIPS.
+- ✅ Al importar, los "Datos para RIPS" del paciente (tipo de usuario, país, municipio, zona, país de origen) se toman
+  del archivo si aún no los tiene.
 
 ### 3. Odontología, fase 3 de los formatos
 

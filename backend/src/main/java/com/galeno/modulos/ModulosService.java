@@ -6,19 +6,49 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import com.galeno.identidad.ConsultorioRegistrado;
+import com.galeno.shared.tenancy.TenantContext;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
 /** Módulos opcionales del consultorio actual. Los demás módulos preguntan aquí antes de responder. */
 @Service
 public class ModulosService {
 
-    private final ModuloConsultorioRepository modulos;
+    /**
+     * Activos al registrar un consultorio. RIPS: la Res. 948 de 2026 pide RIPS de todas las atenciones, y la lectura
+     * más probable es que incluya a los particulares (decidido el 8 de noviembre de 2026). El administrador lo puede
+     * desactivar.
+     */
+    static final Set<Modulo> POR_DEFECTO = EnumSet.of(Modulo.RIPS);
 
-    ModulosService(ModuloConsultorioRepository modulos) {
+    private static final Logger log = LoggerFactory.getLogger(ModulosService.class);
+
+    private final ModuloConsultorioRepository modulos;
+    private final TransactionTemplate tx;
+
+    ModulosService(ModuloConsultorioRepository modulos, TransactionTemplate tx) {
         this.modulos = modulos;
+        this.tx = tx;
+    }
+
+    /** Un consultorio recién registrado empieza con los módulos por defecto. */
+    @EventListener
+    void alRegistrarse(ConsultorioRegistrado evento) {
+        TenantContext.runAs(evento.consultorioId(), () -> tx.executeWithoutResult(t -> {
+            for (Modulo m : POR_DEFECTO) {
+                if (!modulos.existsByModulo(m)) {
+                    modulos.save(new ModuloConsultorio(m));
+                }
+            }
+        }));
+        log.info("Consultorio {}: módulos activos por defecto {}", evento.consultorioId(), POR_DEFECTO);
     }
 
     @Transactional(readOnly = true)

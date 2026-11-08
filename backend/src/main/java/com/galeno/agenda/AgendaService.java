@@ -52,9 +52,12 @@ class AgendaService {
     private final PacienteService pacientes;
     private final ObjectProvider<AtencionesDeCitas> atenciones;
     private final EnEsperaRepository espera;
+    private final org.springframework.context.ApplicationEventPublisher eventos;
 
     AgendaService(AgendaMedicoRepository agendas, CitaRepository citas, IdentidadService identidad,
-                  PacienteService pacientes, ObjectProvider<AtencionesDeCitas> atenciones, EnEsperaRepository espera) {
+                  PacienteService pacientes, ObjectProvider<AtencionesDeCitas> atenciones, EnEsperaRepository espera,
+                  org.springframework.context.ApplicationEventPublisher eventos) {
+        this.eventos = eventos;
         this.agendas = agendas;
         this.citas = citas;
         this.espera = espera;
@@ -209,6 +212,7 @@ class AgendaService {
         validarCupo(agenda, intervalo, sobrecupo, null);
         Cita cita = citas.save(new Cita(medicoId, pacienteId, intervalo.inicio(), intervalo.fin(), blankToNull(motivo),
                 sobrecupo, AuthUser.current().id()));
+        eventos.publishEvent(new CambioCita(cita.getId(), CambioCita.Tipo.AGENDADA, null));
         return vistas(List.of(cita)).getFirst();
     }
 
@@ -219,7 +223,11 @@ class AgendaService {
         int duracion = (int) Duration.between(cita.getInicio(), cita.getFin()).toMinutes();
         Intervalo intervalo = intervalo(inicio, duracion);
         validarCupo(agenda, intervalo, sobrecupo, cita.getId());
+        Instant anterior = cita.getInicio();
         cita.reprogramar(intervalo.inicio(), intervalo.fin(), sobrecupo);
+        if (!anterior.equals(cita.getInicio())) {
+            eventos.publishEvent(new CambioCita(cita.getId(), CambioCita.Tipo.REPROGRAMADA, anterior));
+        }
         return vistas(List.of(cita)).getFirst();
     }
 
@@ -240,6 +248,9 @@ class AgendaService {
             }
         }
         cita.cambiarEstado(estado, motivoCancelacion);
+        if (estado == Cita.Estado.CANCELADA) {
+            eventos.publishEvent(new CambioCita(cita.getId(), CambioCita.Tipo.CANCELADA, null));
+        }
         return vistas(List.of(cita)).getFirst();
     }
 

@@ -23,7 +23,9 @@ public class BuzonLocal implements EnvioCorreo {
     private static final Logger log = LoggerFactory.getLogger(BuzonLocal.class);
     private static final int MAX = 50;
 
-    public record Enviado(String para, String asunto, String texto, Instant enviadoEn) {
+    /** @param remitenteNombre y {@code responderA}: los de un correo de consultorio a paciente (null en los demás) */
+    public record Enviado(String para, String asunto, String texto, Instant enviadoEn, String remitenteNombre,
+                          String responderA) {
     }
 
     private final Deque<Enviado> enviados = new ArrayDeque<>();
@@ -41,7 +43,9 @@ public class BuzonLocal implements EnvioCorreo {
             log.warn("No se envía \"{}\" a {}: la dirección rebotó o se quejó antes", correo.asunto(), correo.para());
             return;
         }
-        enviados.addFirst(new Enviado(correo.para(), correo.asunto(), PieCorreo.agregar(correo.texto(), soporte), Instant.now()));
+        String texto = correo.aPaciente() ? correo.texto() : PieCorreo.agregar(correo.texto(), soporte);
+        enviados.addFirst(new Enviado(correo.para(), correo.asunto(), texto, Instant.now(), correo.remitenteNombre(),
+                correo.responderA()));
         while (enviados.size() > MAX) {
             enviados.removeLast();
         }
