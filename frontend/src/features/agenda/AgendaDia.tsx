@@ -10,6 +10,7 @@ import { useCobrosCitas, type Cobro } from "../rips/pagadores";
 import { useFaltantesRips, useReferencia } from "../rips/referencias";
 import { AgendarForm } from "./AgendarForm";
 import { AnotarEspera, EspacioLiberado } from "./ListaEspera";
+import { useVigiaCorreo } from "../pacientes/VigiaCorreo";
 import { hora } from "./tiempo";
 
 type Cita = Schemas["CitaVista"];
@@ -128,6 +129,7 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
   const [completandoRips, setCompletandoRips] = useState(false);
   const [registrandoCobro, setRegistrandoCobro] = useState(false);
   const [anotandoEspera, setAnotandoEspera] = useState(false);
+  const vigilarCorreo = useVigiaCorreo();
   const conceptos = useReferencia("concepto_recaudo");
   const diferida = useAccionDiferida();
   const esMiCita = cita.medicoId === me?.membresiaId;
@@ -147,7 +149,10 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
       queryClient.invalidateQueries({ queryKey: ["lista-espera"] });
       setCancelando(false);
       setMarcandoInasistencia(false);
-      if (body.estado === "CANCELADA") onCancelada(c);
+      if (body.estado === "CANCELADA") {
+        vigilarCorreo(c.pacienteId!);
+        onCancelada(c);
+      }
     },
   });
   const cuando = `${cita.pacienteNombre} a las ${hora(cita.inicio!, zona)}`;

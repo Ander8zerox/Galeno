@@ -28,8 +28,10 @@ import com.galeno.shared.security.Permiso;
 public class PacienteController {
 
     private final PacienteService service;
+    private final com.galeno.shared.correo.SupresionCorreos supresion;
 
-    PacienteController(PacienteService service) {
+    PacienteController(PacienteService service, com.galeno.shared.correo.SupresionCorreos supresion) {
+        this.supresion = supresion;
         this.service = service;
     }
 
@@ -45,18 +47,23 @@ public class PacienteController {
 
     @GetMapping("/{id}")
     public PacienteResponse get(@PathVariable UUID id) {
-        return PacienteResponse.of(service.get(id), clinicos());
+        return conCorreo(service.get(id));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PacienteResponse create(@Valid @RequestBody PacienteRequest request) {
-        return PacienteResponse.of(service.create(request, clinicos()), clinicos());
+        return conCorreo(service.create(request, clinicos()));
     }
 
     @PutMapping("/{id}")
     public PacienteResponse update(@PathVariable UUID id, @Valid @RequestBody PacienteRequest request) {
-        return PacienteResponse.of(service.update(id, request, clinicos()), clinicos());
+        return conCorreo(service.update(id, request, clinicos()));
+    }
+
+    /** Una sola ficha: con el estado de su correo (en las listas no se consulta, para no hacer una consulta por fila). */
+    private PacienteResponse conCorreo(Paciente p) {
+        return PacienteResponse.of(p, clinicos(), supresion.motivo(p.getEmail()).orElse(null));
     }
 
     /** Los datos clínicos solo los ve y edita quien tiene HISTORIA_VER (no el secretario ni el administrador). */
@@ -68,13 +75,18 @@ public class PacienteController {
     public record PacienteResponse(UUID id, String tipoDocumento, String numeroDocumento, String nombres,
                                    String apellidos, LocalDate fechaNacimiento, int edad, String sexo,
                                    String telefono, String email, String alergias, String antecedentes,
-                                   boolean datosIncompletos, boolean sinCorreosCitas) {
+                                   boolean datosIncompletos, boolean sinCorreosCitas, String correoRechazado) {
 
         static PacienteResponse of(Paciente p, boolean clinicos) {
+            return of(p, clinicos, null);
+        }
+
+        /** @param correoRechazado por qué no se le pueden enviar correos (rebotó o se quejó); null si no hay problema */
+        static PacienteResponse of(Paciente p, boolean clinicos, String correoRechazado) {
             return new PacienteResponse(p.getId(), p.getTipoDocumento(), p.getNumeroDocumento(), p.getNombres(),
                     p.getApellidos(), p.getFechaNacimiento(), p.edad(), p.getSexo(), p.getTelefono(), p.getEmail(),
                     clinicos ? p.getAlergias() : null, clinicos ? p.getAntecedentes() : null, p.isDatosIncompletos(),
-                    p.isSinCorreosCitas());
+                    p.isSinCorreosCitas(), correoRechazado);
         }
     }
 

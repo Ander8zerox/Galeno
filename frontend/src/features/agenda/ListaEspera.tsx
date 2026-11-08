@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 import { PacienteForm } from "../pacientes/PacienteForm";
+import { useVigiaCorreo } from "../pacientes/VigiaCorreo";
 import { duracionTexto } from "./AgendarForm";
 import { fechaCorta, fechaHoraCorta, hora, hoyEn } from "./tiempo";
 
@@ -271,6 +272,7 @@ export function EspacioLiberado({ medicoId, inicio, zona, titulo, onListo, onCer
   onCerrar: () => void;
 }) {
   const refrescar = useRefrescarAgenda();
+  const vigilarCorreo = useVigiaCorreo();
   const [pendiente, setPendiente] = useState<Pendiente | null>(null);
   // Aparece arriba de la agenda: si se canceló una cita de más abajo, se trae a la vista
   const caja = useRef<HTMLDivElement>(null);
@@ -288,6 +290,7 @@ export function EspacioLiberado({ medicoId, inicio, zona, titulo, onListo, onCer
       : unwrap(await api.PUT("/api/v1/agenda/citas/{citaId}/horario", { params: { path: { citaId: p.c.id! } }, body: { inicio } })),
     onSuccess: (cita) => {
       refrescar();
+      vigilarCorreo(cita.pacienteId!);
       onListo(`Listo: ${cita.pacienteNombre} quedó a las ${a}. La cita queda por confirmar.`);
     },
   });

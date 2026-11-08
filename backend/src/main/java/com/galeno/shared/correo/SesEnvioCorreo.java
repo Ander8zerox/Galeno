@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.sesv2.model.Content;
 import software.amazon.awssdk.services.sesv2.model.Destination;
 import software.amazon.awssdk.services.sesv2.model.EmailContent;
 import software.amazon.awssdk.services.sesv2.model.Message;
+import software.amazon.awssdk.services.sesv2.model.NotFoundException;
 import software.amazon.awssdk.services.sesv2.model.SendEmailRequest;
 
 /**
@@ -73,6 +74,24 @@ class SesEnvioCorreo implements EnvioCorreo, AutoCloseable {
             // Quien llama no puede hacer nada distinto (el registro o la recuperación ya quedaron guardados): se
             // registra el fallo para revisarlo, sin romper la petición del usuario.
             log.error("SES no aceptó el correo para {} ({}): {}", correo.para(), correo.asunto(), detalle(e));
+        }
+    }
+
+    /**
+     * Quita la dirección de la lista de supresión de la cuenta de SES: si no, SES la seguiría bloqueando aunque se
+     * quite de la de Galenum. Requiere `ses:DeleteSuppressedDestination` en el rol de la instancia (infra/computo.tf).
+     */
+    @Override
+    public boolean quitarSupresion(String email) {
+        try {
+            ses.deleteSuppressedDestination(r -> r.emailAddress(email.strip()));
+            log.info("Dirección quitada de la lista de supresión de SES: {}", email);
+            return true;
+        } catch (NotFoundException e) {
+            return false;
+        } catch (SdkException e) {
+            log.warn("No se pudo quitar {} de la lista de supresión de SES: {}", email, detalle(e));
+            return false;
         }
     }
 

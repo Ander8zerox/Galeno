@@ -348,6 +348,9 @@ label.row { flex-direction: row; align-items: center; }
 .slot:hover { border-color: var(--primary); border-style: solid; background: var(--primary-soft); }
 .slot-hora { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--text); min-width: 3.4rem; }
 .slot-accion { margin-left: auto; color: var(--primary); font-weight: 600; }
+/* Aviso que interrumpe (por ejemplo, un correo que rebotó) */
+.modal-fondo { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(16, 24, 40, .45); }
+.modal { width: min(30rem, 100%); max-height: calc(100vh - 32px); overflow: auto; box-shadow: var(--shadow-md); }
 .slot-par { display: flex; align-items: center; gap: .75rem; }
 .slot-par .slot { flex: 1; min-width: 0; }
 .slot-par > .btn-link { white-space: nowrap; font-size: var(--fs-sm, .875rem); }

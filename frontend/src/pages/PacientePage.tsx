@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api, unwrap } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { HistorialFormulas } from "../features/formulacion/HistorialFormulas";
@@ -18,7 +18,9 @@ export function PacientePage() {
   const { id } = useParams<{ id: string }>();
   const { puede } = useAuth();
   const [tab, setTab] = useState<Tab>("historia");
-  const [editando, setEditando] = useState(false);
+  // "Corregir el correo" (aviso de rebote) llega con ?editar=1: el formulario ya abierto
+  const [busqueda] = useSearchParams();
+  const [editando, setEditando] = useState(busqueda.get("editar") === "1");
   const rips = useModuloActivo("RIPS");
   const paciente = useQuery({
     queryKey: ["paciente", id],
@@ -54,6 +56,12 @@ export function PacientePage() {
           )}
         </div>
       </div>
+
+      {p.correoRechazado && (
+        <p className="alert alert-warn">
+          <strong>Los correos a {p.email} no llegan.</strong> {p.correoRechazado} Verifique la dirección con el paciente.
+        </p>
+      )}
 
       {editando && <PacienteForm key={p.id} paciente={p} onGuardado={() => setEditando(false)} />}
 

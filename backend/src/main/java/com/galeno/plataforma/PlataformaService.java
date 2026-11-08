@@ -249,7 +249,9 @@ public class PlataformaService {
 
     public void quitarSuprimido(String email) {
         UUID yo = operador();
-        if (!supresion.quitar(email)) {
+        // También de la lista de SES: si no, SES la seguiría bloqueando en silencio
+        boolean enSes = correo.quitarSupresion(email);
+        if (!supresion.quitar(email) && !enSes) {
             throw ApiProblem.notFound("Esa dirección no está en la lista de correos suprimidos");
         }
         registrar(yo, "QUITAR_CORREO_SUPRIMIDO", null, email.trim().toLowerCase());
