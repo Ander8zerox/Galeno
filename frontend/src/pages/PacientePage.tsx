@@ -3,16 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { api, unwrap } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
-import { RedactorFormula } from "../features/formulacion/RedactorFormula";
 import { HistorialFormulas } from "../features/formulacion/HistorialFormulas";
-import { ApoyoDiagnostico } from "../features/apoyo/ApoyoDiagnostico";
 import { ProximasCitas } from "../features/agenda/ProximasCitas";
 import { LineaHistoria } from "../features/historia/LineaHistoria";
 import { PacienteForm } from "../features/pacientes/PacienteForm";
 import { DatosRipsPaciente } from "../features/rips/DatosRipsPaciente";
 import { useModuloActivo } from "../features/rips/modulos";
 
-type Tab = "historia" | "formula" | "diagnostico" | "historial";
+// La fórmula y el apoyo diagnóstico se usan dentro de una atención ("Nueva atención" en la historia), para que queden
+// en el registro de la consulta con su diagnóstico; aquí solo se consultan
+type Tab = "historia" | "historial";
 
 export function PacientePage() {
   const { id } = useParams<{ id: string }>();
@@ -65,13 +65,9 @@ export function PacientePage() {
         <>
           <nav className="tabs">
             <button className={tab === "historia" ? "active" : ""} onClick={() => setTab("historia")}>Historia clínica</button>
-            {puede("FORMULA_REDACTAR") && <button className={tab === "formula" ? "active" : ""} onClick={() => setTab("formula")}>Fórmula rápida</button>}
-            {puede("IA_DIAGNOSTICO") && <button className={tab === "diagnostico" ? "active" : ""} onClick={() => setTab("diagnostico")}>Apoyo diagnóstico</button>}
             {puede("FORMULA_REDACTAR") && <button className={tab === "historial" ? "active" : ""} onClick={() => setTab("historial")}>Fórmulas firmadas</button>}
           </nav>
           {tab === "historia" && <LineaHistoria pacienteId={p.id!} />}
-          {tab === "formula" && puede("FORMULA_REDACTAR") && <RedactorFormula pacienteId={p.id!} onFirmada={() => setTab("historial")} />}
-          {tab === "diagnostico" && puede("IA_DIAGNOSTICO") && <ApoyoDiagnostico pacienteId={p.id!} />}
           {tab === "historial" && puede("FORMULA_REDACTAR") && <HistorialFormulas pacienteId={p.id!} />}
         </>
       )}
