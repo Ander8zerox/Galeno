@@ -90,4 +90,37 @@ class DisponibilidadTest {
         assertThat(Disponibilidad.espacios(LUNES, BOGOTA, horario, 20, 20, ocupados, ANTES))
                 .isEqualTo(Disponibilidad.cupos(LUNES, BOGOTA, horario, 20, ocupados, ANTES));
     }
+
+    @Test
+    void elHuecoLlegaHastaLaSiguienteCitaOElFinDeLaFranja() {
+        List<Bloque> horario = List.of(new Bloque(1, LocalTime.of(8, 0), LocalTime.of(12, 0)),
+                new Bloque(1, LocalTime.of(14, 0), LocalTime.of(18, 0)));
+        List<Intervalo> ocupados = List.of(new Intervalo(bogota(8, 0), bogota(9, 0)),
+                new Intervalo(bogota(10, 0), bogota(11, 0)));
+
+        // Se canceló la de 9:00: libre hasta la de las 10:00
+        assertThat(Disponibilidad.hueco(bogota(9, 0), BOGOTA, horario, ocupados, ANTES))
+                .contains(new Intervalo(bogota(9, 0), bogota(10, 0)));
+        // Después de la última cita de la mañana, hasta el fin de la franja (no atraviesa el almuerzo)
+        assertThat(Disponibilidad.hueco(bogota(11, 0), BOGOTA, horario, ocupados, ANTES))
+                .contains(new Intervalo(bogota(11, 0), bogota(12, 0)));
+    }
+
+    @Test
+    void noHayHuecoEnUnaCitaFueraDelHorarioOEnElPasado() {
+        List<Bloque> horario = List.of(new Bloque(1, LocalTime.of(8, 0), LocalTime.of(12, 0)));
+        List<Intervalo> ocupados = List.of(new Intervalo(bogota(9, 0), bogota(10, 0)));
+
+        assertThat(Disponibilidad.hueco(bogota(9, 30), BOGOTA, horario, ocupados, ANTES)).isEmpty();
+        assertThat(Disponibilidad.hueco(bogota(12, 0), BOGOTA, horario, ocupados, ANTES)).isEmpty();
+        assertThat(Disponibilidad.hueco(bogota(8, 0), BOGOTA, horario, ocupados, bogota(8, 30))).isEmpty();
+    }
+
+    @Test
+    void laMananaEsAntesDelMediodia() {
+        assertThat(Disponibilidad.enFranja(EnEspera.Franja.MANANA, bogota(11, 40), BOGOTA)).isTrue();
+        assertThat(Disponibilidad.enFranja(EnEspera.Franja.MANANA, bogota(12, 0), BOGOTA)).isFalse();
+        assertThat(Disponibilidad.enFranja(EnEspera.Franja.TARDE, bogota(12, 0), BOGOTA)).isTrue();
+        assertThat(Disponibilidad.enFranja(EnEspera.Franja.CUALQUIERA, bogota(7, 0), BOGOTA)).isTrue();
+    }
 }

@@ -125,11 +125,21 @@ El consultorio de prueba tiene una secretaria que maneja la agenda de 5 odontól
     "Agendar" abre el formulario con la duración elegida.
   - Las acciones sobre una cita (confirmar, cobro, cancelar) siguen en la vista del día.
   - API: `GET /agenda/medicos/{id}/disponibilidad/dias` (hasta 6 semanas) y `GET /agenda/espacios`.
-- **Entrega 3, cancelaciones (escribir su diseño antes):**
-  - Hoy, al cancelar, el cupo queda libre de inmediato y se puede agendar a otro paciente ahí.
-  - **Lista de espera:** pacientes que quieren una cita antes. Al cancelarse una cita, Galenum sugiere a quién llamar.
-  - **"Adelantar citas":** sugerir mover las citas de más tarde al hueco, para que los espacios libres queden al final
-    del día. La secretaria confirma cada cambio después de hablar con el paciente; nada se mueve solo.
+- ✅ **Entrega 3, cancelaciones:** nada se agenda ni se mueve solo; la secretaria llama y confirma cada cambio.
+  - **Lista de espera** (botón en Agenda, con el número de pacientes): paciente, médico o "cualquier médico",
+    duración, mañana/tarde/cualquier hora, "antes de" (opcional), motivo y nota. Si el paciente ya tiene una cita
+    abierta, puede esperar para **adelantarla**: entonces el médico y la duración son los de esa cita. "Quiere antes"
+    en una cita lo anota así directamente. Quien ya no sirve (pasó la fecha o la cita ya no está abierta) se marca
+    "Vencida" y no se sugiere.
+  - **Al cancelar una cita** (o con "¿A quién llamar?" al inicio de cada tramo libre del día) se muestra el espacio
+    libre, hasta la siguiente cita o el fin de la franja, con dos listas:
+    - **Lista de espera:** a quienes les sirve (médico, duración, franja y fecha); el que más lleva esperando primero.
+    - **Adelantar citas de más tarde** ese día que caben, **la última primero**: moverla deja el hueco al final del día
+      con una sola llamada.
+  - "Asignar" agenda una cita nueva o mueve la misma cita (que queda por confirmar); "Dejar libre" no hace nada.
+  - API: `GET|POST /agenda/lista-espera`, `POST /agenda/lista-espera/{id}/retirar|asignar` y
+    `GET /agenda/medicos/{id}/sugerencias?inicio=`. Migración V31 (tabla `lista_espera`).
+  - Siguiente: avisar al paciente por WhatsApp o SMS cuando se le adelanta o asigna una cita (con los recordatorios).
 - **Por analizar después: sillas o unidades compartidas.**
   - En el consultorio de prueba cada odontólogo tiene su silla, pero en otros consultorios varios médicos comparten
     menos sillas (por ejemplo, 5 médicos y 3 sillas).

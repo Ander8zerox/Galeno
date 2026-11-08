@@ -1476,6 +1476,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agenda/lista-espera": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listaEspera"];
+        put?: never;
+        post: operations["anotarEnEspera"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/lista-espera/{id}/retirar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["retirarDeEspera"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/lista-espera/{id}/asignar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["asignarDesdeEspera"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/agenda/citas": {
         parameters: {
             query?: never;
@@ -2156,6 +2204,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["medicos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agenda/medicos/{medicoId}/sugerencias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sugerencias"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3462,6 +3526,55 @@ export interface components {
             examenFisico?: string;
             formatos?: string;
         };
+        NuevaEspera: {
+            /** Format: uuid */
+            pacienteId: string;
+            /** Format: uuid */
+            medicoId?: string;
+            /** Format: int32 */
+            duracionMinutos?: number;
+            /** @enum {string} */
+            franja?: "CUALQUIERA" | "MANANA" | "TARDE";
+            /** Format: date */
+            antesDe?: string;
+            /** Format: uuid */
+            citaId?: string;
+            motivo?: string;
+            nota?: string;
+        };
+        EnEsperaVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            pacienteId?: string;
+            pacienteNombre?: string;
+            pacienteDocumento?: string;
+            pacienteTelefono?: string;
+            /** Format: uuid */
+            medicoId?: string;
+            medicoNombre?: string;
+            /** Format: int32 */
+            duracionMinutos?: number;
+            /** @enum {string} */
+            franja?: "CUALQUIERA" | "MANANA" | "TARDE";
+            /** Format: date */
+            antesDe?: string;
+            /** Format: uuid */
+            citaId?: string;
+            /** Format: date-time */
+            citaInicio?: string;
+            motivo?: string;
+            nota?: string;
+            /** Format: date-time */
+            creadaEn?: string;
+            vigente?: boolean;
+        };
+        AsignarEspera: {
+            /** Format: uuid */
+            medicoId: string;
+            /** Format: date-time */
+            inicio: string;
+        };
         NuevaCita: {
             /** Format: uuid */
             medicoId: string;
@@ -3750,27 +3863,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            floatingPointNumber?: boolean;
+            valueNode?: boolean;
+            missingNode?: boolean;
+            container?: boolean;
             number?: boolean;
-            bigInteger?: boolean;
             bigDecimal?: boolean;
-            integralNumber?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            valueNode?: boolean;
-            container?: boolean;
-            missingNode?: boolean;
+            integralNumber?: boolean;
+            bigInteger?: boolean;
             object?: boolean;
-            string?: boolean;
+            pojo?: boolean;
+            short?: boolean;
             int?: boolean;
+            long?: boolean;
+            double?: boolean;
+            string?: boolean;
+            binary?: boolean;
+            boolean?: boolean;
             /** @deprecated */
             textual?: boolean;
-            double?: boolean;
-            pojo?: boolean;
-            boolean?: boolean;
-            binary?: boolean;
-            long?: boolean;
-            short?: boolean;
+            floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -3778,6 +3891,14 @@ export interface components {
             membresiaId?: string;
             nombre?: string;
             puedeEditarHorario?: boolean;
+        };
+        Sugerencias: {
+            /** Format: date-time */
+            inicio?: string;
+            /** Format: date-time */
+            fin?: string;
+            espera?: components["schemas"]["EnEsperaVista"][];
+            adelantar?: components["schemas"]["CitaVista"][];
         };
         Intervalo: {
             /** Format: date-time */
@@ -6613,6 +6734,96 @@ export interface operations {
             };
         };
     };
+    listaEspera: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EnEsperaVista"][];
+                };
+            };
+        };
+    };
+    anotarEnEspera: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NuevaEspera"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EnEsperaVista"];
+                };
+            };
+        };
+    };
+    retirarDeEspera: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    asignarDesdeEspera: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AsignarEspera"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CitaVista"];
+                };
+            };
+        };
+    };
     agendar: {
         parameters: {
             query?: never;
@@ -7567,6 +7778,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MedicoAgenda"][];
+                };
+            };
+        };
+    };
+    sugerencias: {
+        parameters: {
+            query: {
+                inicio: string;
+            };
+            header?: never;
+            path: {
+                medicoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Sugerencias"];
                 };
             };
         };

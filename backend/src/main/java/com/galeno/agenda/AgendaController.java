@@ -26,7 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.galeno.agenda.AgendaService.CitaVista;
 import com.galeno.agenda.AgendaService.DiaDisponible;
+import com.galeno.agenda.AgendaService.EnEsperaVista;
 import com.galeno.agenda.AgendaService.Espacio;
+import com.galeno.agenda.AgendaService.Sugerencias;
 import com.galeno.agenda.AgendaService.Horario;
 import com.galeno.agenda.AgendaService.MedicoAgenda;
 import com.galeno.agenda.Disponibilidad.Intervalo;
@@ -118,6 +120,51 @@ public class AgendaController {
     @GetMapping("/pacientes/{pacienteId}/proximas")
     public List<CitaVista> proximasDelPaciente(@PathVariable UUID pacienteId) {
         return agenda.proximasDelPaciente(pacienteId);
+    }
+
+    /** Pacientes en la lista de espera (activos), el que más lleva esperando primero. */
+    @GetMapping("/lista-espera")
+    public List<EnEsperaVista> listaEspera() {
+        return agenda.listaEspera();
+    }
+
+    @PostMapping("/lista-espera")
+    @ResponseStatus(HttpStatus.CREATED)
+    public EnEsperaVista anotarEnEspera(@Valid @RequestBody NuevaEspera r) {
+        return agenda.anotarEnEspera(r.pacienteId(), r.medicoId(), r.duracionMinutos(), r.franja(), r.antesDe(),
+                r.citaId(), r.motivo(), r.nota());
+    }
+
+    @PostMapping("/lista-espera/{id}/retirar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void retirarDeEspera(@PathVariable UUID id) {
+        agenda.retirarDeEspera(id);
+    }
+
+    /** Agenda (o adelanta) la cita del paciente en espera en el espacio indicado. */
+    @PostMapping("/lista-espera/{id}/asignar")
+    public CitaVista asignarDesdeEspera(@PathVariable UUID id, @Valid @RequestBody AsignarEspera r) {
+        return agenda.asignarDesdeEspera(id, r.medicoId(), r.inicio().toInstant());
+    }
+
+    /** A quién ofrecer el espacio libre que empieza en {@code inicio}: lista de espera y citas de más tarde ese día. */
+    @GetMapping("/medicos/{medicoId}/sugerencias")
+    public Sugerencias sugerencias(@PathVariable UUID medicoId,
+                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime inicio) {
+        return agenda.sugerencias(medicoId, inicio.toInstant());
+    }
+
+    /**
+     * @param medicoId null: cualquier médico. Se ignora si hay {@code citaId}.
+     * @param duracionMinutos obligatoria sin {@code citaId}; con ella, es la de la cita
+     * @param citaId la cita que el paciente quiere adelantar
+     */
+    public record NuevaEspera(@NotNull UUID pacienteId, UUID medicoId, @Min(5) @Max(240) Integer duracionMinutos,
+                              EnEspera.Franja franja, LocalDate antesDe, UUID citaId, @Size(max = 300) String motivo,
+                              @Size(max = 300) String nota) {
+    }
+
+    public record AsignarEspera(@NotNull UUID medicoId, @NotNull OffsetDateTime inicio) {
     }
 
     /** @param atiendeFestivos si se omite, se queda como estaba */
