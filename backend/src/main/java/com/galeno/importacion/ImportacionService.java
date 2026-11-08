@@ -82,8 +82,9 @@ public class ImportacionService {
     record DxDatos(String codigo, String descripcion, boolean principal, Diagnostico.Tipo tipo) {
     }
 
+    /** @param codigoVida identificador de la atención en la IHCE (Res. 948); null en lotes anteriores */
     record AtencionDatos(String clave, String tipo, LocalDateTime fecha, String codigoCups, String nombreCups,
-                         String profesional, String factura, List<DxDatos> diagnosticos) {
+                         String profesional, String factura, List<DxDatos> diagnosticos, String codigoVida) {
     }
 
     record DatosRegistro(LocalDate fechaNacimiento, String sexo, String tipoUsuario, String municipio,
@@ -231,7 +232,8 @@ public class ImportacionService {
             dx.add(new DxDatos(d.codigo(), nombre != null ? nombre : SIN_CIE10, d.principal(), tipoDx(d.tipoRips())));
         }
         return new AtencionDatos(a.clave(), a.tipo(), a.fecha(), a.codigoCups(),
-                a.codigoCups() == null ? null : nombresCups.get(a.codigoCups()), a.profesional(), a.factura(), dx);
+                a.codigoCups() == null ? null : nombresCups.get(a.codigoCups()), a.profesional(), a.factura(), dx,
+                a.codigoVida());
     }
 
     /** Tabla de RIPS: 01 impresión diagnóstica, 02 confirmado nuevo, 03 confirmado repetido. */
@@ -431,7 +433,11 @@ public class ImportacionService {
                 s.append(" · ").append(a.nombreCups());
             }
         }
-        s.append(" (importado de RIPS, factura ").append(a.factura()).append(")");
+        s.append(" (importado de RIPS, factura ").append(a.factura());
+        if (a.codigoVida() != null) {
+            s.append(", código VIDA ").append(a.codigoVida()); // para la interoperabilidad de historia clínica (IHCE)
+        }
+        s.append(")");
         return s.length() > 1000 ? s.substring(0, 1000) : s.toString();
     }
 

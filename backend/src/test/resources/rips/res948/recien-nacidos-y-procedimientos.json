@@ -1,0 +1,77 @@
+{
+	"numDocumentoIdObligado": "530520110",
+	"numFactura": "RNYP01",
+	"tipoNota": null,
+	"numNota": null,
+	"usuarios": [
+		{
+			"consecutivo": 1,
+			"tipoDocumentoIdentificacion": "CC",
+			"numDocumentoIdentificacion": "987654321",
+			"tipoUsuario": "01",
+			"fechaNacimiento": "1991-01-01",
+			"codSexo": "F",
+			"codPaisResidencia": "170",
+			"codMunicipioResidencia": "05001",
+			"codZonaTerritorialResidencia": "02",
+			"incapacidad": "NO",
+			"codPaisOrigen": "170",
+			"registroSIRAS": null,
+			"servicios": {
+				"recienNacidos": [
+					{
+						"codPrestador": "192030405001",
+						"tipoDocumentoIdentificacion": "CN",
+						"numDocumentoIdentificacion": "20963147753951",
+						"fechaNacimiento": "2025-05-26 11:10",
+						"edadGestacional": 40,
+						"numConsultasCPrenatal": 9,
+						"codSexoBiologico": "02",
+						"peso": 3800,
+						"codDiagnosticoPrincipal": "Z370",
+						"codDiagnosticoPrincipalCIE11": null,
+						"nomCodDiagnosticoPrincipalCIE11": null,
+						"condicionDestinoUsuarioEgreso": "01",
+						"codDiagnosticoCausaMuerte": null,
+						"codDiagnosticoCausaMuerteCIE11": null,
+						"nomCodDiagnosticoCausaMuerteCIE11": null,
+						"fechaEgreso": "2025-05-26 15:55",
+						"codigoVIDA": null,
+						"consecutivo": 1
+					}
+				],
+				"procedimientos": [
+					{
+						"codPrestador": "192030405001",
+						"fechaInicioAtencion": "2025-06-26 14:20",
+						"numAutorizacion": "306540078",
+						"idMIPRES": "11111111111111111111",
+						"codProcedimiento": "721003",
+						"viaIngresoServicioSalud": "02",
+						"modalidadGrupoServicioTecSal": "01",
+						"grupoServicios": "02",
+						"codServicio": 130,
+						"finalidadTecnologiaSalud": "15",
+						"tipoDocumentoIdentificacion": "CC",
+						"numDocumentoIdentificacion": "147852369",
+						"codDiagnosticoPrincipal": "C402",
+						"codDiagnosticoPrincipalCIE11": null,
+						"nomCodDiagnosticoPrincipalCIE11": null,
+						"codDiagnosticoRelacionado": null,
+						"codDiagnosticoRelacionadoCIE11": null,
+						"nomCodDiagnosticoRelacionadoCIE11": null,
+						"codComplicacion": null,
+						"codComplicacionCIE11": null,
+						"nomCodComplicacionCIE11": null,
+						"vrServicio": 0,
+						"conceptoRecaudo": "05",
+						"valorPagoModerador": 0,
+						"numFEVPagoModerador": null,
+						"codigoVIDA": null,
+						"consecutivo": 1
+					}
+				]
+			}
+		}
+	]
+}

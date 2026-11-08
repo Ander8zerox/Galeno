@@ -25,12 +25,17 @@ import tools.jackson.databind.json.JsonMapper;
 import com.galeno.pacientes.TiposDocumento;
 
 /**
- * Lee RIPS en JSON (un archivo por factura electrónica, Res. 2275 de 2023 / 948 de 2026) y agrupa por
- * paciente todo lo atendido en todos los archivos. No toca la base de datos: el resultado se revisa
- * antes de confirmar.
+ * Lee RIPS en JSON (un archivo por factura electrónica) y agrupa por paciente todo lo atendido en todos los archivos.
+ * No toca la base de datos: el resultado se revisa antes de confirmar.
+ *
+ * <p>Revisado contra el Documento Técnico 1 v003 de la Res. 948 de 2026 (15 de julio de 2026); lee también los RIPS
+ * de la Res. 2275 de 2023, que tienen los mismos nombres de campo salvo los nuevos.
  *
  * <p>Se importan consultas, procedimientos, urgencias y hospitalización como atenciones. Medicamentos,
  * recién nacidos y otros servicios se cuentan como omitidos en esta versión.
+ *
+ * <p>Diagnósticos: Galenum usa CIE-10. Los pares CIE-11 (`...CIE11`, opcionales en la 948) se ignoran, pero si un
+ * diagnóstico viene solo en CIE-11 se avisa en la revisión.
  */
 final class RipsParser {
 
@@ -56,10 +61,25 @@ final class RipsParser {
      * @param clave       factura + consecutivo del usuario + tipo + consecutivo del servicio: identifica el
      *                    servicio aunque el archivo se suba dos veces
      * @param profesional documento del profesional que atendió, tal como viene en el RIPS
+     * @param codigoVida  identificador de la atención en la interoperabilidad de historia clínica (IHCE), si viene
      */
     record AtencionRips(String clave, String tipo, LocalDateTime fecha, String codigoCups, String profesional,
-                        String factura, List<DxRips> diagnosticos) {
+                        String factura, List<DxRips> diagnosticos, String codigoVida) {
     }
+
+    /**
+     * Campos de diagnóstico CIE-10 de cada servicio, en orden; el primero que venga es el principal. En urgencias y
+     * hospitalización el principal es el de egreso (`PrincipalE`, el definitivo) y el de ingreso queda relacionado.
+     */
+    private static final Map<String, List<String>> CAMPOS_DX = Map.of(
+            "consultas", List.of("codDiagnosticoPrincipal", "codDiagnosticoRelacionado1", "codDiagnosticoRelacionado2",
+                    "codDiagnosticoRelacionado3"),
+            "procedimientos", List.of("codDiagnosticoPrincipal", "codDiagnosticoRelacionado", "codComplicacion"),
+            "urgencias", List.of("codDiagnosticoPrincipalE", "codDiagnosticoPrincipal", "codDiagnosticoRelacionadoE1",
+                    "codDiagnosticoRelacionadoE2", "codDiagnosticoRelacionadoE3", "codDiagnosticoCausaMuerte"),
+            "hospitalizacion", List.of("codDiagnosticoPrincipalE", "codDiagnosticoPrincipal",
+                    "codDiagnosticoRelacionadoE1", "codDiagnosticoRelacionadoE2", "codDiagnosticoRelacionadoE3",
+                    "codComplicacion", "codDiagnosticoCausaMuerte"));
 
     /** Un paciente con todo lo que trae en todos los archivos. */
     static final class PacienteRips {
@@ -191,17 +211,21 @@ final class RipsParser {
             default -> null;
         };
         List<DxRips> dx = new ArrayList<>();
-        String principal = mayus(texto(s, "codDiagnosticoPrincipal"));
-        if (principal != null) {
-            dx.add(new DxRips(principal, true, texto(s, "tipoDiagnosticoPrincipal")));
-        }
-        // Consultas: Relacionado1..3; procedimientos: Relacionado; urgencias/hospitalización: RelacionadoE1..3
-        for (String campo : List.of("codDiagnosticoRelacionado1", "codDiagnosticoRelacionado2", "codDiagnosticoRelacionado3",
-                "codDiagnosticoRelacionado", "codDiagnosticoRelacionadoE1", "codDiagnosticoRelacionadoE2",
-                "codDiagnosticoRelacionadoE3")) {
+        for (String campo : CAMPOS_DX.get(tipo)) {
             String codigo = mayus(texto(s, campo));
-            if (codigo != null && dx.stream().noneMatch(d -> d.codigo().equals(codigo))) {
-                dx.add(new DxRips(codigo, false, null));
+            if (codigo == null) {
+                String cie11 = texto(s, campo + "CIE11");
+                if (cie11 != null) {
+                    p.advertencias.add("Un diagnóstico de " + tipo + " viene solo en CIE-11 (" + cie11
+                            + "): Galenum usa CIE-10 y no lo importa");
+                }
+                continue;
+            }
+            if (dx.stream().noneMatch(d -> d.codigo().equals(codigo))) {
+                // Si falta el principal, un relacionado no pasa a serlo
+                boolean principal = dx.isEmpty() && campo.startsWith("codDiagnosticoPrincipal");
+                // El tipo (impresión, confirmado nuevo o repetido) solo lo traen las consultas y es del principal
+                dx.add(new DxRips(codigo, principal, principal ? texto(s, "tipoDiagnosticoPrincipal") : null));
             }
         }
         String profesional = texto(s, "numDocumentoIdentificacion");
@@ -212,7 +236,7 @@ final class RipsParser {
         String consecutivo = texto(s, "consecutivo");
         String clave = String.join("|", factura, String.valueOf(consecutivoUsuario), tipo,
                 consecutivo != null ? consecutivo : fecha + "|" + cups);
-        return new AtencionRips(clave, tipo, fecha, cups, profesional, factura, dx);
+        return new AtencionRips(clave, tipo, fecha, cups, profesional, factura, dx, texto(s, "codigoVIDA"));
     }
 
     private static List<Archivo> descomprimir(Archivo zip, List<String> errores) {

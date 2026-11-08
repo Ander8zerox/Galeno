@@ -45,8 +45,8 @@ en el texto que publica el régimen legal de la Alcaldía de Bogotá; el PDF del
   validada por la DIAN (art. 15).
 - **CIE-11:** no aparece en el texto de la resolución.
 
-Esto también afecta a la importación: `RipsParser` se escribió con la 2275 y hay que revisarlo contra el Documento
-Técnico 1 vigente.
+Esto también afecta a la importación: `RipsParser` se escribió con la 2275 y había que revisarlo contra el Documento
+Técnico 1 vigente (hecho: ver "Importación revisada contra el DT1 v003" al final).
 
 ### Documentos técnicos vigentes (descargados el 4 de noviembre de 2026)
 
@@ -611,3 +611,25 @@ Fuentes: DT1 v003 (campos T03 y T04, y las observaciones del valor del servicio 
   `GENERAR_RIPS`, con el id de la nota).
 - **Fuera de alcance:** la ND con servicios nuevos (se expide una factura nueva) y corregir datos del usuario (tipo de
   usuario, residencia) en la NA.
+
+## Importación revisada contra el DT1 v003 (8 de noviembre de 2026)
+
+Se compararon los campos que lee `RipsParser` con el Documento Técnico 1 v003 y los ejemplos oficiales de la 948 (los
+de consultas y procedimientos quedaron como recursos de prueba en `backend/src/test/resources/rips/res948`).
+
+- **Diagnóstico de egreso** (`codDiagnosticoPrincipalE`, urgencias y hospitalización): antes no se leía. Ahora es el
+  principal (es el definitivo) y el de ingreso queda como relacionado si es distinto.
+- **Complicación** (`codComplicacion`, procedimientos y hospitalización) y **causa de muerte**
+  (`codDiagnosticoCausaMuerte`): se importan como diagnósticos relacionados.
+- **CIE-11** (pares `...CIE11`, opcionales): Galenum usa CIE-10 y los ignora; si un diagnóstico viene solo en CIE-11,
+  la revisión del lote lo avisa en vez de perderlo en silencio.
+- **`codigoVIDA`** (identificador de la atención en la IHCE): se guarda en la descripción de la atención importada
+  ("…factura FE-1, código VIDA DV64588521"), sin migración. Cuando Galenum se integre con la IHCE, se podrá pasar a un
+  campo propio.
+- Un diagnóstico relacionado ya no pasa a principal cuando falta el principal.
+- **Sin cambios:** la estructura (`numDocumentoIdObligado`, `numFactura`, `usuarios`, `servicios`), los nombres de
+  los campos que ya se leían, las fechas `AAAA-MM-DD HH:MM` y los RIPS de la 2275 (se siguen leyendo igual).
+- **No se importan (como antes):** medicamentos, recién nacidos y otros servicios (se cuentan como omitidos).
+- **Pendiente:** los datos del usuario para el RIPS (`codPaisResidencia`, `codZonaTerritorialResidencia`,
+  `codPaisOrigen`, `incapacidad`, y el tipo de usuario y municipio que ya se leen) no se guardan en los "Datos para
+  RIPS" del paciente. `registroSIRAS` es de cada atención (va en el cobro), no del paciente.

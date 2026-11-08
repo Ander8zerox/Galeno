@@ -1,0 +1,58 @@
+{
+	"numDocumentoIdObligado": "530520110",
+	"numFactura": "CON001",
+	"tipoNota": null,
+	"numNota": null,
+	"usuarios": [
+		{
+			"consecutivo": 1,
+			"tipoDocumentoIdentificacion": "CC",
+			"numDocumentoIdentificacion": "123456789",
+			"tipoUsuario": "01",
+			"fechaNacimiento": "1991-01-01",
+			"codSexo": "F",
+			"codPaisResidencia": "170",
+			"codMunicipioResidencia": "05001",
+			"codZonaTerritorialResidencia": "02",
+			"incapacidad": "NO",
+			"codPaisOrigen": "170",
+			"registroSIRAS": null,
+			"servicios": {
+				"consultas": [
+					{
+						"codPrestador": "192030405001",
+						"fechaInicioAtencion": "2026-06-26 11:28",
+						"numAutorizacion": "306540078",
+						"codConsulta": "890602",
+						"modalidadGrupoServicioTecSal": "01",
+						"grupoServicios": "01",
+						"codServicio": 130,
+						"finalidadTecnologiaSalud": "16",
+						"causaMotivoAtencion": "38",
+						"codDiagnosticoPrincipal": "C402",
+						"codDiagnosticoPrincipalCIE11": null,
+						"nomCodDiagnosticoPrincipalCIE11": null,
+						"codDiagnosticoRelacionado1": null,
+						"codDiagnosticoRelacionado1CIE11": null,
+						"nomCodDiagnosticoRelacionado1CIE11": null,
+						"codDiagnosticoRelacionado2": null,
+						"codDiagnosticoRelacionado2CIE11": null,
+						"nomCodDiagnosticoRelacionado2CIE11": null,
+						"codDiagnosticoRelacionado3": null,
+						"codDiagnosticoRelacionado3CIE11": null,
+						"nomCodDiagnosticoRelacionado3CIE11": null,
+						"tipoDiagnosticoPrincipal": "02",
+						"tipoDocumentoIdentificacion": "CC",
+						"numDocumentoIdentificacion": "30732188",
+						"vrServicio": 0,
+						"conceptoRecaudo": "05",
+						"valorPagoModerador": 0,
+						"numFEVPagoModerador": null,
+						"codigoVIDA": null,
+						"consecutivo": 1
+					}
+				]
+			}
+		}
+	]
+}

@@ -2831,6 +2831,7 @@ export interface components {
             profesional?: string;
             factura?: string;
             diagnosticos?: components["schemas"]["DxDatos"][];
+            codigoVida?: string;
         };
         Cambio: {
             campo?: string;
@@ -3892,27 +3893,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            long?: boolean;
-            boolean?: boolean;
-            pojo?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            short?: boolean;
-            object?: boolean;
-            string?: boolean;
-            int?: boolean;
-            double?: boolean;
-            binary?: boolean;
-            missingNode?: boolean;
-            bigDecimal?: boolean;
-            container?: boolean;
-            valueNode?: boolean;
+            floatingPointNumber?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             bigInteger?: boolean;
+            valueNode?: boolean;
+            bigDecimal?: boolean;
             integralNumber?: boolean;
-            floatingPointNumber?: boolean;
+            container?: boolean;
+            missingNode?: boolean;
             number?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            pojo?: boolean;
+            binary?: boolean;
+            long?: boolean;
+            int?: boolean;
+            string?: boolean;
+            object?: boolean;
+            short?: boolean;
+            double?: boolean;
+            boolean?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
