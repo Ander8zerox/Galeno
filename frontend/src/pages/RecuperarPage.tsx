@@ -19,7 +19,7 @@ export function RecuperarPage() {
           <p>Si <strong>{email}</strong> tiene una cuenta en Galenum, le enviamos un enlace para elegir una contraseña nueva. Vence en una hora.</p>
           <p className="muted small">¿No le llegó? Revise la carpeta de spam o pida otro enlace en unos minutos.</p>
           {import.meta.env.DEV && <a href="/dev/buzon" className="btn btn-secondary">Abrir el buzón de desarrollo</a>}
-          <a href="/" className="btn-link">Volver al inicio de sesión</a>
+          <a href="/ingresar" className="btn-link">Volver al inicio de sesión</a>
         </div>
       ) : (
         <form className="card login-card stack" onSubmit={(e: FormEvent) => { e.preventDefault(); enviar.mutate(); }}>
@@ -30,7 +30,7 @@ export function RecuperarPage() {
           </label>
           {enviar.error && <p className="alert alert-error">{enviar.error.message}</p>}
           <button className="btn" disabled={enviar.isPending}>{enviar.isPending ? "Enviando…" : "Enviar enlace"}</button>
-          <a href="/" className="btn-link center">Volver al inicio de sesión</a>
+          <a href="/ingresar" className="btn-link center">Volver al inicio de sesión</a>
         </form>
       )}
     </div>
@@ -72,7 +72,7 @@ export function RestablecerPage() {
       <Tarjeta>
         <h1>Contraseña cambiada</h1>
         <p>Ya puede ingresar con su contraseña nueva. Por seguridad, se cerraron las sesiones que tenía abiertas en otros equipos.</p>
-        <a href="/" className="btn">Ingresar</a>
+        <a href="/ingresar" className="btn">Ingresar</a>
       </Tarjeta>
     );
   }

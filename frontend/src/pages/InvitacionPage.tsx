@@ -108,7 +108,7 @@ function Mensaje({ texto }: { texto: string }) {
       <div className="card login-card">
         <h1>Galenum</h1>
         <p>{texto}</p>
-        <a href="/">Ir al inicio de sesión</a>
+        <a href="/ingresar">Ir al inicio de sesión</a>
       </div>
     </div>
   );
