@@ -255,7 +255,8 @@ y todas las cuentas tendrían que configurarla de nuevo (habría que restablecer
 
 | Para qué | Ruta |
 |---|---|
-| Ingresar (médicos, administradores, secretarios) | https://galenum.com.co |
+| Página pública (landing) | https://galenum.com.co |
+| Ingresar (médicos, administradores, secretarios) | https://galenum.com.co/ingresar |
 | Registrar un consultorio nuevo | https://galenum.com.co/registro |
 | Olvidé mi contraseña | https://galenum.com.co/recuperar |
 | Política de datos | https://galenum.com.co/politica-datos |

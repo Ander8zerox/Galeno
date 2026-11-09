@@ -1,5 +1,8 @@
 // CloudFront Function (viewer request) del frontend. Va aquí y no en las respuestas de error de la distribución
 // porque esas aplican también a /api/*: un 404 de la API terminaría devolviendo index.html.
+//
+// La raíz (/) es la landing pública (index.html). Las rutas de la app (/ingresar, /pacientes/123, /registro…) sirven
+// app.html. Los archivos (con extensión) se sirven tal cual.
 function handler(event) {
   var request = event.request;
   var host = request.headers.host ? request.headers.host.value : "";
@@ -13,10 +16,14 @@ function handler(event) {
     };
   }
 
-  // Rutas del SPA (/pacientes/123): todo lo que no es un archivo sirve index.html
+  if (request.uri === "/") {
+    request.uri = "/index.html";
+    return request;
+  }
+
   var ultimo = request.uri.split("/").pop();
   if (ultimo.indexOf(".") === -1) {
-    request.uri = "/index.html";
+    request.uri = "/app.html";
   }
   return request;
 }

@@ -214,6 +214,9 @@ límites por IP (registro, recuperación de contraseña, partners) contarían a 
 - [ ] Bucket S3 privado para `frontend/dist` (us-east-2)
 - [ ] CloudFront con dos orígenes: S3 (OAC) por defecto y la EC2 para `/api/*` (sin caché; ver 3a para encabezados)
 - [ ] Rutas del SPA → `/index.html` con una CloudFront Function (`infra/funcion-spa.js`), que además redirige `www` al dominio raíz. No con respuestas de error de la distribución: esas aplican también a `/api/*`
+  - Desde el 9 de noviembre de 2026 la raíz (`/`) es la landing pública (`index.html`) y las rutas de la app sirven
+    `app.html`. El build de Vite produce los dos (`frontend/vite.config.ts`): en el código, `index.html` sigue siendo la
+    app y `landing.html` la landing, y se intercambian al terminar el build.
 - [ ] Certificado ACM **en us-east-1** (lo exige CloudFront; ver "Región") y registro en Route 53
 
 ### 6. Despliegue

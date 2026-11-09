@@ -78,7 +78,7 @@ export function RegistroPage() {
           </p>
           <p className="muted small">¿No le llegó? Revise la carpeta de spam o vuelva a registrarse en unos minutos.</p>
           {import.meta.env.DEV && <a href="/dev/buzon" className="btn btn-secondary">Abrir el buzón de desarrollo</a>}
-          <a href="/" className="btn-link">Volver al inicio de sesión</a>
+          <a href="/ingresar" className="btn-link">Volver al inicio de sesión</a>
         </div>
       </div>
     );
@@ -142,7 +142,7 @@ export function RegistroPage() {
 
         {(errorLocal || enviar.error) && <p className="alert alert-error">{errorLocal ?? enviar.error?.message}</p>}
         <button className="btn" disabled={enviar.isPending}>{enviar.isPending ? "Enviando…" : "Registrar consultorio"}</button>
-        <a href="/" className="btn-link center">Ya tengo cuenta: iniciar sesión</a>
+        <a href="/ingresar" className="btn-link center">Ya tengo cuenta: iniciar sesión</a>
         <EnlacesLegales />
       </form>
     </div>
@@ -247,7 +247,7 @@ export function PoliticaDatosPage() {
           Los titulares pueden conocer, actualizar, rectificar y solicitar la supresión de sus datos (cuando la ley lo
           permita) y revocar la autorización, a través de su consultorio o escribiendo a Galenum.
         </p>
-        <a href="/" className="btn-link">Ir al inicio</a>
+        <a href="/ingresar" className="btn-link">Ir al inicio</a>
       </div>
     </div>
   );
@@ -307,7 +307,7 @@ export function TerminosPage() {
           Si estos términos cambian, se avisará a los consultorios antes de que rijan. Se rigen por las leyes de la
           República de Colombia.
         </p>
-        <a href="/" className="btn-link">Ir al inicio</a>
+        <a href="/ingresar" className="btn-link">Ir al inicio</a>
       </div>
     </div>
   );
@@ -336,7 +336,7 @@ export function BuzonDevPage() {
             </pre>
           </div>
         ))}
-        <a href="/" className="btn-link">Ir al inicio de sesión</a>
+        <a href="/ingresar" className="btn-link">Ir al inicio de sesión</a>
       </div>
     </div>
   );

@@ -231,12 +231,15 @@ Decidido el 8 de noviembre de 2026:
 
 ### 4b. Landing page (en curso, 9 de noviembre de 2026)
 
-- Página pública estática en la raíz de `galenum.com.co` (opción A): la app sigue en el mismo dominio y la landing es
-  el `index.html` de S3; las demás rutas caen en la app (`app.html`) por la respuesta de error de CloudFront.
-- ✅ Textos: `docs/marketing/landing.md` (portada, funciones, video, precios, recursos, partners, preguntas).
-- Siguiente: diseño y página estática, ajuste de CloudFront (`terraform apply` de la usuaria) y los PDF del folleto y
-  la guía alojados en el sitio (la guía, revisada para que solo tenga datos ficticios).
-- Después: el video en YouTube (modo privacidad).
+- Página pública estática en la raíz de `galenum.com.co` (opción A): la app sigue en el mismo dominio. La landing es
+  el `index.html` de S3 y las rutas de la app sirven `app.html` (CloudFront Function `infra/funcion-spa.js`). El
+  inicio de sesión queda en `/ingresar`.
+- ✅ Textos: `docs/marketing/landing.md`.
+- ✅ Página (`frontend/landing.html`, `src/landing/`): mismos colores y logo "G" de la app, sin React (~12 KB),
+  capturas reales con datos ficticios (`public/landing/`), imagen para compartir y los PDF del folleto y la guía de
+  uso (`public/recursos/`, generados desde sus Artifacts).
+- Pendiente: el video en YouTube (modo privacidad); actualizar la guía de uso con incapacidad, remisión y
+  consentimiento; decidir si el logo del menú de la app (cruz turquesa) pasa a la "G" de la marca.
 
 ### 5. Historia clínica
 
