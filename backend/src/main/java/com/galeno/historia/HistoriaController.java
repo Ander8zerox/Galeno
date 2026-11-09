@@ -120,6 +120,16 @@ public class HistoriaController {
         return historia.agregarFormato(id, r.formatoId());
     }
 
+    /** PDF propio de un formato de la atención (incapacidad, remisión, consentimiento…). */
+    @GetMapping(value = "/atenciones/{id}/formatos/{formatoAtencionId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> pdfFormato(@PathVariable UUID id, @PathVariable UUID formatoAtencionId) {
+        Archivo pdf = historia.pdfFormato(id, formatoAtencionId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(pdf.nombre(), StandardCharsets.UTF_8).build().toString())
+                .body(pdf.contenido());
+    }
+
     /** Quita un formato del borrador (con lo que tenía diligenciado). */
     @DeleteMapping("/atenciones/{id}/formatos/{formatoAtencionId}")
     public AtencionVista quitarFormato(@PathVariable UUID id, @PathVariable UUID formatoAtencionId) {

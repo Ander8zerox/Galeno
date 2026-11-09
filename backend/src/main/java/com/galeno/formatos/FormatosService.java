@@ -214,8 +214,9 @@ public class FormatosService {
             AtencionFormato af = deLaAtencion(atencionId, r.id());
             Version v = version(af.getFormatoVersionId());
             JsonNode recibidas = r.respuestas() == null ? null : DefinicionFormato.JSON.valueToTree(r.respuestas());
-            af.responder(DefinicionFormato.JSON.writeValueAsString(
-                    ValidadorRespuestas.normalizar(v.nombre(), v.definicion(), recibidas)));
+            ObjectNode limpias = ValidadorRespuestas.normalizar(v.nombre(), v.definicion(), recibidas);
+            ValidadorRespuestas.conservarFechasDeFirma(v.definicion(), limpias, leer(af.getRespuestas()));
+            af.responder(DefinicionFormato.JSON.writeValueAsString(limpias));
         }
     }
 
@@ -253,6 +254,29 @@ public class FormatosService {
             }
         }
         return html.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
+    }
+
+    /**
+     * El formato de la atención como documento propio (su PDF), si su definición lo marca así (incapacidad, remisión,
+     * consentimiento…). Vacío si es un formato que solo vive en la historia (p. ej. el odontograma).
+     */
+    @Transactional(readOnly = true)
+    public java.util.Optional<DocumentoFormato> documento(UUID atencionId, UUID atencionFormatoId) {
+        AtencionFormato af = deLaAtencion(atencionId, atencionFormatoId);
+        Version v = version(af.getFormatoVersionId());
+        DefinicionFormato.Documento doc = v.definicion().documento();
+        if (doc == null) {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.of(new DocumentoFormato(v.nombre(), doc.titulo(), doc.diagnosticos(),
+                PresentacionFormato.html(v.nombre(), v.definicion(), leer(af.getRespuestas()))));
+    }
+
+    /** Códigos de los formatos de la atención (p. ej. "general.incapacidad"). */
+    @Transactional(readOnly = true)
+    public java.util.Set<String> codigos(UUID atencionId) {
+        return diligenciados.findByAtencionIdOrderByOrden(atencionId).stream()
+                .map(af -> version(af.getFormatoVersionId()).codigo()).collect(Collectors.toSet());
     }
 
     // --- internos ---
@@ -325,6 +349,10 @@ public class FormatosService {
     public record FormatoDiligenciado(UUID id, UUID formatoId, String codigo, String nombre, int version,
                                       Map<String, Object> definicion, Map<String, Object> respuestas,
                                       UUID arrastradoDe) {
+    }
+
+    /** @param html el formato diligenciado, en XHTML para el PDF */
+    public record DocumentoFormato(String nombre, String titulo, boolean diagnosticos, String html) {
     }
 
     /** @param id el del formato dentro de la atención */

@@ -45,6 +45,10 @@ final class PresentacionFormato {
                     continue;
                 }
                 switch (c.tipo()) {
+                    case FIRMA -> {
+                        cerrarGrilla(b, filas);
+                        b.append(firma(c, v));
+                    }
                     case TABLA, ODONTOGRAMA -> {
                         cerrarGrilla(b, filas);
                         b.append(c.tipo() == DefinicionFormato.Tipo.TABLA ? tabla(c, v) : odontograma(c, v));
@@ -56,6 +60,24 @@ final class PresentacionFormato {
             cerrarGrilla(b, filas);
         }
         return b.isEmpty() ? "" : "<h2>" + esc(nombre) + "</h2>" + b;
+    }
+
+    /** La firma manuscrita, con el nombre y la fecha (hora de Colombia: los consultorios están en Colombia). */
+    private static String firma(Campo c, JsonNode v) {
+        String fecha = "";
+        if (v.has("firmadaEn")) {
+            fecha = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                    .format(java.time.Instant.parse(v.get("firmadaEn").stringValue()).atZone(java.time.ZoneId.of("America/Bogota")));
+        }
+        StringBuilder b = new StringBuilder("<div class=\"firma-formato\"><p class=\"small\"><strong>")
+                .append(esc(c.etiqueta())).append("</strong></p>");
+        b.append("<img class=\"firma-imagen\" src=\"").append(esc(v.get("imagen").stringValue())).append("\" alt=\"Firma\" />");
+        b.append("<p class=\"small\">");
+        if (v.has("nombre")) {
+            b.append(esc(v.get("nombre").stringValue())).append(" · ");
+        }
+        b.append("Firmado el ").append(fecha).append("</p></div>");
+        return b.toString();
     }
 
     private static void cerrarGrilla(StringBuilder b, List<String> filas) {

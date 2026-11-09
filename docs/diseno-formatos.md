@@ -209,3 +209,30 @@ Lo que se ajustó al construirla, frente a lo de arriba:
   siglas de los hallazgos del diente y la lista escrita de hallazgos, que es la que vale como registro.
 - **Pendiente para el odontólogo:** validar el catálogo de hallazgos y los colores. Una "diferencia frente al anterior"
   (qué cambió en esta atención) quedaría para después.
+
+## Cómo quedó la fase 4: formatos transversales (8 de noviembre de 2026)
+
+Cuatro formatos de especialidad "General" (el administrador los activa en Formatos):
+
+- **Incapacidad** (`general.incapacidad`): tipo (incapacidad o licencia), origen, modalidad, desde, días, hasta
+  (calculado), prórroga y recomendaciones. Al firmar la atención marca "incapacidad: SÍ" en el RIPS.
+- **Remisión** (`general.remision`): especialidad o servicio de destino, institución, prioridad, motivo, resumen
+  clínico, tratamiento y exámenes.
+- **Contrarreferencia** (`general.contrarreferencia`): quién remitió, hallazgos, conducta, recomendaciones y control.
+- **Consentimiento informado** (`general.consentimiento`): procedimiento, en qué consiste, beneficios, riesgos,
+  alternativas, la declaración del paciente, la decisión, quién firma (paciente o representante, con nombre y
+  parentesco) y **la firma en pantalla**.
+
+Lo que se agregó al motor:
+
+- **`documento`** en la definición (`{"titulo": "CERTIFICADO DE INCAPACIDAD", "diagnosticos": true}`): el formato
+  tiene su propio PDF (`GET /historia/atenciones/{id}/formatos/{formatoAtencionId}/pdf`) con el encabezado del
+  consultorio, el paciente, el formato, los diagnósticos de la atención si se piden y la firma del médico. En un
+  borrador sale con la marca BORRADOR ("Vista previa del PDF"); firmada, "PDF para el paciente".
+- **Tipo `firma`:** `{"imagen": "data:image/png;base64,…", "nombre", "firmadaEn"}`. Se dibuja con el dedo o el mouse
+  (`FirmaPad`). Solo PNG, hasta 400 KB. La fecha la pone siempre el servidor y no cambia si la imagen es la misma (al
+  volver a guardar el borrador); lo que mande el navegador se ignora. En el PDF va la imagen con el nombre y la fecha.
+- **`calculo`** en un campo fecha (`{"desde": "inicio", "dias": "dias"}`): el servidor la calcula al guardar (último
+  día del periodo) y la pantalla la muestra sin dejarla editar.
+- **Pendiente:** revisión legal de los campos de la incapacidad (Decreto 1427 de 2022) y, si se quiere, consentimientos
+  odontológicos con el texto ya escrito (exodoncia, endodoncia, anestesia), que es la fase 3.

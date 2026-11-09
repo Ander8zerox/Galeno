@@ -1,0 +1,30 @@
+{
+  "codigo": "general.incapacidad",
+  "nombre": "Incapacidad",
+  "especialidad": "General",
+  "descripcion": "Certificado de incapacidad o licencia: tipo, origen, días y fechas. Se entrega en PDF con los diagnósticos de la atención y marca la incapacidad en el RIPS al firmar.",
+  "version": 1,
+  "definicion": {
+    "documento": { "titulo": "CERTIFICADO DE INCAPACIDAD", "diagnosticos": true },
+    "secciones": [
+      {
+        "clave": "incapacidad",
+        "titulo": "Incapacidad",
+        "campos": [
+          { "clave": "tipo", "tipo": "seleccion", "etiqueta": "Tipo", "obligatorio": true,
+            "opciones": ["Incapacidad", "Licencia de maternidad", "Licencia de paternidad"] },
+          { "clave": "origen", "tipo": "seleccion", "etiqueta": "Origen", "obligatorio": true,
+            "opciones": ["Enfermedad general", "Accidente de trabajo", "Enfermedad laboral", "Accidente de tránsito"] },
+          { "clave": "modalidad", "tipo": "seleccion", "etiqueta": "Modalidad de la atención", "obligatorio": true,
+            "opciones": ["Ambulatoria", "Hospitalaria", "Urgencias"] },
+          { "clave": "inicio", "tipo": "fecha", "etiqueta": "Desde", "obligatorio": true },
+          { "clave": "dias", "tipo": "numero", "etiqueta": "Días", "unidad": "días", "min": 1, "max": 540, "obligatorio": true },
+          { "clave": "fin", "tipo": "fecha", "etiqueta": "Hasta (incluido)", "calculo": { "desde": "inicio", "dias": "dias" },
+            "ayuda": "Se calcula con la fecha de inicio y los días." },
+          { "clave": "prorroga", "tipo": "si_no", "etiqueta": "Es prórroga de una incapacidad anterior", "obligatorio": true },
+          { "clave": "recomendaciones", "tipo": "texto_largo", "etiqueta": "Recomendaciones" }
+        ]
+      }
+    ]
+  }
+}

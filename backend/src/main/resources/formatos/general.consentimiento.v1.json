@@ -1,0 +1,41 @@
+{
+  "codigo": "general.consentimiento",
+  "nombre": "Consentimiento informado",
+  "especialidad": "General",
+  "descripcion": "Consentimiento del paciente para un procedimiento: en qué consiste, beneficios, riesgos y alternativas, con la firma del paciente o su representante en pantalla. Se entrega en PDF.",
+  "version": 1,
+  "definicion": {
+    "documento": { "titulo": "CONSENTIMIENTO INFORMADO", "diagnosticos": false },
+    "secciones": [
+      {
+        "clave": "procedimiento",
+        "titulo": "Procedimiento",
+        "campos": [
+          { "clave": "nombre", "tipo": "texto", "etiqueta": "Procedimiento", "obligatorio": true },
+          { "clave": "descripcion", "tipo": "texto_largo", "etiqueta": "En qué consiste", "obligatorio": true },
+          { "clave": "beneficios", "tipo": "texto_largo", "etiqueta": "Beneficios esperados", "obligatorio": true },
+          { "clave": "riesgos", "tipo": "texto_largo", "etiqueta": "Riesgos y posibles complicaciones", "obligatorio": true },
+          { "clave": "alternativas", "tipo": "texto_largo", "etiqueta": "Alternativas", "obligatorio": true },
+          { "clave": "no_realizar", "tipo": "texto_largo", "etiqueta": "Riesgos de no realizarlo" }
+        ]
+      },
+      {
+        "clave": "declaracion",
+        "titulo": "Declaración del paciente",
+        "campos": [
+          { "clave": "entendio", "tipo": "si_no", "obligatorio": true,
+            "etiqueta": "Me explicaron el procedimiento, sus beneficios, riesgos y alternativas; pude hacer preguntas y me las respondieron. Sé que puedo retirar este consentimiento en cualquier momento." },
+          { "clave": "acepta", "tipo": "seleccion", "etiqueta": "Decisión", "obligatorio": true,
+            "opciones": ["Acepto el procedimiento", "No acepto el procedimiento"] },
+          { "clave": "quien_firma", "tipo": "seleccion", "etiqueta": "Quién firma", "obligatorio": true,
+            "opciones": ["El paciente", "Su representante legal o acudiente"] },
+          { "clave": "representante", "tipo": "texto", "etiqueta": "Nombre y documento del representante", "obligatorio": true,
+            "visibleSi": { "campo": "quien_firma", "igual": "Su representante legal o acudiente" } },
+          { "clave": "parentesco", "tipo": "texto", "etiqueta": "Parentesco o relación con el paciente", "obligatorio": true,
+            "visibleSi": { "campo": "quien_firma", "igual": "Su representante legal o acudiente" } },
+          { "clave": "firma", "tipo": "firma", "etiqueta": "Firma del paciente o su representante", "obligatorio": true }
+        ]
+      }
+    ]
+  }
+}

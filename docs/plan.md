@@ -217,9 +217,14 @@ la **Res. 948 de 2026**, con el Documento Técnico 1 v003 y el 2 v001, ambos del
 
 ### 4. Suscripciones
 
-- Pasarela de pagos (Wompi, PayU…), cuyo webhook haga lo mismo que "Aprobar".
-- Factura electrónica de Galenum por cada pago (obligatoria ante la DIAN).
-- Renovación automática.
+Decidido el 8 de noviembre de 2026:
+- **Pasarela: Wompi** (tarjeta, PSE, Nequi, botón Bancolombia), con su checkout: los datos de la tarjeta no pasan por
+  Galenum. Su webhook firmado aprueba el pago solo, como "Aprobar" en la consola. La transferencia manual se queda.
+- Galenum todavía no tiene empresa constituida: se construye y prueba con las llaves de prueba (sandbox) de Wompi; los
+  pagos reales y la factura electrónica esperan al NIT. **Pendiente de la usuaria:** crear la cuenta de prueba en
+  Wompi para tener las llaves.
+- Después: **renovación automática** (tarjeta tokenizada en Wompi) y **factura electrónica** de Galenum por cada pago
+  con un proveedor (Alegra, Siigo u otro), cuando exista la empresa.
 
 ### 5. Historia clínica
 
@@ -228,7 +233,10 @@ la **Res. 948 de 2026**, con el Documento Técnico 1 v003 y el 2 v001, ambos del
 
 ### 6. Formatos transversales (fase 4)
 
-Incapacidad, remisión y contrarreferencia, y consentimiento informado firmado por el paciente.
+- ✅ **Incapacidad, remisión, contrarreferencia y consentimiento informado** (8 de noviembre de 2026), cada uno con su
+  PDF para el paciente y el consentimiento con la firma del paciente en pantalla. Ver "Cómo quedó la fase 4" en
+  `docs/diseno-formatos.md`.
+- Pendiente: que un abogado o una EPS revise los campos del certificado de incapacidad (Decreto 1427 de 2022).
 
 ### 7. Más adelante
 

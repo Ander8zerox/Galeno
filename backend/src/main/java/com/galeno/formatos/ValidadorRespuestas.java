@@ -33,6 +33,9 @@ final class ValidadorRespuestas {
     static final int MAX_TEXTO = 500;
     static final int MAX_TEXTO_LARGO = 20_000;
     static final int MAX_FILAS = 50;
+    /** Una firma en PNG ocupa unos 20 a 60 KB en base64; el tope deja margen sin permitir imágenes cualquiera. */
+    static final int MAX_FIRMA = 400_000;
+    private static final String PREFIJO_FIRMA = "data:image/png;base64,";
 
     private static final JsonNodeFactory NODOS = JsonNodeFactory.instance;
 
@@ -120,10 +123,10 @@ final class ValidadorRespuestas {
                 throw ApiProblem.badRequest(formato + " › " + s.titulo() + ": el campo «" + clave + "» no existe en esta versión");
             }
         }
-        // En el orden de la definición: visibleSi solo mira campos anteriores, ya limpios
+        // En el orden de la definición: visibleSi y calculo solo miran campos anteriores, ya limpios
         for (Campo c : s.campos()) {
             String donde = formato + " › " + s.titulo() + " › " + c.etiqueta();
-            JsonNode v = normalizarValor(donde, c, valores.get(c.clave()));
+            JsonNode v = c.calculo() != null ? calcular(c, limpios) : normalizarValor(donde, c, valores.get(c.clave()));
             if (v != null && visible(c, limpios)) {
                 limpios.set(c.clave(), v);
             }
@@ -147,7 +150,73 @@ final class ValidadorRespuestas {
             case TABLA -> tabla(donde, c, v);
             case ESCALA -> escala(donde, c, v);
             case ODONTOGRAMA -> Odontograma.normalizar(donde, v);
+            case FIRMA -> firma(donde, v);
         };
+    }
+
+    /** El valor calculado lo pone el servidor (lo que mande el navegador se ignora). */
+    private static JsonNode calcular(Campo c, ObjectNode limpios) {
+        JsonNode desde = limpios.get(c.calculo().desde());
+        JsonNode dias = limpios.get(c.calculo().dias());
+        if (desde == null || dias == null || !dias.canConvertToInt() || dias.intValue() < 1) {
+            return null;
+        }
+        return NODOS.stringNode(LocalDate.parse(desde.stringValue()).plusDays(dias.intValue() - 1L).toString());
+    }
+
+    /**
+     * {@code {"imagen": "data:image/png;base64,…", "nombre": "…", "firmadaEn": "2026-11-08T15:04:05Z"}}. Sin imagen
+     * es vacío. La fecha la pone siempre el servidor (lo que mande el navegador se ignora: no se puede falsear); si la
+     * firma no cambió, {@link #conservarFechasDeFirma} deja la fecha original.
+     */
+    private static JsonNode firma(String donde, JsonNode v) {
+        if (!v.isObject()) {
+            throw ApiProblem.badRequest(donde + ": se esperaba una firma");
+        }
+        JsonNode imagen = v.get("imagen");
+        if (imagen == null || imagen.isNull() || (imagen.isString() && imagen.stringValue().isBlank())) {
+            return null;
+        }
+        String datos = imagen.isString() ? imagen.stringValue() : "";
+        if (!datos.startsWith(PREFIJO_FIRMA) || datos.length() > MAX_FIRMA
+                || !datos.substring(PREFIJO_FIRMA.length()).matches("[A-Za-z0-9+/]+={0,2}")) {
+            throw ApiProblem.badRequest(donde + ": la firma debe ser una imagen PNG");
+        }
+        ObjectNode limpia = NODOS.objectNode();
+        limpia.put("imagen", datos);
+        JsonNode nombre = v.get("nombre");
+        if (nombre != null && nombre.isString() && !nombre.stringValue().isBlank()) {
+            String n = nombre.stringValue().strip();
+            if (n.length() > 120) {
+                throw ApiProblem.badRequest(donde + ": el nombre de quien firma admite 120 caracteres");
+            }
+            limpia.put("nombre", n);
+        }
+        limpia.put("firmadaEn", java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString());
+        return limpia;
+    }
+
+    /**
+     * Una firma que no cambió (la misma imagen que ya estaba guardada) conserva la fecha en que se firmó: guardar el
+     * borrador otra vez no la mueve.
+     */
+    static void conservarFechasDeFirma(DefinicionFormato d, ObjectNode nuevas, JsonNode previas) {
+        if (previas == null || !previas.isObject()) {
+            return;
+        }
+        for (Seccion s : d.secciones()) {
+            for (Campo c : s.campos()) {
+                if (c.tipo() != Tipo.FIRMA) {
+                    continue;
+                }
+                JsonNode nueva = nuevas.path(s.clave()).get(c.clave());
+                JsonNode previa = previas.path(s.clave()).get(c.clave());
+                if (nueva instanceof ObjectNode n && previa != null && previa.has("firmadaEn")
+                        && n.path("imagen").equals(previa.path("imagen"))) {
+                    n.set("firmadaEn", previa.get("firmadaEn"));
+                }
+            }
+        }
     }
 
     private static JsonNode texto(String donde, JsonNode v, int max) {
@@ -249,7 +318,7 @@ final class ValidadorRespuestas {
             }
             for (Columna col : c.columnas()) {
                 Campo comoCampo = new Campo(col.clave(), col.tipo(), col.etiqueta(), null, false, col.opciones(), null,
-                        null, null, null, null, null, null, null, false);
+                        null, null, null, null, null, null, null, false, null);
                 JsonNode valor = normalizarValor(donde + " › " + col.etiqueta(), comoCampo, fila.get(col.clave()));
                 if (valor != null) {
                     limpia.set(col.clave(), valor);

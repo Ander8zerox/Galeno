@@ -3,7 +3,7 @@
 
 import { lineasHallazgos, type ValorOdontograma } from "./odontograma";
 
-export type Tipo = "texto" | "texto_largo" | "numero" | "fecha" | "seleccion" | "multiple" | "si_no" | "tabla" | "escala" | "odontograma";
+export type Tipo = "texto" | "texto_largo" | "numero" | "fecha" | "seleccion" | "multiple" | "si_no" | "tabla" | "escala" | "odontograma" | "firma";
 
 export interface Campo {
   clave: string;
@@ -22,6 +22,8 @@ export interface Campo {
   filas?: { clave: string; etiqueta: string }[];
   items?: { clave: string; etiqueta: string; opciones: { etiqueta: string; puntaje: number }[] }[];
   rangos?: { min: number; max: number; interpretacion: string }[];
+  /** Fecha calculada (la pone el servidor): `desde` más `dias` menos uno. */
+  calculo?: { desde: string; dias: string };
 }
 
 export interface Seccion {
@@ -32,6 +34,19 @@ export interface Seccion {
 
 export interface Definicion {
   secciones: Seccion[];
+  /** El formato se entrega también como PDF propio (incapacidad, remisión, consentimiento). */
+  documento?: { titulo: string; diagnosticos?: boolean };
+}
+
+/** El valor de un campo calculado, igual que lo calcula el servidor al guardar. */
+export function calcular(c: Campo, valores: Record<string, unknown> | undefined): string | null {
+  if (!c.calculo) return null;
+  const desde = valores?.[c.calculo.desde];
+  const dias = valores?.[c.calculo.dias];
+  if (typeof desde !== "string" || typeof dias !== "number" || dias < 1 || !Number.isInteger(dias)) return null;
+  const f = new Date(`${desde}T12:00:00Z`);
+  f.setUTCDate(f.getUTCDate() + dias - 1);
+  return f.toISOString().slice(0, 10);
 }
 
 /** {"seccion": {"campo": valor}} */
@@ -95,6 +110,9 @@ export function textoFormatos(formatos: { nombre?: string; definicion: Definicio
         } else if (c.tipo === "escala") {
           const t = total(c, v);
           if (t) lineas.push(`${prefijo}: ${t.puntaje}/${t.maximo}${t.interpretacion ? ` (${t.interpretacion})` : ""}`);
+        } else if (c.tipo === "firma") {
+          const nombre = (v as { nombre?: string }).nombre;
+          lineas.push(`${prefijo}: firmado${nombre ? ` por ${nombre}` : ""}`);
         } else if (c.tipo === "tabla") {
           const filas = (v as Fila[]).map((fila) => {
             const nombre = c.filas?.find((x) => x.clave === fila.fila)?.etiqueta;

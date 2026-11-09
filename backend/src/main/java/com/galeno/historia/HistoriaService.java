@@ -37,6 +37,9 @@ import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 @Service
 public class HistoriaService {
 
+    /** El formato de incapacidad: al firmar, marca la incapacidad del RIPS. */
+    static final String CODIGO_INCAPACIDAD = "general.incapacidad";
+
     static final long MAX_BYTES = 20L * 1024 * 1024;
 
     private final AtencionRepository atenciones;
@@ -206,6 +209,10 @@ public class HistoriaService {
                 throw ApiProblem.badRequest("Para firmar, complete: " + String.join("; ", faltan));
             }
         }
+        // Con el formato de incapacidad, el RIPS lleva "incapacidad: SI" sin marcarlo aparte
+        if (!atencion.firmada() && formatos.codigos(atencionId).contains(CODIGO_INCAPACIDAD)) {
+            atencion.marcarIncapacidad(true);
+        }
         atencion.firmar(registro);
         if (atencion.getCitaId() != null) {
             agenda.marcarAtendida(atencion.getCitaId());
@@ -246,6 +253,25 @@ public class HistoriaService {
         notas.save(new NotaAclaratoria(atencionId, yo.id(), yo.nombre(), texto.strip()));
         auditar(atencion.getPacienteId(), Accion.NOTA_ACLARATORIA, atencionId);
         return vista(atencion);
+    }
+
+    /**
+     * PDF propio de un formato de la atención (incapacidad, remisión, consentimiento…), para entregar al paciente. Con
+     * marca de agua si la atención es un borrador. Queda auditado como impresión de la atención.
+     */
+    @Transactional
+    public Archivo pdfFormato(UUID atencionId, UUID atencionFormatoId) {
+        Atencion a = visible(atencionId);
+        var doc = formatos.documento(atencionId, atencionFormatoId)
+                .orElseThrow(() -> ApiProblem.notFound("Este formato no tiene un documento para imprimir"));
+        Paciente p = pacientes.get(a.getPacienteId());
+        var consultorio = identidad.consultorio(AuthUser.current().tenantId());
+        auditar(a.getPacienteId(), Accion.IMPRIMIR_ATENCION, atencionId);
+        byte[] contenido = pdf.render(FormatoPdf.html(a, p, consultorio, doc));
+        String tipo = java.text.Normalizer.normalize(doc.nombre(), java.text.Normalizer.Form.NFD).replaceAll("\\p{M}", "")
+                .toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("^-|-$", "");
+        return new Archivo(NombreArchivo.pdf(tipo, p.getApellidos(), p.getNombres(), a.getFechaAtencion(), consultorio.zona()),
+                "application/pdf", contenido);
     }
 
     /** PDF de la atención (con marca de agua si es un borrador). Queda auditado. */

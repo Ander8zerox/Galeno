@@ -174,4 +174,98 @@ class MotorFormatosTest {
     private static InputStream entrada(String s) {
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }
+
+    // --- formatos transversales: documento, fecha calculada y firma ---
+
+    @Test
+    void losFormatosTransversalesDelCatalogoEstanBienDefinidos() throws Exception {
+        for (String codigo : java.util.List.of("general.incapacidad", "general.remision", "general.contrarreferencia",
+                "general.consentimiento")) {
+            try (InputStream in = getClass().getResourceAsStream("/formatos/" + codigo + ".v1.json")) {
+                var archivo = CatalogoFormatos.leer(in, codigo + ".v1.json");
+                assertThat(DefinicionFormato.leer(archivo.definicion()).documento().titulo()).isNotBlank();
+            }
+        }
+    }
+
+    private static final String INCAPACIDAD = """
+            {"secciones": [{"clave": "inc", "titulo": "Incapacidad", "campos": [
+              {"clave": "inicio", "tipo": "fecha", "etiqueta": "Desde"},
+              {"clave": "dias", "tipo": "numero", "etiqueta": "Días", "min": 1, "max": 540},
+              {"clave": "fin", "tipo": "fecha", "etiqueta": "Hasta", "calculo": {"desde": "inicio", "dias": "dias"}},
+              {"clave": "firma", "tipo": "firma", "etiqueta": "Firma del paciente", "obligatorio": true}
+            ]}]}""";
+
+    @Test
+    void laFechaCalculadaLaPoneElServidor() {
+        JsonNode r = ValidadorRespuestas.normalizar("Inc", definicion(INCAPACIDAD),
+                json("{\"inc\": {\"inicio\": \"2026-11-30\", \"dias\": 3, \"fin\": \"2020-01-01\"}}"));
+
+        // 30 de noviembre más 3 días: hasta el 2 de diciembre (incluido); lo que mandó el navegador se ignora
+        assertThat(r.get("inc").get("fin").stringValue()).isEqualTo("2026-12-02");
+        JsonNode sinDias = ValidadorRespuestas.normalizar("Inc", definicion(INCAPACIDAD), json("{\"inc\": {\"inicio\": \"2026-11-30\"}}"));
+        assertThat(sinDias.get("inc").has("fin")).isFalse();
+    }
+
+    @Test
+    void elCalculoDebeApuntarAUnaFechaYUnNumeroAnteriores() {
+        String mal = INCAPACIDAD.replace("\"calculo\": {\"desde\": \"inicio\", \"dias\": \"dias\"}", "\"calculo\": {\"desde\": \"dias\", \"dias\": \"inicio\"}");
+        assertThatThrownBy(() -> definicion(mal)).hasMessageContaining("calculo");
+    }
+
+    private static final String PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
+    @Test
+    void laFirmaGuardaImagenNombreYFecha() {
+        JsonNode r = ValidadorRespuestas.normalizar("Inc", definicion(INCAPACIDAD),
+                json("{\"inc\": {\"firma\": {\"imagen\": \"" + PNG + "\", \"nombre\": \" Ana Ficticia \"}}}"));
+
+        JsonNode f = r.get("inc").get("firma");
+        assertThat(f.get("imagen").stringValue()).isEqualTo(PNG);
+        assertThat(f.get("nombre").stringValue()).isEqualTo("Ana Ficticia");
+        assertThat(java.time.Instant.parse(f.get("firmadaEn").stringValue())).isBeforeOrEqualTo(java.time.Instant.now());
+        // Sin imagen, la firma está vacía y al firmar la atención falta
+        JsonNode vacia = ValidadorRespuestas.normalizar("Inc", definicion(INCAPACIDAD), json("{\"inc\": {\"firma\": {\"imagen\": \"\"}}}"));
+        assertThat(ValidadorRespuestas.faltantes(definicion(INCAPACIDAD), vacia)).containsExactly("Incapacidad › Firma del paciente");
+    }
+
+    @Test
+    void laFechaDeLaFirmaLaPoneElServidorYNoCambiaSiLaFirmaEsLaMisma() {
+        JsonNode previas = json("{\"inc\": {\"firma\": {\"imagen\": \"" + PNG + "\", \"firmadaEn\": \"2026-11-30T15:00:00Z\"}}}");
+        // El navegador manda otra fecha: se ignora
+        var nuevas = ValidadorRespuestas.normalizar("Inc", definicion(INCAPACIDAD),
+                json("{\"inc\": {\"firma\": {\"imagen\": \"" + PNG + "\", \"firmadaEn\": \"2020-01-01T00:00:00Z\"}}}"));
+        assertThat(nuevas.get("inc").get("firma").get("firmadaEn").stringValue()).isNotEqualTo("2020-01-01T00:00:00Z");
+
+        // La misma imagen que ya estaba guardada conserva la fecha original
+        ValidadorRespuestas.conservarFechasDeFirma(definicion(INCAPACIDAD), nuevas, previas);
+        assertThat(nuevas.get("inc").get("firma").get("firmadaEn").stringValue()).isEqualTo("2026-11-30T15:00:00Z");
+
+        // Una firma nueva (otra imagen) toma la fecha de ahora
+        var otra = ValidadorRespuestas.normalizar("Inc", definicion(INCAPACIDAD),
+                json("{\"inc\": {\"firma\": {\"imagen\": \"" + PNG.replace("iVBOR", "iVBOS") + "\"}}}"));
+        ValidadorRespuestas.conservarFechasDeFirma(definicion(INCAPACIDAD), otra, previas);
+        assertThat(otra.get("inc").get("firma").get("firmadaEn").stringValue()).isNotEqualTo("2026-11-30T15:00:00Z");
+    }
+
+    @Test
+    void laFirmaDebeSerUnaImagenPng() {
+        assertThatThrownBy(() -> ValidadorRespuestas.normalizar("Inc", definicion(INCAPACIDAD),
+                json("{\"inc\": {\"firma\": {\"imagen\": \"data:text/html;base64,PHNjcmlwdD4=\"}}}")))
+                .isInstanceOf(ApiProblem.class).hasMessageContaining("PNG");
+        assertThatThrownBy(() -> ValidadorRespuestas.normalizar("Inc", definicion(INCAPACIDAD),
+                json("{\"inc\": {\"firma\": {\"imagen\": \"data:image/png;base64,\\\"><script>\"}}}")))
+                .isInstanceOf(ApiProblem.class).hasMessageContaining("PNG");
+    }
+
+    @Test
+    void elPdfMuestraLaFirmaConSuNombre() {
+        // Tal como queda guardado (la fecha la puso el servidor al firmar)
+        JsonNode r = json("{\"inc\": {\"inicio\": \"2026-11-30\", \"dias\": 3, \"fin\": \"2026-12-02\", \"firma\": {\"imagen\": \"" + PNG
+                        + "\", \"nombre\": \"Ana <b>Ficticia</b>\", \"firmadaEn\": \"2026-11-30T15:00:00Z\"}}}");
+
+        String html = PresentacionFormato.html("Incapacidad", definicion(INCAPACIDAD), r);
+        assertThat(html).contains("02/12/2026").contains("<img class=\"firma-imagen\" src=\"" + PNG)
+                .contains("Ana &lt;b&gt;Ficticia&lt;/b&gt;").contains("Firmado el 30/11/2026 10:00");
+    }
 }

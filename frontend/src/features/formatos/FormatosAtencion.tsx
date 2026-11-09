@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { api, unwrap, type Schemas } from "../../api/client";
+import { BotonArchivo } from "../historia/Documentos";
 import { FormatoEditor } from "./FormatoEditor";
 import { vacio, type Definicion, type Respuestas } from "./motor";
 
@@ -59,6 +60,12 @@ export function FormatosAtencion({ atencionId, pacienteId, formatos, respuestas,
             <div className="row between">
               <h3>{f.nombre} <span className="muted small">v{f.version}</span></h3>
               <div className="row">
+                {(f.definicion as unknown as Definicion).documento && (
+                  <BotonArchivo ruta={`/api/v1/historia/atenciones/${atencionId}/formatos/${f.id}/pdf`}
+                    nombre={`${(f.nombre ?? "documento").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-")}.pdf`}>
+                    Vista previa del PDF
+                  </BotonArchivo>
+                )}
                 {disp && (
                   <label className="check small" title="Se agrega solo a sus atenciones nuevas">
                     <input type="checkbox" checked={!!disp.porDefecto} disabled={porDefecto.isPending}

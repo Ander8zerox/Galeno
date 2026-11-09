@@ -2100,6 +2100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/historia/atenciones/{id}/formatos/{formatoAtencionId}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pdfFormato"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/formulacion/formulas/{id}/pdf": {
         parameters: {
             query?: never;
@@ -3984,27 +4000,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            container?: boolean;
-            bigInteger?: boolean;
-            integralNumber?: boolean;
             missingNode?: boolean;
+            floatingPointNumber?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            container?: boolean;
             bigDecimal?: boolean;
             valueNode?: boolean;
-            number?: boolean;
-            string?: boolean;
-            object?: boolean;
+            integralNumber?: boolean;
+            bigInteger?: boolean;
+            binary?: boolean;
             pojo?: boolean;
+            object?: boolean;
+            string?: boolean;
+            /** @deprecated */
+            textual?: boolean;
             short?: boolean;
             int?: boolean;
             long?: boolean;
-            double?: boolean;
-            /** @deprecated */
-            textual?: boolean;
             boolean?: boolean;
-            binary?: boolean;
-            floatingPointNumber?: boolean;
+            double?: boolean;
+            number?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -7795,6 +7811,29 @@ export interface operations {
             header?: never;
             path: {
                 id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    pdfFormato: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                formatoAtencionId: string;
             };
             cookie?: never;
         };
