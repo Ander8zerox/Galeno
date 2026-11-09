@@ -39,7 +39,7 @@ producción en AWS, en https://galenum.com.co.
 - **Programa de partners:**
   - Inscripción con aprobación de la plataforma, y código y enlace de referido.
   - 10 % de descuento para el consultorio referido.
-  - Comisión recurrente del 30 % sobre cada pago, con retención de 30 días y liquidación desde $30.000.
+  - Comisión recurrente del 20 % sobre cada pago (era 30 %; bajó el 9 de noviembre de 2026, sin partners aprobados todavía), con retención de 30 días y liquidación desde $30.000.
 - **Consola de la plataforma:** operadores, consultorios, pagos, partners, correos bloqueados y auditoría con el
   detalle y el operador de cada acción.
 - **Correo:** Amazon SES con el dominio verificado (DKIM, SPF y DMARC), fuera del sandbox. Los rebotes y las quejas
@@ -225,6 +225,18 @@ Decidido el 8 de noviembre de 2026:
   Wompi para tener las llaves.
 - Después: **renovación automática** (tarjeta tokenizada en Wompi) y **factura electrónica** de Galenum por cada pago
   con un proveedor (Alegra, Siigo u otro), cuando exista la empresa.
+- Mientras no exista la cuenta de la empresa, "Datos para pagar" (consola → Planes y datos de pago) dice que escriban a
+  soporte para recibir los datos (9 de noviembre de 2026). Al tener la cuenta: poner banco, tipo y número, titular y NIT.
+- Precios decididos el 9 de noviembre de 2026: **mensual $140.000** y **anual $1.512.000** (10 % de ahorro).
+
+### 4b. Landing page (en curso, 9 de noviembre de 2026)
+
+- Página pública estática en la raíz de `galenum.com.co` (opción A): la app sigue en el mismo dominio y la landing es
+  el `index.html` de S3; las demás rutas caen en la app (`app.html`) por la respuesta de error de CloudFront.
+- ✅ Textos: `docs/marketing/landing.md` (portada, funciones, video, precios, recursos, partners, preguntas).
+- Siguiente: diseño y página estática, ajuste de CloudFront (`terraform apply` de la usuaria) y los PDF del folleto y
+  la guía alojados en el sitio (la guía, revisada para que solo tenga datos ficticios).
+- Después: el video en YouTube (modo privacidad).
 
 ### 5. Historia clínica
 

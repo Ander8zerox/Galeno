@@ -62,7 +62,7 @@ import com.galeno.suscripciones.SuscripcionService.PagoAprobado;
 @Service
 class PartnerService implements CodigosReferido {
 
-    static final String TERMINOS_VERSION = "2026-11"; // 2026-11: comisión del 30 % y liquidación desde $30.000
+    static final String TERMINOS_VERSION = "2026-11"; // 2026-11: comisión del 20 % (era 30 % antes de aprobar al primer partner) y liquidación desde $30.000
     private static final Logger log = LoggerFactory.getLogger(PartnerService.class);
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final Set<String> DOCUMENTOS = Set.of("CC", "CE", "PA", "PT", "NIT");
@@ -97,7 +97,7 @@ class PartnerService implements CodigosReferido {
                    PlataformaService plataforma, TokenService tokens, MfaService mfa, PasswordEncoder passwordEncoder,
                    EnvioCorreo correo, LimiteIntentos limites, JsonMapper mapper, TransactionTemplate tx,
                    @Value("${app.web.base-url}") String baseUrl,
-                   @Value("${app.partners.comision-porcentaje:30}") int comisionPorcentaje,
+                   @Value("${app.partners.comision-porcentaje:20}") int comisionPorcentaje,
                    @Value("${app.partners.descuento-porcentaje:10}") int descuentoPorcentaje,
                    @Value("${app.partners.minimo-liquidacion:30000}") long minimoLiquidacion,
                    @Value("${app.partners.retencion-dias:30}") int retencionDias,
