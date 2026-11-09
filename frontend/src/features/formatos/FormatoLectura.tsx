@@ -16,7 +16,7 @@ export function FormatoLectura({ nombre, definicion, respuestas }: { nombre?: st
           {s.titulo.toLowerCase() !== nombre?.toLowerCase() && <h4>{s.titulo}</h4>}
           <dl className="campos-lectura">
             {campos.map((c) => (
-              <div key={c.clave} className={c.tipo === "tabla" || c.tipo === "odontograma" ? "wide" : undefined}>
+              <div key={c.clave} className={c.tipo === "tabla" || c.tipo === "odontograma" || c.tipo === "firma" ? "wide" : undefined}>
                 <dt>{c.etiqueta}</dt>
                 <dd><Valor campo={c} v={respuestas[s.clave][c.clave]} /></dd>
               </div>
@@ -32,6 +32,18 @@ function Valor({ campo: c, v }: { campo: Campo; v: unknown }) {
   if (c.tipo === "escala") {
     const t = total(c, v);
     return t ? <><strong>{t.puntaje} / {t.maximo}</strong>{t.interpretacion && ` · ${t.interpretacion}`}</> : <span className="muted">Incompleta</span>;
+  }
+  if (c.tipo === "firma") {
+    const f = v as { imagen?: string; nombre?: string; firmadaEn?: string };
+    return (
+      <div className="stack-sm">
+        {f.imagen && <img className="firma-guardada" src={f.imagen} alt={`Firma${f.nombre ? ` de ${f.nombre}` : ""}`} />}
+        <span className="muted small">
+          {f.nombre}{f.nombre && f.firmadaEn ? " · " : ""}
+          {f.firmadaEn && `Firmada el ${new Date(f.firmadaEn).toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" })}`}
+        </span>
+      </div>
+    );
   }
   if (c.tipo === "odontograma") {
     const o = v as ValorOdontograma;

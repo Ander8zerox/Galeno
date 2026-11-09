@@ -1,6 +1,7 @@
 import { OdontogramaEditor } from "./OdontogramaEditor";
 import type { ValorOdontograma } from "./odontograma";
-import { errorCampo, total, visible, type Campo, type Definicion, type Fila, type Respuestas } from "./motor";
+import { FirmaPad, type ValorFirma } from "./FirmaPad";
+import { calcular, errorCampo, textoValor, total, visible, type Campo, type Definicion, type Fila, type Respuestas } from "./motor";
 
 /** Dibuja cualquier formato a partir de su definición. Un solo componente para todas las especialidades. */
 export function FormatoEditor({ definicion, value, onChange }: {
@@ -18,7 +19,15 @@ export function FormatoEditor({ definicion, value, onChange }: {
             <legend>{s.titulo}</legend>
             <div className="form-grid">
               {s.campos.filter((c) => visible(c, valores)).map((c) => (
-                <CampoEditor key={c.clave} campo={c} valor={valores[c.clave]} onChange={(v) => set(c.clave, v)} />
+                c.calculo ? (
+                  <div key={c.clave} className="stack-sm">
+                    <span className="etiqueta-campo">{c.etiqueta}</span>
+                    <strong>{calcular(c, valores) ? textoValor("fecha", calcular(c, valores)) : "—"}</strong>
+                    {c.ayuda && <span className="muted small">{c.ayuda}</span>}
+                  </div>
+                ) : (
+                  <CampoEditor key={c.clave} campo={c} valor={valores[c.clave]} onChange={(v) => set(c.clave, v)} />
+                )
               ))}
             </div>
           </fieldset>
@@ -28,7 +37,7 @@ export function FormatoEditor({ definicion, value, onChange }: {
   );
 }
 
-const ANCHOS = new Set(["texto_largo", "multiple", "tabla", "escala", "odontograma"]);
+const ANCHOS = new Set(["texto_largo", "multiple", "tabla", "escala", "odontograma", "firma"]);
 
 function CampoEditor({ campo: c, valor, onChange }: { campo: Campo; valor: unknown; onChange: (v: unknown) => void }) {
   // Un solo bloque de texto: el label es flex en columna y la unidad no debe quedar en otra línea
@@ -115,6 +124,13 @@ function CampoEditor({ campo: c, valor, onChange }: { campo: Campo; valor: unkno
         <div className={`stack-sm ${clase}`}>
           <span className="etiqueta-campo">{etiqueta}</span>{ayuda}
           <OdontogramaEditor value={(valor as ValorOdontograma) ?? null} onChange={onChange} />
+        </div>
+      );
+    case "firma":
+      return (
+        <div className={`stack-sm ${clase}`}>
+          <span className="etiqueta-campo">{etiqueta}</span>{ayuda}
+          <FirmaPad valor={(valor as ValorFirma) ?? null} onChange={onChange} />
         </div>
       );
     case "tabla":

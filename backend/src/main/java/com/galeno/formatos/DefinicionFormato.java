@@ -18,7 +18,17 @@ import tools.jackson.databind.json.JsonMapper;
  * Secciones y campos de una versión de formato (la columna {@code formato_versiones.definicion}). Las respuestas se
  * guardan por clave: {@code {"seccion": {"campo": valor}}}, así que las claves no cambian entre versiones.
  */
-public record DefinicionFormato(List<Seccion> secciones) {
+public record DefinicionFormato(List<Seccion> secciones, Documento documento) {
+
+    /**
+     * El formato se entrega también como documento propio (PDF aparte para el paciente, como la fórmula): la
+     * incapacidad, la remisión, el consentimiento.
+     *
+     * @param titulo       el título del PDF ("CERTIFICADO DE INCAPACIDAD")
+     * @param diagnosticos si el PDF incluye los diagnósticos de la atención
+     */
+    public record Documento(String titulo, boolean diagnosticos) {
+    }
 
     public enum Tipo {
         @JsonProperty("texto") TEXTO,
@@ -33,7 +43,9 @@ public record DefinicionFormato(List<Seccion> secciones) {
         /** Ítems con puntaje, total automático e interpretación por rangos (Glasgow, EVA…). */
         @JsonProperty("escala") ESCALA,
         /** Dientes FDI con hallazgos por diente y por superficie (ver {@link Odontograma}). */
-        @JsonProperty("odontograma") ODONTOGRAMA
+        @JsonProperty("odontograma") ODONTOGRAMA,
+        /** Firma manuscrita en pantalla (del paciente o su representante): imagen PNG, nombre y fecha. */
+        @JsonProperty("firma") FIRMA
     }
 
     public record Seccion(String clave, String titulo, List<Campo> campos) {
@@ -44,11 +56,12 @@ public record DefinicionFormato(List<Seccion> secciones) {
      * @param obligatorio se exige al firmar la atención, no al guardar el borrador
      * @param arrastrar al agregar el formato a una atención, el campo parte del valor que tenía en la última atención
      *                  firmada del paciente con este formato (p. ej. el odontograma)
+     * @param calculo   fecha calculada, no se digita (p. ej. el fin de una incapacidad)
      */
     public record Campo(String clave, Tipo tipo, String etiqueta, String ayuda, boolean obligatorio,
                         List<String> opciones, String unidad, BigDecimal min, BigDecimal max, VisibleSi visibleSi,
                         List<Columna> columnas, List<Fila> filas, List<ItemEscala> items, List<Rango> rangos,
-                        boolean arrastrar) {
+                        boolean arrastrar, Calculo calculo) {
 
         int puntajeMaximo() {
             return items.stream().mapToInt(i -> i.opciones().stream().mapToInt(OpcionEscala::puntaje).max().orElse(0)).sum();
@@ -56,6 +69,10 @@ public record DefinicionFormato(List<Seccion> secciones) {
     }
 
     public record VisibleSi(String campo, JsonNode igual) {
+    }
+
+    /** Fecha = el campo {@code desde} (fecha) más {@code dias} (número) menos uno: el último día de un periodo. */
+    public record Calculo(String desde, String dias) {
     }
 
     /** Columna de una tabla: solo tipos sencillos (texto, numero, seleccion, si_no). */
@@ -93,6 +110,7 @@ public record DefinicionFormato(List<Seccion> secciones) {
     /** Revisa que la definición esté bien armada. Se llama al cargar el catálogo: un error impide arrancar. */
     void verificar(String formato) {
         exigir(secciones != null && !secciones.isEmpty(), formato, "no tiene secciones");
+        exigir(documento == null || texto(documento.titulo()), formato, "el documento no tiene título");
         Set<String> clavesSeccion = new HashSet<>();
         for (Seccion s : secciones) {
             String donde = formato + "/" + s.clave();
@@ -105,6 +123,13 @@ public record DefinicionFormato(List<Seccion> secciones) {
                 exigir(clave(c.clave()) && !anteriores.containsKey(c.clave()), dondeCampo, "clave de campo inválida o repetida");
                 exigir(c.tipo() != null && texto(c.etiqueta()), dondeCampo, "falta el tipo o la etiqueta");
                 verificarCampo(c, dondeCampo);
+                if (c.calculo() != null) {
+                    Campo desde = anteriores.get(c.calculo().desde());
+                    Campo dias = anteriores.get(c.calculo().dias());
+                    exigir(c.tipo() == Tipo.FECHA && desde != null && desde.tipo() == Tipo.FECHA && dias != null
+                            && dias.tipo() == Tipo.NUMERO, dondeCampo,
+                            "calculo: el campo debe ser fecha y apuntar a una fecha y un número anteriores de la sección");
+                }
                 if (c.visibleSi() != null) {
                     // Solo de un campo anterior: así el orden de evaluación es el de la pantalla
                     exigir(anteriores.containsKey(c.visibleSi().campo()) && c.visibleSi().igual() != null, dondeCampo,

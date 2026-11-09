@@ -50,6 +50,8 @@ public class PdfRenderer {
             .texto { white-space: pre-wrap; }
             h3 { font-size: 10.5pt; margin: 0 0 4px; color: #1f2933; }
             h3.seccion-formato { margin-top: 8px; }
+            .firma-formato { margin-top: 10px; page-break-inside: avoid; }
+            .firma-imagen { height: 22mm; max-width: 70mm; border-bottom: 1px solid #1f2933; }
             table.odontograma { border-collapse: collapse; margin: 4px auto; }
             table.odontograma > tbody > tr > td, table.odontograma > tr > td { padding: 1px; text-align: center; vertical-align: top; }
             table.odontograma td.linea-media { border-left: 1px solid #1f2933; padding: 0 1px; }

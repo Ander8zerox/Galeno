@@ -332,7 +332,17 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
         {!!signos.length && <Seccion titulo="Signos vitales" texto={signos.join(" · ")} />}
         <Seccion titulo="Examen físico" texto={a.examenFisico} />
         {a.formatos?.map((f) => (
-          <FormatoLectura key={f.id} nombre={f.nombre} definicion={f.definicion as unknown as Definicion} respuestas={(f.respuestas ?? {}) as Respuestas} />
+          <div key={f.id} className="stack-sm">
+          <FormatoLectura nombre={f.nombre} definicion={f.definicion as unknown as Definicion} respuestas={(f.respuestas ?? {}) as Respuestas} />
+          {(f.definicion as unknown as Definicion).documento && (
+            <div>
+              <BotonArchivo ruta={`/api/v1/historia/atenciones/${a.id}/formatos/${f.id}/pdf`} className="btn btn-secondary"
+                nombre={`${(f.nombre ?? "documento").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-")}.pdf`}>
+                {f.nombre}: PDF para el paciente
+              </BotonArchivo>
+            </div>
+          )}
+          </div>
         ))}
         {!!a.diagnosticos?.length && (
           <div>

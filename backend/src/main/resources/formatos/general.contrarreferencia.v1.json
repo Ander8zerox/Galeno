@@ -1,0 +1,27 @@
+{
+  "codigo": "general.contrarreferencia",
+  "nombre": "Contrarreferencia",
+  "especialidad": "General",
+  "descripcion": "Respuesta al profesional que remitió al paciente: hallazgos, conducta y recomendaciones. Se entrega en PDF con los diagnósticos de la atención.",
+  "version": 1,
+  "definicion": {
+    "documento": { "titulo": "CONTRARREFERENCIA", "diagnosticos": true },
+    "secciones": [
+      {
+        "clave": "contrarreferencia",
+        "titulo": "Contrarreferencia",
+        "campos": [
+          { "clave": "remitente", "tipo": "texto", "etiqueta": "Profesional o institución que remitió", "obligatorio": true },
+          { "clave": "fecha_remision", "tipo": "fecha", "etiqueta": "Fecha de la remisión" },
+          { "clave": "motivo_remision", "tipo": "texto_largo", "etiqueta": "Motivo de la remisión" },
+          { "clave": "hallazgos", "tipo": "texto_largo", "etiqueta": "Hallazgos", "obligatorio": true },
+          { "clave": "conducta", "tipo": "texto_largo", "etiqueta": "Conducta y tratamiento realizado", "obligatorio": true },
+          { "clave": "recomendaciones", "tipo": "texto_largo", "etiqueta": "Recomendaciones al profesional tratante", "obligatorio": true },
+          { "clave": "control", "tipo": "si_no", "etiqueta": "Requiere control con la especialidad" },
+          { "clave": "control_cuando", "tipo": "texto", "etiqueta": "¿Cuándo?",
+            "visibleSi": { "campo": "control", "igual": true } }
+        ]
+      }
+    ]
+  }
+}
