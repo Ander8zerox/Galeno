@@ -83,7 +83,7 @@ ACTIVA (pagada) ──┘                         └─────────
 
 ```
 partner se inscribe → la plataforma lo aprueba (código) → consultorio se registra con el código (atribuido, 10 % de descuento)
-    → cada pago aprobado → comisión del 30 % (retenida 30 días → disponible) → liquidación cuando suma $30.000
+    → cada pago aprobado → comisión del 20 % (retenida 30 días → disponible) → liquidación cuando suma $30.000
 ```
 
 - **Módulo `partners`.** Depende de identidad, suscripciones y plataforma; ninguno de ellos depende de partners. Se engancha por eventos:
