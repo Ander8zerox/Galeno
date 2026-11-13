@@ -40,9 +40,14 @@ const auth: Middleware = {
 export const api = createClient<paths>({ baseUrl: "/" });
 api.use(auth);
 
+/** Si la respuesta no trae detalle (p. ej. un 429 del WAF de CloudFront, sin cuerpo JSON). */
+function mensajeSinDetalle(status: number): string {
+  return status === 429 ? "Demasiadas solicitudes seguidas. Espere un momento e intente de nuevo." : "Error inesperado";
+}
+
 async function problema(res: Response): Promise<ApiError> {
   const p = (await res.json().catch(() => ({}))) as { detail?: string; errores?: Record<string, string> };
-  return new ApiError(res.status, p.detail ?? "Error inesperado", p.errores);
+  return new ApiError(res.status, p.detail ?? mensajeSinDetalle(res.status), p.errores);
 }
 
 /** Sube un archivo (multipart). openapi-fetch no maneja bien FormData, así que va con fetch directo. */
@@ -87,7 +92,7 @@ export async function descargarArchivo(ruta: string, nombre: string): Promise<{ 
 export function expectOk(result: { error?: unknown; response: Response }): void {
   if (!result.response.ok) {
     const problem = (result.error ?? {}) as { detail?: string; errores?: Record<string, string> };
-    throw new ApiError(result.response.status, problem.detail ?? "Error inesperado", problem.errores);
+    throw new ApiError(result.response.status, problem.detail ?? mensajeSinDetalle(result.response.status), problem.errores);
   }
 }
 
@@ -95,7 +100,7 @@ export function expectOk(result: { error?: unknown; response: Response }): void 
 export function unwrap<T>(result: { data?: T; error?: unknown; response: Response }): T {
   if (result.error !== undefined || result.data === undefined) {
     const problem = (result.error ?? {}) as { detail?: string; errores?: Record<string, string> };
-    throw new ApiError(result.response.status, problem.detail ?? "Error inesperado", problem.errores);
+    throw new ApiError(result.response.status, problem.detail ?? mensajeSinDetalle(result.response.status), problem.errores);
   }
   return result.data;
 }

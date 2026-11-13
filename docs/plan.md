@@ -269,8 +269,12 @@ Decidido el 8 de noviembre de 2026:
   - Normalizar los alias de Gmail. Las opciones (a) verificar en ReTHUS y (c) prueba con topes se retoman si se ve
     abuso.
 - Técnico: cifrado de campos sensibles y pruebas de integración con Testcontainers.
-- **AWS, Capa 2 (robustez):** alarmas en CloudWatch y Sentry; WAF en CloudFront (confirmar antes que la nueva
-  experiencia lo permita); ambiente de *staging*.
+- ✅ **Protección contra bots, capa 1 (código)** (12 de noviembre de 2026): límites por IP, por correo en el login, por
+  persona con sesión y topes diarios de citas y pacientes. Ver "Protección contra bots y abusos" en
+  `docs/arquitectura.md`.
+- **AWS, Capa 2 (robustez):** alarmas en CloudWatch (peticiones y errores 4xx/5xx de CloudFront) y Sentry; WAF en
+  CloudFront (unos US$8–10 al mes: regla por frecuencia por IP, una más estricta para login y registro, y la lista de IP
+  de mala reputación de AWS; confirmar antes que la nueva experiencia lo permita); ambiente de *staging*.
 - **AWS, Capa 3 (disponibilidad):** ALB con ECS Fargate (2 tareas o más), RDS Multi-AZ y SQS para la cola de IA.
 
 ## Pendientes que dependen del usuario (no de código)

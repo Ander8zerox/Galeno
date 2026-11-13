@@ -17,3 +17,9 @@ app:
     consultorios-por-ip-30-dias: 1000
   plataforma:
     operadores: plataforma@demo.local
+  limites: # en local todo llega desde 127.0.0.1 y las pruebas E2E entran muchas veces seguidas
+    ip-por-minuto: 100000
+    sensibles-por-ip-15-min: 100000
+    login-fallidos-por-correo: 1000
+    usuario-por-minuto: 100000
+    escrituras-usuario-por-minuto: 100000

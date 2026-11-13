@@ -52,8 +52,26 @@ registros_consultorio (solicitudes de registro sin verificar, 24 horas; solo se 
   - `POST /api/v1/registro` valida los datos y guarda la solicitud. Exige contraseña de al menos 10 caracteres, registro médico si la persona es médico, aceptación de términos y NIT con el dígito de verificación de la DIAN (si no lo trae, se calcula). Luego envía al correo un enlace con el token en el fragmento `#`. Responde 202 exista o no una cuenta con ese correo, para no revelar qué correos usan Galeno.
   - `POST /api/v1/registro/consultar` y `/confirmar` crean el consultorio con la constancia de los términos (versión, fecha y quién), la cuenta y el perfil médico, y la membresía ADMIN (más MEDICO si aplica). Dejan a la persona con sesión iniciada. Si el correo ya tenía cuenta, se pide la contraseña actual y la cuenta no cambia.
   - El enlace vence en 24 horas y se usa una sola vez; la confirmación bloquea la solicitud para que dos clics no creen dos consultorios. Las solicitudes vencidas se borran.
-  - **Límites** (`LimiteIntentos`, en memoria): por IP (`app.registro.solicitudes-por-ip-hora`, 5 en producción) antes de validar, y 3 solicitudes válidas por correo por hora. En AWS la IP real llega en `X-Forwarded-For` desde el balanceador: hay que activar `server.forward-headers-strategy` y aceptar ese encabezado solo del ALB.
+  - **Límites** (`LimiteIntentos`, en memoria): por IP (`app.registro.solicitudes-por-ip-hora`, 5 en producción) antes de validar, y 3 solicitudes válidas por correo por hora. En AWS la IP real la decide `IpCliente` (`CloudFront-Viewer-Address`, que solo se cree con el secreto de origen de CloudFront).
 - **Recuperación de contraseña.** `POST /api/v1/auth/recuperar` responde 202 exista o no la cuenta. Si existe, envía un enlace de un solo uso que vence en 1 hora (`recuperaciones_contrasena`; token en el `#`, solo se guarda su hash), y pedir otro anula el anterior. `/auth/restablecer` cambia la contraseña y pone `usuarios.credenciales_cambiadas_en`. `SesionVigenteFilter` rechaza cualquier token emitido antes de esa fecha (sesión, selección o plataforma), así que cambiar la contraseña cierra todas las sesiones abiertas. También avisa por correo del cambio. Hay límites por IP y 3 solicitudes por correo por hora, exista o no la cuenta, para que el 429 no revele cuáles existen.
+- **Protección contra bots y abusos** (12 de noviembre de 2026). Todo responde **429** en problem+json con
+  `Retry-After`; los valores están en `app.limites` (`application.yml`) y en el perfil local son muy altos.
+  - **Por IP** (`LimiteFrecuenciaFilter`, justo después de `OrigenCloudFrontFilter`, antes de la seguridad): 1.200
+    peticiones por minuto en toda la API (holgado: un consultorio comparte la IP de su router) y 30 cada 15 minutos en
+    las rutas públicas sensibles (los tres login, los tres códigos de dos pasos, recuperación, invitaciones, registro,
+    inscripción y validación de códigos de partner).
+  - **Contraseñas incorrectas por correo** (`SesionService.contrasenaValida`, por donde pasan las tres entradas): 10 en
+    15 minutos. Se comprueba antes de bcrypt (que gasta CPU), solo cuentan los fallidos, cuenta igual exista o no el
+    correo y se vence solo: un bot no deja a nadie fuera más de 15 minutos.
+  - **Por persona con sesión** (`LimiteUsuarioFilter`, en la cadena de seguridad antes de `SuscripcionFilter`): 300
+    peticiones por minuto y 60 escrituras por minuto, con cualquier token (consultorio, plataforma o partner).
+  - **Topes diarios por consultorio** (`TopesDiarios`, ventana de 24 horas): 500 citas nuevas y 300 pacientes creados a
+    mano (la importación no cuenta). Frenan también los correos de citas en masa, que dañarían la reputación en SES.
+  - Cada filtro y los topes usan su propio contador en memoria, para que una avalancha no vacíe los de registro y login
+    al proteger la memoria. Los avisos en el log salen como mucho una vez por minuto y clave (para no inflar
+    CloudWatch).
+  - **Limitación:** en memoria y por instancia. Con varias instancias (Capa 3 de AWS) los topes se multiplican y habría
+    que llevarlos a la base de datos o a Redis. La capa siguiente es el WAF en CloudFront (pendiente).
 - **Correo.** Va detrás de la interfaz `EnvioCorreo`. Con `app.correo.proveedor=local` (el valor por defecto) los correos quedan en un buzón en memoria, visible en `GET /api/v1/dev/buzon` y en la página `/dev/buzon` del front (solo en desarrollo). Con `ses`, `SesEnvioCorreo` envía con la API v2 de SES desde `app.correo.remitente` y con el *configuration set* que publica los eventos.
   - **Rebotes y quejas.** SES los publica en un tema SNS suscrito a una cola SQS, y `ColaEventosSes` la lee con *long polling* (si `app.correo.cola-eventos` tiene la URL). Así la API no expone un endpoint público ni tiene que validar firmas de SNS, y si está caída los eventos esperan en la cola. `EventosSes` acepta el evento dentro del sobre de SNS o crudo.
   - **Supresión.** Un rebote permanente o una queja dejan la dirección en `correos_suprimidos` (V14), y los dos proveedores dejan de escribirle (registran un aviso en el log). Los rebotes transitorios solo se registran. En la consola de la plataforma, "Correos bloqueados" lista las direcciones y permite desbloquear una, con auditoría. En desarrollo, `POST /api/v1/dev/buzon/evento-ses` simula un evento con el mismo JSON de SES.

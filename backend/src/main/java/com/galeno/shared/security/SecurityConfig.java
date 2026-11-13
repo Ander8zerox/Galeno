@@ -6,6 +6,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,8 +32,8 @@ import com.galeno.shared.tenancy.TenantFilter;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain api(HttpSecurity http, SesionVigenteFilter sesionVigenteFilter, SuscripcionFilter suscripcionFilter)
-            throws Exception {
+    SecurityFilterChain api(HttpSecurity http, SesionVigenteFilter sesionVigenteFilter, SuscripcionFilter suscripcionFilter,
+                            LimiteUsuarioFilter limiteUsuarioFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // API sin cookies: el token viaja en Authorization
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -108,8 +109,24 @@ public class SecurityConfig {
                 .oauth2ResourceServer(rs -> rs.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .addFilterAfter(new TenantFilter(), BearerTokenAuthenticationFilter.class)
                 .addFilterAfter(sesionVigenteFilter, TenantFilter.class)
-                .addFilterAfter(suscripcionFilter, SesionVigenteFilter.class);
+                // Antes de la suscripción: un bot con sesión se frena sin consultar nada más
+                .addFilterAfter(limiteUsuarioFilter, SesionVigenteFilter.class)
+                .addFilterAfter(suscripcionFilter, LimiteUsuarioFilter.class);
         return http.build();
+    }
+
+    @Bean
+    LimiteUsuarioFilter limiteUsuarioFilter(@Value("${app.limites.usuario-por-minuto:300}") int porMinuto,
+                                            @Value("${app.limites.escrituras-usuario-por-minuto:60}") int escrituras) {
+        return new LimiteUsuarioFilter(porMinuto, escrituras);
+    }
+
+    /** Solo dentro de la cadena de seguridad, donde ya se sabe quién hace la petición. */
+    @Bean
+    FilterRegistrationBean<LimiteUsuarioFilter> limiteUsuarioFilterRegistration(LimiteUsuarioFilter filter) {
+        FilterRegistrationBean<LimiteUsuarioFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean

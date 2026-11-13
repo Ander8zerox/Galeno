@@ -1,5 +1,6 @@
 package com.galeno.identidad;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -19,6 +21,7 @@ import com.galeno.shared.security.TokenService;
 import com.galeno.shared.security.TokenService.IssuedToken;
 import com.galeno.shared.tenancy.TenantContext;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
+import com.galeno.shared.web.LimiteIntentos;
 
 /**
  * Inicio de sesión en dos pasos: credenciales → (si tiene varios consultorios) elegir uno → token de sesión.
@@ -37,10 +40,18 @@ public class SesionService {
     private final TransactionTemplate tx;
     /** Hash de relleno: el login tarda lo mismo exista o no el correo (evita enumerar cuentas). */
     private final String hashRelleno;
+    private final LimiteIntentos limites;
+    private final int fallidosPorCorreo;
+
+    /** Ventana del límite de contraseñas incorrectas por correo. */
+    static final Duration VENTANA_FALLIDOS = Duration.ofMinutes(15);
 
     SesionService(UsuarioRepository usuarios, MembresiaRepository membresias, ConsultorioRepository consultorios,
                   PerfilMedicoRepository perfiles, PasswordEncoder passwordEncoder, TokenService tokens, MfaService mfa,
-                  TransactionTemplate tx) {
+                  TransactionTemplate tx, LimiteIntentos limites,
+                  @Value("${app.limites.login-fallidos-por-correo:10}") int fallidosPorCorreo) {
+        this.limites = limites;
+        this.fallidosPorCorreo = fallidosPorCorreo;
         this.usuarios = usuarios;
         this.membresias = membresias;
         this.consultorios = consultorios;
@@ -56,7 +67,7 @@ public class SesionService {
     public SesionResponse login(String email, String password, String equipo) {
         Usuario u = comoSistema(() -> {
             Optional<Usuario> usuario = usuarios.findByEmail(email.toLowerCase());
-            boolean valido = passwordEncoder.matches(password, usuario.map(Usuario::getPasswordHash).orElse(hashRelleno));
+            boolean valido = contrasenaValida(email, password, usuario);
             if (!valido || usuario.isEmpty() || !usuario.get().isActivo()) {
                 throw ApiProblem.unauthorized("Correo o contraseña incorrectos");
             }
@@ -94,11 +105,30 @@ public class SesionService {
     public record Cuenta(UUID id, String nombre, String email) {
     }
 
+    /**
+     * Compara la contraseña con un tope de intentos fallidos por correo (las tres entradas pasan por aquí), contra
+     * quien prueba contraseñas de una cuenta desde muchas IP. Solo cuentan los fallidos y el bloqueo se vence solo:
+     * un bot no deja a nadie sin poder entrar más de 15 minutos. Cuenta igual exista o no el correo, para no revelar
+     * cuáles existen. Va antes de bcrypt, que es lo que gasta CPU.
+     */
+    private boolean contrasenaValida(String email, String password, Optional<Usuario> usuario) {
+        String clave = "login-correo:" + email.toLowerCase();
+        if (limites.agotado(clave, fallidosPorCorreo, VENTANA_FALLIDOS)) {
+            throw ApiProblem.tooManyRequests("Demasiados intentos fallidos con este correo. Espere "
+                    + (limites.segundosParaReintentar(clave, VENTANA_FALLIDOS) + 59) / 60 + " minutos e intente de nuevo.");
+        }
+        boolean valido = passwordEncoder.matches(password, usuario.map(Usuario::getPasswordHash).orElse(hashRelleno));
+        if (!valido) {
+            limites.registrar(clave);
+        }
+        return valido;
+    }
+
     /** Verifica correo y contraseña sin abrir sesión en un consultorio (la usa la consola de plataforma). */
     public Optional<Cuenta> verificarCredenciales(String email, String password) {
         return comoSistema(() -> {
             Optional<Usuario> usuario = usuarios.findByEmail(email.toLowerCase());
-            boolean valido = passwordEncoder.matches(password, usuario.map(Usuario::getPasswordHash).orElse(hashRelleno));
+            boolean valido = contrasenaValida(email, password, usuario);
             return valido && usuario.isPresent() && usuario.get().isActivo()
                     ? Optional.of(new Cuenta(usuario.get().getId(), usuario.get().getNombre(), usuario.get().getEmail()))
                     : Optional.<Cuenta>empty();
