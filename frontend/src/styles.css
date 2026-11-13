@@ -207,6 +207,8 @@ input::placeholder, textarea::placeholder { color: #667180; }
 .alert-error { background: var(--danger-bg); color: var(--danger); border-left-color: var(--danger-line); }
 .alert-warn { background: var(--warn-bg); color: var(--warn); border-left-color: var(--warn-line); }
 .alert-ok { background: var(--ok-bg); color: var(--ok); border-left-color: var(--ok-line); }
+.campo-con-casilla { display: flex; flex-direction: column; gap: .35rem; }
+.req { color: var(--danger); font-weight: 600; }
 .field-error { color: var(--danger); font-weight: 500; font-size: var(--fs-sm); }
 
 /*

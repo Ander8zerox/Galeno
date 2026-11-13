@@ -17,7 +17,7 @@ const TIPOS_DOCUMENTO: [string, string][] = [
 
 const VACIO: PacienteRequest = {
   tipoDocumento: "CC", numeroDocumento: "", nombres: "", apellidos: "", fechaNacimiento: "", sexo: "F",
-  telefono: "", email: "", alergias: "", antecedentes: "", sinCorreosCitas: false,
+  telefono: "", email: "", alergias: "", antecedentes: "", sinCorreosCitas: false, sinCorreo: false,
 };
 
 function desde(p: Paciente): PacienteRequest {
@@ -27,6 +27,8 @@ function desde(p: Paciente): PacienteRequest {
     nombres: p.datosIncompletos ? "" : p.nombres!, apellidos: p.datosIncompletos ? "" : p.apellidos!,
     fechaNacimiento: p.fechaNacimiento!, sexo: p.sexo!, telefono: p.telefono ?? "", email: p.email ?? "",
     alergias: p.alergias ?? "", antecedentes: p.antecedentes ?? "", sinCorreosCitas: !!p.sinCorreosCitas,
+    // Sin marcar aunque no tenga correo: al editar se pide el correo o que se confirme que no tiene
+    sinCorreo: false,
   };
 }
 
@@ -54,6 +56,7 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
     },
   });
   const errores = guardar.error instanceof ApiError ? guardar.error.errores : {};
+  const errorCorreo = errores.email ?? errores.correoResuelto;
   const set = (campo: keyof PacienteRequest) => (e: { target: { value: string } }) => setForm({ ...form, [campo]: e.target.value });
 
   function onSubmit(e: FormEvent) {
@@ -64,31 +67,46 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
 
   return (
     <form className="card form-grid" onSubmit={onSubmit}>
-      <label>Tipo de documento
+      <p className="small muted wide">Los campos con <span className="req">*</span> son obligatorios.</p>
+      <label><span>Tipo de documento <span className="req">*</span></span>
         <select value={form.tipoDocumento} onChange={set("tipoDocumento")} disabled={!!paciente}>
           {TIPOS_DOCUMENTO.map(([t, nombre]) => <option key={t} value={t}>{t} · {nombre}</option>)}
         </select>
       </label>
-      <Campo label="Número de documento" error={errores.numeroDocumento}>
+      <Campo label="Número de documento" requerido error={errores.numeroDocumento}>
         <input value={form.numeroDocumento} onChange={set("numeroDocumento")} required disabled={!!paciente} />
       </Campo>
-      <Campo label="Nombres" error={errores.nombres}><input value={form.nombres} onChange={set("nombres")} required autoFocus={!!paciente} /></Campo>
-      <Campo label="Apellidos" error={errores.apellidos}><input value={form.apellidos} onChange={set("apellidos")} required /></Campo>
-      <Campo label="Fecha de nacimiento" error={errores.fechaNacimiento}><input type="date" value={form.fechaNacimiento} onChange={set("fechaNacimiento")} required /></Campo>
-      <label>Sexo
+      <Campo label="Nombres" requerido error={errores.nombres}><input value={form.nombres} onChange={set("nombres")} required autoFocus={!!paciente} /></Campo>
+      <Campo label="Apellidos" requerido error={errores.apellidos}><input value={form.apellidos} onChange={set("apellidos")} required /></Campo>
+      <Campo label="Fecha de nacimiento" requerido error={errores.fechaNacimiento}><input type="date" value={form.fechaNacimiento} onChange={set("fechaNacimiento")} required /></Campo>
+      <label><span>Sexo <span className="req">*</span></span>
         <select value={form.sexo} onChange={set("sexo")}>
           <option value="F">Femenino</option><option value="M">Masculino</option><option value="I">Indeterminado</option>
         </select>
       </label>
-      <Campo label="Teléfono" error={errores.telefono}><input value={form.telefono} onChange={set("telefono")} /></Campo>
-      <Campo label="Correo" error={errores.email}><input type="email" value={form.email} onChange={set("email")} /></Campo>
+      <Campo label="Teléfono" requerido error={errores.telefono}>
+        <input type="tel" inputMode="tel" value={form.telefono} onChange={set("telefono")} required
+          pattern="\+?[0-9 ()\-]{7,30}" title="Solo números, al menos 7" />
+      </Campo>
+      {/* Un div, no un label: la casilla lleva su propio label (un label dentro de otro no es válido) */}
+      <div className="campo-con-casilla">
+        <Campo label="Correo" requerido={!form.sinCorreo} error={errorCorreo}>
+          <input type="email" value={form.sinCorreo ? "" : form.email} onChange={set("email")} required={!form.sinCorreo}
+            disabled={!!form.sinCorreo} placeholder={form.sinCorreo ? "No tiene correo" : undefined} />
+        </Campo>
+        <label className="check small">
+          <input type="checkbox" checked={!!form.sinCorreo}
+            onChange={(e) => setForm({ ...form, sinCorreo: e.target.checked, email: e.target.checked ? "" : form.email })} />
+          El paciente no tiene correo
+        </label>
+      </div>
       {paciente?.correoRechazado && (form.email ?? "").trim().toLowerCase() === (paciente.email ?? "").toLowerCase() && (
         <p className="alert alert-warn small wide">
           Esta dirección rechazó los correos: {paciente.correoRechazado} Corríjala. Si está seguro de que es correcta,
           escriba a soporte para desbloquearla.
         </p>
       )}
-      {!!form.email && (
+      {!!form.email && !form.sinCorreo && (
         <label className="check wide">
           <input type="checkbox" checked={!!form.sinCorreosCitas} onChange={(e) => setForm({ ...form, sinCorreosCitas: e.target.checked })} />
           No enviarle correos sobre sus citas (lo pidió el paciente)
@@ -105,10 +123,12 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
   );
 }
 
-function Campo({ label, error, wide, children }: { label: string; error?: string; wide?: boolean; children: React.ReactNode }) {
+function Campo({ label, error, wide, requerido, children }: {
+  label: string; error?: string; wide?: boolean; requerido?: boolean; children: React.ReactNode;
+}) {
   return (
     <label className={wide ? "wide" : undefined}>
-      {label}
+      <span>{label}{requerido && <> <span className="req">*</span></>}</span>
       {children}
       {error && <small className="field-error">{error}</small>}
     </label>

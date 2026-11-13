@@ -154,7 +154,7 @@ public class PacienteService {
     }
 
     private static void apply(Paciente p, PacienteRequest r, boolean datosClinicos) {
-        p.actualizarDemograficos(r.nombres(), r.apellidos(), r.fechaNacimiento(), r.sexo(), r.telefono(), r.email());
+        p.actualizarDemograficos(r.nombres(), r.apellidos(), r.fechaNacimiento(), r.sexo(), r.telefono().strip(), r.emailAGuardar());
         if (r.sinCorreosCitas() != null) {
             p.preferirSinCorreosCitas(r.sinCorreosCitas());
         }
