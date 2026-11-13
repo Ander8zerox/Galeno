@@ -2799,12 +2799,13 @@ export interface components {
             /** Format: date */
             fechaNacimiento: string;
             sexo: string;
-            telefono?: string;
+            telefono: string;
             /** Format: email */
             email?: string;
             alergias?: string;
             antecedentes?: string;
             sinCorreosCitas?: boolean;
+            sinCorreo?: boolean;
         };
         PacienteResponse: {
             /** Format: uuid */
@@ -4000,27 +4001,27 @@ export interface components {
             empty?: boolean;
             null?: boolean;
             float?: boolean;
-            missingNode?: boolean;
-            floatingPointNumber?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            container?: boolean;
-            bigDecimal?: boolean;
-            valueNode?: boolean;
-            integralNumber?: boolean;
-            bigInteger?: boolean;
-            binary?: boolean;
-            pojo?: boolean;
+            number?: boolean;
             object?: boolean;
             string?: boolean;
+            floatingPointNumber?: boolean;
             /** @deprecated */
             textual?: boolean;
-            short?: boolean;
             int?: boolean;
-            long?: boolean;
+            pojo?: boolean;
             boolean?: boolean;
+            short?: boolean;
             double?: boolean;
-            number?: boolean;
+            long?: boolean;
+            binary?: boolean;
+            integralNumber?: boolean;
+            valueNode?: boolean;
+            bigInteger?: boolean;
+            missingNode?: boolean;
+            container?: boolean;
+            bigDecimal?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
