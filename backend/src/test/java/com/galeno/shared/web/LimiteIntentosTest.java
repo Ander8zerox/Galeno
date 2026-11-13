@@ -45,4 +45,23 @@ class LimiteIntentosTest {
         reloj.ahora = reloj.ahora.plus(Duration.ofMinutes(61));
         assertThat(limite.permitir("ip:1", 2, hora)).isTrue();
     }
+
+    @Test
+    void soloCuentanLosRegistradosYSeVencenSolos() {
+        Reloj reloj = new Reloj();
+        LimiteIntentos limite = new LimiteIntentos(reloj);
+        Duration quince = Duration.ofMinutes(15);
+
+        assertThat(limite.agotado("correo:a", 2, quince)).isFalse(); // consultar no registra
+        assertThat(limite.agotado("correo:a", 2, quince)).isFalse();
+        limite.registrar("correo:a");
+        reloj.ahora = reloj.ahora.plus(Duration.ofMinutes(5));
+        limite.registrar("correo:a");
+        assertThat(limite.agotado("correo:a", 2, quince)).isTrue();
+        // El primero se vence a los 15 minutos de registrado: faltan 10
+        assertThat(limite.segundosParaReintentar("correo:a", quince)).isBetween(600L, 601L);
+
+        reloj.ahora = reloj.ahora.plus(Duration.ofMinutes(11));
+        assertThat(limite.agotado("correo:a", 2, quince)).isFalse();
+    }
 }

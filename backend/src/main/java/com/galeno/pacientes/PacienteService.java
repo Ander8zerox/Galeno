@@ -12,15 +12,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
+import com.galeno.shared.web.TopesDiarios;
 
 /** API pública del módulo de pacientes: otros módulos la usan en lugar del repositorio. */
 @Service
 public class PacienteService {
 
     private final PacienteRepository repository;
+    private final TopesDiarios topes;
 
-    PacienteService(PacienteRepository repository) {
+    PacienteService(PacienteRepository repository, TopesDiarios topes) {
         this.repository = repository;
+        this.topes = topes;
     }
 
     @Transactional(readOnly = true)
@@ -122,6 +125,7 @@ public class PacienteService {
         if (repository.existsByTipoDocumentoAndNumeroDocumento(r.tipoDocumento(), r.numeroDocumento())) {
             throw ApiProblem.conflict("Ya existe un paciente con ese documento");
         }
+        topes.paciente();
         Paciente paciente = new Paciente(r.tipoDocumento(), r.numeroDocumento());
         apply(paciente, r, datosClinicos);
         return repository.save(paciente);

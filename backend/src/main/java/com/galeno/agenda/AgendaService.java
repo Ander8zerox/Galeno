@@ -26,6 +26,7 @@ import com.galeno.pacientes.PacienteService.PacienteResumen;
 import com.galeno.shared.security.AuthUser;
 import com.galeno.shared.security.Permiso;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
+import com.galeno.shared.web.TopesDiarios;
 
 /**
  * Quién ve la agenda de quién:
@@ -54,10 +55,13 @@ class AgendaService {
     private final EnEsperaRepository espera;
     private final org.springframework.context.ApplicationEventPublisher eventos;
     private final BloqueoAgendaRepository bloqueos;
+    private final TopesDiarios topes;
 
     AgendaService(AgendaMedicoRepository agendas, CitaRepository citas, IdentidadService identidad,
                   PacienteService pacientes, ObjectProvider<AtencionesDeCitas> atenciones, EnEsperaRepository espera,
-                  org.springframework.context.ApplicationEventPublisher eventos, BloqueoAgendaRepository bloqueos) {
+                  org.springframework.context.ApplicationEventPublisher eventos, BloqueoAgendaRepository bloqueos,
+                  TopesDiarios topes) {
+        this.topes = topes;
         this.eventos = eventos;
         this.bloqueos = bloqueos;
         this.agendas = agendas;
@@ -226,6 +230,7 @@ class AgendaService {
         AgendaMedico agenda = obtenerOCrear(medicoId);
         Intervalo intervalo = intervalo(inicio, duracionMinutos != null ? duracionMinutos : agenda.getDuracionMinutos());
         validarCupo(agenda, intervalo, sobrecupo, null);
+        topes.cita();
         Cita cita = citas.save(new Cita(medicoId, pacienteId, intervalo.inicio(), intervalo.fin(), blankToNull(motivo),
                 sobrecupo, AuthUser.current().id()));
         eventos.publishEvent(new CambioCita(cita.getId(), CambioCita.Tipo.AGENDADA, null));

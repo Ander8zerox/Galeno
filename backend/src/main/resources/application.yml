@@ -62,6 +62,14 @@ app:
   soporte: # los mismos valores en frontend/src/soporte.ts
     correo: soporte@galenum.com.co # se reenvía al buzón del equipo (MX en infra/correo.tf)
     whatsapp: "" # p. ej. 573001234567; vacío, no se muestra
+  limites: # contra bots y abusos (429 con Retry-After); en memoria, por instancia
+    ip-por-minuto: 1200                # todas las rutas de la API; un consultorio comparte la IP de su router
+    sensibles-por-ip-15-min: 30        # login, código de dos pasos, recuperación, invitaciones, registro, códigos de partner
+    login-fallidos-por-correo: 10      # contraseñas incorrectas en 15 minutos (las tres entradas); se vence solo
+    usuario-por-minuto: 300            # por persona con sesión
+    escrituras-usuario-por-minuto: 60  # crear, cambiar o borrar
+    citas-por-dia: 500                 # citas nuevas por consultorio en 24 horas
+    pacientes-por-dia: 300             # pacientes creados a mano por consultorio en 24 horas (la importación no cuenta)
   web:
     base-url: http://localhost:5180 # para los enlaces de invitación; en AWS, el dominio de CloudFront
     origen-secreto: ""  # APP_WEB_ORIGEN_SECRETO: el encabezado X-Origen-Galeno que agrega CloudFront (vacío = sin CloudFront)
