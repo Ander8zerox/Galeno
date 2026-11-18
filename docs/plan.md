@@ -1,6 +1,6 @@
 # Hoja de ruta
 
-Estado al **4 de noviembre de 2026**. Galenum (marca visible; el código interno sigue como "galeno") está en
+Estado al **18 de noviembre de 2026** (ver "Dónde quedamos" al final para retomar). Galenum (marca visible; el código interno sigue como "galeno") está en
 producción en AWS, en https://galenum.com.co.
 
 ## Hecho
@@ -8,6 +8,7 @@ producción en AWS, en https://galenum.com.co.
 ### Producto
 
 - **Base (Capa 1):** pacientes, multi-tenant por consultorio, redactor de fórmulas con IA y apoyo diagnóstico con IA.
+  - Teléfono y correo del paciente obligatorios, con la opción "no tiene correo" (13 de noviembre de 2026, PR #61).
 - **Equipo del consultorio:** membresías con varios roles (administrador, médico, secretario), permisos, selector de
   consultorio e invitaciones.
   - **Invitaciones por correo:** Galenum envía el enlace (quién invita, consultorio, roles, vencimiento). El enlace y
@@ -341,6 +342,41 @@ Principio: primero las fuentes masivas, todas por el mismo flujo **extraer → r
 - **Legal:** contrato de encargado (Ley 1581) que mencione la IA, auditoría de quién importó y aprobó, y conservación
   del original (Res. 1995).
 - **Comercial:** ofrecer "migración asistida incluida" para el primer lote de cada cliente.
+
+## Dónde quedamos (18 de noviembre de 2026)
+
+### Lo último que se hizo
+- **PR #60:** protección contra bots, capa 1 (límites por IP, por correo, por usuario y topes diarios).
+- **PR #61:** teléfono y correo obligatorios en el paciente, con la opción "no tiene correo".
+- **PR #62:** la guía de uso deja de ser pública. Sale de la landing y se descarga solo con sesión, desde "Guía de uso"
+  en el menú (`GET /api/v1/ayuda/guia`, sin caché).
+- **Texto comercial completo** en `docs/marketing/presentacion-galenum.md`: qué ahorra y cómo, funcionalidades,
+  beneficios, costos y programa de referidos con cifras. Está **sin commitear**.
+
+### Lo que falta para continuar, en orden
+1. **Desplegar `main` a producción.** El #62 está en `main`, pero el 18 de noviembre producción todavía servía la guía
+   a cualquiera: `https://galenum.com.co/recursos/guia-de-uso-galenum.pdf` respondía 200 y la landing la enlazaba.
+   - Primero, la sesión de AWS: `"$LOCALAPPDATA/Programs/Amazon/AWSCLIV2/aws.exe" login --profile galeno`, con la CLI
+     nueva porque la 2.33 del PATH no entiende `aws login`. Confirmar con `sts get-caller-identity` (cuenta
+     821211779252).
+   - Luego `tools/desplegar.sh`, completo (API y frontend). Sube el frontend con `--delete` e invalida CloudFront, así
+     que borra el PDF viejo del bucket.
+   - Verificar: el PDF ya no responde `application/pdf` (cae en la landing); la landing no contiene "guia-de-uso";
+     `GET /api/v1/ayuda/guia` sin sesión da 401; el folleto `/recursos/folleto-galenum.pdf` sigue en 200; con la
+     cuenta demo, "Guía de uso" descarga el PDF.
+   - Hay una sesión creada para esto ("Desplegar main a producción"), que quedó esperando el `aws login`.
+2. **`docs/marketing/landing.md`** todavía presenta la guía como recurso público: corregir la sección 6 "Recursos" y
+   el punto 4 de "Antes de publicar".
+3. **`docs/marketing/presentacion-galenum.md`:** commitearlo. Las cifras de referidos (10 % de descuento, 20 % de
+   comisión sobre lo pagado, $25.200 al mes por consultorio mensual, liquidación desde $30.000) siguen pendientes de
+   la revisión legal y de decidir el tope de la comisión. Sin esa revisión, publicar solo "comisión recurrente".
+4. **Archivos sin seguimiento:** decidir si `docs/marketing/prompt-video-galenum.md` y `tools/desbloquear-correo-aws.ps1`
+   van al repo. Los que nunca se suben están en "Para retomar en un chat nuevo".
+5. **MCP `aws-mcp`:** no conecta ("Invalid request parameters"). Su entrada en `~/.claude.json` usa
+   `uvx --python 3.13 mcp-proxy-for-aws@latest`. Revisarlo desde `/mcp`. Mientras tanto, la AWS CLI y las skills de
+   AWS bastan.
+6. Después, seguir con "Siguiente (en orden)" y con los "Pendientes que dependen del usuario". El más urgente es la
+   cuota de Bedrock, sin la cual la IA sigue bloqueada en producción.
 
 ## Para retomar en un chat nuevo
 
