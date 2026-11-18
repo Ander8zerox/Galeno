@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Blocks, CalendarDays, ClipboardList, CreditCard, FileUp, ReceiptText, ShieldCheck, Users, UsersRound } from "lucide-react";
+import { Blocks, BookOpen, CalendarDays, ClipboardList, CreditCard, FileUp, ReceiptText, ShieldCheck, Users, UsersRound } from "lucide-react";
 import { Shell, type ItemMenu } from "./components/Shell";
 import { VigiaCorreoProvider } from "./features/pacientes/VigiaCorreo";
 import { Bienvenida } from "./components/Bienvenida";
 import { SeguridadCuenta, VerificacionDosPasos } from "./components/DosPasos";
-import { api, unwrap } from "./api/client";
+import { api, descargarArchivo, unwrap } from "./api/client";
 import { useAuth } from "./auth/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
 import { SeleccionConsultorioPage } from "./pages/SeleccionConsultorioPage";
@@ -59,6 +59,12 @@ export function App() {
     ...(puede("MODULOS_GESTIONAR") ? [{ etiqueta: "Módulos", icono: Blocks, to: "/modulos" }] : []),
     ...(puede("SUSCRIPCION_GESTIONAR") ? [{ etiqueta: "Suscripción", icono: CreditCard, to: "/suscripcion" }] : []),
     { etiqueta: "Seguridad", icono: ShieldCheck, to: "/seguridad" },
+    // Solo con sesión: la guía no está en la web pública
+    {
+      etiqueta: "Guía de uso", icono: BookOpen,
+      onClick: () => descargarArchivo("/api/v1/ayuda/guia", "guia-de-uso-galenum.pdf")
+        .catch((e: Error) => alert(`No se pudo descargar la guía: ${e.message}`)),
+    },
   ];
 
   return (

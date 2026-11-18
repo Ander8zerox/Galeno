@@ -236,8 +236,9 @@ Decidido el 8 de noviembre de 2026:
   inicio de sesión queda en `/ingresar`.
 - ✅ Textos: `docs/marketing/landing.md`.
 - ✅ Página (`frontend/landing.html`, `src/landing/`): mismos colores y logo "G" de la app, sin React (~12 KB),
-  capturas reales con datos ficticios (`public/landing/`), imagen para compartir y los PDF del folleto y la guía de
-  uso (`public/recursos/`, generados desde sus Artifacts).
+  capturas reales con datos ficticios (`public/landing/`), imagen para compartir y el PDF del folleto
+  (`public/recursos/`, generado desde su Artifact). La guía de uso no es pública: solo se descarga con sesión, desde
+  "Guía de uso" en el menú (`GET /api/v1/ayuda/guia`; el PDF va en `backend/src/main/resources/ayuda/`).
 - Pendiente: el video en YouTube (modo privacidad); actualizar la guía de uso con incapacidad, remisión y
   consentimiento; decidir si el logo del menú de la app (cruz turquesa) pasa a la "G" de la marca.
 
