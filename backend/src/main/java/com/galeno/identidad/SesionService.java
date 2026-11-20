@@ -46,10 +46,15 @@ public class SesionService {
     /** Ventana del límite de contraseñas incorrectas por correo. */
     static final Duration VENTANA_FALLIDOS = Duration.ofMinutes(15);
 
+    /** app.ai.habilitada: en falso, la app no ofrece la IA (p. ej. mientras AWS no aprueba la cuota de Bedrock). */
+    private final boolean iaHabilitada;
+
     SesionService(UsuarioRepository usuarios, MembresiaRepository membresias, ConsultorioRepository consultorios,
                   PerfilMedicoRepository perfiles, PasswordEncoder passwordEncoder, TokenService tokens, MfaService mfa,
                   TransactionTemplate tx, LimiteIntentos limites,
-                  @Value("${app.limites.login-fallidos-por-correo:10}") int fallidosPorCorreo) {
+                  @Value("${app.limites.login-fallidos-por-correo:10}") int fallidosPorCorreo,
+                  @Value("${app.ai.habilitada:true}") boolean iaHabilitada) {
+        this.iaHabilitada = iaHabilitada;
         this.limites = limites;
         this.fallidosPorCorreo = fallidosPorCorreo;
         this.usuarios = usuarios;
@@ -162,7 +167,7 @@ public class SesionService {
                     perfil.map(PerfilMedico::getRegistroMedico).orElse(null),
                     perfil.map(PerfilMedico::getEspecialidad).orElse(null),
                     m.getTenantId(), consultorio.getNombre(), consultorio.getZonaHoraria(), m.getId(), ordenados(m),
-                    m.permisos().stream().sorted().toList(), 0);
+                    m.permisos().stream().sorted().toList(), 0, iaHabilitada);
         }));
         int total = consultorios(auth.id()).size();
         return me.conTotalConsultorios(total);
@@ -230,11 +235,11 @@ public class SesionService {
 
     public record MeResponse(UUID id, String nombre, String email, String registroMedico, String especialidad,
                              UUID consultorioId, String consultorioNombre, String zonaHoraria, UUID membresiaId,
-                             List<Rol> roles, List<Permiso> permisos, int totalConsultorios) {
+                             List<Rol> roles, List<Permiso> permisos, int totalConsultorios, boolean iaDisponible) {
 
         MeResponse conTotalConsultorios(int total) {
             return new MeResponse(id, nombre, email, registroMedico, especialidad, consultorioId, consultorioNombre,
-                    zonaHoraria, membresiaId, roles, permisos, total);
+                    zonaHoraria, membresiaId, roles, permisos, total, iaDisponible);
         }
     }
 }

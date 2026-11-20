@@ -6,7 +6,7 @@ import { useAuth } from "../../auth/AuthContext";
 import { PacienteForm } from "../pacientes/PacienteForm";
 import { useVigiaCorreo } from "../pacientes/VigiaCorreo";
 import { duracionTexto } from "./AgendarForm";
-import { fechaCorta, fechaHoraCorta, hora, hoyEn } from "./tiempo";
+import { fechaCorta, fechaHoraCorta, fechaValida, hora, hoyEn } from "./tiempo";
 
 type EnEspera = Schemas["EnEsperaVista"];
 type Medico = Schemas["MedicoAgenda"];
@@ -244,7 +244,7 @@ export function AnotarEspera({ medicos, zona, inicial, onCerrar }: {
               {(Object.keys(FRANJAS) as Franja[]).map((f) => <option key={f} value={f}>{FRANJAS[f]}</option>)}
             </select>
           </label>
-          <label>Antes de (opcional)<input type="date" value={antesDe} min={hoy} onChange={(e) => setAntesDe(e.target.value)} /></label>
+          <label>Antes de (opcional)<input type="date" value={antesDe} min={hoy} onChange={(e) => (e.target.value === "" || fechaValida(e.target.value)) && setAntesDe(e.target.value)} /></label>
           {!citaId && <label className="wide">Motivo de la cita (opcional)<input value={motivo} maxLength={300} onChange={(e) => setMotivo(e.target.value)} placeholder="Control, primera vez…" /></label>}
           <label className="wide">Nota (opcional)<input value={nota} maxLength={300} onChange={(e) => setNota(e.target.value)} placeholder="Solo después de las 10, llamar al celular…" /></label>
         </div>

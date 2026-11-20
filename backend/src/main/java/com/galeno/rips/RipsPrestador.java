@@ -37,8 +37,13 @@ class RipsPrestador {
     @Column(name = "grupo_servicios", length = 2)
     private String grupoServicios;
 
+    /** La de las consultas de primera vez (y de lo que no es consulta de control). */
     @Column(length = 2)
     private String finalidad;
+
+    /** La de las consultas de control (CUPS 8903xx); vacía: la misma de primera vez. */
+    @Column(name = "finalidad_control", length = 2)
+    private String finalidadControl;
 
     @Column(name = "causa_externa", length = 2)
     private String causaExterna;
@@ -58,7 +63,7 @@ class RipsPrestador {
     }
 
     void actualizar(String codigoHabilitacion, String servicio, String modalidadAtencion, String grupoServicios,
-                    String finalidad, String causaExterna, String viaIngreso) {
+                    String finalidad, String causaExterna, String viaIngreso, String finalidadControl) {
         this.codigoHabilitacion = codigoHabilitacion;
         this.servicio = servicio;
         this.modalidadAtencion = modalidadAtencion;
@@ -66,6 +71,7 @@ class RipsPrestador {
         this.finalidad = finalidad;
         this.causaExterna = causaExterna;
         this.viaIngreso = viaIngreso;
+        this.finalidadControl = finalidadControl;
         this.actualizadoEn = Instant.now();
     }
 
@@ -87,6 +93,10 @@ class RipsPrestador {
 
     String getFinalidad() {
         return finalidad;
+    }
+
+    String getFinalidadControl() {
+        return finalidadControl;
     }
 
     String getCausaExterna() {

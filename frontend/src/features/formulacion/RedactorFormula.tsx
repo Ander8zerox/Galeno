@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { useAiJob } from "../../ai/useAiJob";
+import { useAuth } from "../../auth/AuthContext";
 
 type Borrador = Schemas["BorradorFormula"];
 type Item = Schemas["ItemRequest"];
@@ -36,7 +37,9 @@ export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnostico
   const [items, setItems] = useState<Item[]>([]);
   const [advertencias, setAdvertencias] = useState<string[]>([]);
   const [observaciones, setObservaciones] = useState("");
+  const [firmadaEn, setFirmadaEn] = useState<Date | null>(null);
   const queryClient = useQueryClient();
+  const ia = !!useAuth().me?.iaDisponible;
 
   const solicitar = useMutation({
     mutationFn: async () =>
@@ -58,6 +61,12 @@ export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnostico
         body: { pacienteId, aiJobId: jobId, atencionId, observaciones: observaciones || undefined, items },
       })),
     onSuccess: () => {
+      setItems([]);
+      setAdvertencias([]);
+      setObservaciones("");
+      setTexto("");
+      setJobId(undefined);
+      setFirmadaEn(new Date());
       queryClient.invalidateQueries({ queryKey: ["formulas", pacienteId] });
       onFirmada();
     },
@@ -69,7 +78,17 @@ export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnostico
 
   return (
     <div className="stack">
-      <div className="card stack">
+      {firmadaEn && (
+        <p className="alert alert-ok row" role="status">
+          <span className="grow">
+            Fórmula firmada a las {firmadaEn.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}. Queda en
+            las fórmulas del paciente, lista para descargar.
+          </span>
+          <button className="btn-link" onClick={() => setFirmadaEn(null)}>Redactar otra</button>
+        </p>
+      )}
+      {!firmadaEn && <>
+      {ia && <div className="card stack">
         <label>Indicación (texto libre, como la escribiría en la historia)
           <textarea rows={3} placeholder="Ej.: amoxicilina 500 c/8h x 7 días, acetaminofén 500 c/6h si dolor"
             value={texto} onChange={(e) => setTexto(e.target.value)} />
@@ -84,7 +103,13 @@ export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnostico
           <button className="btn btn-secondary" onClick={() => setItems([...items, { ...ITEM_VACIO }])}>Agregar ítem manual</button>
         </div>
         {(solicitar.error || job.error) && <p className="alert alert-error">{solicitar.error?.message ?? job.error}</p>}
-      </div>
+      </div>}
+      {!ia && items.length === 0 && (
+        <div className="card row">
+          <span className="grow muted">Escriba la fórmula ítem por ítem.</span>
+          <button className="btn btn-secondary" onClick={() => setItems([{ ...ITEM_VACIO }])}>Agregar medicamento</button>
+        </div>
+      )}
 
       {advertencias.length > 0 && (
         <div className="card">
@@ -98,7 +123,7 @@ export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnostico
       {items.length > 0 && (
         <div className="card stack">
           <h3>Fórmula</h3>
-          <p className="muted small">La IA propone; usted revisa, corrige y firma. Nada se guarda hasta que firme.</p>
+          <p className="muted small">{ia ? "La IA propone; usted revisa, corrige y firma." : "Revise cada ítem y firme."} Nada se guarda hasta que firme.</p>
           {items.map((item, idx) => (
             <div key={idx} className="item-grid">
               {CAMPOS.map((c) => (
@@ -110,6 +135,7 @@ export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnostico
               <button className="btn-link danger" onClick={() => setItems(items.filter((_, i) => i !== idx))}>Quitar</button>
             </div>
           ))}
+          {!ia && <div><button className="btn-link" onClick={() => setItems([...items, { ...ITEM_VACIO }])}>Agregar otro medicamento</button></div>}
           <label>Observaciones
             <input value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
           </label>
@@ -121,6 +147,7 @@ export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnostico
           </div>
         </div>
       )}
+      </>}
     </div>
   );
 }

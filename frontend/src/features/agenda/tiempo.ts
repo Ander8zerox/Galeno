@@ -5,6 +5,17 @@ export function hoyEn(zona: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: zona }).format(new Date());
 }
 
+/**
+ * Si el valor de un `<input type="date">` es una fecha completa que existe. Al escribirla a mano, el navegador entrega
+ * años a medio escribir ("0002-11-20") o de 5 dígitos ("20261-11-20"), y con estos últimos `toISOString()` lanza
+ * RangeError y tumba la pantalla. Solo se aceptan años entre 1900 y 2100.
+ */
+export function fechaValida(fecha: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || fecha < "1900-01-01" || fecha > "2100-12-31") return false;
+  const d = new Date(`${fecha}T12:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === fecha; // descarta "2026-02-31"
+}
+
 export function sumarDias(fecha: string, dias: number): string {
   const d = new Date(`${fecha}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + dias);

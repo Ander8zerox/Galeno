@@ -19,6 +19,7 @@ import com.galeno.historia.HistoriaService.AtencionRips;
 import com.galeno.historia.HistoriaService.Cie10Vista;
 import com.galeno.historia.HistoriaService.DiagnosticoVista;
 import com.galeno.historia.HistoriaService.ProcedimientoVista;
+import com.galeno.pacientes.TiposDocumento;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
 /**
@@ -91,7 +92,12 @@ final class ArmadorRips {
     }
 
     record PrestadorRips(String codigoHabilitacion, String servicio, String modalidadAtencion, String grupoServicios,
-                         String finalidad, String causaExterna, String viaIngreso) {
+                         String finalidad, String causaExterna, String viaIngreso, String finalidadControl) {
+
+        /** La de un control (consulta 8903xx) si se fijó; si no, la general. */
+        String finalidadPara(boolean control) {
+            return control && finalidadControl != null ? finalidadControl : finalidad;
+        }
     }
 
     /** Ficha del paciente y sus datos del RIPS ({@code faltantes}: lo que el RIPS pide y no está). */
@@ -195,6 +201,8 @@ final class ArmadorRips {
             u.put("numDocumentoIdentificacion", p.numeroDocumento());
             u.put("tipoUsuario", p.tipoUsuario());
             u.put("fechaNacimiento", p.fechaNacimiento() == null ? null : p.fechaNacimiento().toString());
+            // U05 usa la columna Extra_III de la tabla Sexo de SISPRO (M masculino, F femenino, I), la misma de la
+            // ficha. No es la columna Código (H hombre, M mujer, I): esa M significa lo contrario.
             u.put("codSexo", p.sexo());
             u.put("codPaisResidencia", p.paisResidencia());
             u.put("codMunicipioResidencia", p.municipioResidencia());
@@ -243,7 +251,8 @@ final class ArmadorRips {
         var cobro = a.cobro();
         PrestadorRips pr = e.prestador();
         Ajustes aj = a.ajustes() == null ? Ajustes.NINGUNO : a.ajustes();
-        String finalidad = valor(aj.finalidad(), pr.finalidad());
+        boolean control = at.procedimientos().stream().anyMatch(pc -> pc.consulta() && pc.codigoCups().startsWith("8903"));
+        String finalidad = valor(aj.finalidad(), pr.finalidadPara(control));
         String causa = valor(aj.causaExterna(), pr.causaExterna());
         String modalidad = valor(aj.modalidadAtencion(), pr.modalidadAtencion());
         String grupo = valor(aj.grupoServicios(), pr.grupoServicios());
@@ -491,14 +500,9 @@ final class ArmadorRips {
         return distintos.isEmpty() ? null : distintos.get(0);
     }
 
-    /** RVC007: RC hasta 7 años, TI de 7 a 17, CC desde 18, con un año de tolerancia. Los demás documentos no se revisan. */
+    /** RVC007: la misma regla que exige la ficha del paciente al crearlo. */
     static boolean documentoAcordeConEdad(String tipo, int edad) {
-        return switch (tipo == null ? "" : tipo) {
-            case "RC" -> edad < 8;
-            case "TI" -> edad >= 6 && edad <= 18;
-            case "CC" -> edad >= 17;
-            default -> true;
-        };
+        return TiposDocumento.acordeConEdad(tipo, edad);
     }
 
     private static void revisarFinalidad(Entrada e, Revision r, String finalidad, PacienteRips p, LocalDate dia) {

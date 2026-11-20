@@ -69,14 +69,19 @@ public class DatosRipsService {
         pacientes.get(pacienteId);
         String pais = referencias.validar("pais", datos.paisResidencia(), "País de residencia");
         boolean colombia = COLOMBIA.equals(pais);
+        String tipoUsuario = referencias.validar("tipo_usuario", datos.tipoUsuario(), "Tipo de usuario");
+        Pagador pagador = datos.pagadorId() == null ? null : pagadores.activo(datos.pagadorId());
+        if (pagador != null) {
+            exigirTipoUsuarioDelPagador(tipoUsuario, pagador);
+        }
         RipsPaciente p = pacientesRips.findById(pacienteId).orElseGet(() -> new RipsPaciente(pacienteId));
         p.actualizar(
-                referencias.validar("tipo_usuario", datos.tipoUsuario(), "Tipo de usuario"),
+                tipoUsuario,
                 pais,
                 colombia ? referencias.validar("municipio", datos.municipioResidencia(), "Municipio de residencia") : null,
                 colombia ? referencias.validar("zona", datos.zonaResidencia(), "Zona de residencia") : null,
                 referencias.validar("pais", datos.paisOrigen(), "País de origen"),
-                datos.pagadorId() == null ? null : pagadores.activo(datos.pagadorId()).getId());
+                pagador == null ? null : pagador.getId());
         return vista(pacientesRips.saveAndFlush(p));
     }
 
@@ -104,6 +109,30 @@ public class DatosRipsService {
         p.actualizar(tipoUsuario, pais, municipio, zona, origen, null);
         pacientesRips.save(p);
         return true;
+    }
+
+    /**
+     * La ficha no puede guardar un tipo de usuario que su pagador habitual no admite: el RIPS lo corregiría en silencio
+     * (particular → 12) o lo rechazaría (numeral 1.8 del DT1). Un afiliado a una EPS que un día paga de su bolsillo
+     * se reporta como particular en esa factura sin cambiar la ficha: eso lo resuelve el cobro de la atención.
+     */
+    static void exigirTipoUsuarioDelPagador(String tipoUsuario, Pagador pagador) {
+        if (tipoUsuario == null) {
+            return;
+        }
+        if (pagador.getTipo() == Pagador.Tipo.PARTICULAR) {
+            if (!ArmadorRips.PARTICULAR.equals(tipoUsuario)) {
+                throw ApiProblem.badRequest("Con el pagador " + pagador.getNombre() + " (particular), el tipo de usuario es "
+                        + ArmadorRips.PARTICULAR + " (particular)");
+            }
+            return;
+        }
+        String cobertura = pagador.datos().cobertura();
+        ArmadorRips.Cruce cruce = ArmadorRips.CRUCES.get(cobertura);
+        if (cruce != null && !cruce.tiposUsuario().contains(tipoUsuario)) {
+            throw ApiProblem.badRequest("El tipo de usuario " + tipoUsuario + " no se reporta con la cobertura " + cobertura
+                    + " de " + pagador.getNombre() + ". Use uno de: " + String.join(", ", cruce.tiposUsuario().stream().sorted().toList()));
+        }
     }
 
     private String codigo(String tabla, String valor) {
@@ -193,6 +222,8 @@ public class DatosRipsService {
         }
         String finalidad = referencias.validar("finalidad", datos.finalidad(), "Finalidad");
         referencias.exigirParaConsultas("finalidad", finalidad, "Finalidad");
+        String finalidadControl = referencias.validar("finalidad", datos.finalidadControl(), "Finalidad de los controles");
+        referencias.exigirParaConsultas("finalidad", finalidadControl, "Finalidad de los controles");
         String causa = referencias.validar("causa_externa", datos.causaExterna(), "Causa externa");
         referencias.exigirParaConsultas("causa_externa", causa, "Causa externa");
         RipsPrestador p = prestadores.findFirstBy().orElseGet(RipsPrestador::nuevo);
@@ -201,7 +232,7 @@ public class DatosRipsService {
                 referencias.validar("modalidad_atencion", datos.modalidadAtencion(), "Modalidad de atención"),
                 referencias.validar("grupo_servicios", datos.grupoServicios(), "Grupo de servicios"),
                 finalidad, causa,
-                referencias.validar("via_ingreso", datos.viaIngreso(), "Vía de ingreso"));
+                referencias.validar("via_ingreso", datos.viaIngreso(), "Vía de ingreso"), finalidadControl);
         return vista(prestadores.saveAndFlush(p), nitConsultorio());
     }
 
@@ -219,7 +250,7 @@ public class DatosRipsService {
 
     private static Prestador vista(RipsPrestador p, String nit) {
         return new Prestador(p.getCodigoHabilitacion(), p.getServicio(), p.getModalidadAtencion(), p.getGrupoServicios(),
-                p.getFinalidad(), p.getCausaExterna(), p.getViaIngreso(), true, nit);
+                p.getFinalidad(), p.getCausaExterna(), p.getViaIngreso(), true, nit, p.getFinalidadControl());
     }
 
     // --- profesionales ---
@@ -272,14 +303,18 @@ public class DatosRipsService {
      * @param nit el del consultorio (de solo lectura aquí: se fija aparte, una vez)
      */
     public record Prestador(String codigoHabilitacion, String servicio, String modalidadAtencion, String grupoServicios,
-                            String finalidad, String causaExterna, String viaIngreso, boolean guardado, String nit) {
+                            String finalidad, String causaExterna, String viaIngreso, boolean guardado, String nit,
+                            String finalidadControl) {
 
-        /** Intramural, consulta externa, enfermedad general y derivado de consulta externa (lo más común). */
-        static final Prestador SUGERIDO = new Prestador(null, null, "01", "01", null, "38", "02", false, null);
+        /**
+         * Intramural, consulta externa, enfermedad general y derivado de consulta externa (lo más común). La primera
+         * vez suele ser para diagnóstico (15) y el control, para tratamiento (16).
+         */
+        static final Prestador SUGERIDO = new Prestador(null, null, "01", "01", "15", "38", "02", false, null, "16");
 
         Prestador conNit(String nit) {
             return new Prestador(codigoHabilitacion, servicio, modalidadAtencion, grupoServicios, finalidad, causaExterna,
-                    viaIngreso, guardado, nit);
+                    viaIngreso, guardado, nit, finalidadControl);
         }
     }
 

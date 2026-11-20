@@ -56,12 +56,14 @@ public class HistoriaService {
     private final CupsRepository cups;
     private final ModulosService modulos;
     private final ListaPrecios precios;
+    private final ServicioHabilitado servicio;
 
     HistoriaService(AtencionRepository atenciones, NotaAclaratoriaRepository notas,
                     DocumentoClinicoRepository documentos, AccesoHistoriaRepository accesos, Cie10Repository cie10,
                     AlmacenDocumentos almacen, PacienteService pacientes, IdentidadService identidad,
                     AgendaPublica agenda, PdfRenderer pdf, FormatosService formatos, CupsRepository cups,
-                    ModulosService modulos, java.util.Optional<ListaPrecios> precios) {
+                    ModulosService modulos, java.util.Optional<ListaPrecios> precios,
+                    java.util.Optional<ServicioHabilitado> servicio) {
         this.atenciones = atenciones;
         this.notas = notas;
         this.documentos = documentos;
@@ -76,6 +78,7 @@ public class HistoriaService {
         this.cups = cups;
         this.modulos = modulos;
         this.precios = precios.orElse((codigos, contexto) -> java.util.Map.of());
+        this.servicio = servicio.orElse(java.util.Optional::empty);
     }
 
     // --- línea de tiempo ---
@@ -133,6 +136,10 @@ public class HistoriaService {
         }
         Atencion nueva = Atencion.nueva(pacienteId, yo.membresiaId(), yo.id(), yo.nombre(), citaId,
                 paciente.getAntecedentes());
+        // A un menor lo suele acompañar su responsable: arranca con él y el médico lo cambia si vino otra persona
+        if (paciente.edad() < 18 && paciente.getResponsableNombre() != null) {
+            nueva.registrarAcompanante(paciente.getResponsableNombre(), paciente.getResponsableParentesco());
+        }
         // Antes de guardarla: así nace con la consulta y con la versión que recibe la pantalla
         if (modulos.activo(Modulo.RIPS)) {
             consultaSugerida(pacienteId, citaId, yo.id()).ifPresent(p -> nueva.registrarProcedimientos(List.of(p)));
@@ -158,7 +165,7 @@ public class HistoriaService {
     @Transactional
     public AtencionVista guardar(UUID atencionId, long version, Atencion.Contenido contenido,
                                  List<RespuestasFormato> respuestasFormatos, List<ProcedimientoNuevo> procedimientos,
-                                 Boolean incapacidad) {
+                                 Boolean incapacidad, Acompanante acompanante) {
         Atencion atencion = propia(atencionId);
         if (atencion.getVersion() != version) {
             throw ApiProblem.conflict("La atención cambió en otra pestaña o equipo. Recargue para ver la última versión.");
@@ -173,6 +180,9 @@ public class HistoriaService {
         }
         if (incapacidad != null) {
             atencion.marcarIncapacidad(incapacidad);
+        }
+        if (acompanante != null && (acompanante.nombre() != null || acompanante.parentesco() != null)) {
+            atencion.registrarAcompanante(acompanante.nombre(), acompanante.parentesco());
         }
         atenciones.flush(); // incrementa la versión antes de responder
         return vista(atencion);
@@ -204,6 +214,10 @@ public class HistoriaService {
         String registro = identidad.registroMedico(atencion.getMedicoUsuarioId())
                 .orElseThrow(() -> ApiProblem.conflict("Para firmar debe tener su registro médico en el perfil"));
         if (!atencion.firmada()) {
+            if (pacientes.get(atencion.getPacienteId()).edad() < 18 && (atencion.getAcompananteNombre() == null
+                    || atencion.getAcompananteParentesco() == null)) {
+                throw ApiProblem.badRequest("Para firmar la atención de un menor de edad, registre quién lo acompaña y su parentesco");
+            }
             List<String> faltan = formatos.faltantesParaFirmar(atencionId);
             if (!faltan.isEmpty()) {
                 throw ApiProblem.badRequest("Para firmar, complete: " + String.join("; ", faltan));
@@ -342,10 +356,24 @@ public class HistoriaService {
     java.util.Optional<Procedimiento> consultaSugerida(UUID pacienteId, UUID citaId, UUID medicoUsuarioId) {
         boolean primeraVez = atenciones.firmadas(pacienteId).isEmpty();
         String especialidad = identidad.profesional(medicoUsuarioId).especialidad();
-        String codigo = (primeraVez ? "8902" : "8903") + sufijoConsulta(especialidad);
+        String codigo = (primeraVez ? "8902" : "8903") + sufijoConsulta(servicio.codigo().orElse(null), especialidad);
         return cups.findById(codigo).map(c -> new Procedimiento(c.getCodigo(), c.getDescripcion(), 1,
                 precios.precios(List.of(c.getCodigo()), new ListaPrecios.Contexto(pacienteId, citaId, null)).get(c.getCodigo()),
                 null, null));
+    }
+
+    /**
+     * Manda el servicio habilitado del consultorio (lo que se reporta en el RIPS): 328 medicina general → 01, 334
+     * odontología general → 03. Sin servicio configurado, o con otro, decide la especialidad de quien atiende.
+     */
+    static String sufijoConsulta(String servicioHabilitado, String especialidad) {
+        if ("328".equals(servicioHabilitado)) {
+            return "01";
+        }
+        if ("334".equals(servicioHabilitado)) {
+            return "03";
+        }
+        return sufijoConsulta(especialidad);
     }
 
     /** 01 medicina general, 03 odontología general, 02 otras especialidades médicas (sufijos CUPS 8902xx / 8903xx). */
@@ -683,7 +711,8 @@ public class HistoriaService {
                                 String examenFisico, String analisis, String plan,
                                 List<DiagnosticoVista> diagnosticos, List<ProcedimientoVista> procedimientos,
                                 boolean incapacidad, List<NotaVista> notas, List<DocumentoVista> documentos,
-                                List<FormatoDiligenciado> formatos) {
+                                List<FormatoDiligenciado> formatos, String acompananteNombre,
+                                String acompananteParentesco) {
 
         static AtencionVista de(Atencion a, boolean propia, List<NotaVista> notas, List<DocumentoVista> documentos,
                                 List<FormatoDiligenciado> formatos) {
@@ -696,8 +725,12 @@ public class HistoriaService {
                     a.getDiagnosticos().stream().map(d -> new DiagnosticoVista(d.getCodigoCie10(), d.getDescripcion(),
                             d.isPrincipal(), d.getTipo())).toList(),
                     a.getProcedimientos().stream().map(ProcedimientoVista::de).toList(), a.isIncapacidad(), notas,
-                    documentos, formatos);
+                    documentos, formatos, a.getAcompananteNombre(), a.getAcompananteParentesco());
         }
+    }
+
+    /** Quién acompaña al paciente en la atención; campos nulos: no cambian. */
+    public record Acompanante(String nombre, String parentesco) {
     }
 
     public enum TipoEvento {

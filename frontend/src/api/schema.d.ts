@@ -2196,6 +2196,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ayuda/guia": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["guia"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -2459,6 +2475,7 @@ export interface components {
             finalidad?: string;
             causaExterna?: string;
             viaIngreso?: string;
+            finalidadControl?: string;
         };
         Prestador: {
             codigoHabilitacion?: string;
@@ -2470,6 +2487,7 @@ export interface components {
             viaIngreso?: string;
             guardado?: boolean;
             nit?: string;
+            finalidadControl?: string;
         };
         NitConsultorio: {
             nit: string;
@@ -2806,6 +2824,11 @@ export interface components {
             antecedentes?: string;
             sinCorreosCitas?: boolean;
             sinCorreo?: boolean;
+            responsableNombre?: string;
+            responsableParentesco?: string;
+            responsableTipoDocumento?: string;
+            responsableNumeroDocumento?: string;
+            responsableTelefono?: string;
         };
         PacienteResponse: {
             /** Format: uuid */
@@ -2826,6 +2849,14 @@ export interface components {
             datosIncompletos?: boolean;
             sinCorreosCitas?: boolean;
             correoRechazado?: string;
+            responsable?: components["schemas"]["Responsable"];
+        };
+        Responsable: {
+            nombre?: string;
+            parentesco?: string;
+            tipoDocumento?: string;
+            numeroDocumento?: string;
+            telefono?: string;
         };
         Activacion: {
             activo: boolean;
@@ -2984,6 +3015,8 @@ export interface components {
             formatos?: components["schemas"]["RespuestasFormatoRequest"][];
             procedimientos?: components["schemas"]["ProcedimientoRequest"][];
             incapacidad?: boolean;
+            acompananteNombre?: string;
+            acompananteParentesco?: string;
         };
         ProcedimientoRequest: {
             codigoCups: string;
@@ -3046,6 +3079,8 @@ export interface components {
             notas?: components["schemas"]["NotaVista"][];
             documentos?: components["schemas"]["DocumentoVista"][];
             formatos?: components["schemas"]["FormatoDiligenciado"][];
+            acompananteNombre?: string;
+            acompananteParentesco?: string;
         };
         DiagnosticoVista: {
             codigoCie10?: string;
@@ -3981,6 +4016,7 @@ export interface components {
             permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR" | "FORMATOS_GESTIONAR" | "MODULOS_GESTIONAR" | "RIPS_GESTIONAR")[];
             /** Format: int32 */
             totalConsultorios?: number;
+            iaDisponible?: boolean;
         };
         AiJobResponse: {
             /** Format: uuid */
@@ -4004,24 +4040,24 @@ export interface components {
             number?: boolean;
             object?: boolean;
             string?: boolean;
-            floatingPointNumber?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            int?: boolean;
             pojo?: boolean;
-            boolean?: boolean;
+            int?: boolean;
             short?: boolean;
             double?: boolean;
-            long?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            boolean?: boolean;
             binary?: boolean;
-            integralNumber?: boolean;
+            long?: boolean;
+            floatingPointNumber?: boolean;
             valueNode?: boolean;
-            bigInteger?: boolean;
-            missingNode?: boolean;
             container?: boolean;
-            bigDecimal?: boolean;
+            missingNode?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            integralNumber?: boolean;
+            bigDecimal?: boolean;
+            bigInteger?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -7949,6 +7985,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Enviado"][];
+                };
+            };
+        };
+    };
+    guia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

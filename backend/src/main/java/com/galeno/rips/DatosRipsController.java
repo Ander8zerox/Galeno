@@ -70,7 +70,7 @@ public class DatosRipsController {
     @PutMapping("/prestador")
     public Prestador guardarPrestador(@Valid @RequestBody DatosPrestador r) {
         return datos.guardarPrestador(new Prestador(r.codigoHabilitacion(), r.servicio(), r.modalidadAtencion(),
-                r.grupoServicios(), r.finalidad(), r.causaExterna(), r.viaIngreso(), true, null));
+                r.grupoServicios(), r.finalidad(), r.causaExterna(), r.viaIngreso(), true, null, r.finalidadControl()));
     }
 
     /** El NIT del consultorio, si no lo dio al registrarse: el RIPS lo exige. Una vez fijado no cambia desde aquí. */
@@ -100,7 +100,7 @@ public class DatosRipsController {
     public record DatosPrestador(@Size(max = 12) String codigoHabilitacion, @Size(max = 4) String servicio,
                                  @Size(max = 2) String modalidadAtencion, @Size(max = 2) String grupoServicios,
                                  @Size(max = 2) String finalidad, @Size(max = 2) String causaExterna,
-                                 @Size(max = 2) String viaIngreso) {
+                                 @Size(max = 2) String viaIngreso, @Size(max = 2) String finalidadControl) {
     }
 
     public record DocumentoProfesional(@NotBlank @Size(max = 2) String tipoDocumento,

@@ -145,6 +145,13 @@ public class Atencion {
     @Column(nullable = false)
     private boolean incapacidad;
 
+    /** Quién acompaña al paciente (obligatorio para firmar la atención de un menor de edad). */
+    @Column(name = "acompanante_nombre", length = 200)
+    private String acompananteNombre;
+
+    @Column(name = "acompanante_parentesco", length = 40)
+    private String acompananteParentesco;
+
     @Column(name = "lote_importacion_id", updatable = false)
     private UUID loteImportacionId;
 
@@ -234,6 +241,13 @@ public class Atencion {
         exigirBorrador();
         this.procedimientos.clear();
         this.procedimientos.addAll(nuevos);
+        this.actualizadaEn = Instant.now();
+    }
+
+    void registrarAcompanante(String nombre, String parentesco) {
+        exigirBorrador();
+        this.acompananteNombre = nombre == null || nombre.isBlank() ? null : nombre.strip();
+        this.acompananteParentesco = parentesco == null || parentesco.isBlank() ? null : parentesco.strip();
         this.actualizadaEn = Instant.now();
     }
 
@@ -387,6 +401,14 @@ public class Atencion {
 
     public List<Procedimiento> getProcedimientos() {
         return procedimientos;
+    }
+
+    public String getAcompananteNombre() {
+        return acompananteNombre;
+    }
+
+    public String getAcompananteParentesco() {
+        return acompananteParentesco;
     }
 
     public boolean isIncapacidad() {

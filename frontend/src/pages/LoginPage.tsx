@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { EnlacesLegales } from "../components/EnlacesLegales";
+import { CampoContrasena } from "../components/CampoContrasena";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -33,7 +34,7 @@ export function LoginPage() {
         </label>
         <label>
           Contraseña
-          <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <CampoContrasena autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </label>
         {error && <p className="alert alert-error">{error}</p>}
         <a href="/recuperar" className="btn-link small">¿Olvidó su contraseña?</a>

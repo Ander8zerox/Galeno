@@ -110,7 +110,7 @@ public class HistoriaController {
                 r.procedimientos() == null ? null : r.procedimientos().stream()
                         .map(p -> new ProcedimientoNuevo(p.codigoCups(), p.cantidad(), p.valorUnitario(), p.diente(),
                                 p.superficies())).toList(),
-                r.incapacidad());
+                r.incapacidad(), new HistoriaService.Acompanante(r.acompananteNombre(), r.acompananteParentesco()));
     }
 
     /** Agrega al borrador un formato activo del consultorio, con su última versión. */
@@ -234,7 +234,9 @@ public class HistoriaController {
                                   @NotNull @Size(max = 20) List<@Valid DiagnosticoRequest> diagnosticos,
                                   @Size(max = 10) List<@Valid RespuestasFormatoRequest> formatos,
                                   @Size(max = 50) List<@Valid ProcedimientoRequest> procedimientos,
-                                  Boolean incapacidad) {
+                                  Boolean incapacidad,
+                                  @Size(max = 200) String acompananteNombre,
+                                  @Size(max = 40) String acompananteParentesco) {
     }
 
     /** @param procedimientos {@code null} si la pantalla no los muestra (sin el módulo de RIPS): no cambian */

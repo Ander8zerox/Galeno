@@ -6,7 +6,7 @@ import { AgendaDia } from "../features/agenda/AgendaDia";
 import { HorarioEditor } from "../features/agenda/HorarioEditor";
 import { ListaEspera, useListaEspera } from "../features/agenda/ListaEspera";
 import { AvisoBloqueos, Bloqueos } from "../features/agenda/Bloqueos";
-import { fechaCorta, fechaLarga, hoyEn, lunesDe, mesLargo, primeroDelMes, sumarDias } from "../features/agenda/tiempo";
+import { fechaCorta, fechaLarga, fechaValida, hoyEn, lunesDe, mesLargo, primeroDelMes, sumarDias } from "../features/agenda/tiempo";
 import { AgendaMes, AgendaSemana, AgendaTodos, BuscarEspacio, type AbrirDia } from "../features/agenda/VistasAgenda";
 
 const STORAGE_MEDICO = "galeno.agenda.medico";
@@ -164,7 +164,7 @@ export function AgendaPage() {
               <button className="btn btn-secondary" aria-label={anterior} title={anterior} onClick={() => mover(-1)}>‹</button>
               <button className="btn btn-secondary" onClick={() => { setAbrir(null); setFecha(hoyEn(zona)); }}>Hoy</button>
               <button className="btn btn-secondary" aria-label={siguiente} title={siguiente} onClick={() => mover(1)}>›</button>
-              <input type="date" value={fecha} onChange={(e) => { if (e.target.value) { setAbrir(null); setFecha(e.target.value); } }} />
+              <input type="date" value={fecha} onChange={(e) => { if (fechaValida(e.target.value)) { setAbrir(null); setFecha(e.target.value); } }} />
             </div>
           </div>
         )}

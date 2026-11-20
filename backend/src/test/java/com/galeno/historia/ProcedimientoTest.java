@@ -64,6 +64,11 @@ class ProcedimientoTest {
         assertThat(HistoriaService.sufijoConsulta("Odontología")).isEqualTo("03");
         assertThat(HistoriaService.sufijoConsulta("ODONTOLOGIA GENERAL")).isEqualTo("03");
         assertThat(HistoriaService.sufijoConsulta("Medicina interna")).isEqualTo("02");
+        // El servicio habilitado manda sobre la especialidad: un médico con especialidad en el perfil que atiende en un
+        // consultorio de medicina general (328) factura consulta de medicina general
+        assertThat(HistoriaService.sufijoConsulta("328", "Medicina interna")).isEqualTo("01");
+        assertThat(HistoriaService.sufijoConsulta("334", null)).isEqualTo("03");
+        assertThat(HistoriaService.sufijoConsulta(null, "Medicina interna")).isEqualTo("02");
     }
 
     @Test

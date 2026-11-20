@@ -9,6 +9,7 @@ import { Shell } from "../components/Shell";
 import { EnlacesLegales } from "../components/EnlacesLegales";
 import { contactoSoporte } from "../soporte";
 import { SeguridadCuenta, VerificacionDosPasos, equiposRecordados } from "../components/DosPasos";
+import { CampoContrasena } from "../components/CampoContrasena";
 
 /**
  * Portal de los partners (quienes venden Galenum): inscripción, su código, sus referidos y sus comisiones.
@@ -112,7 +113,7 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
         <h1>Partners de Galenum</h1>
         <p className="muted">Recomiende Galenum a consultorios y reciba una comisión mensual mientras sigan usándolo.</p>
         <label>Correo<input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
-        <label>Contraseña<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
+        <label>Contraseña<CampoContrasena autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
         {entrar.error && <p className="alert alert-error">{entrar.error.message}</p>}
         <button className="btn" disabled={entrar.isPending}>{entrar.isPending ? "Ingresando…" : "Ingresar"}</button>
         <a href="/partner/inscripcion" className="btn btn-secondary">Quiero ser partner</a>
@@ -167,8 +168,8 @@ function Inscripcion() {
         <h3>Su cuenta</h3>
         <label>Su nombre<input value={f.nombreCuenta} onChange={set("nombreCuenta")} required maxLength={200} autoComplete="name" /></label>
         <label>Correo<input type="email" value={f.email} onChange={set("email")} required maxLength={190} autoComplete="email" /></label>
-        <label>Contraseña (mínimo {MIN_PASSWORD} caracteres)<input type="password" value={f.password} onChange={set("password")} required autoComplete="new-password" /></label>
-        <label>Confirmar contraseña<input type="password" value={f.confirmacion} onChange={set("confirmacion")} required autoComplete="new-password" /></label>
+        <label>Contraseña (mínimo {MIN_PASSWORD} caracteres)<CampoContrasena value={f.password} onChange={set("password")} required autoComplete="new-password" /></label>
+        <label>Confirmar contraseña<CampoContrasena value={f.confirmacion} onChange={set("confirmacion")} required autoComplete="new-password" /></label>
         <h3>A quién le pagamos</h3>
         <label>Persona
           <select value={f.tipoPersona} onChange={(e) => setF({ ...f, tipoPersona: e.target.value as "NATURAL" | "JURIDICA", tipoDocumento: e.target.value === "JURIDICA" ? "NIT" : "CC" })}>
@@ -228,7 +229,7 @@ function Confirmar({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
         {info.data.cuentaExistente && (
           <>
             <p className="alert">Ya tiene una cuenta en Galenum con este correo. Confirme con su contraseña actual.</p>
-            <label>Contraseña actual<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
+            <label>Contraseña actual<CampoContrasena autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
           </>
         )}
         {confirmar.error && <p className="alert alert-error">{confirmar.error.message}</p>}

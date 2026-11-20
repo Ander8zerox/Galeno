@@ -1,6 +1,7 @@
 package com.galeno.pacientes;
 
 import java.time.LocalDate;
+import java.time.Period;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -19,9 +20,7 @@ public record PacienteRequest(
         @NotBlank @Size(max = 120) String apellidos,
         @NotNull @Past LocalDate fechaNacimiento,
         @NotBlank @Pattern(regexp = "F|M|I", message = "Sexo debe ser F, M o I") String sexo,
-        @NotBlank @Size(max = 30)
-        @Pattern(regexp = "\\+?[0-9 ()-]{7,30}", message = "Escriba un teléfono válido: solo números, al menos 7")
-        String telefono,
+        @NotBlank @Size(max = 30) @Pattern(regexp = Telefonos.PATRON, message = Telefonos.MENSAJE) String telefono,
         @Email @Size(max = 190) String email,
         @Size(max = 2000) String alergias,
         @Size(max = 4000) String antecedentes,
@@ -31,7 +30,13 @@ public record PacienteRequest(
          * El paciente no tiene correo. El correo es obligatorio salvo con esta marca: así nadie inventa uno para pasar
          * el formulario (un correo inventado rebota, y los rebotes ponen en riesgo el envío de correos de todos).
          */
-        Boolean sinCorreo) {
+        Boolean sinCorreo,
+        /** Quien responde por un menor de edad (obligatorio si tiene menos de 18 años). */
+        @Size(max = 200) String responsableNombre,
+        @Size(max = 40) String responsableParentesco,
+        @Pattern(regexp = TiposDocumento.PATRON, message = "Tipo de documento no válido") String responsableTipoDocumento,
+        @Size(max = 30) String responsableNumeroDocumento,
+        @Size(max = 30) @Pattern(regexp = Telefonos.PATRON, message = Telefonos.MENSAJE) String responsableTelefono) {
 
     /** El correo que se guarda: ninguno si el paciente no tiene. */
     public String emailAGuardar() {
@@ -42,5 +47,19 @@ public record PacienteRequest(
     @AssertTrue(message = "Escriba el correo o marque que el paciente no tiene correo")
     public boolean isCorreoResuelto() {
         return Boolean.TRUE.equals(sinCorreo) || (email != null && !email.isBlank());
+    }
+
+    public boolean esMenor() {
+        return fechaNacimiento != null && Period.between(fechaNacimiento, LocalDate.now()).getYears() < 18;
+    }
+
+    @JsonIgnore
+    @AssertTrue(message = "Para un menor de edad, escriba el nombre, el parentesco y el teléfono de su responsable")
+    public boolean isResponsableCompleto() {
+        return !esMenor() || (lleno(responsableNombre) && lleno(responsableParentesco) && lleno(responsableTelefono));
+    }
+
+    private static boolean lleno(String s) {
+        return s != null && !s.isBlank();
     }
 }

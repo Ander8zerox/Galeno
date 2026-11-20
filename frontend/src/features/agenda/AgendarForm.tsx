@@ -29,7 +29,8 @@ interface Props {
 const MAX_MINUTOS = 240;
 const DURACIONES_SOBRECUPO = [10, 15, 20, 30, 40, 60, 90, 120, 180, 240];
 
-type PacienteElegido = { id: string; nombre: string; incompleto: boolean };
+/** sinCorreo: no tiene correo o pidió no recibirlos (no le llega la confirmación ni el recordatorio). */
+type PacienteElegido = { id: string; nombre: string; incompleto: boolean; sinCorreo: boolean };
 
 export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInicial, onCerrar }: Props) {
   const queryClient = useQueryClient();
@@ -95,7 +96,7 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
         </div>
         <PacienteForm inicial={inicialDesde(q)} onCancelar={() => setRegistrando(false)}
           onGuardado={(p) => {
-            setPaciente({ id: p.id!, nombre: `${p.nombres} ${p.apellidos}`, incompleto: !!p.datosIncompletos });
+            setPaciente({ id: p.id!, nombre: `${p.nombres} ${p.apellidos}`, incompleto: !!p.datosIncompletos, sinCorreo: !p.email || !!p.sinCorreosCitas });
             setRegistrando(false);
           }} />
       </div>
@@ -135,6 +136,11 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
         <div className="row">
           <span>Paciente: <strong>{paciente.nombre}</strong></span>
           <button type="button" className="btn-link" onClick={() => setPaciente(null)}>Cambiar</button>
+          {paciente.sinCorreo && (
+            <small className="badge badge-warn">
+              Sin correo: no le llegará la confirmación ni el recordatorio. Avísele por teléfono.
+            </small>
+          )}
           {paciente.incompleto && (
             <small className="badge badge-warn">
               Importado sin nombre: <Link to={`/pacientes/${paciente.id}`}>complete sus datos</Link> antes de la cita
@@ -147,7 +153,7 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
           {!!busqueda.data?.items?.length && (
             <div className="resultados">
               {busqueda.data.items.map((p) => (
-                <button type="button" key={p.id} className="opcion" onClick={() => setPaciente({ id: p.id!, nombre: `${p.nombres} ${p.apellidos}`, incompleto: !!p.datosIncompletos })}>
+                <button type="button" key={p.id} className="opcion" onClick={() => setPaciente({ id: p.id!, nombre: `${p.nombres} ${p.apellidos}`, incompleto: !!p.datosIncompletos, sinCorreo: !p.email || !!p.sinCorreosCitas })}>
                   <strong>{p.nombres} {p.apellidos}</strong>{p.datosIncompletos && <span className="badge badge-warn">Datos incompletos</span>}
                   <span className="muted small">{p.tipoDocumento} {p.numeroDocumento}{p.telefono && ` · ${p.telefono}`}</span>
                 </button>

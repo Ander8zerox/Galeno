@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { api, unwrap } from "../api/client";
 import { ROL_NOMBRE, useAuth } from "../auth/AuthContext";
+import { CampoContrasena } from "../components/CampoContrasena";
 
 const MIN_PASSWORD = 10;
 
@@ -69,7 +70,7 @@ export function InvitacionPage() {
           <>
             <p className="alert">Ya tiene una cuenta en Galenum. Confirme con su contraseña actual y el consultorio se agregará a su cuenta.</p>
             <label>Contraseña actual
-              <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <CampoContrasena autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </label>
           </>
         ) : (
@@ -78,10 +79,10 @@ export function InvitacionPage() {
               <input value={nombre} onChange={(e) => setNombre(e.target.value)} required autoComplete="name" />
             </label>
             <label>Contraseña (mínimo {MIN_PASSWORD} caracteres)
-              <input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <CampoContrasena autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </label>
             <label>Confirmar contraseña
-              <input type="password" autoComplete="new-password" value={confirmacion} onChange={(e) => setConfirmacion(e.target.value)} required />
+              <CampoContrasena autoComplete="new-password" value={confirmacion} onChange={(e) => setConfirmacion(e.target.value)} required />
             </label>
           </>
         )}

@@ -8,6 +8,7 @@ import { ESTADO_PARTNER, TablaComisiones } from "./PartnerApp";
 import { Building, Handshake, MailX, Receipt, ScrollText, Settings2, ShieldCheck } from "lucide-react";
 import { Shell } from "../components/Shell";
 import { SeguridadCuenta, VerificacionDosPasos, equiposRecordados } from "../components/DosPasos";
+import { CampoContrasena } from "../components/CampoContrasena";
 
 type Pago = Schemas["PagoVista"];
 type Consultorio = Schemas["ConsultorioVista"];
@@ -101,7 +102,7 @@ function Login({ onEntrar }: { onEntrar: (s: Sesion) => void }) {
         <h1>Galenum · Plataforma</h1>
         <p className="muted">Consola para los operadores de Galenum.</p>
         <label>Correo<input type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
-        <label>Contraseña<input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
+        <label>Contraseña<CampoContrasena autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
         {entrar.error && <p className="alert alert-error">{entrar.error.message}</p>}
         <button className="btn" disabled={entrar.isPending}>{entrar.isPending ? "Ingresando…" : "Ingresar"}</button>
       </form>

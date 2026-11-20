@@ -5,6 +5,7 @@ import { api, ApiError, unwrap, type Schemas } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { marcarBienvenida } from "../components/Bienvenida";
 import { EnlacesLegales } from "../components/EnlacesLegales";
+import { CampoContrasena } from "../components/CampoContrasena";
 
 type Solicitud = Schemas["SolicitudRegistro"];
 
@@ -106,10 +107,10 @@ export function RegistroPage() {
           <input type="email" value={form.email} onChange={set("email")} required autoComplete="email" maxLength={190} />
         </Campo>
         <Campo label={`Contraseña (mínimo ${MIN_PASSWORD} caracteres)`} error={errores.password}>
-          <input type="password" value={form.password} onChange={set("password")} required autoComplete="new-password" />
+          <CampoContrasena value={form.password} onChange={set("password")} required autoComplete="new-password" />
         </Campo>
         <label>Confirmar contraseña
-          <input type="password" value={confirmacion} onChange={(e) => setConfirmacion(e.target.value)} required autoComplete="new-password" />
+          <CampoContrasena value={confirmacion} onChange={(e) => setConfirmacion(e.target.value)} required autoComplete="new-password" />
         </label>
 
         <label className="check">
@@ -199,7 +200,7 @@ export function ConfirmarRegistroPage() {
               se agregará a su cuenta (su contraseña no cambia).
             </p>
             <label>Contraseña actual
-              <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <CampoContrasena autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </label>
           </>
         )}

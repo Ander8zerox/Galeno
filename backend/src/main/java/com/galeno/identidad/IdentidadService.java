@@ -117,6 +117,11 @@ public class IdentidadService implements SesionVerifier {
         if (email != null && !email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
             throw ApiProblem.badRequest("El correo de contacto no es válido");
         }
+        // Los correos le dicen al paciente cómo avisar si no puede ir: sin un teléfono o un correo no tendría cómo
+        if (correosPacientes && vacioANull(telefono) == null && email == null) {
+            throw ApiProblem.badRequest("Para enviar correos a los pacientes, escriba el teléfono o el correo del consultorio: "
+                    + "es lo que el paciente usa para avisar si no puede asistir");
+        }
         consultorios.findById(consultorioId).orElseThrow().actualizarContacto(vacioANull(direccion), vacioANull(telefono),
                 email == null ? null : email.toLowerCase(java.util.Locale.ROOT), correosPacientes);
         return contacto(consultorioId);

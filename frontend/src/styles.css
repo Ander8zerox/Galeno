@@ -534,3 +534,10 @@ a.evento:hover { background: var(--primary-soft); box-shadow: var(--shadow-md); 
 /* Procedimientos con CUPS (módulo de RIPS) */
 .tabla-procedimientos th, .tabla-procedimientos td { padding: .4rem .5rem; vertical-align: middle; }
 .tabla-procedimientos input { min-height: 2.1rem; padding: .3rem .45rem; }
+
+/* Contraseña con botón para verla */
+.campo-contrasena { position: relative; display: block; }
+.campo-contrasena input { width: 100%; padding-right: 2.75rem; }
+.ver-contrasena { position: absolute; right: .25rem; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); cursor: pointer; }
+.ver-contrasena:hover { color: var(--text); }
+.ver-contrasena:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }

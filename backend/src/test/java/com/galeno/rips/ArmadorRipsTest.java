@@ -30,9 +30,10 @@ class ArmadorRipsTest {
     /** 2026-11-03 09:30 en Bogotá. */
     private static final Instant FECHA = Instant.parse("2026-11-03T14:30:00Z");
     private static final ArmadorRips.PrestadorRips PRESTADOR =
-            new ArmadorRips.PrestadorRips("110010000101", "328", "01", "01", "15", "38", "02");
+            new ArmadorRips.PrestadorRips("110010000101", "328", "01", "01", "15", "38", "02", "16");
     private static final Map<String, Fila> CUPS = Map.of(
             "890201", new Fila(true, Map.of("uso", "AC", "sexo", "Z", "maximo", "1")),
+            "890301", new Fila(true, Map.of("uso", "AC", "sexo", "Z", "maximo", "1")),
             "232102", new Fila(true, Map.of("uso", "AP", "sexo", "Z", "maximo", "4")),
             "895100", new Fila(true, Map.of("uso", "AP", "sexo", "F", "maximo", "1")));
 
@@ -91,6 +92,17 @@ class ArmadorRipsTest {
     @SuppressWarnings("unchecked")
     private static Map<String, Object> usuario(ArmadorRips.Resultado r, int i) {
         return ((List<Map<String, Object>>) r.json().get("usuarios")).get(i);
+    }
+
+    @Test
+    void elControlLlevaLaFinalidadDeLosControles() {
+        var primeraVez = armar(eps("04"), false, null,
+                atencion(paciente("01"), cobro("02", "0"), dx("J029"), proc("890201", 1, "50000")));
+        var control = armar(eps("04"), false, null,
+                atencion(paciente("01"), cobro("02", "0"), dx("J029"), proc("890301", 1, "50000")));
+
+        assertThat(lista(primeraVez, 0, "consultas").get(0)).containsEntry("finalidadTecnologiaSalud", "15");
+        assertThat(lista(control, 0, "consultas").get(0)).containsEntry("finalidadTecnologiaSalud", "16");
     }
 
     @Test

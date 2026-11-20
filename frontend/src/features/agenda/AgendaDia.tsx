@@ -11,7 +11,7 @@ import { useFaltantesRips, useReferencia } from "../rips/referencias";
 import { AgendarForm } from "./AgendarForm";
 import { AnotarEspera, EspacioLiberado } from "./ListaEspera";
 import { useVigiaCorreo } from "../pacientes/VigiaCorreo";
-import { hora } from "./tiempo";
+import { hora, hoyEn } from "./tiempo";
 
 type Cita = Schemas["CitaVista"];
 type Estado = NonNullable<Cita["estado"]>;
@@ -55,6 +55,8 @@ export function AgendaDia({ medicoId, fecha, zona, abrir }: {
   ].sort((a, b) => a.inicio.localeCompare(b.inicio) || (a.tipo === "cita" ? -1 : 1));
 
   const activas = (citas.data ?? []).filter((c) => c.estado !== "CANCELADA").length;
+  // En un día pasado no se agenda: el servidor lo rechaza, así que tampoco se ofrece
+  const pasado = fecha < hoyEn(zona);
   // "¿A quién llamar?" solo en el primer cupo de cada tramo libre: las sugerencias cubren el tramo completo
   const finesLibres = new Set((libres.data ?? []).map((l) => Date.parse(l.fin!)));
   // Con RIPS activo, se avisa en la cita lo que le falta al paciente para que la secretaria lo complete al recibirlo
@@ -70,7 +72,9 @@ export function AgendaDia({ medicoId, fecha, zona, abrir }: {
     <div className="stack">
       <div className="row between">
         <span className="muted">{activas} cita(s) · {libres.data?.length ?? 0} cupo(s) libre(s)</span>
-        <button className="btn btn-secondary" onClick={() => setAgendando({})}>Sobrecupo / otra hora</button>
+        {pasado
+          ? <span className="muted small">Día pasado: no se agendan citas</span>
+          : <button className="btn btn-secondary" onClick={() => setAgendando({})}>Sobrecupo / otra hora</button>}
       </div>
 
       {agendando && (
@@ -86,7 +90,10 @@ export function AgendaDia({ medicoId, fecha, zona, abrir }: {
       {(citas.error || libres.error) && <p className="alert alert-error">{citas.error?.message ?? libres.error?.message}</p>}
       {(citas.isLoading || libres.isLoading) && <p className="muted">Cargando…</p>}
       {!citas.isLoading && !libres.isLoading && filas.length === 0 && (
-        <p className="card muted center">No hay cupos libres este día (fuera del horario del médico, ya pasaron o están ocupados). Puede agendar un sobrecupo si es necesario.</p>
+        <p className="card muted center">
+          {pasado ? "Este día ya pasó: no hay citas registradas."
+            : "No hay cupos libres este día (fuera del horario del médico, ya pasaron o están ocupados). Puede agendar un sobrecupo si es necesario."}
+        </p>
       )}
 
       <div className="timeline">
@@ -220,6 +227,8 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
           {cita.estado === "PROGRAMADA" && <button className="btn-link" onClick={() => diferida.programar("Confirmando la cita", () => cambiar.mutate({ estado: "CONFIRMADA" }))}>Confirmar</button>}
           {cobro && !registrandoCobro && <button className="btn-link" onClick={() => setRegistrandoCobro(true)}>Cobro</button>}
           {puede("HISTORIA_REGISTRAR") && esMiCita && <button className="btn" disabled={atender.isPending} onClick={() => diferida.programar("Abriendo la atención", () => atender.mutate())}>Atender</button>}
+          {/* "Atender" no depende de la hora: solo de ser el médico de la cita y tener permiso de historia clínica */}
+          {puede("HISTORIA_REGISTRAR") && !esMiCita && <span className="muted small" title="Cada médico atiende sus propias citas">La atiende su médico</span>}
           {Date.parse(cita.inicio!) > Date.now() && !anotandoEspera && (
             <button className="btn-link" title="Anotarlo en la lista de espera para adelantar esta cita si se libera un espacio antes"
               onClick={() => setAnotandoEspera(true)}>Quiere antes</button>
