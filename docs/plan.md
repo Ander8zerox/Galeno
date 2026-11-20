@@ -248,7 +248,7 @@ Decidido el 8 de noviembre de 2026:
 - Imagen de la firma del médico y código QR de verificación en los PDF.
 - Reporte de auditoría para el administrador.
 
-### 5b. Historia clínica según los 13 bloques del RDA (fase D, planeada el 20 de noviembre de 2026; sin implementar)
+### 5b. Historia clínica según los 13 bloques del RDA (fase D: D1 a D6 hechos el 20 de noviembre de 2026; D7 bloqueado)
 
 Viene del informe de QA. Ya cumplen: 1 prestador, 2 entidad responsable, 3 paciente, 5 antecedentes y alergias
 (estructurados, PR #67), 11 incapacidad (formato con días, fechas y PDF) y 12 profesional. Lo que falta, un PR por
@@ -288,6 +288,24 @@ Otros pendientes que salieron de leer las normas (Res. 1552 de 2013 y Circular 0
 - Aviso cuando la cita supera el estándar: 3 días hábiles en medicina general y odontología; en especialidades, los de
   la Circular 038.
 - Aviso de vencimiento de los 22 días hábiles para radicar la factura con su RIPS.
+
+### 5c. Contratación con pagadores (fase E, planeada el 20 de noviembre de 2026; sin implementar)
+
+Viene del informe de QA ("crear un módulo de contratación"). Se entiende como la gestión de los contratos del
+prestador con sus pagadores (EPS, aseguradoras, ARL, SOAT; Decreto 441 de 2022), que la factura exige al radicar
+(CUCON). **Confirmar con QA que es esto y no contratación de personal.**
+
+Ya existe: pagadores con su CUCON, tarifas por pagador, lista de precios por CUPS y el aviso "Falta autorización" en la
+cita. Faltaría:
+
+- **El contrato como entidad:** pagador, número, CUCON, vigencia (desde–hasta), estado y modalidad de pago (evento,
+  capitación, paquete, pago global prospectivo).
+- **Servicios contratados:** qué CUPS cubre y a qué tarifa (valor fijo o manual SOAT/ISS ± %).
+- **Condiciones:** si exige autorización, topes de valor o de cantidad, copagos y cuotas moderadoras.
+- **Validaciones y avisos:** en la agenda y el RIPS, contrato vencido, CUPS no contratado o tope casi agotado; contrato
+  por vencer.
+- **Capitación:** la primera factura va sin RIPS; desde la segunda, el RIPS del período anterior (Res. 948 de 2026,
+  según Consultorsalud).
 
 ### 6. Formatos transversales (fase 4)
 

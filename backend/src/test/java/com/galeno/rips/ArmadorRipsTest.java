@@ -57,13 +57,13 @@ class ArmadorRipsTest {
 
     private static ProcedimientoVista proc(String codigo, int cantidad, String valor) {
         return new ProcedimientoVista(codigo, "Descripción " + codigo, cantidad, valor == null ? null : new BigDecimal(valor),
-                null, null, codigo.startsWith("890"));
+                null, null, codigo.startsWith("890"), null);
     }
 
     private static AtencionLote atencion(ArmadorRips.PacienteRips p, CobroVista c, List<DiagnosticoVista> dx,
                                          ProcedimientoVista... procs) {
         AtencionRips a = new AtencionRips(UUID.randomUUID(), p.id(), null, UUID.randomUUID(), "Dra. Prueba", FECHA,
-                false, dx, List.of(procs));
+                false, dx, List.of(procs), null, null, null);
         return new AtencionLote(a, p, c, new ArmadorRips.ProfesionalRips("CC", "52000000"), ArmadorRips.Ajustes.NINGUNO,
                 Map.of());
     }
@@ -103,6 +103,19 @@ class ArmadorRipsTest {
 
         assertThat(lista(primeraVez, 0, "consultas").get(0)).containsEntry("finalidadTecnologiaSalud", "15");
         assertThat(lista(control, 0, "consultas").get(0)).containsEntry("finalidadTecnologiaSalud", "16");
+    }
+
+    @Test
+    void laCausaYLaModalidadDeLaAtencionMandanSobreLasDelPrestador() {
+        AtencionLote base = atencion(paciente("01"), cobro("02", "0"), dx("J029"), proc("890201", 1, "50000"));
+        AtencionRips a = base.atencion();
+        AtencionRips conEncuentro = new AtencionRips(a.id(), a.pacienteId(), a.citaId(), a.medicoUsuarioId(), a.medicoNombre(),
+                a.fecha(), a.incapacidad(), a.diagnosticos(), a.procedimientos(), "04", null, "13");
+        var r = armar(eps("04"), false, null, new AtencionLote(conEncuentro, base.paciente(), base.cobro(), base.profesional(),
+                ArmadorRips.Ajustes.NINGUNO, Map.of()));
+
+        assertThat(lista(r, 0, "consultas").get(0)).containsEntry("modalidadGrupoServicioTecSal", "04")
+                .containsEntry("causaMotivoAtencion", "13");
     }
 
     @Test

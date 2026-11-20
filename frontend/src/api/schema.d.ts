@@ -2260,6 +2260,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/historia/atenciones/{id}/ordenes/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pdfOrdenes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/historia/atenciones/{id}/formatos/{formatoAtencionId}/pdf": {
         parameters: {
             query?: never;
@@ -3256,6 +3272,11 @@ export interface components {
             /** @enum {string} */
             tipo?: "IMPRESION_DIAGNOSTICA" | "CONFIRMADO_NUEVO" | "CONFIRMADO_REPETIDO";
         };
+        FactorRequest: {
+            /** @enum {string} */
+            codigo: "TABAQUISMO" | "ALCOHOL" | "SUSTANCIAS_PSICOACTIVAS" | "SEDENTARISMO" | "OBESIDAD" | "HIPERTENSION" | "DIABETES" | "DISLIPIDEMIA" | "ANTECEDENTE_FAMILIAR_CARDIOVASCULAR" | "EMBARAZO_ALTO_RIESGO" | "RIESGO_CAIDAS" | "OTRO";
+            observacion?: string;
+        };
         GuardarAtencion: {
             /** Format: int64 */
             version?: number;
@@ -3287,6 +3308,23 @@ export interface components {
             acompananteParentesco?: string;
             acompananteTipoDocumento?: string;
             acompananteNumeroDocumento?: string;
+            modalidadAtencion?: string;
+            grupoServicios?: string;
+            causaExterna?: string;
+            entorno?: string;
+            ordenes?: components["schemas"]["OrdenRequest"][];
+            factoresRiesgo?: components["schemas"]["FactorRequest"][];
+        };
+        OrdenRequest: {
+            /** @enum {string} */
+            tipo: "LABORATORIO" | "IMAGEN" | "PROCEDIMIENTO" | "INTERCONSULTA";
+            codigoCups?: string;
+            descripcion?: string;
+            /** Format: int32 */
+            cantidad?: number;
+            indicaciones?: string;
+            /** @enum {string} */
+            prioridad?: "RUTINARIA" | "URGENTE";
         };
         ProcedimientoRequest: {
             codigoCups: string;
@@ -3295,6 +3333,7 @@ export interface components {
             valorUnitario?: number;
             diente?: string;
             superficies?: string;
+            resultado?: string;
         };
         RespuestasFormatoRequest: {
             /** Format: uuid */
@@ -3353,6 +3392,14 @@ export interface components {
             acompananteParentesco?: string;
             acompananteTipoDocumento?: string;
             acompananteNumeroDocumento?: string;
+            /** Format: date-time */
+            finalizadaEn?: string;
+            modalidadAtencion?: string;
+            grupoServicios?: string;
+            causaExterna?: string;
+            entorno?: string;
+            ordenes?: components["schemas"]["OrdenVista"][];
+            factoresRiesgo?: components["schemas"]["FactorVista"][];
         };
         DiagnosticoVista: {
             codigoCie10?: string;
@@ -3378,6 +3425,12 @@ export interface components {
             /** Format: date-time */
             anuladoEn?: string;
             motivoAnulacion?: string;
+        };
+        FactorVista: {
+            /** @enum {string} */
+            codigo?: "TABAQUISMO" | "ALCOHOL" | "SUSTANCIAS_PSICOACTIVAS" | "SEDENTARISMO" | "OBESIDAD" | "HIPERTENSION" | "DIABETES" | "DISLIPIDEMIA" | "ANTECEDENTE_FAMILIAR_CARDIOVASCULAR" | "EMBARAZO_ALTO_RIESGO" | "RIESGO_CAIDAS" | "OTRO";
+            nombre?: string;
+            observacion?: string;
         };
         FormatoDiligenciado: {
             /** Format: uuid */
@@ -3405,6 +3458,17 @@ export interface components {
             /** Format: date-time */
             creadaEn?: string;
         };
+        OrdenVista: {
+            /** @enum {string} */
+            tipo?: "LABORATORIO" | "IMAGEN" | "PROCEDIMIENTO" | "INTERCONSULTA";
+            codigoCups?: string;
+            descripcion?: string;
+            /** Format: int32 */
+            cantidad?: number;
+            indicaciones?: string;
+            /** @enum {string} */
+            prioridad?: "RUTINARIA" | "URGENTE";
+        };
         ProcedimientoVista: {
             codigoCups?: string;
             descripcion?: string;
@@ -3414,6 +3478,7 @@ export interface components {
             diente?: string;
             superficies?: string;
             consulta?: boolean;
+            resultado?: string;
         };
         PorDefecto: {
             porDefecto: boolean;
@@ -4362,26 +4427,26 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            floatingPointNumber?: boolean;
-            valueNode?: boolean;
-            integralNumber?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            container?: boolean;
-            missingNode?: boolean;
-            bigDecimal?: boolean;
-            bigInteger?: boolean;
+            boolean?: boolean;
+            string?: boolean;
             int?: boolean;
-            double?: boolean;
-            object?: boolean;
             short?: boolean;
+            pojo?: boolean;
+            long?: boolean;
             /** @deprecated */
             textual?: boolean;
-            pojo?: boolean;
-            string?: boolean;
-            boolean?: boolean;
-            long?: boolean;
+            object?: boolean;
             binary?: boolean;
+            double?: boolean;
+            floatingPointNumber?: boolean;
+            bigDecimal?: boolean;
+            missingNode?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
+            integralNumber?: boolean;
+            bigInteger?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -8511,6 +8576,28 @@ export interface operations {
         };
     };
     pdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    pdfOrdenes: {
         parameters: {
             query?: never;
             header?: never;

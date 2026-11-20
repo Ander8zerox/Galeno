@@ -141,6 +141,47 @@ public class Atencion {
     @OrderColumn(name = "orden")
     private List<Procedimiento> procedimientos = new ArrayList<>();
 
+    /** Órdenes médicas (bloque 9 del RDA): se firman con la atención. */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "atencion_ordenes", joinColumns = @JoinColumn(name = "atencion_id"))
+    @OrderColumn(name = "orden")
+    private List<OrdenMedica> ordenes = new ArrayList<>();
+
+    /** Factores de riesgo identificados (bloque 10 del RDA). */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "atencion_factores_riesgo", joinColumns = @JoinColumn(name = "atencion_id"))
+    @OrderColumn(name = "orden")
+    private List<FactorRiesgo> factoresRiesgo = new ArrayList<>();
+
+    void registrarOrdenes(List<OrdenMedica> nuevas) {
+        exigirBorrador();
+        if (nuevas.size() > 40) {
+            throw ApiProblem.badRequest("Máximo 40 órdenes por atención");
+        }
+        ordenes.clear();
+        ordenes.addAll(nuevas);
+        this.actualizadaEn = Instant.now();
+    }
+
+    void registrarFactoresRiesgo(List<FactorRiesgo> nuevos) {
+        exigirBorrador();
+        if (nuevos.stream().map(FactorRiesgo::getCodigo).filter(c -> c != FactorRiesgo.Codigo.OTRO).distinct().count()
+                != nuevos.stream().filter(f -> f.getCodigo() != FactorRiesgo.Codigo.OTRO).count()) {
+            throw ApiProblem.badRequest("Hay factores de riesgo repetidos");
+        }
+        factoresRiesgo.clear();
+        factoresRiesgo.addAll(nuevos);
+        this.actualizadaEn = Instant.now();
+    }
+
+    public List<OrdenMedica> getOrdenes() {
+        return ordenes;
+    }
+
+    public List<FactorRiesgo> getFactoresRiesgo() {
+        return factoresRiesgo;
+    }
+
     /** Expidió incapacidad (campo "incapacidad" del usuario en el RIPS). */
     @Column(nullable = false)
     private boolean incapacidad;
@@ -177,6 +218,57 @@ public class Atencion {
 
     @Column(name = "firmada_en")
     private Instant firmadaEn;
+
+    /** Hora de fin de la atención (bloque 4 del RDA): al firmar. */
+    @Column(name = "finalizada_en")
+    private Instant finalizadaEn;
+
+    /** Datos del encuentro para el RIPS (tablas de SISPRO); arrancan con los del prestador. */
+    @Column(name = "modalidad_atencion", length = 2)
+    private String modalidadAtencion;
+
+    @Column(name = "grupo_servicios", length = 2)
+    private String grupoServicios;
+
+    @Column(name = "causa_externa", length = 2)
+    private String causaExterna;
+
+    /** Entorno de la atención (institucional, hogar, comunitario, escolar, laboral, virtual…). */
+    @Column(length = 40)
+    private String entorno;
+
+    void registrarEncuentro(String modalidadAtencion, String grupoServicios, String causaExterna, String entorno) {
+        exigirBorrador();
+        this.modalidadAtencion = vacioANulo(modalidadAtencion);
+        this.grupoServicios = vacioANulo(grupoServicios);
+        this.causaExterna = vacioANulo(causaExterna);
+        this.entorno = vacioANulo(entorno);
+        this.actualizadaEn = Instant.now();
+    }
+
+    private static String vacioANulo(String s) {
+        return s == null || s.isBlank() ? null : s.strip();
+    }
+
+    public Instant getFinalizadaEn() {
+        return finalizadaEn;
+    }
+
+    public String getModalidadAtencion() {
+        return modalidadAtencion;
+    }
+
+    public String getGrupoServicios() {
+        return grupoServicios;
+    }
+
+    public String getCausaExterna() {
+        return causaExterna;
+    }
+
+    public String getEntorno() {
+        return entorno;
+    }
 
     protected Atencion() {
     }
@@ -296,6 +388,7 @@ public class Atencion {
         this.registroMedico = registroMedico;
         this.estado = Estado.FIRMADA;
         this.firmadaEn = Instant.now();
+        this.finalizadaEn = firmadaEn;
         this.actualizadaEn = firmadaEn;
     }
 

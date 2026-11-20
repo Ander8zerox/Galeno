@@ -87,6 +87,16 @@ public class HistoriaController {
                 .body(pdf.contenido());
     }
 
+    @GetMapping(value = "/atenciones/{id}/ordenes/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> pdfOrdenes(@PathVariable UUID id) {
+        Archivo pdf = historia.pdfOrdenes(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
+                        .filename(pdf.nombre(), StandardCharsets.UTF_8).build().toString())
+                .body(pdf.contenido());
+    }
+
     @GetMapping(value = "/atenciones/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> pdf(@PathVariable UUID id) {
         Archivo pdf = historia.pdfAtencion(id);
@@ -109,9 +119,16 @@ public class HistoriaController {
                         .map(f -> new RespuestasFormato(f.id(), f.respuestas())).toList(),
                 r.procedimientos() == null ? null : r.procedimientos().stream()
                         .map(p -> new ProcedimientoNuevo(p.codigoCups(), p.cantidad(), p.valorUnitario(), p.diente(),
-                                p.superficies())).toList(),
+                                p.superficies(), p.resultado())).toList(),
                 r.incapacidad(), new HistoriaService.Acompanante(r.acompananteNombre(), r.acompananteParentesco(),
-                        r.acompananteTipoDocumento(), r.acompananteNumeroDocumento()));
+                        r.acompananteTipoDocumento(), r.acompananteNumeroDocumento()),
+                r.modalidadAtencion() == null && r.grupoServicios() == null && r.causaExterna() == null && r.entorno() == null
+                        ? null : new HistoriaService.Encuentro(r.modalidadAtencion(), r.grupoServicios(), r.causaExterna(),
+                        r.entorno()),
+                r.ordenes() == null ? null : r.ordenes().stream().map(o -> new HistoriaService.OrdenNueva(o.tipo(),
+                        o.codigoCups(), o.descripcion(), o.cantidad(), o.indicaciones(), o.prioridad())).toList(),
+                r.factoresRiesgo() == null ? null : r.factoresRiesgo().stream()
+                        .map(f -> new HistoriaService.FactorNuevo(f.codigo(), f.observacion())).toList());
     }
 
     /** Agrega al borrador un formato activo del consultorio, con su última versión. */
@@ -241,14 +258,30 @@ public class HistoriaController {
                                   @Size(max = 40) String acompananteParentesco,
                                   @jakarta.validation.constraints.Pattern(regexp = "(" + com.galeno.pacientes.TiposDocumento.PATRON + ")?",
                                           message = "Tipo de documento no válido") String acompananteTipoDocumento,
-                                  @Size(max = 30) String acompananteNumeroDocumento) {
+                                  @Size(max = 30) String acompananteNumeroDocumento,
+                                  @jakarta.validation.constraints.Pattern(regexp = "\\d{2}|", message = "Código de modalidad no válido") String modalidadAtencion,
+                                  @jakarta.validation.constraints.Pattern(regexp = "\\d{2}|", message = "Código de grupo de servicios no válido") String grupoServicios,
+                                  @jakarta.validation.constraints.Pattern(regexp = "\\d{2}|", message = "Código de causa externa no válido") String causaExterna,
+                                  @Size(max = 40) String entorno,
+                                  @Size(max = 40) List<@Valid OrdenRequest> ordenes,
+                                  @Size(max = 20) List<@Valid FactorRequest> factoresRiesgo) {
     }
 
     /** @param procedimientos {@code null} si la pantalla no los muestra (sin el módulo de RIPS): no cambian */
     public record ProcedimientoRequest(@NotBlank @Size(max = 10) String codigoCups,
                                        @Min(1) @Max(99) int cantidad,
                                        @DecimalMin("0.00") @DecimalMax("999999999.99") BigDecimal valorUnitario,
-                                       @Size(max = 2) String diente, @Size(max = 5) String superficies) {
+                                       @Size(max = 2) String diente, @Size(max = 5) String superficies,
+                                       @Size(max = 1000) String resultado) {
+    }
+
+    /** @param codigoCups opcional: sin él va la descripción (interconsulta o estudio fuera del catálogo) */
+    public record OrdenRequest(@NotNull OrdenMedica.Tipo tipo, @Size(max = 10) String codigoCups,
+                               @Size(max = 400) String descripcion, @Min(1) @Max(99) int cantidad,
+                               @Size(max = 500) String indicaciones, OrdenMedica.Prioridad prioridad) {
+    }
+
+    public record FactorRequest(@NotNull FactorRiesgo.Codigo codigo, @Size(max = 300) String observacion) {
     }
 
     public record NuevoFormato(@NotNull UUID formatoId) {
