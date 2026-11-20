@@ -62,11 +62,11 @@ export function AgendaDia({ medicoId, fecha, zona, abrir }: {
   // Con RIPS activo, se avisa en la cita lo que le falta al paciente para que la secretaria lo complete al recibirlo
   const { puede } = useAuth();
   const modulo = useModuloActivo("RIPS");
-  const rips = modulo && puede("PACIENTE_GESTIONAR");
+  const rips = modulo && puede("RIPS_PACIENTE");
   const abiertas = (citas.data ?? []).filter(abierta);
   const faltantes = useFaltantesRips(abiertas.map((c) => c.pacienteId!), rips);
   // Y el pagador y el cobro de cada una, que la secretaria registra al recibir al paciente
-  const cobros = useCobrosCitas(abiertas.map((c) => c.id!), modulo && puede("AGENDA_GESTIONAR"));
+  const cobros = useCobrosCitas(abiertas.map((c) => c.id!), modulo && puede("RIPS_PACIENTE"));
 
   return (
     <div className="stack">

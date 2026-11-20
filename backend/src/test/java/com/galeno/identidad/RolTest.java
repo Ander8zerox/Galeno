@@ -13,8 +13,21 @@ class RolTest {
     @Test
     void elSecretarioNoVeDatosClinicosNiUsaLaIa() {
         assertThat(Rol.permisosDe(List.of(Rol.SECRETARIO)))
-                .containsExactlyInAnyOrder(Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR)
+                .containsExactlyInAnyOrder(Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR, Permiso.RIPS_PACIENTE)
                 .doesNotContain(Permiso.HISTORIA_VER, Permiso.FORMULA_FIRMAR, Permiso.IA_DIAGNOSTICO);
+    }
+
+    @Test
+    void elMedicoNoFactura() {
+        assertThat(Rol.permisosDe(List.of(Rol.MEDICO)))
+                .doesNotContain(Permiso.RIPS_GESTIONAR, Permiso.RIPS_PACIENTE);
+    }
+
+    @Test
+    void facturacionGestionaElRipsSinDatosClinicos() {
+        assertThat(Rol.permisosDe(List.of(Rol.FACTURACION)))
+                .contains(Permiso.RIPS_GESTIONAR, Permiso.RIPS_PACIENTE)
+                .doesNotContain(Permiso.HISTORIA_VER, Permiso.AGENDA_GESTIONAR, Permiso.EQUIPO_GESTIONAR);
     }
 
     @Test

@@ -21,7 +21,8 @@ export function PacientePage() {
   // "Corregir el correo" (aviso de rebote) llega con ?editar=1: el formulario ya abierto
   const [busqueda] = useSearchParams();
   const [editando, setEditando] = useState(busqueda.get("editar") === "1");
-  const rips = useModuloActivo("RIPS");
+  // Los datos RIPS los completa quien recibe o factura, no el médico
+  const rips = useModuloActivo("RIPS") && puede("RIPS_PACIENTE");
   const paciente = useQuery({
     queryKey: ["paciente", id],
     queryFn: async () => unwrap(await api.GET("/api/v1/pacientes/{id}", { params: { path: { id: id! } } })),
