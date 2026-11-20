@@ -3184,7 +3184,7 @@ export interface components {
             activo?: boolean;
         };
         ActualizarMiembro: {
-            roles: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
+            roles: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
             /** @enum {string} */
             estado: "ACTIVA" | "SUSPENDIDA";
             registroMedico?: string;
@@ -3366,7 +3366,7 @@ export interface components {
             /** Format: uuid */
             consultorioId?: string;
             nombre?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
         };
         SesionResponse: {
             accessToken?: string;
@@ -3542,7 +3542,7 @@ export interface components {
         InvitacionPublica: {
             consultorioNombre?: string;
             email?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
             cuentaExistente?: boolean;
             requiereRegistroMedico?: boolean;
         };
@@ -3643,14 +3643,14 @@ export interface components {
         Invitar: {
             /** Format: email */
             email: string;
-            roles: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
+            roles: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
             registroMedico?: string;
         };
         InvitacionCreada: {
             /** Format: uuid */
             id?: string;
             email?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
             /** Format: date-time */
             expiraEn?: string;
             enlace?: string;
@@ -4013,7 +4013,7 @@ export interface components {
             usuarioId?: string;
             nombre?: string;
             email?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
             /** @enum {string} */
             estado?: "ACTIVA" | "SUSPENDIDA";
             registroMedico?: string;
@@ -4023,7 +4023,7 @@ export interface components {
             /** Format: uuid */
             id?: string;
             email?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
             /** Format: date-time */
             expiraEn?: string;
             /** Format: date-time */
@@ -4051,8 +4051,8 @@ export interface components {
             zonaHoraria?: string;
             /** Format: uuid */
             membresiaId?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO")[];
-            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR" | "FORMATOS_GESTIONAR" | "MODULOS_GESTIONAR" | "RIPS_GESTIONAR")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
+            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR" | "FORMATOS_GESTIONAR" | "MODULOS_GESTIONAR" | "RIPS_GESTIONAR" | "RIPS_PACIENTE")[];
             /** Format: int32 */
             totalConsultorios?: number;
             iaDisponible?: boolean;
@@ -4077,26 +4077,26 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            floatingPointNumber?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            integralNumber?: boolean;
-            missingNode?: boolean;
-            valueNode?: boolean;
-            bigDecimal?: boolean;
-            container?: boolean;
-            bigInteger?: boolean;
-            boolean?: boolean;
-            int?: boolean;
             long?: boolean;
-            short?: boolean;
-            object?: boolean;
-            string?: boolean;
+            double?: boolean;
+            int?: boolean;
             pojo?: boolean;
             /** @deprecated */
             textual?: boolean;
+            short?: boolean;
+            boolean?: boolean;
             binary?: boolean;
-            double?: boolean;
+            floatingPointNumber?: boolean;
+            valueNode?: boolean;
+            container?: boolean;
+            missingNode?: boolean;
+            integralNumber?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            bigDecimal?: boolean;
+            bigInteger?: boolean;
+            string?: boolean;
+            object?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {

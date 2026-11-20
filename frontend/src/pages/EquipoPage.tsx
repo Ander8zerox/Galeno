@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, expectOk, unwrap, type Schemas } from "../api/client";
-import { ROL_NOMBRE, ROLES, useAuth, type Rol } from "../auth/AuthContext";
+import { ROL_DESCRIPCION, ROL_NOMBRE, ROLES, useAuth, type Rol } from "../auth/AuthContext";
 
 type Miembro = Schemas["Miembro"];
 
@@ -102,14 +102,20 @@ function DatosConsultorioForm({ inicial, onGuardado }: {
 
 function RolesCheckboxes({ value, onChange }: { value: Rol[]; onChange: (roles: Rol[]) => void }) {
   return (
+    <div className="stack-sm">
     <div className="row">
       {ROLES.map((r) => (
-        <label key={r} className="check">
+        <label key={r} className="check" title={ROL_DESCRIPCION[r]}>
           <input type="checkbox" checked={value.includes(r)}
             onChange={(e) => onChange(e.target.checked ? [...value, r] : value.filter((x) => x !== r))} />
           {ROL_NOMBRE[r]}
         </label>
       ))}
+    </div>
+    <small className="muted">
+      {value.length ? value.map((r) => `${ROL_NOMBRE[r]}: ${ROL_DESCRIPCION[r].toLowerCase()}`).join(" · ")
+        : "Los roles se suman: por ejemplo, Secretario + Facturación para quien recibe y factura."}
+    </small>
     </div>
   );
 }

@@ -30,7 +30,7 @@ import com.galeno.rips.PreciosService.PrecioVista;
 
 /**
  * Pagadores, tarifas y cobros. La lista de pagadores la lee cualquier miembro (la usan la cita y la ficha); crearlos y
- * sus tarifas, RIPS_GESTIONAR. El cobro de la cita, quien gestiona la agenda; el de la atención, quien la registra.
+ * sus tarifas, RIPS_GESTIONAR. El cobro de la cita, RIPS_PACIENTE (quien recibe o factura); el de la atención, quien la registra.
  * Todo exige el módulo de RIPS activo (ver SecurityConfig).
  */
 @RestController

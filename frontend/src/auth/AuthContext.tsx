@@ -176,5 +176,14 @@ export function useAuth() {
   return ctx;
 }
 
-export const ROL_NOMBRE: Record<Rol, string> = { ADMIN: "Administrador", MEDICO: "Médico", SECRETARIO: "Secretario" };
-export const ROLES: Rol[] = ["ADMIN", "MEDICO", "SECRETARIO"];
+export const ROL_NOMBRE: Record<Rol, string> = {
+  ADMIN: "Administrador", MEDICO: "Médico", SECRETARIO: "Secretario", FACTURACION: "Facturación",
+};
+export const ROLES: Rol[] = ["ADMIN", "MEDICO", "SECRETARIO", "FACTURACION"];
+/** Qué hace cada rol (se ve al invitar y al cambiar roles). Los roles se suman. */
+export const ROL_DESCRIPCION: Record<Rol, string> = {
+  ADMIN: "Equipo, módulos, formatos, suscripción y RIPS",
+  MEDICO: "Historia clínica, fórmulas y su agenda",
+  SECRETARIO: "Pacientes, agenda y datos RIPS del paciente; sin datos clínicos",
+  FACTURACION: "RIPS: lotes, notas, pagadores y precios",
+};

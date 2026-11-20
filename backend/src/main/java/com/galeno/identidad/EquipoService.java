@@ -196,6 +196,7 @@ class EquipoService {
             case ADMIN -> "administrador";
             case MEDICO -> "médico";
             case SECRETARIO -> "secretario";
+            case FACTURACION -> "facturación";
         };
     }
 

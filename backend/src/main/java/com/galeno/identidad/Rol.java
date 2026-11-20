@@ -9,10 +9,12 @@ import com.galeno.shared.security.Permiso;
 public enum Rol {
     ADMIN(EnumSet.of(Permiso.EQUIPO_GESTIONAR, Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR,
             Permiso.IMPORTAR_HISTORIAS, Permiso.SUSCRIPCION_GESTIONAR, Permiso.FORMATOS_GESTIONAR,
-            Permiso.MODULOS_GESTIONAR, Permiso.RIPS_GESTIONAR)),
+            Permiso.MODULOS_GESTIONAR, Permiso.RIPS_GESTIONAR, Permiso.RIPS_PACIENTE)),
     MEDICO(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.HISTORIA_VER, Permiso.HISTORIA_REGISTRAR, Permiso.FORMULA_REDACTAR,
             Permiso.FORMULA_FIRMAR, Permiso.IA_DIAGNOSTICO, Permiso.AGENDA_GESTIONAR)),
-    SECRETARIO(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR));
+    SECRETARIO(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR, Permiso.RIPS_PACIENTE)),
+    /** RIPS, lotes, notas, pagadores y precios. Se suma a otro rol (p. ej. la secretaria que factura). */
+    FACTURACION(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.RIPS_GESTIONAR, Permiso.RIPS_PACIENTE));
 
     private final Set<Permiso> permisos;
 

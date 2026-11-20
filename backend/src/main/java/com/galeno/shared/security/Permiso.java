@@ -28,5 +28,10 @@ public enum Permiso {
     /** Activar y desactivar módulos opcionales (p. ej. RIPS) en el consultorio. */
     MODULOS_GESTIONAR,
     /** Lista de precios por CUPS y, en la fase 2, pagadores y lotes de RIPS. Exige además el módulo activo. */
-    RIPS_GESTIONAR
+    RIPS_GESTIONAR,
+    /**
+     * Ver y completar los datos RIPS del paciente (tipo de usuario, residencia, pagador): quien lo recibe o factura,
+     * no el médico.
+     */
+    RIPS_PACIENTE
 }

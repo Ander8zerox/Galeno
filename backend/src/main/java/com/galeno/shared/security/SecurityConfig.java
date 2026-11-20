@@ -85,15 +85,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/historia/**").hasAuthority(Permiso.HISTORIA_REGISTRAR.name())
                         .requestMatchers("/api/v1/importaciones/**").hasAuthority(Permiso.IMPORTAR_HISTORIAS.name())
                         .requestMatchers(HttpMethod.PUT, "/api/v1/modulos/**").hasAuthority(Permiso.MODULOS_GESTIONAR.name())
-                        // Las listas de SISPRO las usa cualquier pantalla del módulo; los datos del paciente, quien
-                        // edita pacientes (también la secretaria). El resto del módulo, quien gestiona RIPS.
+                        // Las listas de SISPRO las usa cualquier pantalla del módulo; los datos RIPS del paciente,
+                        // quien lo recibe o factura (no el médico). El resto del módulo, quien gestiona RIPS.
                         .requestMatchers(HttpMethod.GET, "/api/v1/rips/referencias/**").hasAuthority(TokenService.MIEMBRO)
-                        .requestMatchers("/api/v1/rips/pacientes/**").hasAuthority(Permiso.PACIENTE_GESTIONAR.name())
-                        // La lista de pagadores la usan la cita y la ficha. El cobro de la cita, quien gestiona la agenda
-                        // (también la secretaria); el de la atención, quien la ve o la registra.
+                        .requestMatchers("/api/v1/rips/pacientes/**").hasAuthority(Permiso.RIPS_PACIENTE.name())
+                        // La lista de pagadores la usan la cita y la ficha. El cobro de la cita, quien recibe o factura
+                        // (no el médico); el de la atención, quien la ve o la registra.
                         .requestMatchers(HttpMethod.GET, "/api/v1/rips/pagadores").hasAuthority(TokenService.MIEMBRO)
                         .requestMatchers("/api/v1/rips/cobros/citas/**", "/api/v1/rips/cobros/citas")
-                                .hasAuthority(Permiso.AGENDA_GESTIONAR.name())
+                                .hasAuthority(Permiso.RIPS_PACIENTE.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/rips/cobros/atenciones/**").hasAuthority(Permiso.HISTORIA_VER.name())
                         .requestMatchers("/api/v1/rips/cobros/atenciones/**").hasAuthority(Permiso.HISTORIA_REGISTRAR.name())
                         .requestMatchers("/api/v1/rips/**").hasAuthority(Permiso.RIPS_GESTIONAR.name())
