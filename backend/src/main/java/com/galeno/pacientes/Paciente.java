@@ -93,7 +93,68 @@ public class Paciente {
     @Column(name = "responsable_telefono", length = 30)
     private String responsableTelefono;
 
+    /** Atención prioritaria (la agenda lo avisa en la cita). Gestante solo aplica a sexo F. */
+    @Column(nullable = false)
+    private boolean gestante;
+
+    @Column(nullable = false)
+    private boolean discapacidad;
+
+    /** Evidencia de la autorización de tratamiento de datos (Ley 1581 de 2012): cuándo, quién la registró y cómo. */
+    @Column(name = "autorizacion_datos_en")
+    private Instant autorizacionDatosEn;
+
+    @Column(name = "autorizacion_datos_por")
+    private UUID autorizacionDatosPor;
+
+    @Column(name = "autorizacion_datos_medio", length = 10)
+    private String autorizacionDatosMedio;
+
+    /** Versión del texto de autorización que se le mostró o leyó al paciente. */
+    @Column(name = "autorizacion_datos_texto", length = 10)
+    private String autorizacionDatosTexto;
+
     protected Paciente() {
+    }
+
+    void actualizarPrioridad(boolean gestante, boolean discapacidad) {
+        this.gestante = gestante && "F".equals(sexo);
+        this.discapacidad = discapacidad;
+    }
+
+    /** Solo la primera vez: la evidencia de una autorización no se reescribe. */
+    void registrarAutorizacionDatos(UUID por, String medio, String versionTexto) {
+        if (autorizacionDatosEn != null) {
+            return;
+        }
+        this.autorizacionDatosEn = Instant.now();
+        this.autorizacionDatosPor = por;
+        this.autorizacionDatosMedio = medio;
+        this.autorizacionDatosTexto = versionTexto;
+    }
+
+    public boolean isGestante() {
+        return gestante;
+    }
+
+    public boolean isDiscapacidad() {
+        return discapacidad;
+    }
+
+    public Instant getAutorizacionDatosEn() {
+        return autorizacionDatosEn;
+    }
+
+    public UUID getAutorizacionDatosPor() {
+        return autorizacionDatosPor;
+    }
+
+    public String getAutorizacionDatosMedio() {
+        return autorizacionDatosMedio;
+    }
+
+    public String getAutorizacionDatosTexto() {
+        return autorizacionDatosTexto;
     }
 
     public Paciente(String tipoDocumento, String numeroDocumento) {

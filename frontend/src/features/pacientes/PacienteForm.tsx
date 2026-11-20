@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { api, ApiError, unwrap, type Schemas } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 
@@ -21,6 +22,16 @@ const NV: [string, string] = ["NV", "Certificado de nacido vivo (NV)"];
 const SEP = String.raw`[\s\(\)\.\-]*`;
 const PATRON_TELEFONO = String.raw`(\+?57)?` + SEP + "(3(" + SEP + String.raw`\d){9}|6` + SEP + "0(" + SEP + String.raw`\d){8})` + SEP;
 const AYUDA_TELEFONO = "Celular de 10 dígitos que empiece por 3, o fijo de 10 que empiece por 60";
+
+/**
+ * Texto de la autorización de tratamiento de datos (Ley 1581 de 2012). Si cambia, sube también
+ * PacienteService.TEXTO_AUTORIZACION en el servidor: cada paciente guarda la versión que autorizó.
+ */
+const TEXTO_AUTORIZACION = "El paciente (o su representante) autoriza al consultorio a tratar sus datos personales y de "
+  + "salud para prestarle la atención, llevar su historia clínica, facturar y reportar el RIPS, y para avisarle de sus "
+  + "citas, conforme a la Ley 1581 de 2012. Puede conocer, actualizar, rectificar y suprimir sus datos y revocar la "
+  + "autorización, salvo lo que la ley obliga a conservar (como la historia clínica).";
+const MEDIOS_AUTORIZACION: [string, string][] = [["ESCRITA", "Firmada en papel"], ["VERBAL", "Verbal, en el consultorio o por teléfono"], ["DIGITAL", "Aceptada en un formulario digital"]];
 
 const PARENTESCOS = ["Madre", "Padre", "Abuela", "Abuelo", "Tía", "Tío", "Hermana", "Hermano", "Tutor legal", "Acudiente"];
 
@@ -54,7 +65,7 @@ const VACIO: PacienteRequest = {
   tipoDocumento: "CC", numeroDocumento: "", nombres: "", apellidos: "", fechaNacimiento: "", sexo: "F",
   telefono: "", email: "", alergias: "", antecedentes: "", sinCorreosCitas: false, sinCorreo: false,
   responsableNombre: "", responsableParentesco: "", responsableTipoDocumento: "CC", responsableNumeroDocumento: "",
-  responsableTelefono: "",
+  responsableTelefono: "", gestante: false, discapacidad: false, autorizaDatos: false, medioAutorizacion: "",
 };
 
 function desde(p: Paciente): PacienteRequest {
@@ -69,6 +80,7 @@ function desde(p: Paciente): PacienteRequest {
     responsableNumeroDocumento: p.responsable?.numeroDocumento ?? "", responsableTelefono: p.responsable?.telefono ?? "",
     // Sin marcar aunque no tenga correo: al editar se pide el correo o que se confirme que no tiene
     sinCorreo: false,
+    gestante: !!p.gestante, discapacidad: !!p.discapacidad, autorizaDatos: false, medioAutorizacion: "",
   };
 }
 
@@ -105,10 +117,20 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
   const errorDocumento = paciente ? null : errorNumero(form.tipoDocumento, form.numeroDocumento);
   const errorDocumentoEdad = paciente ? null : errorEdad(form.tipoDocumento, edad);
   const tipos = form.tipoDocumento === "NV" ? [...TIPOS_DOCUMENTO, NV] : TIPOS_DOCUMENTO;
+  // Antes de registrar, se busca el documento (al salir del campo): si ya existe, se ofrece ese paciente
+  const [documentoBuscado, setDocumentoBuscado] = useState("");
+  const existente = useQuery({
+    queryKey: ["pacientes", documentoBuscado, "existente"],
+    enabled: !paciente && documentoBuscado.length >= 3,
+    queryFn: async () => unwrap(await api.GET("/api/v1/pacientes", { params: { query: { q: documentoBuscado, size: 10 } } })),
+    select: (r) => r.items?.filter((p) => p.numeroDocumento === documentoBuscado) ?? [],
+  });
+  const yaAutorizo = paciente?.autorizacionDatos;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (errorDocumento || errorDocumentoEdad) return;
+    if (!paciente && existente.data?.some((p) => p.tipoDocumento === form.tipoDocumento)) return;
     // Los campos opcionales vacíos se envían como ausentes, no como cadenas vacías; sin responsable, ninguno de sus
     // campos (el tipo de documento trae CC por defecto)
     const sinResponsable = !form.responsableNombre?.trim();
@@ -127,8 +149,24 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
       <Campo label="Número de documento" requerido error={errores.numeroDocumento ?? errorDocumento ?? undefined}>
         <input value={form.numeroDocumento} onChange={set("numeroDocumento")} required disabled={!!paciente}
           inputMode={form.tipoDocumento === "CC" || form.tipoDocumento === "TI" ? "numeric" : undefined}
+          onBlur={() => setDocumentoBuscado(form.numeroDocumento.trim())}
           aria-invalid={!!errorDocumento} />
       </Campo>
+      {!paciente && !!existente.data?.length && (
+        <div className="alert alert-warn wide stack-sm" role="status">
+          <span>Ya hay {existente.data.length === 1 ? "un paciente" : "pacientes"} con el documento {documentoBuscado}:</span>
+          {existente.data.map((p) => (
+            <div key={p.id} className="row">
+              <strong className="grow">{p.tipoDocumento} {p.numeroDocumento} · {p.nombres} {p.apellidos}</strong>
+              <button type="button" className="btn btn-secondary" onClick={() => onGuardado(p)}>Usar este paciente</button>
+              <Link to={`/pacientes/${p.id}`}>Ver ficha</Link>
+            </div>
+          ))}
+          {existente.data.some((p) => p.tipoDocumento === form.tipoDocumento)
+            ? <small>No se puede registrar otra vez con el mismo tipo y número.</small>
+            : <small>Si es la misma persona con otro tipo de documento (por ejemplo, la TI que pasó a CC), use su ficha.</small>}
+        </div>
+      )}
       <Campo label="Nombres" requerido error={errores.nombres}><input value={form.nombres} onChange={set("nombres")} required autoFocus={!!paciente} /></Campo>
       <Campo label="Apellidos" requerido error={errores.apellidos}><input value={form.apellidos} onChange={set("apellidos")} required /></Campo>
       <Campo label="Fecha de nacimiento" requerido error={errores.fechaNacimiento ?? errorDocumentoEdad ?? undefined}><input type="date" value={form.fechaNacimiento} onChange={set("fechaNacimiento")} required /></Campo>
@@ -165,6 +203,19 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
           No enviarle correos sobre sus citas (lo pidió el paciente)
         </label>
       )}
+      <div className="wide row">
+        {form.sexo === "F" && (
+          <label className="check">
+            <input type="checkbox" checked={!!form.gestante} onChange={(e) => setForm({ ...form, gestante: e.target.checked })} />
+            Gestante
+          </label>
+        )}
+        <label className="check">
+          <input type="checkbox" checked={!!form.discapacidad} onChange={(e) => setForm({ ...form, discapacidad: e.target.checked })} />
+          Persona con discapacidad
+        </label>
+        <small className="muted">Atención prioritaria: la agenda lo avisa en la cita.</small>
+      </div>
       {menor && (
         <fieldset className="wide form-grid">
           <legend>Responsable del menor <span className="req">*</span></legend>
@@ -193,6 +244,31 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
       )}
       {clinico && <Campo label="Alergias (separadas por coma)" error={errores.alergias} wide><input value={form.alergias} onChange={set("alergias")} /></Campo>}
       {clinico && <Campo label="Antecedentes" error={errores.antecedentes} wide><textarea rows={2} value={form.antecedentes} onChange={set("antecedentes")} /></Campo>}
+      {yaAutorizo ? (
+        <p className="small muted wide">
+          Autorizó el tratamiento de datos el {new Date(yaAutorizo.en!).toLocaleDateString("es-CO")}
+          {" "}({MEDIOS_AUTORIZACION.find(([m]) => m === yaAutorizo.medio)?.[1].toLowerCase() ?? yaAutorizo.medio}).
+        </p>
+      ) : (
+        <fieldset className="wide stack-sm">
+          <legend>Tratamiento de datos personales {!paciente && <span className="req">*</span>}</legend>
+          {paciente && <p className="alert alert-warn small">Este paciente no tiene registrada la autorización de tratamiento de datos.</p>}
+          <p className="small">{TEXTO_AUTORIZACION}</p>
+          <label className="check">
+            <input type="checkbox" checked={!!form.autorizaDatos} required={!paciente}
+              onChange={(e) => setForm({ ...form, autorizaDatos: e.target.checked })} />
+            El paciente (o su representante) leyó o escuchó este texto y autoriza
+          </label>
+          {form.autorizaDatos && (
+            <Campo label="¿Cómo autorizó?" requerido error={errores.medioAutorizacionIndicado ?? errores.medioAutorizacion}>
+              <select value={form.medioAutorizacion} onChange={set("medioAutorizacion")} required>
+                <option value="">Seleccione…</option>
+                {MEDIOS_AUTORIZACION.map(([m, t]) => <option key={m} value={m}>{t}</option>)}
+              </select>
+            </Campo>
+          )}
+        </fieldset>
+      )}
       {guardar.error && <p className="alert alert-error wide">{guardar.error.message}</p>}
       <div className="wide row">
         <button className="btn" disabled={guardar.isPending}>{guardar.isPending ? "Guardando…" : paciente ? "Guardar cambios" : "Guardar paciente"}</button>

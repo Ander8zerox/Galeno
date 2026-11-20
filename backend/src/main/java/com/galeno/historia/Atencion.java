@@ -152,6 +152,12 @@ public class Atencion {
     @Column(name = "acompanante_parentesco", length = 40)
     private String acompananteParentesco;
 
+    @Column(name = "acompanante_tipo_documento", length = 2)
+    private String acompananteTipoDocumento;
+
+    @Column(name = "acompanante_numero_documento", length = 30)
+    private String acompananteNumeroDocumento;
+
     @Column(name = "lote_importacion_id", updatable = false)
     private UUID loteImportacionId;
 
@@ -244,10 +250,12 @@ public class Atencion {
         this.actualizadaEn = Instant.now();
     }
 
-    void registrarAcompanante(String nombre, String parentesco) {
+    void registrarAcompanante(String nombre, String parentesco, String tipoDocumento, String numeroDocumento) {
         exigirBorrador();
         this.acompananteNombre = nombre == null || nombre.isBlank() ? null : nombre.strip();
         this.acompananteParentesco = parentesco == null || parentesco.isBlank() ? null : parentesco.strip();
+        this.acompananteTipoDocumento = tipoDocumento == null || tipoDocumento.isBlank() ? null : tipoDocumento.strip();
+        this.acompananteNumeroDocumento = numeroDocumento == null || numeroDocumento.isBlank() ? null : numeroDocumento.strip();
         this.actualizadaEn = Instant.now();
     }
 
@@ -409,6 +417,14 @@ public class Atencion {
 
     public String getAcompananteParentesco() {
         return acompananteParentesco;
+    }
+
+    public String getAcompananteTipoDocumento() {
+        return acompananteTipoDocumento;
+    }
+
+    public String getAcompananteNumeroDocumento() {
+        return acompananteNumeroDocumento;
     }
 
     public boolean isIncapacidad() {

@@ -5,7 +5,7 @@ import { api, unwrap, type Schemas } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 import { PacienteForm } from "../pacientes/PacienteForm";
 import { useVigiaCorreo } from "../pacientes/VigiaCorreo";
-import { aIso, hora } from "./tiempo";
+import { aIso, fechaValida, hora, hoyEn } from "./tiempo";
 
 interface Cupo {
   inicio?: string;
@@ -41,6 +41,12 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
   const [paciente, setPaciente] = useState<PacienteElegido | null>(null);
   const [registrando, setRegistrando] = useState(false);
   const [motivo, setMotivo] = useState("");
+  const [motivoSobrecupo, setMotivoSobrecupo] = useState("");
+  // Oportunidad (Res. 1552 de 2013): la fecha que el paciente quería; vacía = lo antes posible
+  const [fechaDeseada, setFechaDeseada] = useState("");
+  const hoy = hoyEn(zona);
+  const errorDeseada = fechaDeseada && (!fechaValida(fechaDeseada) || fechaDeseada < hoy)
+    ? "La fecha deseada no puede ser anterior a hoy" : null;
   const [horaManual, setHoraManual] = useState("07:00");
   const [duracionSobrecupo, setDuracionSobrecupo] = useState(20);
   const seguidos = inicio ? duracionesPosibles(inicio, cupos ?? []) : [];
@@ -69,6 +75,8 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
           duracionMinutos: sobrecupo || (duracion && duracion !== cupo) ? duracion : undefined,
           motivo: motivo || undefined,
           sobrecupo,
+          motivoSobrecupo: sobrecupo ? motivoSobrecupo.trim() : undefined,
+          fechaDeseada: fechaDeseada || undefined,
         },
       })),
     onSuccess: (cita) => {
@@ -81,7 +89,7 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (paciente) agendar.mutate();
+    if (paciente && !errorDeseada) agendar.mutate();
   }
 
   const titulo = sobrecupo ? "Agendar sobrecupo" : `Agendar a las ${hora(inicio!, zona)}`;
@@ -116,6 +124,10 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
             <select value={duracionSobrecupo} onChange={(e) => setDuracionSobrecupo(Number(e.target.value))}>
               {DURACIONES_SOBRECUPO.map((d) => <option key={d} value={d}>{duracionTexto(d)}</option>)}
             </select>
+          </label>
+          <label className="wide"><span>Motivo del sobrecupo <span className="req">*</span></span>
+            <input value={motivoSobrecupo} onChange={(e) => setMotivoSobrecupo(e.target.value)} required maxLength={300}
+              placeholder="Urgencia, control postoperatorio, paciente que viene de lejos…" />
           </label>
         </div>
       )}
@@ -169,6 +181,12 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
         </div>
       )}
       <label>Motivo (opcional)<input value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Control, primera vez…" /></label>
+      <label>Fecha que el paciente deseaba
+        <input type="date" value={fechaDeseada} min={hoy} onChange={(e) => setFechaDeseada(e.target.value)} />
+        <small className={errorDeseada ? "field-error" : "muted"}>
+          {errorDeseada ?? "Vacía: lo antes posible. La fecha de la solicitud (hoy) se guarda sola, para medir la espera."}
+        </small>
+      </label>
       {agendar.error && <p className="alert alert-error">{agendar.error.message}</p>}
       <div><button className="btn" disabled={!paciente || agendar.isPending}>{agendar.isPending ? "Agendando…" : "Agendar cita"}</button></div>
     </form>

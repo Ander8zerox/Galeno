@@ -138,7 +138,8 @@ public class HistoriaService {
                 paciente.getAntecedentes());
         // A un menor lo suele acompañar su responsable: arranca con él y el médico lo cambia si vino otra persona
         if (paciente.edad() < 18 && paciente.getResponsableNombre() != null) {
-            nueva.registrarAcompanante(paciente.getResponsableNombre(), paciente.getResponsableParentesco());
+            nueva.registrarAcompanante(paciente.getResponsableNombre(), paciente.getResponsableParentesco(),
+                    paciente.getResponsableTipoDocumento(), paciente.getResponsableNumeroDocumento());
         }
         // Antes de guardarla: así nace con la consulta y con la versión que recibe la pantalla
         if (modulos.activo(Modulo.RIPS)) {
@@ -181,8 +182,10 @@ public class HistoriaService {
         if (incapacidad != null) {
             atencion.marcarIncapacidad(incapacidad);
         }
-        if (acompanante != null && (acompanante.nombre() != null || acompanante.parentesco() != null)) {
-            atencion.registrarAcompanante(acompanante.nombre(), acompanante.parentesco());
+        if (acompanante != null && (acompanante.nombre() != null || acompanante.parentesco() != null
+                || acompanante.tipoDocumento() != null || acompanante.numeroDocumento() != null)) {
+            atencion.registrarAcompanante(acompanante.nombre(), acompanante.parentesco(), acompanante.tipoDocumento(),
+                    acompanante.numeroDocumento());
         }
         atenciones.flush(); // incrementa la versión antes de responder
         return vista(atencion);
@@ -215,8 +218,10 @@ public class HistoriaService {
                 .orElseThrow(() -> ApiProblem.conflict("Para firmar debe tener su registro médico en el perfil"));
         if (!atencion.firmada()) {
             if (pacientes.get(atencion.getPacienteId()).edad() < 18 && (atencion.getAcompananteNombre() == null
-                    || atencion.getAcompananteParentesco() == null)) {
-                throw ApiProblem.badRequest("Para firmar la atención de un menor de edad, registre quién lo acompaña y su parentesco");
+                    || atencion.getAcompananteParentesco() == null || atencion.getAcompananteTipoDocumento() == null
+                    || atencion.getAcompananteNumeroDocumento() == null)) {
+                throw ApiProblem.badRequest("Para firmar la atención de un menor de edad, registre quién lo acompaña: "
+                        + "nombre, documento y parentesco");
             }
             List<String> faltan = formatos.faltantesParaFirmar(atencionId);
             if (!faltan.isEmpty()) {
@@ -712,7 +717,8 @@ public class HistoriaService {
                                 List<DiagnosticoVista> diagnosticos, List<ProcedimientoVista> procedimientos,
                                 boolean incapacidad, List<NotaVista> notas, List<DocumentoVista> documentos,
                                 List<FormatoDiligenciado> formatos, String acompananteNombre,
-                                String acompananteParentesco) {
+                                String acompananteParentesco, String acompananteTipoDocumento,
+                                String acompananteNumeroDocumento) {
 
         static AtencionVista de(Atencion a, boolean propia, List<NotaVista> notas, List<DocumentoVista> documentos,
                                 List<FormatoDiligenciado> formatos) {
@@ -725,12 +731,13 @@ public class HistoriaService {
                     a.getDiagnosticos().stream().map(d -> new DiagnosticoVista(d.getCodigoCie10(), d.getDescripcion(),
                             d.isPrincipal(), d.getTipo())).toList(),
                     a.getProcedimientos().stream().map(ProcedimientoVista::de).toList(), a.isIncapacidad(), notas,
-                    documentos, formatos, a.getAcompananteNombre(), a.getAcompananteParentesco());
+                    documentos, formatos, a.getAcompananteNombre(), a.getAcompananteParentesco(),
+                    a.getAcompananteTipoDocumento(), a.getAcompananteNumeroDocumento());
         }
     }
 
-    /** Quién acompaña al paciente en la atención; campos nulos: no cambian. */
-    public record Acompanante(String nombre, String parentesco) {
+    /** Quién acompaña al paciente en la atención; todos nulos: no cambia. */
+    public record Acompanante(String nombre, String parentesco, String tipoDocumento, String numeroDocumento) {
     }
 
     public enum TipoEvento {

@@ -60,7 +60,7 @@ public class AgendaController {
     public Horario actualizarHorario(@PathVariable UUID medicoId, @Valid @RequestBody ActualizarHorario r) {
         List<Bloque> bloques = r.bloques().stream()
                 .map(b -> new Bloque(b.diaSemana(), b.horaInicio(), b.horaFin())).toList();
-        return agenda.actualizarHorario(medicoId, r.duracionMinutos(), bloques, r.atiendeFestivos());
+        return agenda.actualizarHorario(medicoId, r.duracionMinutos(), bloques, r.atiendeFestivos(), r.maxSobrecuposDia());
     }
 
     @GetMapping("/festivos")
@@ -104,17 +104,17 @@ public class AgendaController {
     @ResponseStatus(HttpStatus.CREATED)
     public CitaVista agendar(@Valid @RequestBody NuevaCita r) {
         return agenda.agendar(r.medicoId(), r.pacienteId(), r.inicio().toInstant(), r.duracionMinutos(), r.motivo(),
-                Boolean.TRUE.equals(r.sobrecupo()));
+                Boolean.TRUE.equals(r.sobrecupo()), r.motivoSobrecupo(), r.fechaDeseada(), null);
     }
 
     @PutMapping("/citas/{citaId}/horario")
     public CitaVista reprogramar(@PathVariable UUID citaId, @Valid @RequestBody Reprogramar r) {
-        return agenda.reprogramar(citaId, r.inicio().toInstant(), Boolean.TRUE.equals(r.sobrecupo()));
+        return agenda.reprogramar(citaId, r.inicio().toInstant(), Boolean.TRUE.equals(r.sobrecupo()), r.motivoSobrecupo());
     }
 
     @PutMapping("/citas/{citaId}/estado")
     public CitaVista cambiarEstado(@PathVariable UUID citaId, @Valid @RequestBody CambiarEstado r) {
-        return agenda.cambiarEstado(citaId, r.estado(), r.motivoCancelacion());
+        return agenda.cambiarEstado(citaId, r.estado(), r.motivoCancelacion(), r.justificacionSinRips());
     }
 
     @GetMapping("/pacientes/{pacienteId}/proximas")
@@ -192,21 +192,29 @@ public class AgendaController {
     public record AsignarEspera(@NotNull UUID medicoId, @NotNull OffsetDateTime inicio) {
     }
 
-    /** @param atiendeFestivos si se omite, se queda como estaba */
+    /**
+     * @param atiendeFestivos si se omite, se queda como estaba
+     * @param maxSobrecuposDia tope de sobrecupos por día; null: sin tope
+     */
     public record ActualizarHorario(@Min(5) @Max(240) int duracionMinutos,
-                                    @NotNull @Size(max = 50) List<@Valid BloqueRequest> bloques, Boolean atiendeFestivos) {
+                                    @NotNull @Size(max = 50) List<@Valid BloqueRequest> bloques, Boolean atiendeFestivos,
+                                    @Min(0) @Max(50) Integer maxSobrecuposDia) {
     }
 
     public record BloqueRequest(@Min(1) @Max(7) int diaSemana, @NotNull LocalTime horaInicio, @NotNull LocalTime horaFin) {
     }
 
     public record NuevaCita(@NotNull UUID medicoId, @NotNull UUID pacienteId, @NotNull OffsetDateTime inicio,
-                            @Min(5) @Max(240) Integer duracionMinutos, @Size(max = 300) String motivo, Boolean sobrecupo) {
+                            @Min(5) @Max(240) Integer duracionMinutos, @Size(max = 300) String motivo, Boolean sobrecupo,
+                            @Size(max = 300) String motivoSobrecupo, LocalDate fechaDeseada) {
     }
 
-    public record Reprogramar(@NotNull OffsetDateTime inicio, Boolean sobrecupo) {
+    /** @param motivoSobrecupo obligatorio con sobrecupo */
+    public record Reprogramar(@NotNull OffsetDateTime inicio, Boolean sobrecupo, @Size(max = 300) String motivoSobrecupo) {
     }
 
-    public record CambiarEstado(@NotNull Cita.Estado estado, @Size(max = 300) String motivoCancelacion) {
+    /** @param justificacionSinRips para confirmar sin el pagador o el tipo de usuario del RIPS */
+    public record CambiarEstado(@NotNull Cita.Estado estado, @Size(max = 300) String motivoCancelacion,
+                                @Size(max = 300) String justificacionSinRips) {
     }
 }

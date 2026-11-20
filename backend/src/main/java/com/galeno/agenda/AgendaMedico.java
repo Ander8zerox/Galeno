@@ -45,6 +45,10 @@ public class AgendaMedico {
     @Column(name = "atiende_festivos", nullable = false)
     private boolean atiendeFestivos;
 
+    /** Cuántos sobrecupos se le agendan al día como máximo; null: sin tope. */
+    @Column(name = "max_sobrecupos_dia")
+    private Integer maxSobrecuposDia;
+
     @Column(name = "actualizado_en", nullable = false)
     private Instant actualizadoEn;
 
@@ -64,12 +68,17 @@ public class AgendaMedico {
         return agenda;
     }
 
-    void actualizar(int duracionMinutos, List<Bloque> nuevos, boolean atiendeFestivos) {
+    void actualizar(int duracionMinutos, List<Bloque> nuevos, boolean atiendeFestivos, Integer maxSobrecuposDia) {
+        this.maxSobrecuposDia = maxSobrecuposDia;
         this.duracionMinutos = duracionMinutos;
         this.bloques.clear();
         this.bloques.addAll(nuevos);
         this.atiendeFestivos = atiendeFestivos;
         this.actualizadoEn = Instant.now();
+    }
+
+    public Integer getMaxSobrecuposDia() {
+        return maxSobrecuposDia;
     }
 
     public boolean isAtiendeFestivos() {

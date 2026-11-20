@@ -36,7 +36,16 @@ public record PacienteRequest(
         @Size(max = 40) String responsableParentesco,
         @Pattern(regexp = TiposDocumento.PATRON, message = "Tipo de documento no válido") String responsableTipoDocumento,
         @Size(max = 30) String responsableNumeroDocumento,
-        @Size(max = 30) @Pattern(regexp = Telefonos.PATRON, message = Telefonos.MENSAJE) String responsableTelefono) {
+        @Size(max = 30) @Pattern(regexp = Telefonos.PATRON, message = Telefonos.MENSAJE) String responsableTelefono,
+        /** Prioridad en la atención; null: se queda como estaba. Gestante solo aplica a sexo F. */
+        Boolean gestante,
+        Boolean discapacidad,
+        /**
+         * El paciente autorizó el tratamiento de sus datos (Ley 1581 de 2012). Obligatorio al crear; al editar, true
+         * registra la autorización si aún no estaba (la ya registrada no cambia).
+         */
+        Boolean autorizaDatos,
+        @Pattern(regexp = "ESCRITA|VERBAL|DIGITAL", message = "Medio de autorización no válido") String medioAutorizacion) {
 
     /** El correo que se guarda: ninguno si el paciente no tiene. */
     public String emailAGuardar() {
@@ -57,6 +66,12 @@ public record PacienteRequest(
     @AssertTrue(message = "Para un menor de edad, escriba el nombre, el parentesco y el teléfono de su responsable")
     public boolean isResponsableCompleto() {
         return !esMenor() || (lleno(responsableNombre) && lleno(responsableParentesco) && lleno(responsableTelefono));
+    }
+
+    @JsonIgnore
+    @AssertTrue(message = "Indique cómo autorizó el paciente el tratamiento de datos (escrita, verbal o digital)")
+    public boolean isMedioAutorizacionIndicado() {
+        return !Boolean.TRUE.equals(autorizaDatos) || lleno(medioAutorizacion);
     }
 
     private static boolean lleno(String s) {

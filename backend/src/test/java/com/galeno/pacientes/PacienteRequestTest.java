@@ -23,12 +23,13 @@ class PacienteRequestTest {
 
     private static PacienteRequest request(String telefono, String email, Boolean sinCorreo) {
         return new PacienteRequest("CC", "1000000001", "Ana", "Prueba", LocalDate.of(1990, 1, 1), "F", telefono, email,
-                null, null, null, sinCorreo, null, null, null, null, null);
+                null, null, null, sinCorreo, null, null, null, null, null, null, null, true, "ESCRITA");
     }
 
     private static PacienteRequest menor(String responsableNombre, String responsableTelefono) {
         return new PacienteRequest("TI", "1000000001", "Sofía", "Prueba", LocalDate.now().minusYears(15), "F",
-                "3001234567", null, null, null, null, true, responsableNombre, "Madre", "CC", "52000111", responsableTelefono);
+                "3001234567", null, null, null, null, true, responsableNombre, "Madre", "CC", "52000111", responsableTelefono,
+                null, null, true, "VERBAL");
     }
 
     private static Set<String> camposConError(PacienteRequest r) {
