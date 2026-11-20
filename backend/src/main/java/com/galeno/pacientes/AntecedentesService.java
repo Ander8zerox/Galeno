@@ -152,7 +152,8 @@ public class AntecedentesService {
     }
 
     private static void exigirPermiso() {
-        if (!AuthUser.current().puede(Permiso.HISTORIA_VER)) {
+        AuthUser yo = AuthUser.current();
+        if (!yo.puede(Permiso.HISTORIA_VER) && !yo.puede(Permiso.PRECONSULTA_REGISTRAR)) {
             throw ApiProblem.forbidden("Las alergias y los antecedentes son datos clínicos");
         }
     }

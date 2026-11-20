@@ -11,10 +11,15 @@ public enum Rol {
             Permiso.IMPORTAR_HISTORIAS, Permiso.SUSCRIPCION_GESTIONAR, Permiso.FORMATOS_GESTIONAR,
             Permiso.MODULOS_GESTIONAR, Permiso.RIPS_GESTIONAR, Permiso.RIPS_PACIENTE)),
     MEDICO(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.HISTORIA_VER, Permiso.HISTORIA_REGISTRAR, Permiso.FORMULA_REDACTAR,
-            Permiso.FORMULA_FIRMAR, Permiso.IA_DIAGNOSTICO, Permiso.AGENDA_GESTIONAR)),
+            Permiso.FORMULA_FIRMAR, Permiso.IA_DIAGNOSTICO, Permiso.AGENDA_GESTIONAR, Permiso.PRECONSULTA_REGISTRAR)),
     SECRETARIO(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR, Permiso.RIPS_PACIENTE)),
     /** RIPS, lotes, notas, pagadores y precios. Se suma a otro rol (p. ej. la secretaria que factura). */
-    FACTURACION(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.RIPS_GESTIONAR, Permiso.RIPS_PACIENTE));
+    FACTURACION(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.RIPS_GESTIONAR, Permiso.RIPS_PACIENTE)),
+    /**
+     * Auxiliar o quien toma la preconsulta: signos vitales, motivo, medicamentos, alergias y antecedentes. Ve la agenda
+     * de todos los médicos; no ve la historia clínica ni firma.
+     */
+    PRECONSULTA(EnumSet.of(Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR, Permiso.PRECONSULTA_REGISTRAR));
 
     private final Set<Permiso> permisos;
 

@@ -24,6 +24,15 @@ class RolTest {
     }
 
     @Test
+    void preconsultaRegistraSinVerLaHistoriaNiFacturar() {
+        assertThat(Rol.permisosDe(List.of(Rol.PRECONSULTA)))
+                .contains(Permiso.PRECONSULTA_REGISTRAR, Permiso.AGENDA_GESTIONAR)
+                .doesNotContain(Permiso.HISTORIA_VER, Permiso.HISTORIA_REGISTRAR, Permiso.RIPS_GESTIONAR,
+                        Permiso.FORMULA_FIRMAR);
+        assertThat(Rol.permisosDe(List.of(Rol.MEDICO))).contains(Permiso.PRECONSULTA_REGISTRAR);
+    }
+
+    @Test
     void facturacionGestionaElRipsSinDatosClinicos() {
         assertThat(Rol.permisosDe(List.of(Rol.FACTURACION)))
                 .contains(Permiso.RIPS_GESTIONAR, Permiso.RIPS_PACIENTE)

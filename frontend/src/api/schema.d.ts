@@ -196,6 +196,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/preconsulta/citas/{citaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["deCita"];
+        put: operations["guardar_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plataforma/planes/{codigo}": {
         parameters: {
             query?: never;
@@ -380,7 +396,7 @@ export interface paths {
             cookie?: never;
         };
         get: operations["obtener_1"];
-        put: operations["guardar_1"];
+        put: operations["guardar_2"];
         post?: never;
         delete: operations["eliminarBorrador"];
         options?: never;
@@ -2882,6 +2898,54 @@ export interface components {
             registroSiras?: string;
             pideSiras?: boolean;
         };
+        PreconsultaRequest: {
+            motivoConsulta?: string;
+            /** Format: int32 */
+            taSistolica?: number;
+            /** Format: int32 */
+            taDiastolica?: number;
+            /** Format: int32 */
+            frecuenciaCardiaca?: number;
+            /** Format: int32 */
+            frecuenciaRespiratoria?: number;
+            temperatura?: number;
+            /** Format: int32 */
+            saturacionO2?: number;
+            pesoKg?: number;
+            tallaCm?: number;
+            medicamentosActuales?: string;
+            observaciones?: string;
+        };
+        Datos: {
+            motivoConsulta?: string;
+            /** Format: int32 */
+            taSistolica?: number;
+            /** Format: int32 */
+            taDiastolica?: number;
+            /** Format: int32 */
+            frecuenciaCardiaca?: number;
+            /** Format: int32 */
+            frecuenciaRespiratoria?: number;
+            temperatura?: number;
+            /** Format: int32 */
+            saturacionO2?: number;
+            pesoKg?: number;
+            tallaCm?: number;
+            medicamentosActuales?: string;
+            observaciones?: string;
+        };
+        Vista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            citaId?: string;
+            /** Format: uuid */
+            pacienteId?: string;
+            datos?: components["schemas"]["Datos"];
+            registradaPor?: string;
+            /** Format: date-time */
+            actualizadaEn?: string;
+        };
         CambioPlan: {
             nombre: string;
             /** Format: int64 */
@@ -3375,7 +3439,7 @@ export interface components {
             activo?: boolean;
         };
         ActualizarMiembro: {
-            roles: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
+            roles: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION" | "PRECONSULTA")[];
             /** @enum {string} */
             estado: "ACTIVA" | "SUSPENDIDA";
             registroMedico?: string;
@@ -3492,6 +3556,7 @@ export interface components {
             /** Format: uuid */
             tipoCitaId?: string;
             tipoCitaNombre?: string;
+            preconsulta?: boolean;
         };
         CambiarEstado: {
             /** @enum {string} */
@@ -3580,7 +3645,7 @@ export interface components {
             /** Format: uuid */
             consultorioId?: string;
             nombre?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION" | "PRECONSULTA")[];
         };
         SesionResponse: {
             accessToken?: string;
@@ -3760,7 +3825,7 @@ export interface components {
         InvitacionPublica: {
             consultorioNombre?: string;
             email?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION" | "PRECONSULTA")[];
             cuentaExistente?: boolean;
             requiereRegistroMedico?: boolean;
         };
@@ -3861,14 +3926,14 @@ export interface components {
         Invitar: {
             /** Format: email */
             email: string;
-            roles: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
+            roles: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION" | "PRECONSULTA")[];
             registroMedico?: string;
         };
         InvitacionCreada: {
             /** Format: uuid */
             id?: string;
             email?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION" | "PRECONSULTA")[];
             /** Format: date-time */
             expiraEn?: string;
             enlace?: string;
@@ -4233,7 +4298,7 @@ export interface components {
             usuarioId?: string;
             nombre?: string;
             email?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION" | "PRECONSULTA")[];
             /** @enum {string} */
             estado?: "ACTIVA" | "SUSPENDIDA";
             registroMedico?: string;
@@ -4243,7 +4308,7 @@ export interface components {
             /** Format: uuid */
             id?: string;
             email?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION" | "PRECONSULTA")[];
             /** Format: date-time */
             expiraEn?: string;
             /** Format: date-time */
@@ -4271,8 +4336,8 @@ export interface components {
             zonaHoraria?: string;
             /** Format: uuid */
             membresiaId?: string;
-            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION")[];
-            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR" | "FORMATOS_GESTIONAR" | "MODULOS_GESTIONAR" | "RIPS_GESTIONAR" | "RIPS_PACIENTE")[];
+            roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION" | "PRECONSULTA")[];
+            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR" | "FORMATOS_GESTIONAR" | "MODULOS_GESTIONAR" | "RIPS_GESTIONAR" | "RIPS_PACIENTE" | "PRECONSULTA_REGISTRAR")[];
             /** Format: int32 */
             totalConsultorios?: number;
             iaDisponible?: boolean;
@@ -4298,25 +4363,25 @@ export interface components {
             float?: boolean;
             number?: boolean;
             missingNode?: boolean;
+            integralNumber?: boolean;
+            bigDecimal?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            valueNode?: boolean;
-            bigDecimal?: boolean;
-            integralNumber?: boolean;
             container?: boolean;
             bigInteger?: boolean;
-            floatingPointNumber?: boolean;
-            int?: boolean;
+            valueNode?: boolean;
+            object?: boolean;
+            pojo?: boolean;
+            short?: boolean;
+            string?: boolean;
             long?: boolean;
+            double?: boolean;
             /** @deprecated */
             textual?: boolean;
-            binary?: boolean;
-            object?: boolean;
-            string?: boolean;
-            double?: boolean;
             boolean?: boolean;
-            short?: boolean;
-            pojo?: boolean;
+            int?: boolean;
+            binary?: boolean;
+            floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -4898,6 +4963,54 @@ export interface operations {
             };
         };
     };
+    deCita: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                citaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Vista"];
+                };
+            };
+        };
+    };
+    guardar_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                citaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreconsultaRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Vista"];
+                };
+            };
+        };
+    };
     actualizarPlan: {
         parameters: {
             query?: never;
@@ -5293,7 +5406,7 @@ export interface operations {
             };
         };
     };
-    guardar_1: {
+    guardar_2: {
         parameters: {
             query?: never;
             header?: never;
