@@ -40,8 +40,10 @@ import com.galeno.agenda.FestivosColombia.Festivo;
 public class AgendaController {
 
     private final AgendaService agenda;
+    private final TiposCitaService tiposCita;
 
-    AgendaController(AgendaService agenda) {
+    AgendaController(AgendaService agenda, TiposCitaService tiposCita) {
+        this.tiposCita = tiposCita;
         this.agenda = agenda;
     }
 
@@ -104,7 +106,24 @@ public class AgendaController {
     @ResponseStatus(HttpStatus.CREATED)
     public CitaVista agendar(@Valid @RequestBody NuevaCita r) {
         return agenda.agendar(r.medicoId(), r.pacienteId(), r.inicio().toInstant(), r.duracionMinutos(), r.motivo(),
-                Boolean.TRUE.equals(r.sobrecupo()), r.motivoSobrecupo(), r.fechaDeseada(), null);
+                Boolean.TRUE.equals(r.sobrecupo()), r.motivoSobrecupo(), r.fechaDeseada(), null, r.tipoCitaId());
+    }
+
+    /** Tipos de cita del consultorio (un consultorio nuevo arranca con Primera vez y Control). */
+    @GetMapping("/tipos-cita")
+    public List<TiposCitaService.TipoCitaVista> tiposCita() {
+        return tiposCita.listar();
+    }
+
+    @PostMapping("/tipos-cita")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TiposCitaService.TipoCitaVista crearTipoCita(@Valid @RequestBody TipoCitaRequest r) {
+        return tiposCita.guardar(null, r.nombre(), r.duracionMinutos(), r.clase(), r.cups(), true);
+    }
+
+    @PutMapping("/tipos-cita/{id}")
+    public TiposCitaService.TipoCitaVista editarTipoCita(@PathVariable UUID id, @Valid @RequestBody TipoCitaRequest r) {
+        return tiposCita.guardar(id, r.nombre(), r.duracionMinutos(), r.clase(), r.cups(), r.activo());
     }
 
     @PutMapping("/citas/{citaId}/horario")
@@ -206,7 +225,16 @@ public class AgendaController {
 
     public record NuevaCita(@NotNull UUID medicoId, @NotNull UUID pacienteId, @NotNull OffsetDateTime inicio,
                             @Min(5) @Max(240) Integer duracionMinutos, @Size(max = 300) String motivo, Boolean sobrecupo,
-                            @Size(max = 300) String motivoSobrecupo, LocalDate fechaDeseada) {
+                            @Size(max = 300) String motivoSobrecupo, LocalDate fechaDeseada, UUID tipoCitaId) {
+    }
+
+    /**
+     * @param cups 6 dígitos, o vacío para el de consulta según la clase
+     * @param activo null: activo
+     */
+    public record TipoCitaRequest(@jakarta.validation.constraints.NotBlank @Size(max = 80) String nombre,
+                                  @Min(5) @Max(240) int duracionMinutos, @NotNull TipoCita.Clase clase,
+                                  @Size(max = 10) String cups, Boolean activo) {
     }
 
     /** @param motivoSobrecupo obligatorio con sobrecupo */

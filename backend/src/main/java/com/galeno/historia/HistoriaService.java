@@ -365,9 +365,15 @@ public class HistoriaService {
      * control; por medicina general, odontología u otras especialidades según el perfil de quien atiende.
      */
     java.util.Optional<Procedimiento> consultaSugerida(UUID pacienteId, UUID citaId, UUID medicoUsuarioId) {
-        boolean primeraVez = atenciones.firmadas(pacienteId).isEmpty();
+        // El tipo de la cita manda: su CUPS, o primera vez / control según su clase; sin tipo (u OTRA), el historial
+        var tipo = citaId == null ? java.util.Optional.<com.galeno.agenda.AgendaPublica.TipoDeCita>empty()
+                : agenda.tipoDeCita(citaId);
+        var clase = tipo.map(com.galeno.agenda.AgendaPublica.TipoDeCita::clase).orElse(null);
+        boolean primeraVez = clase == com.galeno.agenda.TipoCita.Clase.PRIMERA_VEZ
+                || (clase != com.galeno.agenda.TipoCita.Clase.CONTROL && atenciones.firmadas(pacienteId).isEmpty());
         String especialidad = identidad.profesional(medicoUsuarioId).especialidad();
-        String codigo = (primeraVez ? "8902" : "8903") + sufijoConsulta(servicio.codigo().orElse(null), especialidad);
+        String codigo = tipo.map(com.galeno.agenda.AgendaPublica.TipoDeCita::cups)
+                .orElse((primeraVez ? "8902" : "8903") + sufijoConsulta(servicio.codigo().orElse(null), especialidad));
         return cups.findById(codigo).map(c -> new Procedimiento(c.getCodigo(), c.getDescripcion(), 1,
                 precios.precios(List.of(c.getCodigo()), new ListaPrecios.Contexto(pacienteId, citaId, null)).get(c.getCodigo()),
                 null, null));

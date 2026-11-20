@@ -85,6 +85,18 @@ public class Cita {
     @Column(name = "motivo_sobrecupo", length = 300)
     private String motivoSobrecupo;
 
+    /** Tipo de cita (primera vez, control…); null en las citas de antes de los tipos. */
+    @Column(name = "tipo_cita_id")
+    private UUID tipoCitaId;
+
+    void asignarTipo(UUID tipoCitaId) {
+        this.tipoCitaId = tipoCitaId;
+    }
+
+    public UUID getTipoCitaId() {
+        return tipoCitaId;
+    }
+
     /** Por qué se confirmó sin el pagador o el tipo de usuario del RIPS. */
     @Column(name = "justificacion_sin_rips", length = 300)
     private String justificacionSinRips;

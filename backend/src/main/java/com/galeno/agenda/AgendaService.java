@@ -57,11 +57,13 @@ class AgendaService {
     private final BloqueoAgendaRepository bloqueos;
     private final TopesDiarios topes;
     private final ObjectProvider<DatosRipsDeCitas> datosRips;
+    private final TiposCitaService tiposCita;
 
     AgendaService(AgendaMedicoRepository agendas, CitaRepository citas, IdentidadService identidad,
                   PacienteService pacientes, ObjectProvider<AtencionesDeCitas> atenciones, EnEsperaRepository espera,
                   org.springframework.context.ApplicationEventPublisher eventos, BloqueoAgendaRepository bloqueos,
-                  TopesDiarios topes, ObjectProvider<DatosRipsDeCitas> datosRips) {
+                  TopesDiarios topes, ObjectProvider<DatosRipsDeCitas> datosRips, TiposCitaService tiposCita) {
+        this.tiposCita = tiposCita;
         this.datosRips = datosRips;
         this.topes = topes;
         this.eventos = eventos;
@@ -236,14 +238,19 @@ class AgendaService {
      * @param motivoSobrecupo obligatorio con sobrecupo
      * @param fechaDeseada la fecha que pidió el paciente; null: lo antes posible
      * @param solicitadaEn cuándo la pidió (null: ahora; desde la lista de espera, cuando se anotó)
+     * @param tipoCitaId el tipo de cita; sin duración explícita, la cita dura lo que dice el tipo
      */
     @Transactional
     public CitaVista agendar(UUID medicoId, UUID pacienteId, Instant inicio, Integer duracionMinutos, String motivo,
-                             boolean sobrecupo, String motivoSobrecupo, LocalDate fechaDeseada, Instant solicitadaEn) {
+                             boolean sobrecupo, String motivoSobrecupo, LocalDate fechaDeseada, Instant solicitadaEn,
+                             UUID tipoCitaId) {
         verificarAcceso(medicoId);
         pacientes.get(pacienteId); // 404 si el paciente no es de este consultorio
         AgendaMedico agenda = obtenerOCrear(medicoId);
-        Intervalo intervalo = intervalo(inicio, duracionMinutos != null ? duracionMinutos : agenda.getDuracionMinutos());
+        TipoCita tipo = tipoCitaId == null ? null : tiposCita.paraAgendar(tipoCitaId);
+        int duracion = duracionMinutos != null ? duracionMinutos
+                : tipo != null ? tipo.getDuracionMinutos() : agenda.getDuracionMinutos();
+        Intervalo intervalo = intervalo(inicio, duracion);
         validarCupo(agenda, intervalo, sobrecupo, null);
         validarSobrecupo(agenda, intervalo, sobrecupo, motivoSobrecupo, null);
         Instant solicitud = solicitadaEn != null ? solicitadaEn : Instant.now();
@@ -253,6 +260,9 @@ class AgendaService {
         topes.cita();
         Cita cita = citas.save(new Cita(medicoId, pacienteId, intervalo.inicio(), intervalo.fin(), blankToNull(motivo),
                 sobrecupo, blankToNull(motivoSobrecupo), solicitud, fechaDeseada, AuthUser.current().id()));
+        if (tipo != null) {
+            cita.asignarTipo(tipo.getId());
+        }
         eventos.publishEvent(new CambioCita(cita.getId(), CambioCita.Tipo.AGENDADA, null));
         return vistas(List.of(cita)).getFirst();
     }
@@ -521,7 +531,7 @@ class AgendaService {
             }
             // La solicitud es de cuando se anotó en la lista de espera: desde entonces está esperando
             cita = agendar(medicoId, e.getPacienteId(), inicio, e.getDuracionMinutos(), e.getMotivo(), false, null, null,
-                    e.getCreadaEn());
+                    e.getCreadaEn(), null);
         }
         e.asignar(cita.id());
         return cita;
@@ -696,8 +706,13 @@ class AgendaService {
         Map<UUID, String> medicos = identidad.medicosActivos().stream()
                 .collect(Collectors.toMap(MedicoResumen::membresiaId, MedicoResumen::nombre));
         ZoneId zona = zona();
+        Map<UUID, String> tipos = lista.stream().anyMatch(c -> c.getTipoCitaId() != null)
+                ? tiposCita.listar().stream().collect(Collectors.toMap(TiposCitaService.TipoCitaVista::id,
+                        TiposCitaService.TipoCitaVista::nombre))
+                : Map.of();
         return lista.stream().map(c -> CitaVista.de(c, porPaciente.get(c.getPacienteId()),
-                medicos.get(c.getMedicoMembresiaId()), zona)).toList();
+                medicos.get(c.getMedicoMembresiaId()), zona, c.getTipoCitaId() == null ? null : tipos.get(c.getTipoCitaId())))
+                .toList();
     }
 
     private static String blankToNull(String s) {
@@ -771,9 +786,9 @@ class AgendaService {
                             Cita.Estado estado, String motivo, boolean sobrecupo, String motivoCancelacion,
                             String motivoSobrecupo, String justificacionSinRips, Instant solicitadaEn,
                             LocalDate fechaDeseada, long diasEspera, long diasEsperaDeseada, Integer pacienteEdad,
-                            List<String> prioridades) {
+                            List<String> prioridades, UUID tipoCitaId, String tipoCitaNombre) {
 
-        static CitaVista de(Cita c, PacienteResumen p, String medico, ZoneId zona) {
+        static CitaVista de(Cita c, PacienteResumen p, String medico, ZoneId zona, String tipoNombre) {
             LocalDate dia = c.getInicio().atZone(zona).toLocalDate();
             LocalDate solicitud = c.getSolicitadaEn().atZone(zona).toLocalDate();
             LocalDate referencia = c.getFechaDeseada() != null && c.getFechaDeseada().isAfter(solicitud)
@@ -785,7 +800,7 @@ class AgendaService {
                     c.getSolicitadaEn(), c.getFechaDeseada(),
                     Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(solicitud, dia)),
                     Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(referencia, dia)),
-                    p == null ? null : p.edad(), p == null ? List.of() : p.prioridades());
+                    p == null ? null : p.edad(), p == null ? List.of() : p.prioridades(), c.getTipoCitaId(), tipoNombre);
         }
     }
 }

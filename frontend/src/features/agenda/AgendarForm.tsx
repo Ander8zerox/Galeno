@@ -6,6 +6,7 @@ import { useAuth } from "../../auth/AuthContext";
 import { PacienteForm } from "../pacientes/PacienteForm";
 import { useVigiaCorreo } from "../pacientes/VigiaCorreo";
 import { aIso, fechaValida, hora, hoyEn } from "./tiempo";
+import { useTiposCita } from "./TiposCita";
 
 interface Cupo {
   inicio?: string;
@@ -41,6 +42,11 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
   const [paciente, setPaciente] = useState<PacienteElegido | null>(null);
   const [registrando, setRegistrando] = useState(false);
   const [motivo, setMotivo] = useState("");
+  // Tipo de cita: trae su duración (si cabe en el cupo; si no, se avisa)
+  const tipos = useTiposCita();
+  const activos = (tipos.data ?? []).filter((t) => t.activo);
+  const [tipoId, setTipoId] = useState<string>("");
+  const tipo = activos.find((t) => t.id === tipoId);
   const [motivoSobrecupo, setMotivoSobrecupo] = useState("");
   // Oportunidad (Res. 1552 de 2013): la fecha que el paciente quería; vacía = lo antes posible
   const [fechaDeseada, setFechaDeseada] = useState("");
@@ -57,6 +63,15 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
   const [duracionCupo, setDuracionCupo] = useState<number | null>(duracionInicial ?? null);
   const cupo = seguidos[0];
   const duracion = sobrecupo ? duracionSobrecupo : duracionCupo ?? cupo;
+  // Un tipo más largo que lo que cabe seguido en este cupo: no se puede agendar aquí sin sobrecupo
+  const noCabe = !sobrecupo && !!tipo && seguidos.length > 0 && !posibles.includes(tipo.duracionMinutos!);
+  function elegirTipo(id: string) {
+    setTipoId(id);
+    const t = activos.find((x) => x.id === id);
+    if (!t) return;
+    if (sobrecupo) setDuracionSobrecupo(t.duracionMinutos!);
+    else if (posibles.includes(t.duracionMinutos!)) setDuracionCupo(t.duracionMinutos!);
+  }
 
   const busqueda = useQuery({
     queryKey: ["pacientes", q, "agendar"],
@@ -77,6 +92,7 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
           sobrecupo,
           motivoSobrecupo: sobrecupo ? motivoSobrecupo.trim() : undefined,
           fechaDeseada: fechaDeseada || undefined,
+          tipoCitaId: tipo?.id,
         },
       })),
     onSuccess: (cita) => {
@@ -89,7 +105,7 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (paciente && !errorDeseada) agendar.mutate();
+    if (paciente && !errorDeseada && !noCabe) agendar.mutate();
   }
 
   const titulo = sobrecupo ? "Agendar sobrecupo" : `Agendar a las ${hora(inicio!, zona)}`;
@@ -117,6 +133,20 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
         <h3>{titulo}</h3>
         <button type="button" className="btn-link" onClick={onCerrar}>Cerrar</button>
       </div>
+      {activos.length > 0 && (
+        <label>Tipo de cita
+          <select value={tipoId} onChange={(e) => elegirTipo(e.target.value)}>
+            <option value="">Sin tipo</option>
+            {activos.map((t) => <option key={t.id} value={t.id}>{t.nombre} · {duracionTexto(t.duracionMinutos!)}</option>)}
+          </select>
+          {noCabe && (
+            <small className="field-error">
+              {tipo!.nombre} dura {duracionTexto(tipo!.duracionMinutos!)} y aquí caben {duracionTexto(posibles[posibles.length - 1])}
+              {" "}seguidos. Elija otro cupo o agende como sobrecupo.
+            </small>
+          )}
+        </label>
+      )}
       {sobrecupo && (
         <div className="form-grid">
           <label>Hora<input type="time" value={horaManual} onChange={(e) => setHoraManual(e.target.value)} required /></label>
@@ -188,7 +218,7 @@ export function AgendarForm({ medicoId, fecha, zona, inicio, cupos, duracionInic
         </small>
       </label>
       {agendar.error && <p className="alert alert-error">{agendar.error.message}</p>}
-      <div><button className="btn" disabled={!paciente || agendar.isPending}>{agendar.isPending ? "Agendando…" : "Agendar cita"}</button></div>
+      <div><button className="btn" disabled={!paciente || noCabe || agendar.isPending}>{agendar.isPending ? "Agendando…" : "Agendar cita"}</button></div>
     </form>
   );
 }
