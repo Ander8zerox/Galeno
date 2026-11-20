@@ -45,6 +45,28 @@ class PacienteRequestTest {
     }
 
     @Test
+    void elCorreoTieneFormatoCompleto() {
+        assertThat(camposConError(request("3001234567", "ana.perez+citas@mail.empresa.com.co", null))).isEmpty();
+        // @Email solo acepta estos; con dominio sin extensión el correo rebota
+        assertThat(camposConError(request("3001234567", "ana@gmail", null))).contains("email");
+        assertThat(camposConError(request("3001234567", "ana@gmail.c", null))).contains("email");
+        assertThat(camposConError(request("3001234567", "ana.gmail.com", null))).contains("email");
+        assertThat(camposConError(request("3001234567", "ana @gmail.com", null))).contains("email");
+        assertThat(camposConError(request("3001234567", "ana@gmail..com", null))).contains("email");
+    }
+
+    @Test
+    void losNombresSoloLlevanLetras() {
+        for (String bueno : new String[] {"María José", "O'Neill", "Gómez-Pérez", "Ma. Fernanda", "Müller", " Ana "}) {
+            assertThat(java.util.regex.Pattern.matches(Nombres.PATRON, bueno)).as(bueno).isTrue();
+        }
+        for (String malo : new String[] {"Ana2", "123", "Juan_Pablo", "Ana@", "-Ana", ""}) {
+            assertThat(java.util.regex.Pattern.matches(Nombres.PATRON, malo)).as(malo).isFalse();
+        }
+        assertThat(java.util.regex.Pattern.matches(Nombres.PATRON_OPCIONAL, "  ")).isTrue();
+    }
+
+    @Test
     void elTelefonoEsObligatorioYConNumeros() {
         assertThat(camposConError(request(null, "ana@ejemplo.test", null))).contains("telefono");
         assertThat(camposConError(request("  ", "ana@ejemplo.test", null))).contains("telefono");

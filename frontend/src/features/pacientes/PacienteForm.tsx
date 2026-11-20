@@ -45,6 +45,33 @@ export function edadDe(fechaNacimiento: string | undefined): number | null {
   return edad;
 }
 
+/** Igual que el servidor (Nombres): letras, espacios, apóstrofo, punto o guion; sin números. */
+const NOMBRE = /^\s*\p{L}[\p{L} .'-]*$/u;
+export function errorNombre(valor: string | undefined): string | null {
+  const v = valor ?? "";
+  return !v.trim() || NOMBRE.test(v) ? null : "Solo letras, espacios, apóstrofo, punto o guion; sin números";
+}
+
+/** Igual que el servidor (Correos): nombre@dominio.ext, con extensión de al menos 2 letras. */
+const CORREO = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+/** Errores de digitación frecuentes en el dominio: se sugiere la corrección (no se bloquea). */
+const DOMINIOS_CORREGIDOS: Record<string, string> = {
+  "gmial.com": "gmail.com", "gmai.com": "gmail.com", "gmal.com": "gmail.com", "gmail.co": "gmail.com", "gmail.con": "gmail.com",
+  "gamil.com": "gmail.com", "hotmial.com": "hotmail.com", "hotmai.com": "hotmail.com", "hotmail.co": "hotmail.com",
+  "hotmail.con": "hotmail.com", "hotmal.com": "hotmail.com", "outlok.com": "outlook.com", "outlook.co": "outlook.com",
+  "yaho.com": "yahoo.com", "yahoo.co": "yahoo.com", "yahoo.con": "yahoo.com",
+};
+function errorCorreoFormato(correo: string | undefined): string | null {
+  const c = (correo ?? "").trim();
+  return !c || CORREO.test(c) ? null : "Correo no válido: debe ser como nombre@dominio.com";
+}
+function correoSugerido(correo: string | undefined): string | null {
+  const c = (correo ?? "").trim();
+  const [usuario, dominio] = c.split("@");
+  const bueno = dominio && DOMINIOS_CORREGIDOS[dominio.toLowerCase()];
+  return bueno ? `${usuario}@${bueno}` : null;
+}
+
 /** Igual que el servidor (TiposDocumento): CC de 3 a 10 dígitos y TI de 10 u 11, solo números. */
 function errorNumero(tipo: string, numero: string): string | null {
   const n = numero.trim();
@@ -116,6 +143,11 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
   // Solo al crear: el documento no se edita y una ficha antigua no debe quedar sin poder guardarse
   const errorDocumento = paciente ? null : errorNumero(form.tipoDocumento, form.numeroDocumento);
   const errorDocumentoEdad = paciente ? null : errorEdad(form.tipoDocumento, edad);
+  const errorNombres = errorNombre(form.nombres);
+  const errorApellidos = errorNombre(form.apellidos);
+  const errorResponsable = errorNombre(form.responsableNombre);
+  const errorFormatoCorreo = form.sinCorreo ? null : errorCorreoFormato(form.email);
+  const sugerido = form.sinCorreo ? null : correoSugerido(form.email);
   const tipos = form.tipoDocumento === "NV" ? [...TIPOS_DOCUMENTO, NV] : TIPOS_DOCUMENTO;
   // Antes de registrar, se busca el documento (al salir del campo): si ya existe, se ofrece ese paciente
   const [documentoBuscado, setDocumentoBuscado] = useState("");
@@ -129,7 +161,8 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (errorDocumento || errorDocumentoEdad) return;
+    if (errorDocumento || errorDocumentoEdad || errorNombres || errorApellidos || errorFormatoCorreo
+      || (menor && errorResponsable)) return;
     if (!paciente && existente.data?.some((p) => p.tipoDocumento === form.tipoDocumento)) return;
     // Los campos opcionales vacíos se envían como ausentes, no como cadenas vacías; sin responsable, ninguno de sus
     // campos (el tipo de documento trae CC por defecto)
@@ -167,8 +200,8 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
             : <small>Si es la misma persona con otro tipo de documento (por ejemplo, la TI que pasó a CC), use su ficha.</small>}
         </div>
       )}
-      <Campo label="Nombres" requerido error={errores.nombres}><input value={form.nombres} onChange={set("nombres")} required autoFocus={!!paciente} /></Campo>
-      <Campo label="Apellidos" requerido error={errores.apellidos}><input value={form.apellidos} onChange={set("apellidos")} required /></Campo>
+      <Campo label="Nombres" requerido error={errores.nombres ?? errorNombres ?? undefined}><input value={form.nombres} onChange={set("nombres")} required autoFocus={!!paciente} /></Campo>
+      <Campo label="Apellidos" requerido error={errores.apellidos ?? errorApellidos ?? undefined}><input value={form.apellidos} onChange={set("apellidos")} required /></Campo>
       <Campo label="Fecha de nacimiento" requerido error={errores.fechaNacimiento ?? errorDocumentoEdad ?? undefined}><input type="date" value={form.fechaNacimiento} onChange={set("fechaNacimiento")} required /></Campo>
       <label><span>Sexo <span className="req">*</span></span>
         <select value={form.sexo} onChange={set("sexo")}>
@@ -181,9 +214,12 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
       </Campo>
       {/* Un div, no un label: la casilla lleva su propio label (un label dentro de otro no es válido) */}
       <div className="campo-con-casilla">
-        <Campo label="Correo" requerido={!form.sinCorreo} error={errorCorreo}>
+        <Campo label="Correo" requerido={!form.sinCorreo} error={errorCorreo ?? errorFormatoCorreo ?? undefined}>
           <input type="email" value={form.sinCorreo ? "" : form.email} onChange={set("email")} required={!form.sinCorreo}
-            disabled={!!form.sinCorreo} placeholder={form.sinCorreo ? "No tiene correo" : undefined} />
+            disabled={!!form.sinCorreo} placeholder={form.sinCorreo ? "No tiene correo" : undefined} aria-invalid={!!errorFormatoCorreo} />
+          {sugerido && (
+            <small>¿Quiso decir <button type="button" className="btn-link" onClick={() => setForm({ ...form, email: sugerido })}>{sugerido}</button>?</small>
+          )}
         </Campo>
         <label className="check small">
           <input type="checkbox" checked={!!form.sinCorreo}
@@ -221,7 +257,7 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
           <legend>Responsable del menor <span className="req">*</span></legend>
           <p className="small muted wide">Tiene {edad} años: registre quién responde por el paciente (padre, madre, acudiente o tutor).</p>
           {errores.responsableCompleto && <p className="alert alert-error small wide">{errores.responsableCompleto}</p>}
-          <Campo label="Nombre completo" requerido error={errores.responsableNombre}>
+          <Campo label="Nombre completo" requerido error={errores.responsableNombre ?? errorResponsable ?? undefined}>
             <input value={form.responsableNombre} onChange={set("responsableNombre")} required maxLength={200} />
           </Campo>
           <Campo label="Parentesco" requerido error={errores.responsableParentesco}>
