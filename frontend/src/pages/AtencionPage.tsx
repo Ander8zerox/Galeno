@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { textoAlergias, useClinicos } from "../features/pacientes/AntecedentesPaciente";
 import { api, expectOk, unwrap, type Schemas } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { ApoyoDiagnostico } from "../features/apoyo/ApoyoDiagnostico";
@@ -64,6 +65,7 @@ const txt = (v: string) => (v.trim() === "" ? undefined : v);
 
 export function AtencionPage() {
   const { pacienteId, atencionId } = useParams<{ pacienteId: string; atencionId: string }>();
+  const alergias = useClinicos(pacienteId!);
   const atencion = useQuery({
     queryKey: ["atencion", atencionId],
     queryFn: async () => unwrap(await api.GET("/api/v1/historia/atenciones/{id}", { params: { path: { id: atencionId! } } })),
@@ -84,7 +86,7 @@ export function AtencionPage() {
       {p && (
         <div className="card row between">
           <span><strong>{p.nombres} {p.apellidos}</strong> · {p.tipoDocumento} {p.numeroDocumento} · {p.edad} años</span>
-          {p.alergias ? <span className="badge badge-danger">Alergias: {p.alergias}</span> : <span className="badge">Sin alergias registradas</span>}
+          {alergias.data && <span className={`badge ${textoAlergias(alergias.data).alerta ? "badge-danger" : ""}`}>{textoAlergias(alergias.data).texto}</span>}
         </div>
       )}
       {a.estado === "BORRADOR" && a.propia

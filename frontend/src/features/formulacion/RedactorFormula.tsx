@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { useAiJob } from "../../ai/useAiJob";
 import { useAuth } from "../../auth/AuthContext";
+import { useClinicos } from "../pacientes/AntecedentesPaciente";
 
 type Borrador = Schemas["BorradorFormula"];
 type Item = Schemas["ItemRequest"];
@@ -39,6 +40,7 @@ export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnostico
   const [observaciones, setObservaciones] = useState("");
   const [firmadaEn, setFirmadaEn] = useState<Date | null>(null);
   const queryClient = useQueryClient();
+  const clinicos = useClinicos(pacienteId);
   const ia = !!useAuth().me?.iaDisponible;
 
   const solicitar = useMutation({
@@ -76,8 +78,16 @@ export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnostico
     setItems(items.map((it, i) => (i === idx ? { ...it, [key]: value } : it)));
   const completa = items.length > 0 && items.every((it) => CAMPOS.every((c) => !c.requerido || (it[c.key] ?? "").trim()));
 
+  // Alergias a medicamentos: se avisan arriba y se marcan en el ítem cuyo medicamento las nombra
+  const agentes = [...(clinicos.data?.alergias ?? []).filter((a) => a.tipo === "MEDICAMENTO" || a.tipo === "OTRO").map((a) => a.agente!),
+    ...(clinicos.data?.alergiasTextoAnterior ? clinicos.data.alergiasTextoAnterior.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean) : [])];
+  const alergiaDe = (medicamento?: string) => {
+    const m = (medicamento ?? "").toLowerCase();
+    return m ? agentes.find((a) => a.length >= 3 && m.includes(a.toLowerCase())) : undefined;
+  };
   return (
     <div className="stack">
+      {agentes.length > 0 && <p className="alert alert-error small" role="alert">Alergias del paciente: {agentes.join(", ")}. Revise cada medicamento.</p>}
       {firmadaEn && (
         <p className="alert alert-ok row" role="status">
           <span className="grow">
@@ -126,6 +136,9 @@ export function RedactorFormula({ pacienteId, onFirmada, atencionId, diagnostico
           <p className="muted small">{ia ? "La IA propone; usted revisa, corrige y firma." : "Revise cada ítem y firme."} Nada se guarda hasta que firme.</p>
           {items.map((item, idx) => (
             <div key={idx} className="item-grid">
+              {alergiaDe(item.medicamento) && (
+                <p className="alert alert-error small wide" role="alert">El paciente es alérgico a {alergiaDe(item.medicamento)}.</p>
+              )}
               {CAMPOS.map((c) => (
                 <label key={c.key} className={c.key === "indicaciones" ? "wide" : undefined}>
                   {c.label}{c.requerido && " *"}

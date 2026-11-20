@@ -24,18 +24,19 @@ final class HistoriaPdf {
     private HistoriaPdf() {
     }
 
-    static String html(Paciente p, ConsultorioResumen consultorio, List<AtencionImpresa> atenciones,
+    static String html(Paciente p, com.galeno.pacientes.AntecedentesService.ResumenClinico clinico,
+                       ConsultorioResumen consultorio, List<AtencionImpresa> atenciones,
                        List<DocumentoClinico> documentos, String generadoPor) {
         StringBuilder b = new StringBuilder();
         b.append(EncabezadoPdf.html(consultorio, "HISTORIA CLÍNICA COMPLETA",
                 "Generada: " + fechaHora(Instant.now(), consultorio.zona())));
         b.append(EncabezadoPdf.paciente(p));
 
-        if (p.getAlergias() != null && !p.getAlergias().isBlank()) {
-            b.append("<h2>Alergias</h2><div class=\"texto\">").append(esc(p.getAlergias().strip())).append("</div>");
+        if (clinico.alergias() != null) {
+            b.append("<h2>Alergias</h2><div class=\"texto\">").append(esc(clinico.alergias())).append("</div>");
         }
-        if (p.getAntecedentes() != null && !p.getAntecedentes().isBlank()) {
-            b.append("<h2>Antecedentes</h2><div class=\"texto\">").append(esc(p.getAntecedentes().strip())).append("</div>");
+        if (clinico.antecedentes() != null) {
+            b.append("<h2>Antecedentes</h2><div class=\"texto\">").append(esc(clinico.antecedentes())).append("</div>");
         }
 
         b.append("<h2>Atenciones (").append(atenciones.size()).append(")</h2>");

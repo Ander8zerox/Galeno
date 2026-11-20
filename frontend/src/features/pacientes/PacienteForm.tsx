@@ -63,7 +63,7 @@ function errorEdad(tipo: string, edad: number | null): string | null {
 
 const VACIO: PacienteRequest = {
   tipoDocumento: "CC", numeroDocumento: "", nombres: "", apellidos: "", fechaNacimiento: "", sexo: "F",
-  telefono: "", email: "", alergias: "", antecedentes: "", sinCorreosCitas: false, sinCorreo: false,
+  telefono: "", email: "", sinCorreosCitas: false, sinCorreo: false,
   responsableNombre: "", responsableParentesco: "", responsableTipoDocumento: "CC", responsableNumeroDocumento: "",
   responsableTelefono: "", gestante: false, discapacidad: false, autorizaDatos: false, medioAutorizacion: "",
 };
@@ -74,7 +74,7 @@ function desde(p: Paciente): PacienteRequest {
     // Un paciente importado de RIPS trae nombres de relleno: el formulario arranca vacío para escribir los reales
     nombres: p.datosIncompletos ? "" : p.nombres!, apellidos: p.datosIncompletos ? "" : p.apellidos!,
     fechaNacimiento: p.fechaNacimiento!, sexo: p.sexo!, telefono: p.telefono ?? "", email: p.email ?? "",
-    alergias: p.alergias ?? "", antecedentes: p.antecedentes ?? "", sinCorreosCitas: !!p.sinCorreosCitas,
+    sinCorreosCitas: !!p.sinCorreosCitas,
     responsableNombre: p.responsable?.nombre ?? "", responsableParentesco: p.responsable?.parentesco ?? "",
     responsableTipoDocumento: p.responsable?.tipoDocumento ?? "CC",
     responsableNumeroDocumento: p.responsable?.numeroDocumento ?? "", responsableTelefono: p.responsable?.telefono ?? "",
@@ -242,8 +242,7 @@ export function PacienteForm({ paciente, inicial, onGuardado, onCancelar }: {
           </Campo>
         </fieldset>
       )}
-      {clinico && <Campo label="Alergias (separadas por coma)" error={errores.alergias} wide><input value={form.alergias} onChange={set("alergias")} /></Campo>}
-      {clinico && <Campo label="Antecedentes" error={errores.antecedentes} wide><textarea rows={2} value={form.antecedentes} onChange={set("antecedentes")} /></Campo>}
+      {clinico && <p className="small muted wide">Las alergias y los antecedentes se registran en la ficha, en la sección de historia clínica.</p>}
       {yaAutorizo ? (
         <p className="small muted wide">
           Autorizó el tratamiento de datos el {new Date(yaAutorizo.en!).toLocaleDateString("es-CO")}

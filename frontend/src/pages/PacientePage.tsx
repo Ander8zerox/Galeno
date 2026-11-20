@@ -8,6 +8,7 @@ import { ProximasCitas } from "../features/agenda/ProximasCitas";
 import { LineaHistoria } from "../features/historia/LineaHistoria";
 import { PacienteForm } from "../features/pacientes/PacienteForm";
 import { DatosRipsPaciente } from "../features/rips/DatosRipsPaciente";
+import { AntecedentesPaciente, textoAlergias, useClinicos } from "../features/pacientes/AntecedentesPaciente";
 import { useModuloActivo } from "../features/rips/modulos";
 
 // La fórmula y el apoyo diagnóstico se usan dentro de una atención ("Nueva atención" en la historia), para que queden
@@ -23,6 +24,7 @@ export function PacientePage() {
   const [editando, setEditando] = useState(busqueda.get("editar") === "1");
   // Los datos RIPS los completa quien recibe o factura, no el médico
   const rips = useModuloActivo("RIPS") && puede("RIPS_PACIENTE");
+  const clinicos = useClinicos(id!, puede("HISTORIA_VER"));
   const paciente = useQuery({
     queryKey: ["paciente", id],
     queryFn: async () => unwrap(await api.GET("/api/v1/pacientes/{id}", { params: { path: { id: id! } } })),
@@ -49,8 +51,10 @@ export function PacientePage() {
           </button>
           {clinico ? (
             <>
-              {p.alergias ? <span className="badge badge-danger">Alergias: {p.alergias}</span> : <span className="badge">Sin alergias registradas</span>}
-              {p.antecedentes && <span className="badge">Antecedentes: {p.antecedentes}</span>}
+              {clinicos.data && (() => {
+                const a = textoAlergias(clinicos.data);
+                return <span className={`badge ${a.alerta ? "badge-danger" : ""}`}>{a.texto}</span>;
+              })()}
             </>
           ) : (
             <span className="badge">Historia clínica: solo personal médico</span>
@@ -76,6 +80,7 @@ export function PacientePage() {
             <button className={tab === "historia" ? "active" : ""} onClick={() => setTab("historia")}>Historia clínica</button>
             {puede("FORMULA_REDACTAR") && <button className={tab === "historial" ? "active" : ""} onClick={() => setTab("historial")}>Fórmulas firmadas</button>}
           </nav>
+          {tab === "historia" && <AntecedentesPaciente pacienteId={p.id!} />}
           {tab === "historia" && <LineaHistoria pacienteId={p.id!} />}
           {tab === "historial" && puede("FORMULA_REDACTAR") && <HistorialFormulas pacienteId={p.id!} />}
         </>

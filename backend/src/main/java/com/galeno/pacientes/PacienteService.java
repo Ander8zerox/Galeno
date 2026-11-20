@@ -24,10 +24,21 @@ public class PacienteService {
 
     private final PacienteRepository repository;
     private final TopesDiarios topes;
+    private final AlergiaPacienteRepository alergias;
+    private final AntecedentePacienteRepository antecedentes;
 
-    PacienteService(PacienteRepository repository, TopesDiarios topes) {
+    PacienteService(PacienteRepository repository, TopesDiarios topes, AlergiaPacienteRepository alergias,
+                    AntecedentePacienteRepository antecedentes) {
         this.repository = repository;
         this.topes = topes;
+        this.alergias = alergias;
+        this.antecedentes = antecedentes;
+    }
+
+    /** Alergias y antecedentes del paciente en texto (estructurados y el texto anterior), para otros módulos. */
+    @Transactional(readOnly = true)
+    public AntecedentesService.ResumenClinico resumenClinico(UUID pacienteId) {
+        return AntecedentesService.resumen(get(pacienteId), alergias, antecedentes);
     }
 
     @Transactional(readOnly = true)
@@ -210,8 +221,10 @@ public class PacienteService {
         if (Boolean.TRUE.equals(r.autorizaDatos())) {
             p.registrarAutorizacionDatos(AuthUser.current().id(), r.medioAutorizacion(), TEXTO_AUTORIZACION);
         }
-        if (datosClinicos) {
-            p.actualizarClinicos(r.alergias(), r.antecedentes());
+        // El formulario ya no envía estos textos (ahora son ítems, ver AntecedentesService): sin ellos no se tocan
+        if (datosClinicos && (r.alergias() != null || r.antecedentes() != null)) {
+            p.actualizarClinicos(r.alergias() != null ? r.alergias() : p.getAlergias(),
+                    r.antecedentes() != null ? r.antecedentes() : p.getAntecedentes());
         }
     }
 

@@ -93,6 +93,22 @@ public class Paciente {
     @Column(name = "responsable_telefono", length = 30)
     private String responsableTelefono;
 
+    /** Respuesta a "¿tiene alergias?". null: no se ha preguntado. */
+    public enum EstadoAlergias { NIEGA, SI }
+
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(name = "alergias_estado", length = 10)
+    private EstadoAlergias alergiasEstado;
+
+    void responderAlergias(EstadoAlergias estado) {
+        this.alergiasEstado = estado;
+        this.actualizadoEn = Instant.now();
+    }
+
+    public EstadoAlergias getAlergiasEstado() {
+        return alergiasEstado;
+    }
+
     /** Atención prioritaria (la agenda lo avisa en la cita). Gestante solo aplica a sexo F. */
     @Column(nullable = false)
     private boolean gestante;
@@ -337,11 +353,13 @@ public class Paciente {
      * Contexto clínico para la IA sin datos que identifiquen al paciente (nombre, documento,
      * contacto): se envía solo lo necesario para el razonamiento clínico.
      */
-    public String resumenAnonimizado() {
+    /** Para la IA: sin nombre ni documento. {@code clinico} trae alergias y antecedentes (PacienteService#resumenClinico). */
+    public String resumenAnonimizado(AntecedentesService.ResumenClinico clinico) {
         return """
                 Paciente: %d años, sexo %s.
                 Alergias conocidas: %s
-                Antecedentes: %s""".formatted(edad(), sexo, valueOrNone(alergias), valueOrNone(antecedentes));
+                Antecedentes: %s""".formatted(edad(), sexo, valueOrNone(clinico.alergias()),
+                valueOrNone(clinico.antecedentes()));
     }
 
     private static String valueOrNone(String value) {

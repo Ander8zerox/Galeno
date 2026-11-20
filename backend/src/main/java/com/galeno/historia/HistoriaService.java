@@ -134,8 +134,14 @@ public class HistoriaService {
                 throw ApiProblem.conflict("La cita ya no está abierta");
             }
         }
+        // La atención arranca con las alergias y los antecedentes del paciente (el médico los ajusta a esta consulta)
+        var clinico = pacientes.resumenClinico(pacienteId);
+        String antecedentesAtencion = java.util.stream.Stream.of(
+                        clinico.alergias() == null ? null : "Alergias: " + clinico.alergias().replace("\n", "; "),
+                        clinico.antecedentes())
+                .filter(java.util.Objects::nonNull).reduce((a, b) -> a + "\n" + b).orElse(null);
         Atencion nueva = Atencion.nueva(pacienteId, yo.membresiaId(), yo.id(), yo.nombre(), citaId,
-                paciente.getAntecedentes());
+                antecedentesAtencion);
         // A un menor lo suele acompañar su responsable: arranca con él y el médico lo cambia si vino otra persona
         if (paciente.edad() < 18 && paciente.getResponsableNombre() != null) {
             nueva.registrarAcompanante(paciente.getResponsableNombre(), paciente.getResponsableParentesco(),
@@ -322,7 +328,7 @@ public class HistoriaService {
                         formatosHtml.getOrDefault(a.getId(), "")))
                 .toList();
         auditar(pacienteId, Accion.IMPRIMIR_HISTORIA, null);
-        byte[] contenido = pdf.render(HistoriaPdf.html(p, consultorio, lista,
+        byte[] contenido = pdf.render(HistoriaPdf.html(p, pacientes.resumenClinico(pacienteId), consultorio, lista,
                 documentos.findByPacienteIdOrderByCreadoEnDesc(pacienteId), yo.nombre()));
         return new Archivo(NombreArchivo.pdf("historia-clinica", p.getApellidos(), p.getNombres(), Instant.now(),
                 consultorio.zona()), "application/pdf", contenido);
