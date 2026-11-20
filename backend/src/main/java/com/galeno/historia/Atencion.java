@@ -181,6 +181,20 @@ public class Atencion {
     protected Atencion() {
     }
 
+    /** Lo que trae la preconsulta de la cita: motivo y signos vitales (solo en un borrador recién creado). */
+    void precargar(Preconsulta.Datos d) {
+        exigirBorrador();
+        this.motivoConsulta = d.motivoConsulta();
+        this.taSistolica = d.taSistolica();
+        this.taDiastolica = d.taDiastolica();
+        this.frecuenciaCardiaca = d.frecuenciaCardiaca();
+        this.frecuenciaRespiratoria = d.frecuenciaRespiratoria();
+        this.temperatura = d.temperatura();
+        this.saturacionO2 = d.saturacionO2();
+        this.pesoKg = d.pesoKg();
+        this.tallaCm = d.tallaCm();
+    }
+
     static Atencion nueva(UUID pacienteId, UUID medicoMembresiaId, UUID medicoUsuarioId, String medicoNombre,
                           UUID citaId, String antecedentesPaciente) {
         Atencion a = new Atencion();

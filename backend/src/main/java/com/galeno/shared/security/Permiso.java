@@ -33,5 +33,7 @@ public enum Permiso {
      * Ver y completar los datos RIPS del paciente (tipo de usuario, residencia, pagador): quien lo recibe o factura,
      * no el médico.
      */
-    RIPS_PACIENTE
+    RIPS_PACIENTE,
+    /** Registrar la preconsulta de una cita y ver o completar alergias y antecedentes del paciente. */
+    PRECONSULTA_REGISTRAR
 }

@@ -58,11 +58,14 @@ class AgendaService {
     private final TopesDiarios topes;
     private final ObjectProvider<DatosRipsDeCitas> datosRips;
     private final TiposCitaService tiposCita;
+    private final ObjectProvider<PreconsultasDeCitas> preconsultas;
 
     AgendaService(AgendaMedicoRepository agendas, CitaRepository citas, IdentidadService identidad,
                   PacienteService pacientes, ObjectProvider<AtencionesDeCitas> atenciones, EnEsperaRepository espera,
                   org.springframework.context.ApplicationEventPublisher eventos, BloqueoAgendaRepository bloqueos,
-                  TopesDiarios topes, ObjectProvider<DatosRipsDeCitas> datosRips, TiposCitaService tiposCita) {
+                  TopesDiarios topes, ObjectProvider<DatosRipsDeCitas> datosRips, TiposCitaService tiposCita,
+                  ObjectProvider<PreconsultasDeCitas> preconsultas) {
+        this.preconsultas = preconsultas;
         this.tiposCita = tiposCita;
         this.datosRips = datosRips;
         this.topes = topes;
@@ -659,6 +662,9 @@ class AgendaService {
         if (yo.tieneRol("MEDICO")) {
             visibles.add(yo.membresiaId());
         }
+        if (yo.tieneRol("PRECONSULTA")) {
+            return todos; // toma la preconsulta de los pacientes de cualquier médico
+        }
         if (yo.tieneRol("SECRETARIO")) {
             Set<UUID> asignados = identidad.medicosAsignados(yo.membresiaId());
             if (asignados.isEmpty()) {
@@ -710,8 +716,11 @@ class AgendaService {
                 ? tiposCita.listar().stream().collect(Collectors.toMap(TiposCitaService.TipoCitaVista::id,
                         TiposCitaService.TipoCitaVista::nombre))
                 : Map.of();
+        PreconsultasDeCitas p = preconsultas.getIfAvailable();
+        Set<UUID> conPreconsulta = p == null ? Set.of() : p.conPreconsulta(lista.stream().map(Cita::getId).toList());
         return lista.stream().map(c -> CitaVista.de(c, porPaciente.get(c.getPacienteId()),
-                medicos.get(c.getMedicoMembresiaId()), zona, c.getTipoCitaId() == null ? null : tipos.get(c.getTipoCitaId())))
+                medicos.get(c.getMedicoMembresiaId()), zona, c.getTipoCitaId() == null ? null : tipos.get(c.getTipoCitaId()),
+                conPreconsulta.contains(c.getId())))
                 .toList();
     }
 
@@ -786,9 +795,9 @@ class AgendaService {
                             Cita.Estado estado, String motivo, boolean sobrecupo, String motivoCancelacion,
                             String motivoSobrecupo, String justificacionSinRips, Instant solicitadaEn,
                             LocalDate fechaDeseada, long diasEspera, long diasEsperaDeseada, Integer pacienteEdad,
-                            List<String> prioridades, UUID tipoCitaId, String tipoCitaNombre) {
+                            List<String> prioridades, UUID tipoCitaId, String tipoCitaNombre, boolean preconsulta) {
 
-        static CitaVista de(Cita c, PacienteResumen p, String medico, ZoneId zona, String tipoNombre) {
+        static CitaVista de(Cita c, PacienteResumen p, String medico, ZoneId zona, String tipoNombre, boolean preconsulta) {
             LocalDate dia = c.getInicio().atZone(zona).toLocalDate();
             LocalDate solicitud = c.getSolicitadaEn().atZone(zona).toLocalDate();
             LocalDate referencia = c.getFechaDeseada() != null && c.getFechaDeseada().isAfter(solicitud)
@@ -800,7 +809,7 @@ class AgendaService {
                     c.getSolicitadaEn(), c.getFechaDeseada(),
                     Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(solicitud, dia)),
                     Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(referencia, dia)),
-                    p == null ? null : p.edad(), p == null ? List.of() : p.prioridades(), c.getTipoCitaId(), tipoNombre);
+                    p == null ? null : p.edad(), p == null ? List.of() : p.prioridades(), c.getTipoCitaId(), tipoNombre, preconsulta);
         }
     }
 }

@@ -10,6 +10,7 @@ import { useCobrosCitas, type Cobro } from "../rips/pagadores";
 import { useFaltantesRips, useReferencia } from "../rips/referencias";
 import { AgendarForm } from "./AgendarForm";
 import { AnotarEspera, EspacioLiberado } from "./ListaEspera";
+import { Preconsulta } from "./Preconsulta";
 import { useVigiaCorreo } from "../pacientes/VigiaCorreo";
 import { hora, hoyEn } from "./tiempo";
 
@@ -136,6 +137,7 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
   const [completandoRips, setCompletandoRips] = useState(false);
   const [registrandoCobro, setRegistrandoCobro] = useState(false);
   const [anotandoEspera, setAnotandoEspera] = useState(false);
+  const [tomandoPreconsulta, setTomandoPreconsulta] = useState(false);
   // Confirmar sin pagador o tipo de usuario del RIPS exige una justificación
   const [justificando, setJustificando] = useState(false);
   const [justificacion, setJustificacion] = useState("");
@@ -185,6 +187,7 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
           <Link to={`/pacientes/${cita.pacienteId}`}><strong>{cita.pacienteNombre}</strong></Link>
           <span className={`badge ${ESTADO_CLASE[cita.estado!]}`}>{ESTADO_NOMBRE[cita.estado!]}</span>
           {cita.tipoCitaNombre && <span className="badge">{cita.tipoCitaNombre}</span>}
+          {cita.preconsulta && abierta(cita) && <span className="badge badge-ok">Preconsulta lista</span>}
           {cita.sobrecupo && <span className="badge badge-warn" title={cita.motivoSobrecupo ?? undefined}>Sobrecupo</span>}
           {cita.pacienteEdad != null && <span className="muted small">{cita.pacienteEdad} años</span>}
           {(cita.prioridades ?? []).map((p) => <span key={p} className="badge badge-info" title="Atención prioritaria">Prioridad: {p}</span>)}
@@ -214,6 +217,10 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
           <CobroForm donde="cita" id={cita.id!} cobro={cobro} onGuardado={() => setRegistrandoCobro(false)} onCancelar={() => setRegistrandoCobro(false)} />
         )}
         {completandoRips && abierta(cita) && <DatosRipsPaciente pacienteId={cita.pacienteId!} editar />}
+        {tomandoPreconsulta && abierta(cita) && (
+          <Preconsulta citaId={cita.id!} pacienteId={cita.pacienteId!} pacienteNombre={cita.pacienteNombre}
+            onCerrar={() => setTomandoPreconsulta(false)} />
+        )}
         {anotandoEspera && abierta(cita) && (
           <AnotarEspera medicos={[]} zona={zona} inicial={{ paciente: { id: cita.pacienteId!, nombre: cita.pacienteNombre ?? "" }, cita }}
             onCerrar={() => setAnotandoEspera(false)} />
@@ -262,6 +269,9 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
         <div className="row acciones">
           {cita.estado === "PROGRAMADA" && <button className="btn-link" onClick={confirmar}>Confirmar</button>}
           {cobro && !registrandoCobro && <button className="btn-link" onClick={() => setRegistrandoCobro(true)}>Cobro</button>}
+          {puede("PRECONSULTA_REGISTRAR") && !tomandoPreconsulta && (
+            <button className="btn-link" onClick={() => setTomandoPreconsulta(true)}>{cita.preconsulta ? "Ver preconsulta" : "Preconsulta"}</button>
+          )}
           {puede("HISTORIA_REGISTRAR") && esMiCita && <button className="btn" disabled={atender.isPending} onClick={() => diferida.programar("Abriendo la atención", () => atender.mutate())}>Atender</button>}
           {/* "Atender" no depende de la hora: solo de ser el médico de la cita y tener permiso de historia clínica */}
           {puede("HISTORIA_REGISTRAR") && !esMiCita && <span className="muted small" title="Cada médico atiende sus propias citas">La atiende su médico</span>}

@@ -51,6 +51,7 @@ public class HistoriaService {
     private final PacienteService pacientes;
     private final IdentidadService identidad;
     private final AgendaPublica agenda;
+    private final PreconsultaService preconsultaDe;
     private final PdfRenderer pdf;
     private final FormatosService formatos;
     private final CupsRepository cups;
@@ -63,7 +64,8 @@ public class HistoriaService {
                     AlmacenDocumentos almacen, PacienteService pacientes, IdentidadService identidad,
                     AgendaPublica agenda, PdfRenderer pdf, FormatosService formatos, CupsRepository cups,
                     ModulosService modulos, java.util.Optional<ListaPrecios> precios,
-                    java.util.Optional<ServicioHabilitado> servicio) {
+                    java.util.Optional<ServicioHabilitado> servicio, PreconsultaService preconsultaDe) {
+        this.preconsultaDe = preconsultaDe;
         this.atenciones = atenciones;
         this.notas = notas;
         this.documentos = documentos;
@@ -140,8 +142,17 @@ public class HistoriaService {
                         clinico.alergias() == null ? null : "Alergias: " + clinico.alergias().replace("\n", "; "),
                         clinico.antecedentes())
                 .filter(java.util.Objects::nonNull).reduce((a, b) -> a + "\n" + b).orElse(null);
+        // Con preconsulta, la atención arranca con su motivo, sus signos vitales y los medicamentos que toma
+        var preconsulta = citaId == null ? java.util.Optional.<Preconsulta.Datos>empty() : preconsultaDe.datosDe(citaId);
+        String medicamentos = preconsulta.map(Preconsulta.Datos::medicamentosActuales).orElse(null);
+        String observaciones = preconsulta.map(Preconsulta.Datos::observaciones).orElse(null);
+        antecedentesAtencion = java.util.stream.Stream.of(antecedentesAtencion,
+                        medicamentos == null ? null : "Medicamentos actuales: " + medicamentos,
+                        observaciones == null ? null : "Preconsulta: " + observaciones)
+                .filter(java.util.Objects::nonNull).reduce((a, b) -> a + "\n" + b).orElse(null);
         Atencion nueva = Atencion.nueva(pacienteId, yo.membresiaId(), yo.id(), yo.nombre(), citaId,
                 antecedentesAtencion);
+        preconsulta.ifPresent(nueva::precargar);
         // A un menor lo suele acompañar su responsable: arranca con él y el médico lo cambia si vino otra persona
         if (paciente.edad() < 18 && paciente.getResponsableNombre() != null) {
             nueva.registrarAcompanante(paciente.getResponsableNombre(), paciente.getResponsableParentesco(),

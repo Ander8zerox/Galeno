@@ -101,6 +101,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/formatos/**").hasAuthority(Permiso.HISTORIA_VER.name())
                         .requestMatchers("/api/v1/formatos/**").hasAuthority(Permiso.HISTORIA_REGISTRAR.name())
                         .requestMatchers("/api/v1/agenda/**").hasAuthority(Permiso.AGENDA_GESTIONAR.name())
+                        .requestMatchers("/api/v1/preconsulta/**").hasAuthority(Permiso.PRECONSULTA_REGISTRAR.name())
                         // El estado lo ve cualquier miembro (para el aviso); lo demás, quien administra la suscripción
                         .requestMatchers(HttpMethod.GET, "/api/v1/suscripcion").hasAuthority(TokenService.MIEMBRO)
                         .requestMatchers("/api/v1/suscripcion/**").hasAuthority(Permiso.SUSCRIPCION_GESTIONAR.name())
