@@ -16,12 +16,12 @@ import jakarta.validation.constraints.Size;
 public record PacienteRequest(
         @NotBlank @Pattern(regexp = TiposDocumento.PATRON, message = "Tipo de documento no válido") String tipoDocumento,
         @NotBlank @Size(max = 30) String numeroDocumento,
-        @NotBlank @Size(max = 120) String nombres,
-        @NotBlank @Size(max = 120) String apellidos,
+        @NotBlank @Size(max = 120) @Pattern(regexp = Nombres.PATRON, message = Nombres.MENSAJE) String nombres,
+        @NotBlank @Size(max = 120) @Pattern(regexp = Nombres.PATRON, message = Nombres.MENSAJE) String apellidos,
         @NotNull @Past LocalDate fechaNacimiento,
         @NotBlank @Pattern(regexp = "F|M|I", message = "Sexo debe ser F, M o I") String sexo,
         @NotBlank @Size(max = 30) @Pattern(regexp = Telefonos.PATRON, message = Telefonos.MENSAJE) String telefono,
-        @Email @Size(max = 190) String email,
+        @Email @Size(max = 190) @Pattern(regexp = Correos.PATRON_OPCIONAL, message = Correos.MENSAJE) String email,
         @Size(max = 2000) String alergias,
         @Size(max = 4000) String antecedentes,
         /** El paciente pidió no recibir correos sobre sus citas; null: se queda como estaba. */
@@ -32,7 +32,7 @@ public record PacienteRequest(
          */
         Boolean sinCorreo,
         /** Quien responde por un menor de edad (obligatorio si tiene menos de 18 años). */
-        @Size(max = 200) String responsableNombre,
+        @Size(max = 200) @Pattern(regexp = Nombres.PATRON_OPCIONAL, message = Nombres.MENSAJE) String responsableNombre,
         @Size(max = 40) String responsableParentesco,
         @Pattern(regexp = TiposDocumento.PATRON, message = "Tipo de documento no válido") String responsableTipoDocumento,
         @Size(max = 30) String responsableNumeroDocumento,

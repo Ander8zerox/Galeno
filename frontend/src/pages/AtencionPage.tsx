@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { textoAlergias, useClinicos } from "../features/pacientes/AntecedentesPaciente";
+import { errorNombre } from "../features/pacientes/PacienteForm";
 import { api, expectOk, unwrap, type Schemas } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { ApoyoDiagnostico } from "../features/apoyo/ApoyoDiagnostico";
@@ -234,7 +235,8 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
             parentesco). Sin esto no se puede firmar.
           </p>
           <label>Nombre<input value={acompanante.nombre} maxLength={200}
-            onChange={(e) => setAcompanante({ ...acompanante, nombre: e.target.value })} /></label>
+            onChange={(e) => setAcompanante({ ...acompanante, nombre: e.target.value })} />
+            {errorNombre(acompanante.nombre) && <small className="field-error">{errorNombre(acompanante.nombre)}</small>}</label>
           <label>Parentesco<input value={acompanante.parentesco} maxLength={40} list="parentescos-acompanante"
             onChange={(e) => setAcompanante({ ...acompanante, parentesco: e.target.value })} />
             <datalist id="parentescos-acompanante">

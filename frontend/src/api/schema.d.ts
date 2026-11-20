@@ -4362,26 +4362,26 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            missingNode?: boolean;
+            floatingPointNumber?: boolean;
+            valueNode?: boolean;
             integralNumber?: boolean;
-            bigDecimal?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             container?: boolean;
+            missingNode?: boolean;
+            bigDecimal?: boolean;
             bigInteger?: boolean;
-            valueNode?: boolean;
-            object?: boolean;
-            pojo?: boolean;
-            short?: boolean;
-            string?: boolean;
-            long?: boolean;
+            int?: boolean;
             double?: boolean;
+            object?: boolean;
+            short?: boolean;
             /** @deprecated */
             textual?: boolean;
+            pojo?: boolean;
+            string?: boolean;
             boolean?: boolean;
-            int?: boolean;
+            long?: boolean;
             binary?: boolean;
-            floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
