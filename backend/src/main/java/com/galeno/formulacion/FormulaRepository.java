@@ -12,4 +12,6 @@ interface FormulaRepository extends JpaRepository<Formula, UUID> {
     long countByPacienteId(UUID pacienteId);
 
     long countByAtencionIdIn(java.util.Collection<UUID> atencionIds);
+
+    List<Formula> findByAtencionIdIn(java.util.Collection<UUID> atencionIds);
 }

@@ -16,6 +16,8 @@ import { textoFormatos, type Definicion, type Respuestas } from "../features/for
 import { CobroAtencion } from "../features/rips/CobroAtencion";
 import { ProcedimientosEditor, ProcedimientosLectura, type ProcedimientoForm } from "../features/rips/ProcedimientosEditor";
 import { useModuloActivo } from "../features/rips/modulos";
+import { DatosEncuentro, EncuentroLectura, encuentroDe } from "../features/historia/DatosEncuentro";
+import { FactoresEditor, OrdenesEditor, OrdenesFactoresLectura, factoresDe, ordenesDe, sugerirFactores } from "../features/historia/OrdenesFactores";
 
 type Atencion = Schemas["AtencionVista"];
 
@@ -56,6 +58,7 @@ function aForm(a: Atencion): Form {
 const procedimientosDe = (a: Atencion): ProcedimientoForm[] => (a.procedimientos ?? []).map((p) => ({
   codigoCups: p.codigoCups!, descripcion: p.descripcion, cantidad: p.cantidad ?? 1,
   valorUnitario: p.valorUnitario ?? undefined, diente: p.diente ?? undefined, superficies: p.superficies ?? undefined,
+  resultado: p.resultado ?? undefined,
 }));
 
 const respuestasDe = (formatos?: Diligenciado[]) =>
@@ -112,14 +115,18 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
   const rips = useModuloActivo("RIPS");
   const [procedimientos, setProcedimientos] = useState<ProcedimientoForm[]>(() => procedimientosDe(atencion));
   const [acompanante, setAcompanante] = useState(() => acompananteDe(atencion));
+  const [encuentro, setEncuentro] = useState(() => encuentroDe(atencion));
+  const [ordenes, setOrdenes] = useState(() => ordenesDe(atencion));
+  const [factores, setFactores] = useState(() => factoresDe(atencion));
+  const clinicosPaciente = useClinicos(atencion.pacienteId!);
   const iaDisponible = !!useAuth().me?.iaDisponible;
   const menor = (paciente?.edad ?? 99) < 18;
 
-  const original = useMemo(() => JSON.stringify({ f: aForm(atencion), d: atencion.diagnosticos ?? [], p: procedimientosDe(atencion), c: acompananteDe(atencion) }), [atencion]);
+  const original = useMemo(() => JSON.stringify({ f: aForm(atencion), d: atencion.diagnosticos ?? [], p: procedimientosDe(atencion), c: acompananteDe(atencion), e: encuentroDe(atencion), o: ordenesDe(atencion), r: factoresDe(atencion) }), [atencion]);
   const [base, setBase] = useState(original);
   // Lo último guardado de cada formato (agregar o quitar uno no deja la atención "sin guardar")
   const [baseRespuestas, setBaseRespuestas] = useState(() => respuestasDe(atencion.formatos));
-  const sucio = JSON.stringify({ f: form, d: dx, p: procedimientos, c: acompanante }) !== base || JSON.stringify(respuestas) !== JSON.stringify(baseRespuestas);
+  const sucio = JSON.stringify({ f: form, d: dx, p: procedimientos, c: acompanante, e: encuentro, o: ordenes, r: factores }) !== base || JSON.stringify(respuestas) !== JSON.stringify(baseRespuestas);
 
   useEffect(() => {
     if (!sucio) return;
@@ -147,11 +154,15 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
           acompananteNombre: acompanante.nombre, acompananteParentesco: acompanante.parentesco,
           acompananteTipoDocumento: acompanante.numeroDocumento.trim() ? acompanante.tipoDocumento : "",
           acompananteNumeroDocumento: acompanante.numeroDocumento,
+          // Vacío borra (vuelve a la del prestador); se envían siempre, como el acompañante
+          modalidadAtencion: encuentro.modalidadAtencion, grupoServicios: encuentro.grupoServicios,
+          causaExterna: encuentro.causaExterna, entorno: encuentro.entorno,
+          ordenes, factoresRiesgo: factores,
         },
       })),
     onSuccess: (a) => {
       setVersion(a.version ?? version);
-      setBase(JSON.stringify({ f: form, d: dx, p: procedimientos, c: acompanante }));
+      setBase(JSON.stringify({ f: form, d: dx, p: procedimientos, c: acompanante, e: encuentro, o: ordenes, r: factores }));
       setBaseRespuestas(respuestas);
       setGuardadoEn(new Date());
     },
@@ -227,6 +238,8 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
         </div>
       </div>
 
+      <DatosEncuentro valor={encuentro} onChange={setEncuentro} rips={rips} />
+
       {menor && (
         <div className="card form-grid">
           <h3 className="wide">Acompañante <span className="req">*</span></h3>
@@ -271,6 +284,9 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
         <label>Plan<textarea rows={3} value={form.plan} onChange={set("plan")} /></label>
         <IncapacidadAtencion atencionId={atencion.id!} formatos={formatos} rips={rips} onCambio={cambioFormatos} />
       </div>
+
+      <OrdenesEditor value={ordenes} onChange={setOrdenes} atencionId={atencion.id!} />
+      <FactoresEditor value={factores} onChange={setFactores} sugeridos={sugerirFactores(clinicosPaciente.data, form)} />
 
       {rips && <CobroAtencion atencionId={atencion.id!} editable />}
 
@@ -355,7 +371,12 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
           {a.firmadaEn && (a.origen === "IMPORTADA" ? ` · importada ${fechaHoraCorta(a.firmadaEn, zona)}` : ` · firmada ${fechaHoraCorta(a.firmadaEn, zona)}`)}
         </span>
       </div>
+      {/* En el orden de los bloques del RDA: encuentro, antecedentes, diagnósticos, medicamentos, procedimientos,
+          órdenes, factores de riesgo e incapacidad (prestador, paciente y profesional van en el encabezado) */}
       <div className="card stack lectura">
+        <EncuentroLectura a={a} rips={rips} zona={zona} />
+        {a.acompananteNombre && <p><strong>Acompañante:</strong> {a.acompananteNombre}{a.acompananteParentesco && ` (${a.acompananteParentesco})`}
+          {a.acompananteNumeroDocumento && ` · ${a.acompananteTipoDocumento ?? ""} ${a.acompananteNumeroDocumento}`}</p>}
         <Seccion titulo="Motivo de consulta" texto={a.motivoConsulta} />
         <Seccion titulo="Enfermedad actual" texto={a.enfermedadActual} />
         <Seccion titulo="Antecedentes" texto={a.antecedentes} />
@@ -385,17 +406,11 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
             </ul>
           </div>
         )}
-        <ProcedimientosLectura procedimientos={a.procedimientos ?? []} />
-        {a.incapacidad && <p><strong>Incapacidad:</strong> expidió incapacidad</p>}
-        {a.acompananteNombre && <p><strong>Acompañante:</strong> {a.acompananteNombre}{a.acompananteParentesco && ` (${a.acompananteParentesco})`}
-          {a.acompananteNumeroDocumento && ` · ${a.acompananteTipoDocumento ?? ""} ${a.acompananteNumeroDocumento}`}</p>}
         <Seccion titulo="Análisis" texto={a.analisis} />
         <Seccion titulo="Plan" texto={a.plan} />
-      </div>
-
-      {!!ligadas.length && (
-        <div className="card">
-          <h3>Fórmulas de esta atención</h3>
+        {!!ligadas.length && (
+        <div>
+          <h3>Medicamentos (fórmulas de esta atención)</h3>
           <ul>{ligadas.map((f) => (
             <li key={f.id}>
               {f.items?.map((i) => `${i.medicamento} ${i.concentracion ?? ""} — ${i.dosis} ${i.frecuencia} por ${i.duracion}`).join("; ")}{" "}
@@ -403,7 +418,13 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
             </li>
           ))}</ul>
         </div>
-      )}
+        )}
+        <ProcedimientosLectura procedimientos={a.procedimientos ?? []} />
+        <OrdenesFactoresLectura a={a} pdf={!!a.ordenes?.length && (
+          <BotonArchivo ruta={`/api/v1/historia/atenciones/${a.id}/ordenes/pdf`} nombre={`ordenes-${a.id!.slice(0, 8)}.pdf`}>PDF para el paciente</BotonArchivo>
+        )} />
+        {a.incapacidad && <p><strong>Incapacidad:</strong> expidió incapacidad</p>}
+      </div>
 
       {rips && a.origen !== "IMPORTADA" && <CobroAtencion atencionId={a.id!} editable={puede("HISTORIA_REGISTRAR")} />}
 

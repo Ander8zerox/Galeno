@@ -48,7 +48,14 @@ export function ProcedimientosEditor({ value, onChange, atencionId }: {
                   )}
                   <td><button type="button" className="btn-link danger" onClick={() => onChange(value.filter((_, j) => j !== i))}>Quitar</button></td>
                 </tr>
-              ))}
+              )).flatMap((fila, i) => value[i].codigoCups.startsWith("890") ? [fila] : [fila, (
+                <tr key={`r-${i}`} className="fila-resultado">
+                  <td colSpan={dental ? 6 : 4}>
+                    <input aria-label="Resultado" maxLength={1000} value={value[i].resultado ?? ""} placeholder="Resultado o hallazgo (opcional)"
+                      onChange={(e) => actualizar(i, { resultado: e.target.value || undefined })} />
+                  </td>
+                </tr>
+              )])}
             </tbody>
           </table>
         </div>
@@ -74,6 +81,7 @@ export function ProcedimientosLectura({ procedimientos }: { procedimientos: Sche
             {p.cantidad !== 1 && ` × ${p.cantidad}`}
             {p.diente && ` · diente ${p.diente}${p.superficies ? ` ${p.superficies}` : ""}`}
             {" · "}<span className="muted">{pesos(p.valorUnitario)}</span>
+            {p.resultado && <div className="small">Resultado: {p.resultado}</div>}
           </li>
         ))}
       </ul>

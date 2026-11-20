@@ -253,9 +253,10 @@ final class ArmadorRips {
         Ajustes aj = a.ajustes() == null ? Ajustes.NINGUNO : a.ajustes();
         boolean control = at.procedimientos().stream().anyMatch(pc -> pc.consulta() && pc.codigoCups().startsWith("8903"));
         String finalidad = valor(aj.finalidad(), pr.finalidadPara(control));
-        String causa = valor(aj.causaExterna(), pr.causaExterna());
-        String modalidad = valor(aj.modalidadAtencion(), pr.modalidadAtencion());
-        String grupo = valor(aj.grupoServicios(), pr.grupoServicios());
+        // Manda el ajuste del lote; si no, lo que registró el médico en la atención; si no, el prestador
+        String causa = valor(aj.causaExterna(), valor(at.causaExterna(), pr.causaExterna()));
+        String modalidad = valor(aj.modalidadAtencion(), valor(at.modalidadAtencion(), pr.modalidadAtencion()));
+        String grupo = valor(aj.grupoServicios(), valor(at.grupoServicios(), pr.grupoServicios()));
         String servicio = valor(aj.servicio(), pr.servicio());
         String via = valor(aj.viaIngreso(), pr.viaIngreso());
         LocalDate dia = LocalDate.ofInstant(at.fecha(), e.zona());

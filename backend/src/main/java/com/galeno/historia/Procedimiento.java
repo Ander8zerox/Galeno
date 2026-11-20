@@ -41,6 +41,23 @@ public class Procedimiento {
     @Column(length = 5)
     private String superficies;
 
+    /** Resultado o hallazgo del procedimiento (bloque 8 del RDA). */
+    @Column(length = 1000)
+    private String resultado;
+
+    /** Devuelve el mismo procedimiento con su resultado (vacío: sin resultado). */
+    public Procedimiento conResultado(String resultado) {
+        if (resultado != null && resultado.length() > 1000) {
+            throw ApiProblem.badRequest("El resultado de " + codigoCups + " es muy largo (máximo 1000 caracteres)");
+        }
+        this.resultado = resultado == null || resultado.isBlank() ? null : resultado.strip();
+        return this;
+    }
+
+    public String getResultado() {
+        return resultado;
+    }
+
     protected Procedimiento() {
     }
 

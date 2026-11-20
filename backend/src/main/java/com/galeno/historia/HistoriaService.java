@@ -52,6 +52,7 @@ public class HistoriaService {
     private final IdentidadService identidad;
     private final AgendaPublica agenda;
     private final PreconsultaService preconsultaDe;
+    private final MedicamentosDeAtencion medicamentos;
     private final PdfRenderer pdf;
     private final FormatosService formatos;
     private final CupsRepository cups;
@@ -64,7 +65,9 @@ public class HistoriaService {
                     AlmacenDocumentos almacen, PacienteService pacientes, IdentidadService identidad,
                     AgendaPublica agenda, PdfRenderer pdf, FormatosService formatos, CupsRepository cups,
                     ModulosService modulos, java.util.Optional<ListaPrecios> precios,
-                    java.util.Optional<ServicioHabilitado> servicio, PreconsultaService preconsultaDe) {
+                    java.util.Optional<ServicioHabilitado> servicio, PreconsultaService preconsultaDe,
+                    java.util.Optional<MedicamentosDeAtencion> medicamentos) {
+        this.medicamentos = medicamentos.orElse(ids -> java.util.Map.of());
         this.preconsultaDe = preconsultaDe;
         this.atenciones = atenciones;
         this.notas = notas;
@@ -153,6 +156,9 @@ public class HistoriaService {
         Atencion nueva = Atencion.nueva(pacienteId, yo.membresiaId(), yo.id(), yo.nombre(), citaId,
                 antecedentesAtencion);
         preconsulta.ifPresent(nueva::precargar);
+        // Modalidad, grupo y causa del prestador (el médico los cambia si esta atención es distinta)
+        servicio.encuentroPorDefecto().ifPresent(e -> nueva.registrarEncuentro(e.modalidadAtencion(), e.grupoServicios(),
+                e.causaExterna(), "Institucional"));
         // A un menor lo suele acompañar su responsable: arranca con él y el médico lo cambia si vino otra persona
         if (paciente.edad() < 18 && paciente.getResponsableNombre() != null) {
             nueva.registrarAcompanante(paciente.getResponsableNombre(), paciente.getResponsableParentesco(),
@@ -183,7 +189,8 @@ public class HistoriaService {
     @Transactional
     public AtencionVista guardar(UUID atencionId, long version, Atencion.Contenido contenido,
                                  List<RespuestasFormato> respuestasFormatos, List<ProcedimientoNuevo> procedimientos,
-                                 Boolean incapacidad, Acompanante acompanante) {
+                                 Boolean incapacidad, Acompanante acompanante, Encuentro encuentro,
+                                 List<OrdenNueva> ordenes, List<FactorNuevo> factores) {
         Atencion atencion = propia(atencionId);
         if (atencion.getVersion() != version) {
             throw ApiProblem.conflict("La atención cambió en otra pestaña o equipo. Recargue para ver la última versión.");
@@ -204,8 +211,79 @@ public class HistoriaService {
             atencion.registrarAcompanante(acompanante.nombre(), acompanante.parentesco(), acompanante.tipoDocumento(),
                     acompanante.numeroDocumento());
         }
+        if (ordenes != null) {
+            atencion.registrarOrdenes(ordenes(ordenes));
+        }
+        if (factores != null) {
+            atencion.registrarFactoresRiesgo(factores.stream()
+                    .map(f -> new FactorRiesgo(f.codigo(), f.observacion())).toList());
+        }
+        if (encuentro != null) {
+            atencion.registrarEncuentro(encuentro.modalidadAtencion(), encuentro.grupoServicios(), encuentro.causaExterna(),
+                    encuentro.entorno());
+        }
         atenciones.flush(); // incrementa la versión antes de responder
         return vista(atencion);
+    }
+
+    /** Con CUPS, la descripción sale del catálogo; sin él (interconsulta, estudio fuera del catálogo), la del médico. */
+    private List<OrdenMedica> ordenes(List<OrdenNueva> nuevas) {
+        java.util.Set<String> codigos = nuevas.stream().map(OrdenNueva::codigoCups)
+                .filter(c -> c != null && !c.isBlank()).map(c -> c.strip().toUpperCase()).collect(java.util.stream.Collectors.toSet());
+        java.util.Map<String, String> nombres = cups.findAllById(codigos).stream()
+                .collect(java.util.stream.Collectors.toMap(Cups::getCodigo, Cups::getDescripcion));
+        return nuevas.stream().map(o -> {
+            String codigo = o.codigoCups() == null || o.codigoCups().isBlank() ? null : o.codigoCups().strip().toUpperCase();
+            if (codigo != null && !nombres.containsKey(codigo)) {
+                throw ApiProblem.badRequest("El código " + codigo + " no está en el catálogo CUPS");
+            }
+            return new OrdenMedica(o.tipo(), codigo, codigo != null ? nombres.get(codigo) : o.descripcion(), o.cantidad(),
+                    o.indicaciones(), o.prioridad());
+        }).toList();
+    }
+
+    public record OrdenNueva(OrdenMedica.Tipo tipo, String codigoCups, String descripcion, int cantidad,
+                             String indicaciones, OrdenMedica.Prioridad prioridad) {
+    }
+
+    public record FactorNuevo(FactorRiesgo.Codigo codigo, String observacion) {
+    }
+
+    public record OrdenVista(OrdenMedica.Tipo tipo, String codigoCups, String descripcion, int cantidad,
+                             String indicaciones, OrdenMedica.Prioridad prioridad) {
+        static OrdenVista de(OrdenMedica o) {
+            return new OrdenVista(o.getTipo(), o.getCodigoCups(), o.getDescripcion(), o.getCantidad(), o.getIndicaciones(),
+                    o.getPrioridad());
+        }
+    }
+
+    public record FactorVista(FactorRiesgo.Codigo codigo, String nombre, String observacion) {
+        static FactorVista de(FactorRiesgo f) {
+            return new FactorVista(f.getCodigo(), f.getCodigo().nombre(), f.getObservacion());
+        }
+    }
+
+    /** Lo que el PDF de la atención toma de otros módulos para los bloques del RDA. */
+    private AtencionPdf.Extras extras(Atencion a, java.util.Map<UUID, List<String>> meds) {
+        java.util.Optional<String> entidad;
+        try {
+            entidad = servicio.entidadResponsable(a.getId());
+        } catch (RuntimeException e) {
+            entidad = java.util.Optional.empty(); // sin RIPS o sin cobro: el bloque se omite
+        }
+        return new AtencionPdf.Extras(entidad.orElse(null),
+                conCodigo("modalidad_atencion", a.getModalidadAtencion()),
+                conCodigo("grupo_servicios", a.getGrupoServicios()),
+                conCodigo("causa_externa", a.getCausaExterna()),
+                meds.getOrDefault(a.getId(), List.of()));
+    }
+
+    private String conCodigo(String tabla, String codigo) {
+        return codigo == null ? null : servicio.nombreReferencia(tabla, codigo).map(n -> codigo + " · " + n).orElse(codigo);
+    }
+
+    /** Datos del encuentro de la atención; null en el guardado: no cambian. */
+    public record Encuentro(String modalidadAtencion, String grupoServicios, String causaExterna, String entorno) {
     }
 
     /** Agrega un formato activo del consultorio al borrador. */
@@ -310,6 +388,32 @@ public class HistoriaService {
                 "application/pdf", contenido);
     }
 
+    /** Órdenes médicas de la atención en un PDF para el paciente (con marca de agua si es un borrador). Queda auditado. */
+    @Transactional
+    public Archivo pdfOrdenes(UUID atencionId) {
+        Atencion a = visible(atencionId);
+        if (a.getOrdenes().isEmpty()) {
+            throw ApiProblem.notFound("Esta atención no tiene órdenes médicas");
+        }
+        Paciente p = pacientes.get(a.getPacienteId());
+        var consultorio = identidad.consultorio(AuthUser.current().tenantId());
+        auditar(a.getPacienteId(), Accion.IMPRIMIR_ATENCION, atencionId);
+        StringBuilder t = new StringBuilder("<table class=\"grilla\"><tr><th>Tipo</th><th>CUPS</th><th>Se ordena</th><th>Cant.</th><th>Indicaciones</th></tr>");
+        for (OrdenMedica o : a.getOrdenes()) {
+            t.append("<tr><td>").append(PdfRenderer.esc(AtencionPdf.tipoOrden(o.getTipo())))
+                    .append(o.getPrioridad() == OrdenMedica.Prioridad.URGENTE ? "<br /><strong>URGENTE</strong>" : "")
+                    .append("</td><td>").append(o.getCodigoCups() == null ? "" : PdfRenderer.esc(o.getCodigoCups()))
+                    .append("</td><td>").append(PdfRenderer.esc(o.getDescripcion())).append("</td><td>").append(o.getCantidad())
+                    .append("</td><td>").append(o.getIndicaciones() == null ? "" : PdfRenderer.esc(o.getIndicaciones()))
+                    .append("</td></tr>");
+        }
+        t.append("</table>");
+        byte[] contenido = pdf.render(FormatoPdf.html(a, p, consultorio,
+                new com.galeno.formatos.FormatosService.DocumentoFormato("Órdenes médicas", "ÓRDENES MÉDICAS", true, t.toString())));
+        return new Archivo(NombreArchivo.pdf("ordenes-medicas", p.getApellidos(), p.getNombres(), a.getFechaAtencion(),
+                consultorio.zona()), "application/pdf", contenido);
+    }
+
     /** PDF de la atención (con marca de agua si es un borrador). Queda auditado. */
     @Transactional
     public Archivo pdfAtencion(UUID atencionId) {
@@ -318,7 +422,8 @@ public class HistoriaService {
         var consultorio = identidad.consultorio(AuthUser.current().tenantId());
         auditar(a.getPacienteId(), Accion.IMPRIMIR_ATENCION, atencionId);
         byte[] contenido = pdf.render(AtencionPdf.html(a, p, consultorio, notas.findByAtencionIdOrderByCreadaEn(atencionId),
-                formatos.htmlPorAtencion(List.of(atencionId)).getOrDefault(atencionId, "")));
+                formatos.htmlPorAtencion(List.of(atencionId)).getOrDefault(atencionId, ""),
+                extras(a, medicamentos.lineas(List.of(atencionId)))));
         return new Archivo(NombreArchivo.pdf("atencion", p.getApellidos(), p.getNombres(), a.getFechaAtencion(), consultorio.zona()),
                 "application/pdf", contenido);
     }
@@ -334,9 +439,10 @@ public class HistoriaService {
         var consultorio = identidad.consultorio(yo.tenantId());
         List<Atencion> firmadas = atenciones.firmadas(pacienteId);
         var formatosHtml = formatos.htmlPorAtencion(firmadas.stream().map(Atencion::getId).toList());
+        var meds = medicamentos.lineas(firmadas.stream().map(Atencion::getId).toList());
         List<HistoriaPdf.AtencionImpresa> lista = firmadas.stream()
                 .map(a -> new HistoriaPdf.AtencionImpresa(a, notas.findByAtencionIdOrderByCreadaEn(a.getId()),
-                        formatosHtml.getOrDefault(a.getId(), "")))
+                        formatosHtml.getOrDefault(a.getId(), ""), extras(a, meds)))
                 .toList();
         auditar(pacienteId, Accion.IMPRIMIR_HISTORIA, null);
         byte[] contenido = pdf.render(HistoriaPdf.html(p, pacientes.resumenClinico(pacienteId), consultorio, lista,
@@ -367,7 +473,8 @@ public class HistoriaService {
             if (nombre == null) {
                 throw ApiProblem.badRequest("El código " + p.codigoCups() + " no está en el catálogo CUPS");
             }
-            return new Procedimiento(codigo, nombre, p.cantidad(), p.valorUnitario(), p.diente(), p.superficies());
+            return new Procedimiento(codigo, nombre, p.cantidad(), p.valorUnitario(), p.diente(), p.superficies())
+                    .conResultado(p.resultado());
         }).toList();
     }
 
@@ -478,14 +585,16 @@ public class HistoriaService {
     /** Lo que el RIPS toma de una atención firmada. */
     public record AtencionRips(UUID id, UUID pacienteId, UUID citaId, UUID medicoUsuarioId, String medicoNombre,
                                Instant fecha, boolean incapacidad, List<DiagnosticoVista> diagnosticos,
-                               List<ProcedimientoVista> procedimientos) {
+                               List<ProcedimientoVista> procedimientos, String modalidadAtencion, String grupoServicios,
+                               String causaExterna) {
 
         static AtencionRips de(Atencion a) {
             return new AtencionRips(a.getId(), a.getPacienteId(), a.getCitaId(), a.getMedicoUsuarioId(),
                     a.getMedicoNombre(), a.getFechaAtencion(), a.isIncapacidad(),
                     a.getDiagnosticos().stream().map(d -> new DiagnosticoVista(d.getCodigoCie10(), d.getDescripcion(),
                             d.isPrincipal(), d.getTipo())).toList(),
-                    a.getProcedimientos().stream().map(ProcedimientoVista::de).toList());
+                    a.getProcedimientos().stream().map(ProcedimientoVista::de).toList(), a.getModalidadAtencion(),
+                    a.getGrupoServicios(), a.getCausaExterna());
         }
     }
 
@@ -699,17 +808,17 @@ public class HistoriaService {
 
     /** Lo que envía la pantalla; la descripción sale del catálogo. */
     public record ProcedimientoNuevo(String codigoCups, int cantidad, java.math.BigDecimal valorUnitario, String diente,
-                                     String superficies) {
+                                     String superficies, String resultado) {
     }
 
     /** @param consulta va en "consultas" del RIPS (CUPS 890…); si no, en "procedimientos" */
     public record ProcedimientoVista(String codigoCups, String descripcion, int cantidad,
                                      java.math.BigDecimal valorUnitario, String diente, String superficies,
-                                     boolean consulta) {
+                                     boolean consulta, String resultado) {
 
         static ProcedimientoVista de(Procedimiento p) {
             return new ProcedimientoVista(p.getCodigoCups(), p.getDescripcion(), p.getCantidad(), p.getValorUnitario(),
-                    p.getDiente(), p.getSuperficies(), p.esConsulta());
+                    p.getDiente(), p.getSuperficies(), p.esConsulta(), p.getResultado());
         }
     }
 
@@ -741,7 +850,9 @@ public class HistoriaService {
                                 boolean incapacidad, List<NotaVista> notas, List<DocumentoVista> documentos,
                                 List<FormatoDiligenciado> formatos, String acompananteNombre,
                                 String acompananteParentesco, String acompananteTipoDocumento,
-                                String acompananteNumeroDocumento) {
+                                String acompananteNumeroDocumento, Instant finalizadaEn, String modalidadAtencion,
+                                String grupoServicios, String causaExterna, String entorno, List<OrdenVista> ordenes,
+                                List<FactorVista> factoresRiesgo) {
 
         static AtencionVista de(Atencion a, boolean propia, List<NotaVista> notas, List<DocumentoVista> documentos,
                                 List<FormatoDiligenciado> formatos) {
@@ -755,7 +866,10 @@ public class HistoriaService {
                             d.isPrincipal(), d.getTipo())).toList(),
                     a.getProcedimientos().stream().map(ProcedimientoVista::de).toList(), a.isIncapacidad(), notas,
                     documentos, formatos, a.getAcompananteNombre(), a.getAcompananteParentesco(),
-                    a.getAcompananteTipoDocumento(), a.getAcompananteNumeroDocumento());
+                    a.getAcompananteTipoDocumento(), a.getAcompananteNumeroDocumento(), a.getFinalizadaEn(),
+                    a.getModalidadAtencion(), a.getGrupoServicios(), a.getCausaExterna(), a.getEntorno(),
+                    a.getOrdenes().stream().map(OrdenVista::de).toList(),
+                    a.getFactoresRiesgo().stream().map(FactorVista::de).toList());
         }
     }
 
