@@ -51,7 +51,7 @@ class ApoyoDiagnosticoHandler implements AiJobHandler {
                 Examen físico: %s
                 Formatos diligenciados:
                 %s
-                </caso>""".formatted(paciente.resumenAnonimizado(), e.motivoConsulta(), e.enfermedadActual(),
+                </caso>""".formatted(paciente.resumenAnonimizado(pacientes.resumenClinico(e.pacienteId())), e.motivoConsulta(), e.enfermedadActual(),
                 orNone(e.signosVitales()), orNone(e.examenFisico()), orNone(e.formatos()));
         return llm.generate(new LlmRequest(AiJobType.APOYO_DIAGNOSTICO, prompts.get(PROMPT), contenido), SugerenciasDiagnosticas.class);
     }

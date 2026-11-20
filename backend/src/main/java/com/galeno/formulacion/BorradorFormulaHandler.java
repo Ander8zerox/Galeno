@@ -41,6 +41,7 @@ class BorradorFormulaHandler implements AiJobHandler {
     public LlmResult<BorradorFormula> handle(AiJob job) {
         Entrada entrada = jobs.readInput(job, Entrada.class);
         Paciente paciente = pacientes.get(entrada.pacienteId());
+        var clinico = pacientes.resumenClinico(entrada.pacienteId());
 
         String contenido = """
                 %s
@@ -49,13 +50,13 @@ class BorradorFormulaHandler implements AiJobHandler {
                 Indicación del médico:
                 <indicacion>
                 %s
-                </indicacion>""".formatted(paciente.resumenAnonimizado(),
+                </indicacion>""".formatted(paciente.resumenAnonimizado(clinico),
                 entrada.diagnostico() == null || entrada.diagnostico().isBlank() ? "no especificado" : entrada.diagnostico(),
                 entrada.texto());
 
         LlmResult<BorradorFormula> result = llm.generate(new LlmRequest(AiJobType.BORRADOR_FORMULA, prompts.get(PROMPT), contenido), BorradorFormula.class);
         BorradorFormula revisado = result.output()
-                .conAdvertencias(ValidadorFormula.revisar(result.output(), paciente.getAlergias()));
+                .conAdvertencias(ValidadorFormula.revisar(result.output(), clinico.agentes()));
         return new LlmResult<>(revisado, result.model(), result.inputTokens(), result.outputTokens());
     }
 

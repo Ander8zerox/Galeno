@@ -227,6 +227,9 @@ input::placeholder, textarea::placeholder { color: #667180; }
 .badge-ok { background: var(--ok-bg); color: var(--ok); }
 .badge-warn { background: var(--warn-bg); color: var(--warn); }
 .aviso-precio { flex-basis: 100%; color: var(--warn); }
+/* Dos tarjetas lado a lado (una debajo de otra en pantallas angostas) */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem; align-items: start; }
+.form-grid.compacto { gap: .5rem .75rem; }
 .badge-danger { background: var(--danger-bg); color: var(--danger); }
 .badge-boton { border: 0; cursor: pointer; font-family: inherit; }
 .badge-boton:hover { filter: brightness(.95); }

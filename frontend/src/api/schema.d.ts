@@ -260,6 +260,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pacientes/{pacienteId}/clinicos/antecedentes/{antecedenteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["editarAntecedente"];
+        post?: never;
+        delete: operations["quitarAntecedente"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pacientes/{pacienteId}/clinicos/alergias/{alergiaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["editarAlergia"];
+        post?: never;
+        delete: operations["quitarAlergia"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pacientes/{pacienteId}/clinicos/alergias/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["estadoAlergias"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pacientes/{id}": {
         parameters: {
             query?: never;
@@ -1006,6 +1054,54 @@ export interface paths {
         get: operations["list"];
         put?: never;
         post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pacientes/{pacienteId}/clinicos/texto-anterior/borrar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["borrarTextoAnterior"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pacientes/{pacienteId}/clinicos/antecedentes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["agregarAntecedente"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pacientes/{pacienteId}/clinicos/alergias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["agregarAlergia"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1924,6 +2020,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pacientes/{pacienteId}/clinicos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ver"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/modulos": {
         parameters: {
             query?: never;
@@ -2809,6 +2921,53 @@ export interface components {
             /** Format: int64 */
             pagado?: number;
         };
+        AntecedenteRequest: {
+            /** @enum {string} */
+            tipo: "PATOLOGICO" | "QUIRURGICO" | "TRAUMATICO" | "FARMACOLOGICO" | "TOXICO" | "FAMILIAR" | "GINECO_OBSTETRICO" | "INMUNOLOGICO" | "OTRO";
+            descripcion: string;
+            desde?: string;
+            vigente?: boolean;
+        };
+        AlergiaVista: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            tipo?: "MEDICAMENTO" | "ALIMENTO" | "AMBIENTAL" | "OTRO";
+            agente?: string;
+            reaccion?: string;
+            /** @enum {string} */
+            severidad?: "LEVE" | "MODERADA" | "SEVERA";
+        };
+        AntecedenteVista: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            tipo?: "PATOLOGICO" | "QUIRURGICO" | "TRAUMATICO" | "FARMACOLOGICO" | "TOXICO" | "FAMILIAR" | "GINECO_OBSTETRICO" | "INMUNOLOGICO" | "OTRO";
+            tipoNombre?: string;
+            descripcion?: string;
+            desde?: string;
+            vigente?: boolean;
+        };
+        Clinicos: {
+            /** @enum {string} */
+            alergiasEstado?: "NIEGA" | "SI";
+            alergias?: components["schemas"]["AlergiaVista"][];
+            antecedentes?: components["schemas"]["AntecedenteVista"][];
+            alergiasTextoAnterior?: string;
+            antecedentesTextoAnterior?: string;
+        };
+        AlergiaRequest: {
+            /** @enum {string} */
+            tipo: "MEDICAMENTO" | "ALIMENTO" | "AMBIENTAL" | "OTRO";
+            agente: string;
+            reaccion?: string;
+            /** @enum {string} */
+            severidad?: "LEVE" | "MODERADA" | "SEVERA";
+        };
+        EstadoAlergias: {
+            /** @enum {string} */
+            estado: "NIEGA" | "SI";
+        };
         PacienteRequest: {
             tipoDocumento: string;
             numeroDocumento: string;
@@ -3526,6 +3685,10 @@ export interface components {
             token: string;
             password?: string;
         };
+        BorrarTextoAnterior: {
+            alergias?: boolean;
+            antecedentes?: boolean;
+        };
         CodigoMfa: {
             codigo: string;
         };
@@ -4077,26 +4240,26 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            long?: boolean;
-            double?: boolean;
-            int?: boolean;
-            pojo?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            short?: boolean;
-            boolean?: boolean;
-            binary?: boolean;
-            floatingPointNumber?: boolean;
-            valueNode?: boolean;
-            container?: boolean;
-            missingNode?: boolean;
+            bigDecimal?: boolean;
             integralNumber?: boolean;
+            valueNode?: boolean;
+            bigInteger?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            bigDecimal?: boolean;
-            bigInteger?: boolean;
+            missingNode?: boolean;
+            container?: boolean;
+            floatingPointNumber?: boolean;
+            int?: boolean;
             string?: boolean;
+            pojo?: boolean;
+            long?: boolean;
+            double?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            boolean?: boolean;
             object?: boolean;
+            short?: boolean;
+            binary?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -4794,6 +4957,132 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["PartnerVista"];
+                };
+            };
+        };
+    };
+    editarAntecedente: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+                antecedenteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AntecedenteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Clinicos"];
+                };
+            };
+        };
+    };
+    quitarAntecedente: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+                antecedenteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Clinicos"];
+                };
+            };
+        };
+    };
+    editarAlergia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+                alergiaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlergiaRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Clinicos"];
+                };
+            };
+        };
+    };
+    quitarAlergia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+                alergiaId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Clinicos"];
+                };
+            };
+        };
+    };
+    estadoAlergias: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EstadoAlergias"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Clinicos"];
                 };
             };
         };
@@ -6228,6 +6517,84 @@ export interface operations {
             };
         };
     };
+    borrarTextoAnterior: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BorrarTextoAnterior"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Clinicos"];
+                };
+            };
+        };
+    };
+    agregarAntecedente: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AntecedenteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Clinicos"];
+                };
+            };
+        };
+    };
+    agregarAlergia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlergiaRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Clinicos"];
+                };
+            };
+        };
+    };
     desactivar: {
         parameters: {
             query?: never;
@@ -7635,6 +8002,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CodigoPublico"];
+                };
+            };
+        };
+    };
+    ver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pacienteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Clinicos"];
                 };
             };
         };
