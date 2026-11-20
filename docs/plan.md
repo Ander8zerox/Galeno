@@ -248,6 +248,47 @@ Decidido el 8 de noviembre de 2026:
 - Imagen de la firma del médico y código QR de verificación en los PDF.
 - Reporte de auditoría para el administrador.
 
+### 5b. Historia clínica según los 13 bloques del RDA (fase D, planeada el 20 de noviembre de 2026; sin implementar)
+
+Viene del informe de QA. Ya cumplen: 1 prestador, 2 entidad responsable, 3 paciente, 5 antecedentes y alergias
+(estructurados, PR #67), 11 incapacidad (formato con días, fechas y PDF) y 12 profesional. Lo que falta, un PR por
+pieza y en este orden:
+
+| # | Pieza | Qué incluye | Migración | Bloque |
+|---|---|---|---|---|
+| D1 | Datos del encuentro | Hora de fin de la atención (al firmar o con "Terminar consulta"). Modalidad, grupo de servicios, entorno y causa externa por atención: arrancan con los del prestador y se cambian en un panel plegable; el lote RIPS usa los de la atención | V41 | 4 |
+| D2 | Medicamentos en la atención | Las fórmulas firmadas de la atención se ven dentro de ella y salen en su PDF y en el de la historia. Los medicamentos actuales de la preconsulta pasan de texto a ítems | V42 | 7 |
+| D3 | Resultados de procedimientos | Cada procedimiento CUPS con su resultado o hallazgo, también en el PDF | V43 | 8 |
+| D4 | Órdenes médicas | Laboratorio, imágenes, procedimientos e interconsulta con CUPS del catálogo, cantidad, indicaciones y prioridad; se firman con la atención y salen en un PDF de órdenes para el paciente | V44 | 9 |
+| D5 | Factores de riesgo | Lista estructurada por atención. Sugeridos solos (tabaquismo o alcohol desde los antecedentes tóxicos, obesidad por IMC, presión alta por TA); el médico confirma cada uno | V45 | 10 |
+| D6 | Vista y PDF en orden RDA | La lectura de la atención y su PDF ordenados por los 13 bloques | — | Todos |
+| D7 | 🔒 CIE-11 y envío del RDA | Doble código CIE-10/CIE-11 y el RDA como documento de interoperabilidad (Ley 2015 de 2020) | — | 6 y 13 |
+
+Decisiones pendientes antes de arrancar:
+
+- **Entorno de atención (D1):** la lista oficial de valores no está confirmada (Res. 948, PDF escaneado que no se pudo
+  leer). Propuesta: texto con sugerencias hasta tener la tabla.
+- **Factores de riesgo (D5):** lista inicial propuesta, para que la valide un médico o QA: tabaquismo, alcohol,
+  sustancias psicoactivas, sedentarismo, obesidad, hipertensión, diabetes, dislipidemia, antecedente familiar
+  cardiovascular, embarazo de alto riesgo y riesgo de caídas.
+- **Órdenes (D4):** propuesta, que se firmen con la atención (como los formatos) y no aparte (como la fórmula). Es más
+  rápido; una orden olvidada se corrige con nota aclaratoria.
+
+Riesgo: D1 cambia de dónde saca el lote RIPS la modalidad y la causa. Los lotes ya generados no cambian y las atenciones
+viejas sin esos datos usan los del prestador; probarlo con los ejemplos oficiales de la Res. 948 que ya están en las
+pruebas.
+
+D7 se desbloquea con el texto de la Res. 948 (vigencia, art. 23 y campos CIE-11) y de la norma de interoperabilidad del
+RDA, o cuando SISPRO publique la tabla CIE11 (hoy la consulta pública la devuelve vacía).
+
+Otros pendientes que salieron de leer las normas (Res. 1552 de 2013 y Circular 038 de 2025):
+
+- Reporte mensual de oportunidad (Res. 1552, art. 3): citas asignadas, promedio de días desde la solicitud y desde la
+  fecha deseada, mínimo y máximo, por tipo de cita y especialidad.
+- Aviso cuando la cita supera el estándar: 3 días hábiles en medicina general y odontología; en especialidades, los de
+  la Circular 038.
+- Aviso de vencimiento de los 22 días hábiles para radicar la factura con su RIPS.
+
 ### 6. Formatos transversales (fase 4)
 
 - ✅ **Incapacidad, remisión, contrarreferencia y consentimiento informado** (8 de noviembre de 2026), cada uno con su
