@@ -77,6 +77,22 @@ public class Paciente {
     @Column(name = "sin_correos_citas", nullable = false)
     private boolean sinCorreosCitas;
 
+    /** Quien responde por el paciente si es menor de edad: padre, madre, acudiente o tutor. */
+    @Column(name = "responsable_nombre", length = 200)
+    private String responsableNombre;
+
+    @Column(name = "responsable_parentesco", length = 40)
+    private String responsableParentesco;
+
+    @Column(name = "responsable_tipo_documento", length = 2)
+    private String responsableTipoDocumento;
+
+    @Column(name = "responsable_numero_documento", length = 30)
+    private String responsableNumeroDocumento;
+
+    @Column(name = "responsable_telefono", length = 30)
+    private String responsableTelefono;
+
     protected Paciente() {
     }
 
@@ -205,6 +221,35 @@ public class Paciente {
         this.email = email;
         this.datosIncompletos = false;
         this.actualizadoEn = Instant.now();
+    }
+
+    void actualizarResponsable(String nombre, String parentesco, String tipoDocumento, String numeroDocumento, String telefono) {
+        this.responsableNombre = nombre;
+        this.responsableParentesco = parentesco;
+        this.responsableTipoDocumento = tipoDocumento;
+        this.responsableNumeroDocumento = numeroDocumento;
+        this.responsableTelefono = telefono;
+        this.actualizadoEn = Instant.now();
+    }
+
+    public String getResponsableNombre() {
+        return responsableNombre;
+    }
+
+    public String getResponsableParentesco() {
+        return responsableParentesco;
+    }
+
+    public String getResponsableTipoDocumento() {
+        return responsableTipoDocumento;
+    }
+
+    public String getResponsableNumeroDocumento() {
+        return responsableNumeroDocumento;
+    }
+
+    public String getResponsableTelefono() {
+        return responsableTelefono;
     }
 
     void preferirSinCorreosCitas(boolean sinCorreos) {

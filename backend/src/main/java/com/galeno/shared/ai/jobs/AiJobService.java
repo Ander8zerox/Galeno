@@ -15,13 +15,21 @@ public class AiJobService {
     private final AiJobRepository repository;
     private final JsonMapper mapper;
 
-    public AiJobService(AiJobRepository repository, JsonMapper mapper) {
+    /** app.ai.habilitada: en falso, la IA no se ofrece (la pantalla oculta los botones) y aquí se rechaza. */
+    private final boolean habilitada;
+
+    public AiJobService(AiJobRepository repository, JsonMapper mapper,
+                        @org.springframework.beans.factory.annotation.Value("${app.ai.habilitada:true}") boolean habilitada) {
+        this.habilitada = habilitada;
         this.repository = repository;
         this.mapper = mapper;
     }
 
     @Transactional
     public AiJob enqueue(AiJobType tipo, UUID pacienteId, Object entrada, String versionPrompt) {
+        if (!habilitada) {
+            throw com.galeno.shared.web.ApiExceptionHandler.ApiProblem.conflict("El asistente de IA todavía no está disponible en Galenum");
+        }
         String json = mapper.writeValueAsString(entrada);
         return repository.save(AiJob.pendiente(tipo, pacienteId, AuthUser.current().id(), versionPrompt, json));
     }

@@ -27,7 +27,7 @@ import { RipsPage } from "./pages/RipsPage";
 import { useModuloActivo } from "./features/rips/modulos";
 
 export function App() {
-  const { me, seleccion, mfa, logout, puede } = useAuth();
+  const { me, seleccion, mfa, logout, puede, permisosCambiaron, cerrarAvisoPermisos } = useAuth();
   const location = useLocation();
   const rips = useModuloActivo("RIPS", !!me);
 
@@ -71,6 +71,12 @@ export function App() {
     <Shell marca="Galenum" items={menu} arriba={<SelectorConsultorio />} usuario={me.nombre ?? ""} onSalir={logout}>
       <VigiaCorreoProvider>
         <AvisoSuscripcion />
+        {permisosCambiaron && (
+          <p className="alert alert-ok row" role="status">
+            <span className="grow">Un administrador cambió sus roles en este consultorio. Ya puede usar lo que le habilitaron.</span>
+            <button className="btn btn-secondary" onClick={cerrarAvisoPermisos}>Entendido</button>
+          </p>
+        )}
         <Bienvenida />
         <Routes>
           <Route path="/pacientes" element={<PacientesPage />} />

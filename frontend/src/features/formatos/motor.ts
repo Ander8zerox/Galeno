@@ -46,7 +46,8 @@ export function calcular(c: Campo, valores: Record<string, unknown> | undefined)
   if (typeof desde !== "string" || typeof dias !== "number" || dias < 1 || !Number.isInteger(dias)) return null;
   const f = new Date(`${desde}T12:00:00Z`);
   f.setUTCDate(f.getUTCDate() + dias - 1);
-  return f.toISOString().slice(0, 10);
+  // Una fecha escrita a mano y a medias ("20261-11-20") da Invalid Date: toISOString() lanzaría RangeError
+  return Number.isNaN(f.getTime()) ? null : f.toISOString().slice(0, 10);
 }
 
 /** {"seccion": {"campo": valor}} */

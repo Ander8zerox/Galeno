@@ -10,6 +10,8 @@ app:
     proveedor: ses # sin buzón de desarrollo: ese controlador solo existe con proveedor local
   ai:
     provider: bedrock
+    # Apagada hasta que AWS apruebe la cuota de Bedrock: la app oculta los botones. Se prende con APP_AI_HABILITADA=true
+    habilitada: false
 
 # La documentación de la API no se publica en producción
 springdoc:

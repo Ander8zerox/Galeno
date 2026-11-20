@@ -180,7 +180,7 @@ final class RipsParser {
         PacienteRips p = pacientes.computeIfAbsent(nuevo.clave(), k -> nuevo);
 
         LocalDate nacimiento = fecha(texto(u, "fechaNacimiento"));
-        String sexo = mayus(texto(u, "codSexo"));
+        String sexo = mayus(texto(u, "codSexo")); // Extra_III de la tabla Sexo: M masculino, F femenino, I (ver ArmadorRips)
         if (p == nuevo) {
             p.fechaNacimiento = nacimiento;
             p.sexo = sexo;

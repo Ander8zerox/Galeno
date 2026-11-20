@@ -92,6 +92,7 @@ function FormularioPrestador({ inicial, onGuardado }: { inicial: Schemas["Presta
     codigoHabilitacion: inicial.codigoHabilitacion ?? "", servicio: inicial.servicio ?? "",
     modalidadAtencion: inicial.modalidadAtencion ?? "", grupoServicios: inicial.grupoServicios ?? "",
     finalidad: inicial.finalidad ?? "", causaExterna: inicial.causaExterna ?? "", viaIngreso: inicial.viaIngreso ?? "",
+    finalidadControl: inicial.finalidadControl ?? "",
   });
   const [buscarServicio, setBuscarServicio] = useState("");
   const servicios = useBusquedaReferencia("servicio", buscarServicio);
@@ -135,8 +136,10 @@ function FormularioPrestador({ inicial, onGuardado }: { inicial: Schemas["Presta
       <div className="form-grid">
         <Seleccion etiqueta="Modalidad de atención" tabla="modalidad_atencion" valor={form.modalidadAtencion} onChange={set("modalidadAtencion")} />
         <Seleccion etiqueta="Grupo de servicios" tabla="grupo_servicios" valor={form.grupoServicios} onChange={set("grupoServicios")} />
-        <Seleccion etiqueta="Finalidad" tabla="finalidad" valor={form.finalidad} onChange={set("finalidad")}
-          filtro={(r) => r.extra?.Consultas !== "NO"} ayuda="Solo las que aplican a consultas" />
+        <Seleccion etiqueta="Finalidad (primera vez)" tabla="finalidad" valor={form.finalidad} onChange={set("finalidad")}
+          filtro={(r) => r.extra?.Consultas !== "NO"} ayuda="Suele ser 15 Diagnóstico" />
+        <Seleccion etiqueta="Finalidad (control)" tabla="finalidad" valor={form.finalidadControl} onChange={set("finalidadControl")}
+          filtro={(r) => r.extra?.Consultas !== "NO"} ayuda="Para consultas de control (8903xx); suele ser 16 Tratamiento" />
         <Seleccion etiqueta="Causa externa" tabla="causa_externa" valor={form.causaExterna} onChange={set("causaExterna")}
           filtro={(r) => r.extra?.Consultas !== "NO"} />
         <Seleccion etiqueta="Vía de ingreso (procedimientos)" tabla="via_ingreso" valor={form.viaIngreso} onChange={set("viaIngreso")}

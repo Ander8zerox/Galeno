@@ -61,9 +61,13 @@ function DatosConsultorioForm({ inicial, onGuardado }: {
     setForm({ ...form, [campo]: e.target.value });
   };
 
+  // Los correos le dicen al paciente cómo avisar si no puede ir: sin teléfono ni correo no se activan (el servidor lo exige)
+  const sinContacto = !form.telefono.trim() && !form.correo.trim();
+  const bloqueado = form.correosPacientes && sinContacto;
+
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    guardar.mutate();
+    if (!bloqueado) guardar.mutate();
   }
 
   return (
@@ -76,16 +80,22 @@ function DatosConsultorioForm({ inicial, onGuardado }: {
         <label>Correo para respuestas<input type="email" value={form.correo} maxLength={190} onChange={set("correo")} placeholder="citas@suconsultorio.com" /></label>
       </div>
       <label className="check">
-        <input type="checkbox" checked={form.correosPacientes}
+        <input type="checkbox" checked={form.correosPacientes} disabled={sinContacto && !form.correosPacientes}
           onChange={(e) => { setGuardado(false); setForm({ ...form, correosPacientes: e.target.checked }); }} />
         Enviar correos a los pacientes sobre sus citas: al agendarla, si cambia o se cancela, y un recordatorio 24 horas antes
       </label>
-      {form.correosPacientes && !form.telefono && !form.correo && (
-        <p className="alert">Sin teléfono ni correo, el paciente no sabrá cómo avisar si no puede asistir.</p>
+      {bloqueado && (
+        <p className="alert alert-warn">
+          Escriba el teléfono o el correo del consultorio (o desactive los correos): el paciente los usa para avisar si no
+          puede asistir.
+        </p>
+      )}
+      {sinContacto && !form.correosPacientes && (
+        <p className="muted small">Para enviar correos a los pacientes, escriba primero el teléfono o el correo del consultorio.</p>
       )}
       {guardar.error && <p className="alert alert-error">{guardar.error.message}</p>}
       {guardado && <p className="alert alert-ok">Datos guardados.</p>}
-      <div><button className="btn" disabled={guardar.isPending}>{guardar.isPending ? "Guardando…" : "Guardar"}</button></div>
+      <div><button className="btn" disabled={guardar.isPending || bloqueado}>{guardar.isPending ? "Guardando…" : "Guardar"}</button></div>
     </form>
   );
 }

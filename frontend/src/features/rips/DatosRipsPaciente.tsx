@@ -69,7 +69,8 @@ function FormularioRips({ pacienteId, datos, onGuardado }: { pacienteId: string;
       params: { path: { pacienteId } },
       body: {
         pagadorId: form.pagadorId || undefined,
-        tipoUsuario: form.tipoUsuario || undefined, paisResidencia: form.paisResidencia || undefined,
+        // Una ficha antigua con pagador particular y otro tipo se corrige al guardar (lo que se ve en pantalla)
+        tipoUsuario: (particular ? "12" : form.tipoUsuario) || undefined, paisResidencia: form.paisResidencia || undefined,
         municipioResidencia: form.municipioResidencia || undefined, zonaResidencia: form.zonaResidencia || undefined,
         paisOrigen: form.paisOrigen || undefined,
       },
@@ -81,11 +82,15 @@ function FormularioRips({ pacienteId, datos, onGuardado }: { pacienteId: string;
     },
   });
   const colombia = form.paisResidencia === COLOMBIA;
-  const sugerido = tipoUsuarioSugerido(pagadores.data?.find((p) => p.id === form.pagadorId));
+  const pagador = pagadores.data?.find((p) => p.id === form.pagadorId);
+  const sugerido = tipoUsuarioSugerido(pagador);
+  // Con un pagador particular el tipo es siempre 12: se fija y no se edita (el servidor rechaza otro)
+  const particular = pagador?.tipo === "PARTICULAR";
   // Al elegir el pagador se propone el tipo de usuario si aún no hay uno; si ya hay otro, se ofrece cambiarlo
   const elegirPagador = (pagadorId: string) => {
-    const t = tipoUsuarioSugerido(pagadores.data?.find((p) => p.id === pagadorId));
-    setForm({ ...form, pagadorId, tipoUsuario: form.tipoUsuario || t || "" });
+    const elegido = pagadores.data?.find((p) => p.id === pagadorId);
+    const t = tipoUsuarioSugerido(elegido);
+    setForm({ ...form, pagadorId, tipoUsuario: elegido?.tipo === "PARTICULAR" ? "12" : form.tipoUsuario || t || "" });
   };
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
 
@@ -98,11 +103,12 @@ function FormularioRips({ pacienteId, datos, onGuardado }: { pacienteId: string;
         </select>
       </label>
       <label>Tipo de usuario
-        <select value={form.tipoUsuario} onChange={set("tipoUsuario")}>
+        <select value={particular ? "12" : form.tipoUsuario} onChange={set("tipoUsuario")} disabled={particular}>
           <option value="">—</option>
           {tipos.data?.map((t) => <option key={t.codigo} value={t.codigo}>{t.nombre}</option>)}
         </select>
-        {sugerido && form.tipoUsuario && sugerido !== form.tipoUsuario && (
+        {particular && <span className="muted small">Con un pagador particular, el tipo de usuario es siempre particular.</span>}
+        {!particular && sugerido && form.tipoUsuario && sugerido !== form.tipoUsuario && (
           <span className="muted small">Con este pagador suele ser {tipos.data?.find((t) => t.codigo === sugerido)?.nombre?.toLowerCase()}.{" "}
             <button type="button" className="btn-link" onClick={() => setForm({ ...form, tipoUsuario: sugerido })}>Usar</button></span>
         )}

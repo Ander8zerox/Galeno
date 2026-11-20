@@ -122,11 +122,21 @@ public class PacienteService {
      */
     @Transactional
     public Paciente create(PacienteRequest r, boolean datosClinicos) {
-        if (repository.existsByTipoDocumentoAndNumeroDocumento(r.tipoDocumento(), r.numeroDocumento())) {
+        // Solo al crear: el documento no se edita, y una ficha antigua con otro formato no debe quedar sin poder editarse
+        String errorNumero = TiposDocumento.errorNumero(r.tipoDocumento(), r.numeroDocumento());
+        if (errorNumero != null) {
+            throw ApiProblem.badRequest(errorNumero);
+        }
+        int edad = java.time.Period.between(r.fechaNacimiento(), java.time.LocalDate.now()).getYears();
+        if (!TiposDocumento.acordeConEdad(r.tipoDocumento(), edad)) {
+            throw ApiProblem.badRequest("El tipo de documento no corresponde a la edad (" + edad + " años): el RIPS usa RC "
+                    + "hasta los 7 años, TI de 7 a 17 y CC desde los 18");
+        }
+        if (repository.existsByTipoDocumentoAndNumeroDocumento(r.tipoDocumento(), r.numeroDocumento().strip())) {
             throw ApiProblem.conflict("Ya existe un paciente con ese documento");
         }
         topes.paciente();
-        Paciente paciente = new Paciente(r.tipoDocumento(), r.numeroDocumento());
+        Paciente paciente = new Paciente(r.tipoDocumento(), r.numeroDocumento().strip());
         apply(paciente, r, datosClinicos);
         return repository.save(paciente);
     }
@@ -154,12 +164,21 @@ public class PacienteService {
     }
 
     private static void apply(Paciente p, PacienteRequest r, boolean datosClinicos) {
-        p.actualizarDemograficos(r.nombres(), r.apellidos(), r.fechaNacimiento(), r.sexo(), r.telefono().strip(), r.emailAGuardar());
+        p.actualizarDemograficos(r.nombres(), r.apellidos(), r.fechaNacimiento(), r.sexo(), Telefonos.normalizar(r.telefono()),
+                r.emailAGuardar());
+        // Se guarda aunque ya sea mayor: queda como contacto. Un menor no se puede guardar sin él (PacienteRequest).
+        p.actualizarResponsable(texto(r.responsableNombre()), texto(r.responsableParentesco()),
+                texto(r.responsableTipoDocumento()), texto(r.responsableNumeroDocumento()),
+                r.responsableTelefono() == null || r.responsableTelefono().isBlank() ? null : Telefonos.normalizar(r.responsableTelefono()));
         if (r.sinCorreosCitas() != null) {
             p.preferirSinCorreosCitas(r.sinCorreosCitas());
         }
         if (datosClinicos) {
             p.actualizarClinicos(r.alergias(), r.antecedentes());
         }
+    }
+
+    private static String texto(String s) {
+        return s == null || s.isBlank() ? null : s.strip();
     }
 }

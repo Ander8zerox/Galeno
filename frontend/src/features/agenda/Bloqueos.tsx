@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
-import { aIso, fechaEn, fechaHoraCorta, hora, hoyEn, sumarDias } from "./tiempo";
+import { aIso, fechaEn, fechaValida, fechaHoraCorta, hora, hoyEn, sumarDias } from "./tiempo";
 import type { AbrirDia } from "./VistasAgenda";
 
 type Bloqueo = Schemas["BloqueoVista"];
@@ -186,8 +186,13 @@ function NuevoBloqueo({ medicos, medicoId, zona, esAdmin, onCreado, onCerrar }: 
           <datalist id="motivos-bloqueo">{MOTIVOS.map((m) => <option key={m} value={m} />)}</datalist>
         </label>
         <label>Desde<input type="date" value={desde} min={hoy} required
-          onChange={(e) => { setDesde(e.target.value); if (e.target.value > hasta) setHasta(e.target.value); }} /></label>
-        <label>Hasta<input type="date" value={hasta} min={desde} required onChange={(e) => setHasta(e.target.value)} /></label>
+          onChange={(e) => {
+            if (!fechaValida(e.target.value)) return;
+            setDesde(e.target.value);
+            if (e.target.value > hasta) setHasta(e.target.value);
+          }} /></label>
+        <label>Hasta<input type="date" value={hasta} min={desde} required
+          onChange={(e) => fechaValida(e.target.value) && setHasta(e.target.value)} /></label>
         <label className="check wide">
           <input type="checkbox" checked={todoElDia} onChange={(e) => setTodoElDia(e.target.checked)} /> Todo el día
         </label>

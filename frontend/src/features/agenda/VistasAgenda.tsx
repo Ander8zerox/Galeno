@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { api, unwrap, type Schemas } from "../../api/client";
 import { duracionTexto } from "./AgendarForm";
-import { fechaCorta, fechaEn, fechaHoraCorta, hora, hoyEn, lunesDe, primeroDelMes, sumarDias } from "./tiempo";
+import { fechaCorta, fechaEn, fechaValida, fechaHoraCorta, hora, hoyEn, lunesDe, primeroDelMes, sumarDias } from "./tiempo";
 
 type Cita = Schemas["CitaVista"];
 type Medico = Schemas["MedicoAgenda"];
@@ -230,7 +230,7 @@ export function BuscarEspacio({ medicos, medicoId, fecha, zona, abrirDia, onCerr
             </select>
           </label>
         )}
-        <label>Desde<input type="date" value={desde} min={hoy} onChange={(e) => e.target.value && setDesde(e.target.value)} /></label>
+        <label>Desde<input type="date" value={desde} min={hoy} onChange={(e) => fechaValida(e.target.value) && setDesde(e.target.value)} /></label>
         <div className="wide"><button className="btn">Buscar</button></div>
       </form>
       {espacios.error && <p className="alert alert-error">{espacios.error.message}</p>}

@@ -285,8 +285,8 @@ public class LotesService {
                 pd.cobertura(), pd.modalidadPago());
         ArmadorRips.PrestadorRips prestador = prestadores.findFirstBy()
                 .map(p -> new ArmadorRips.PrestadorRips(p.getCodigoHabilitacion(), p.getServicio(), p.getModalidadAtencion(),
-                        p.getGrupoServicios(), p.getFinalidad(), p.getCausaExterna(), p.getViaIngreso()))
-                .orElse(new ArmadorRips.PrestadorRips(null, null, null, null, null, null, null));
+                        p.getGrupoServicios(), p.getFinalidad(), p.getCausaExterna(), p.getViaIngreso(), p.getFinalidadControl()))
+                .orElse(new ArmadorRips.PrestadorRips(null, null, null, null, null, null, null, null));
 
         List<AtencionRips> ats = historia.atencionesRips(ids(lote));
         List<UUID> pacienteIds = ats.stream().map(AtencionRips::pacienteId).distinct().toList();

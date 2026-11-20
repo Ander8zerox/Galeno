@@ -75,7 +75,8 @@ public class PacienteController {
     public record PacienteResponse(UUID id, String tipoDocumento, String numeroDocumento, String nombres,
                                    String apellidos, LocalDate fechaNacimiento, int edad, String sexo,
                                    String telefono, String email, String alergias, String antecedentes,
-                                   boolean datosIncompletos, boolean sinCorreosCitas, String correoRechazado) {
+                                   boolean datosIncompletos, boolean sinCorreosCitas, String correoRechazado,
+                                   Responsable responsable) {
 
         static PacienteResponse of(Paciente p, boolean clinicos) {
             return of(p, clinicos, null);
@@ -86,8 +87,14 @@ public class PacienteController {
             return new PacienteResponse(p.getId(), p.getTipoDocumento(), p.getNumeroDocumento(), p.getNombres(),
                     p.getApellidos(), p.getFechaNacimiento(), p.edad(), p.getSexo(), p.getTelefono(), p.getEmail(),
                     clinicos ? p.getAlergias() : null, clinicos ? p.getAntecedentes() : null, p.isDatosIncompletos(),
-                    p.isSinCorreosCitas(), correoRechazado);
+                    p.isSinCorreosCitas(), correoRechazado,
+                    p.getResponsableNombre() == null ? null : new Responsable(p.getResponsableNombre(), p.getResponsableParentesco(),
+                            p.getResponsableTipoDocumento(), p.getResponsableNumeroDocumento(), p.getResponsableTelefono()));
         }
+    }
+
+    /** Quien responde por el paciente (obligatorio para menores de edad). */
+    public record Responsable(String nombre, String parentesco, String tipoDocumento, String numeroDocumento, String telefono) {
     }
 
     /** Formato de paginación uniforme para toda la API. */

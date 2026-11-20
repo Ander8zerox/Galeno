@@ -108,13 +108,15 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
   // Con el módulo de RIPS: lo que se hizo, con su CUPS. Sin él, no se muestra ni se envía (el servidor no lo toca)
   const rips = useModuloActivo("RIPS");
   const [procedimientos, setProcedimientos] = useState<ProcedimientoForm[]>(() => procedimientosDe(atencion));
-  const [incapacidad, setIncapacidad] = useState(!!atencion.incapacidad);
+  const [acompanante, setAcompanante] = useState(() => acompananteDe(atencion));
+  const iaDisponible = !!useAuth().me?.iaDisponible;
+  const menor = (paciente?.edad ?? 99) < 18;
 
-  const original = useMemo(() => JSON.stringify({ f: aForm(atencion), d: atencion.diagnosticos ?? [], p: procedimientosDe(atencion), i: !!atencion.incapacidad }), [atencion]);
+  const original = useMemo(() => JSON.stringify({ f: aForm(atencion), d: atencion.diagnosticos ?? [], p: procedimientosDe(atencion), c: acompananteDe(atencion) }), [atencion]);
   const [base, setBase] = useState(original);
   // Lo último guardado de cada formato (agregar o quitar uno no deja la atención "sin guardar")
   const [baseRespuestas, setBaseRespuestas] = useState(() => respuestasDe(atencion.formatos));
-  const sucio = JSON.stringify({ f: form, d: dx, p: procedimientos, i: incapacidad }) !== base || JSON.stringify(respuestas) !== JSON.stringify(baseRespuestas);
+  const sucio = JSON.stringify({ f: form, d: dx, p: procedimientos, c: acompanante }) !== base || JSON.stringify(respuestas) !== JSON.stringify(baseRespuestas);
 
   useEffect(() => {
     if (!sucio) return;
@@ -139,12 +141,12 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
           diagnosticos: dx,
           formatos: formatos.map((f) => ({ id: f.id!, respuestas: respuestas[f.id!] ?? {} })),
           procedimientos: rips ? procedimientos.map(({ descripcion: _d, ...p }) => p) : undefined,
-          incapacidad: rips ? incapacidad : undefined,
+          acompananteNombre: acompanante.nombre, acompananteParentesco: acompanante.parentesco,
         },
       })),
     onSuccess: (a) => {
       setVersion(a.version ?? version);
-      setBase(JSON.stringify({ f: form, d: dx, p: procedimientos, i: incapacidad }));
+      setBase(JSON.stringify({ f: form, d: dx, p: procedimientos, c: acompanante }));
       setBaseRespuestas(respuestas);
       setGuardadoEn(new Date());
     },
@@ -220,6 +222,24 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
         </div>
       </div>
 
+      {menor && (
+        <div className="card form-grid">
+          <h3 className="wide">Acompañante <span className="req">*</span></h3>
+          <p className="small muted wide">
+            El paciente es menor de edad ({paciente?.edad} años): registre quién lo acompaña. Sin esto no se puede firmar.
+          </p>
+          <label>Nombre<input value={acompanante.nombre} maxLength={200}
+            onChange={(e) => setAcompanante({ ...acompanante, nombre: e.target.value })} /></label>
+          <label>Parentesco<input value={acompanante.parentesco} maxLength={40} list="parentescos-acompanante"
+            onChange={(e) => setAcompanante({ ...acompanante, parentesco: e.target.value })} />
+            <datalist id="parentescos-acompanante">
+              {["Madre", "Padre", "Abuela", "Abuelo", "Tía", "Tío", "Hermana", "Hermano", "Tutor legal", "Acudiente"]
+                .map((p) => <option key={p} value={p} />)}
+            </datalist>
+          </label>
+        </div>
+      )}
+
       <FormatosAtencion atencionId={atencion.id!} pacienteId={atencion.pacienteId!} formatos={formatos} respuestas={respuestas}
         onRespuestas={(id, r) => setRespuestas({ ...respuestas, [id]: r })} onCambio={cambioFormatos} />
 
@@ -231,14 +251,11 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
           <>
             <h3>Procedimientos realizados</h3>
             <ProcedimientosEditor value={procedimientos} onChange={setProcedimientos} atencionId={atencion.id!} />
-            <label className="check">
-              <input type="checkbox" checked={incapacidad} onChange={(e) => setIncapacidad(e.target.checked)} />
-              Expidió incapacidad <span className="muted small">(va en el RIPS)</span>
-            </label>
           </>
         )}
         <label>Análisis<textarea rows={3} value={form.analisis} onChange={set("analisis")} /></label>
         <label>Plan<textarea rows={3} value={form.plan} onChange={set("plan")} /></label>
+        <IncapacidadAtencion atencionId={atencion.id!} formatos={formatos} rips={rips} onCambio={cambioFormatos} />
       </div>
 
       {rips && <CobroAtencion atencionId={atencion.id!} editable />}
@@ -261,7 +278,7 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
       </div>
 
       <nav className="tabs">
-        <button className={panel === "ia" ? "active" : ""} onClick={() => setPanel(panel === "ia" ? null : "ia")}>Apoyo diagnóstico con IA</button>
+        {iaDisponible && <button className={panel === "ia" ? "active" : ""} onClick={() => setPanel(panel === "ia" ? null : "ia")}>Apoyo diagnóstico con IA</button>}
         <button className={panel === "formula" ? "active" : ""} onClick={() => setPanel(panel === "formula" ? null : "formula")}>Fórmula</button>
         <button className={panel === "documentos" ? "active" : ""} onClick={() => setPanel(panel === "documentos" ? null : "documentos")}>Documentos ({atencion.documentos?.filter((d) => !d.motivoAnulacion).length ?? 0})</button>
       </nav>
@@ -356,6 +373,7 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
         )}
         <ProcedimientosLectura procedimientos={a.procedimientos ?? []} />
         {a.incapacidad && <p><strong>Incapacidad:</strong> expidió incapacidad</p>}
+        {a.acompananteNombre && <p><strong>Acompañante:</strong> {a.acompananteNombre}{a.acompananteParentesco && ` (${a.acompananteParentesco})`}</p>}
         <Seccion titulo="Análisis" texto={a.analisis} />
         <Seccion titulo="Plan" texto={a.plan} />
       </div>
@@ -426,6 +444,50 @@ function DocumentosAtencion({ atencion, editable }: { atencion: Atencion; editab
         </div>
       ))}
       {editable && <SubirDocumento pacienteId={atencion.pacienteId!} atencionId={atencion.id} />}
+    </div>
+  );
+}
+
+function acompananteDe(a: Atencion) {
+  return { nombre: a.acompananteNombre ?? "", parentesco: a.acompananteParentesco ?? "" };
+}
+
+const CODIGO_INCAPACIDAD = "general.incapacidad";
+
+/**
+ * La incapacidad se expide con su formato (días, inicio, fin y certificado en PDF). Al firmar, la atención queda
+ * marcada con incapacidad (y el RIPS la reporta) sin marcarla aparte.
+ */
+function IncapacidadAtencion({ atencionId, formatos, rips, onCambio }: {
+  atencionId: string; formatos: Diligenciado[]; rips: boolean; onCambio: (a: Atencion) => void;
+}) {
+  const disponibles = useQuery({
+    queryKey: ["formatos-disponibles"],
+    queryFn: async () => unwrap(await api.GET("/api/v1/formatos/disponibles")),
+  });
+  const formato = disponibles.data?.find((d) => d.codigo === CODIGO_INCAPACIDAD);
+  const agregar = useMutation({
+    mutationFn: async () => unwrap(await api.POST("/api/v1/historia/atenciones/{id}/formatos",
+      { params: { path: { id: atencionId } }, body: { formatoId: formato!.formatoId! } })),
+    onSuccess: onCambio,
+  });
+  if (formatos.some((f) => f.codigo === CODIGO_INCAPACIDAD)) {
+    return (
+      <p className="small muted">
+        Incapacidad: diligencie los días y la fecha de inicio en su formato. Al firmar se genera el certificado en PDF
+        {rips ? " y el RIPS la reporta" : ""}.
+      </p>
+    );
+  }
+  return (
+    <div className="row">
+      <button type="button" className="btn btn-secondary" disabled={!formato || agregar.isPending} onClick={() => agregar.mutate()}>
+        {agregar.isPending ? "Agregando…" : "Expedir incapacidad"}
+      </button>
+      {disponibles.isSuccess && !formato && (
+        <small className="muted">Para expedirla, active el formato de incapacidad en <Link to="/formatos">Formatos</Link>.</small>
+      )}
+      {agregar.error && <small className="field-error">{agregar.error.message}</small>}
     </div>
   );
 }

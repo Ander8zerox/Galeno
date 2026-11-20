@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api, expectOk, unwrap } from "../api/client";
+import { CampoContrasena } from "../components/CampoContrasena";
 
 const MIN_PASSWORD = 10;
 
@@ -92,10 +93,10 @@ export function RestablecerPage() {
         <h1>Elija una contraseña nueva</h1>
         <p className="muted">Para la cuenta <strong>{info.data.email}</strong>.</p>
         <label>Contraseña nueva (mínimo {MIN_PASSWORD} caracteres)
-          <input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required autoFocus />
+          <CampoContrasena autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required autoFocus />
         </label>
         <label>Confirmar contraseña
-          <input type="password" autoComplete="new-password" value={confirmacion} onChange={(e) => setConfirmacion(e.target.value)} required />
+          <CampoContrasena autoComplete="new-password" value={confirmacion} onChange={(e) => setConfirmacion(e.target.value)} required />
         </label>
         {(errorLocal || cambiar.error) && <p className="alert alert-error">{errorLocal ?? cambiar.error?.message}</p>}
         <button className="btn" disabled={cambiar.isPending}>{cambiar.isPending ? "Guardando…" : "Cambiar contraseña"}</button>

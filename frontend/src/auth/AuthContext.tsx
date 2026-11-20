@@ -33,7 +33,13 @@ interface AuthState {
   iniciar: (res: SesionResponse) => Promise<void>;
   logout: () => void;
   puede: (permiso: Permiso) => boolean;
+  /** Los permisos cambiaron con la sesión abierta y ya se aplicaron (para avisarle a la persona). */
+  permisosCambiaron: boolean;
+  cerrarAvisoPermisos: () => void;
 }
+
+/** Cada cuánto se revisa si un administrador cambió los roles de la persona (además de al volver a la pestaña). */
+const REVISAR_PERMISOS_MS = 2 * 60_000;
 
 const STORAGE_KEY = "galeno.session";
 const AuthContext = createContext<AuthState | null>(null);
@@ -122,9 +128,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const puede = useCallback((permiso: Permiso) => !!me?.permisos?.includes(permiso), [me]);
 
+  // El token trae los permisos del momento del ingreso. Si un administrador le agrega un rol, el token viejo sigue
+  // siendo válido pero no los incluye: se compara con los vigentes y, si cambiaron, se pide un token nuevo para el
+  // mismo consultorio. (Si se los quitan, el servidor ya rechaza el token viejo y la sesión se cierra.)
+  const [permisosCambiaron, setPermisosCambiaron] = useState(false);
+  useEffect(() => {
+    if (!me?.consultorioId) return;
+    const consultorioId = me.consultorioId;
+    const antes = [...(me.permisos ?? [])].sort().join();
+    let revisando = false;
+    const revisar = async () => {
+      if (revisando || document.visibilityState !== "visible") return;
+      revisando = true;
+      try {
+        const actual = unwrap(await api.GET("/api/v1/auth/me"));
+        if ([...(actual.permisos ?? [])].sort().join() !== antes) {
+          await iniciar(unwrap(await api.POST("/api/v1/auth/sesion", { body: { consultorioId } })));
+          setPermisosCambiaron(true);
+        }
+      } catch {
+        /* sin red o sesión vencida: lo resuelve la próxima petición */
+      } finally {
+        revisando = false;
+      }
+    };
+    const intervalo = window.setInterval(revisar, REVISAR_PERMISOS_MS);
+    document.addEventListener("visibilitychange", revisar);
+    return () => {
+      window.clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", revisar);
+    };
+  }, [me, iniciar]);
+  const cerrarAvisoPermisos = useCallback(() => setPermisosCambiaron(false), []);
+
   const value = useMemo(
-    () => ({ me, seleccion, mfa: mfa?.requisito ?? null, login, completarMfa, terminarMfa, elegirConsultorio, iniciar, logout, puede }),
-    [me, seleccion, mfa, login, completarMfa, terminarMfa, elegirConsultorio, iniciar, logout, puede],
+    () => ({ me, seleccion, mfa: mfa?.requisito ?? null, login, completarMfa, terminarMfa, elegirConsultorio, iniciar, logout,
+      puede, permisosCambiaron, cerrarAvisoPermisos }),
+    [me, seleccion, mfa, login, completarMfa, terminarMfa, elegirConsultorio, iniciar, logout, puede, permisosCambiaron,
+      cerrarAvisoPermisos],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
