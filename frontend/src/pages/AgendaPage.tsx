@@ -4,6 +4,7 @@ import { api, unwrap } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { AgendaDia } from "../features/agenda/AgendaDia";
 import { HorarioEditor } from "../features/agenda/HorarioEditor";
+import { TiposCita } from "../features/agenda/TiposCita";
 import { ListaEspera, useListaEspera } from "../features/agenda/ListaEspera";
 import { AvisoBloqueos, Bloqueos } from "../features/agenda/Bloqueos";
 import { fechaCorta, fechaLarga, fechaValida, hoyEn, lunesDe, mesLargo, primeroDelMes, sumarDias } from "../features/agenda/tiempo";
@@ -32,7 +33,7 @@ function guardar(clave: string, valor: string) {
 }
 
 export function AgendaPage() {
-  const { me } = useAuth();
+  const { me, puede } = useAuth();
   const zona = me?.zonaHoraria ?? "America/Bogota";
   const [fecha, setFecha] = useState(() => hoyEn(zona));
   const [medicoId, setMedicoId] = useState<string | null>(() => leer(STORAGE_MEDICO));
@@ -44,6 +45,7 @@ export function AgendaPage() {
   });
   const [editandoHorario, setEditandoHorario] = useState(false);
   const [buscando, setBuscando] = useState(false);
+  const [tiposAbiertos, setTiposAbiertos] = useState(false);
   const [enEspera, setEnEspera] = useState(false);
   const [bloqueando, setBloqueando] = useState(false);
   const espera = useListaEspera();
@@ -130,6 +132,9 @@ export function AgendaPage() {
               Lista de espera{esperando > 0 && <span className="badge badge-info">{esperando}</span>}
             </button>
           )}
+          {!editandoHorario && puede("EQUIPO_GESTIONAR") && (
+            <button className="btn btn-secondary" onClick={() => setTiposAbiertos((v) => !v)}>Tipos de cita</button>
+          )}
           {medico?.puedeEditarHorario && !verTodos && (
             <button className="btn btn-secondary" onClick={() => setEditandoHorario((v) => !v)}>
               {editandoHorario ? "Volver a la agenda" : "Horario de atención"}
@@ -169,6 +174,8 @@ export function AgendaPage() {
           </div>
         )}
       </div>
+
+      {tiposAbiertos && !editandoHorario && <TiposCita onCerrar={() => setTiposAbiertos(false)} />}
 
       {buscando && !editandoHorario && (
         <BuscarEspacio medicos={medicos.data} medicoId={verTodos ? null : medicoId} fecha={fecha} zona={zona}

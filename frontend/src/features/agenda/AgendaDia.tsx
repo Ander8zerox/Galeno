@@ -184,6 +184,7 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
         <div className="row">
           <Link to={`/pacientes/${cita.pacienteId}`}><strong>{cita.pacienteNombre}</strong></Link>
           <span className={`badge ${ESTADO_CLASE[cita.estado!]}`}>{ESTADO_NOMBRE[cita.estado!]}</span>
+          {cita.tipoCitaNombre && <span className="badge">{cita.tipoCitaNombre}</span>}
           {cita.sobrecupo && <span className="badge badge-warn" title={cita.motivoSobrecupo ?? undefined}>Sobrecupo</span>}
           {cita.pacienteEdad != null && <span className="muted small">{cita.pacienteEdad} años</span>}
           {(cita.prioridades ?? []).map((p) => <span key={p} className="badge badge-info" title="Atención prioritaria">Prioridad: {p}</span>)}

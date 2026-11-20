@@ -23,9 +23,23 @@ public class AgendaPublica {
     private final CitaRepository citas;
     private final AgendaMedicoRepository agendas;
 
-    AgendaPublica(CitaRepository citas, AgendaMedicoRepository agendas) {
+    private final TipoCitaRepository tipos;
+
+    AgendaPublica(CitaRepository citas, AgendaMedicoRepository agendas, TipoCitaRepository tipos) {
         this.citas = citas;
         this.agendas = agendas;
+        this.tipos = tipos;
+    }
+
+    /** El tipo de la cita (para sugerir el CUPS de la consulta), si tiene. */
+    @Transactional(readOnly = true)
+    public Optional<TipoDeCita> tipoDeCita(UUID citaId) {
+        return citas.findById(citaId).map(Cita::getTipoCitaId).flatMap(tipos::findById)
+                .map(t -> new TipoDeCita(t.getNombre(), t.getClase(), t.getCups()));
+    }
+
+    /** @param cups el que fijó el consultorio para este tipo; null: el de consulta según la clase */
+    public record TipoDeCita(String nombre, TipoCita.Clase clase, String cups) {
     }
 
     /** Citas abiertas (programadas o confirmadas) del paciente con el médico ese día, en la zona del consultorio. */
