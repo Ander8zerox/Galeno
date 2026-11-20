@@ -74,6 +74,21 @@ public class Cita {
     @Column(name = "actualizada_en", nullable = false)
     private Instant actualizadaEn;
 
+    /** Cuándo pidió el paciente la cita (Res. 1552 de 2013): al agendar, o al anotarse en la lista de espera. */
+    @Column(name = "solicitada_en")
+    private Instant solicitadaEn;
+
+    /** La fecha que el paciente quería; null: "lo antes posible". */
+    @Column(name = "fecha_deseada")
+    private java.time.LocalDate fechaDeseada;
+
+    @Column(name = "motivo_sobrecupo", length = 300)
+    private String motivoSobrecupo;
+
+    /** Por qué se confirmó sin el pagador o el tipo de usuario del RIPS. */
+    @Column(name = "justificacion_sin_rips", length = 300)
+    private String justificacionSinRips;
+
     /** Cuándo se le recordó al paciente (o se le avisó dentro de las 24 h previas); null: falta el recordatorio. */
     @Column(name = "recordatorio_enviado_en")
     private Instant recordatorioEnviadoEn;
@@ -92,10 +107,27 @@ public class Cita {
         this.estado = Estado.PROGRAMADA;
         this.creadaPor = creadaPor;
         this.creadaEn = Instant.now();
+        this.solicitadaEn = creadaEn;
         this.actualizadaEn = creadaEn;
     }
 
+    /**
+     * @param solicitadaEn cuándo la pidió el paciente (null: ahora)
+     * @param fechaDeseada la fecha que quería, o null
+     */
+    public Cita(UUID medicoMembresiaId, UUID pacienteId, Instant inicio, Instant fin, String motivo, boolean sobrecupo,
+                String motivoSobrecupo, Instant solicitadaEn, java.time.LocalDate fechaDeseada, UUID creadaPor) {
+        this(medicoMembresiaId, pacienteId, inicio, fin, motivo, sobrecupo, creadaPor);
+        this.motivoSobrecupo = sobrecupo ? motivoSobrecupo : null;
+        this.solicitadaEn = solicitadaEn != null ? solicitadaEn : creadaEn;
+        this.fechaDeseada = fechaDeseada;
+    }
+
     void cambiarEstado(Estado nuevo, String motivoCancelacion) {
+        cambiarEstado(nuevo, motivoCancelacion, null);
+    }
+
+    void cambiarEstado(Estado nuevo, String motivoCancelacion, String justificacionSinRips) {
         if (!Estado.ABIERTOS.contains(estado)) {
             throw ApiProblem.conflict("La cita ya está " + estado.name().toLowerCase().replace('_', ' ') + " y no se puede cambiar");
         }
@@ -107,16 +139,21 @@ public class Cita {
         }
         this.estado = nuevo;
         this.motivoCancelacion = nuevo == Estado.CANCELADA ? motivoCancelacion.strip() : null;
+        if (nuevo == Estado.CONFIRMADA) {
+            this.justificacionSinRips = justificacionSinRips;
+        }
         this.actualizadaEn = Instant.now();
     }
 
-    void reprogramar(Instant nuevoInicio, Instant nuevoFin, boolean sobrecupo) {
+    void reprogramar(Instant nuevoInicio, Instant nuevoFin, boolean sobrecupo, String motivoSobrecupo) {
         if (!Estado.ABIERTOS.contains(estado)) {
             throw ApiProblem.conflict("Solo se reprograman citas programadas o confirmadas");
         }
         this.inicio = nuevoInicio;
         this.fin = nuevoFin;
         this.sobrecupo = sobrecupo;
+        this.motivoSobrecupo = sobrecupo ? motivoSobrecupo : null;
+        this.justificacionSinRips = null;
         this.estado = Estado.PROGRAMADA; // hay que volver a confirmarla
         this.recordatorioEnviadoEn = null; // la fecha nueva necesita su propio recordatorio
         this.actualizadaEn = Instant.now();
@@ -164,6 +201,22 @@ public class Cita {
 
     public boolean isSobrecupo() {
         return sobrecupo;
+    }
+
+    public Instant getSolicitadaEn() {
+        return solicitadaEn != null ? solicitadaEn : creadaEn;
+    }
+
+    public java.time.LocalDate getFechaDeseada() {
+        return fechaDeseada;
+    }
+
+    public String getMotivoSobrecupo() {
+        return motivoSobrecupo;
+    }
+
+    public String getJustificacionSinRips() {
+        return justificacionSinRips;
     }
 
     public String getMotivoCancelacion() {

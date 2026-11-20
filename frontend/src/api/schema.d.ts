@@ -2829,6 +2829,16 @@ export interface components {
             responsableTipoDocumento?: string;
             responsableNumeroDocumento?: string;
             responsableTelefono?: string;
+            gestante?: boolean;
+            discapacidad?: boolean;
+            autorizaDatos?: boolean;
+            medioAutorizacion?: string;
+        };
+        AutorizacionDatos: {
+            /** Format: date-time */
+            en?: string;
+            medio?: string;
+            texto?: string;
         };
         PacienteResponse: {
             /** Format: uuid */
@@ -2850,6 +2860,9 @@ export interface components {
             sinCorreosCitas?: boolean;
             correoRechazado?: string;
             responsable?: components["schemas"]["Responsable"];
+            gestante?: boolean;
+            discapacidad?: boolean;
+            autorizacionDatos?: components["schemas"]["AutorizacionDatos"];
         };
         Responsable: {
             nombre?: string;
@@ -3017,6 +3030,8 @@ export interface components {
             incapacidad?: boolean;
             acompananteNombre?: string;
             acompananteParentesco?: string;
+            acompananteTipoDocumento?: string;
+            acompananteNumeroDocumento?: string;
         };
         ProcedimientoRequest: {
             codigoCups: string;
@@ -3081,6 +3096,8 @@ export interface components {
             formatos?: components["schemas"]["FormatoDiligenciado"][];
             acompananteNombre?: string;
             acompananteParentesco?: string;
+            acompananteTipoDocumento?: string;
+            acompananteNumeroDocumento?: string;
         };
         DiagnosticoVista: {
             codigoCie10?: string;
@@ -3193,6 +3210,8 @@ export interface components {
             duracionMinutos?: number;
             bloques: components["schemas"]["BloqueRequest"][];
             atiendeFestivos?: boolean;
+            /** Format: int32 */
+            maxSobrecuposDia?: number;
         };
         BloqueRequest: {
             /** Format: int32 */
@@ -3217,11 +3236,14 @@ export interface components {
             duracionMinutos?: number;
             bloques?: components["schemas"]["BloqueVista"][];
             atiendeFestivos?: boolean;
+            /** Format: int32 */
+            maxSobrecuposDia?: number;
         };
         Reprogramar: {
             /** Format: date-time */
             inicio: string;
             sobrecupo?: boolean;
+            motivoSobrecupo?: string;
         };
         CitaVista: {
             /** Format: uuid */
@@ -3243,11 +3265,25 @@ export interface components {
             motivo?: string;
             sobrecupo?: boolean;
             motivoCancelacion?: string;
+            motivoSobrecupo?: string;
+            justificacionSinRips?: string;
+            /** Format: date-time */
+            solicitadaEn?: string;
+            /** Format: date */
+            fechaDeseada?: string;
+            /** Format: int64 */
+            diasEspera?: number;
+            /** Format: int64 */
+            diasEsperaDeseada?: number;
+            /** Format: int32 */
+            pacienteEdad?: number;
+            prioridades?: string[];
         };
         CambiarEstado: {
             /** @enum {string} */
             estado: "PROGRAMADA" | "CONFIRMADA" | "ATENDIDA" | "NO_ASISTIO" | "CANCELADA";
             motivoCancelacion?: string;
+            justificacionSinRips?: string;
         };
         PagoVista: {
             /** Format: uuid */
@@ -3720,6 +3756,9 @@ export interface components {
             duracionMinutos?: number;
             motivo?: string;
             sobrecupo?: boolean;
+            motivoSobrecupo?: string;
+            /** Format: date */
+            fechaDeseada?: string;
         };
         NuevoBloqueo: {
             /** Format: uuid */
@@ -4038,26 +4077,26 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            object?: boolean;
-            string?: boolean;
-            pojo?: boolean;
-            int?: boolean;
-            short?: boolean;
-            double?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            boolean?: boolean;
-            binary?: boolean;
-            long?: boolean;
             floatingPointNumber?: boolean;
-            valueNode?: boolean;
-            container?: boolean;
-            missingNode?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
             integralNumber?: boolean;
+            missingNode?: boolean;
+            valueNode?: boolean;
             bigDecimal?: boolean;
+            container?: boolean;
             bigInteger?: boolean;
+            boolean?: boolean;
+            int?: boolean;
+            long?: boolean;
+            short?: boolean;
+            object?: boolean;
+            string?: boolean;
+            pojo?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            binary?: boolean;
+            double?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {

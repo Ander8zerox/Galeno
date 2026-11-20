@@ -76,7 +76,8 @@ public class PacienteController {
                                    String apellidos, LocalDate fechaNacimiento, int edad, String sexo,
                                    String telefono, String email, String alergias, String antecedentes,
                                    boolean datosIncompletos, boolean sinCorreosCitas, String correoRechazado,
-                                   Responsable responsable) {
+                                   Responsable responsable, boolean gestante, boolean discapacidad,
+                                   AutorizacionDatos autorizacionDatos) {
 
         static PacienteResponse of(Paciente p, boolean clinicos) {
             return of(p, clinicos, null);
@@ -89,12 +90,19 @@ public class PacienteController {
                     clinicos ? p.getAlergias() : null, clinicos ? p.getAntecedentes() : null, p.isDatosIncompletos(),
                     p.isSinCorreosCitas(), correoRechazado,
                     p.getResponsableNombre() == null ? null : new Responsable(p.getResponsableNombre(), p.getResponsableParentesco(),
-                            p.getResponsableTipoDocumento(), p.getResponsableNumeroDocumento(), p.getResponsableTelefono()));
+                            p.getResponsableTipoDocumento(), p.getResponsableNumeroDocumento(), p.getResponsableTelefono()),
+                    p.isGestante(), p.isDiscapacidad(),
+                    p.getAutorizacionDatosEn() == null ? null : new AutorizacionDatos(p.getAutorizacionDatosEn(),
+                            p.getAutorizacionDatosMedio(), p.getAutorizacionDatosTexto()));
         }
     }
 
     /** Quien responde por el paciente (obligatorio para menores de edad). */
     public record Responsable(String nombre, String parentesco, String tipoDocumento, String numeroDocumento, String telefono) {
+    }
+
+    /** Evidencia de la autorización de tratamiento de datos: cuándo, por qué medio y con qué versión del texto. */
+    public record AutorizacionDatos(java.time.Instant en, String medio, String texto) {
     }
 
     /** Formato de paginación uniforme para toda la API. */

@@ -110,7 +110,8 @@ public class HistoriaController {
                 r.procedimientos() == null ? null : r.procedimientos().stream()
                         .map(p -> new ProcedimientoNuevo(p.codigoCups(), p.cantidad(), p.valorUnitario(), p.diente(),
                                 p.superficies())).toList(),
-                r.incapacidad(), new HistoriaService.Acompanante(r.acompananteNombre(), r.acompananteParentesco()));
+                r.incapacidad(), new HistoriaService.Acompanante(r.acompananteNombre(), r.acompananteParentesco(),
+                        r.acompananteTipoDocumento(), r.acompananteNumeroDocumento()));
     }
 
     /** Agrega al borrador un formato activo del consultorio, con su última versión. */
@@ -236,7 +237,10 @@ public class HistoriaController {
                                   @Size(max = 50) List<@Valid ProcedimientoRequest> procedimientos,
                                   Boolean incapacidad,
                                   @Size(max = 200) String acompananteNombre,
-                                  @Size(max = 40) String acompananteParentesco) {
+                                  @Size(max = 40) String acompananteParentesco,
+                                  @jakarta.validation.constraints.Pattern(regexp = "(" + com.galeno.pacientes.TiposDocumento.PATRON + ")?",
+                                          message = "Tipo de documento no válido") String acompananteTipoDocumento,
+                                  @Size(max = 30) String acompananteNumeroDocumento) {
     }
 
     /** @param procedimientos {@code null} si la pantalla no los muestra (sin el módulo de RIPS): no cambian */

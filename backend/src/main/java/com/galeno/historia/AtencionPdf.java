@@ -35,6 +35,13 @@ final class AtencionPdf {
     /** Todo lo de la atención salvo el encabezado y los datos del paciente (también lo usa {@link HistoriaPdf}). */
     static void cuerpo(StringBuilder b, Atencion a, ConsultorioResumen consultorio, List<NotaAclaratoria> notas,
                        String formatosHtml) {
+        if (a.getAcompananteNombre() != null) {
+            seccion(b, "Acompañante", a.getAcompananteNombre()
+                    + (a.getAcompananteParentesco() != null ? " (" + a.getAcompananteParentesco() + ")" : "")
+                    + (a.getAcompananteNumeroDocumento() != null
+                    ? " · " + (a.getAcompananteTipoDocumento() != null ? a.getAcompananteTipoDocumento() + " " : "")
+                    + a.getAcompananteNumeroDocumento() : ""));
+        }
         seccion(b, "Motivo de consulta", a.getMotivoConsulta());
         seccion(b, "Enfermedad actual", a.getEnfermedadActual());
         seccion(b, "Antecedentes", a.getAntecedentes());

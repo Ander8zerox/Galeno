@@ -142,6 +142,8 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
           formatos: formatos.map((f) => ({ id: f.id!, respuestas: respuestas[f.id!] ?? {} })),
           procedimientos: rips ? procedimientos.map(({ descripcion: _d, ...p }) => p) : undefined,
           acompananteNombre: acompanante.nombre, acompananteParentesco: acompanante.parentesco,
+          acompananteTipoDocumento: acompanante.numeroDocumento.trim() ? acompanante.tipoDocumento : "",
+          acompananteNumeroDocumento: acompanante.numeroDocumento,
         },
       })),
     onSuccess: (a) => {
@@ -226,7 +228,8 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
         <div className="card form-grid">
           <h3 className="wide">Acompañante <span className="req">*</span></h3>
           <p className="small muted wide">
-            El paciente es menor de edad ({paciente?.edad} años): registre quién lo acompaña. Sin esto no se puede firmar.
+            El paciente es menor de edad ({paciente?.edad} años): registre quién lo acompaña (nombre, documento y
+            parentesco). Sin esto no se puede firmar.
           </p>
           <label>Nombre<input value={acompanante.nombre} maxLength={200}
             onChange={(e) => setAcompanante({ ...acompanante, nombre: e.target.value })} /></label>
@@ -237,6 +240,13 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
                 .map((p) => <option key={p} value={p} />)}
             </datalist>
           </label>
+          <label>Tipo de documento
+            <select value={acompanante.tipoDocumento} onChange={(e) => setAcompanante({ ...acompanante, tipoDocumento: e.target.value })}>
+              {["CC", "CE", "PA", "PT", "TI", "DE", "PE", "SC", "CD"].map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </label>
+          <label>Número de documento<input value={acompanante.numeroDocumento} maxLength={30}
+            onChange={(e) => setAcompanante({ ...acompanante, numeroDocumento: e.target.value })} /></label>
         </div>
       )}
 
@@ -373,7 +383,8 @@ function LecturaAtencion({ atencion: a }: { atencion: Atencion }) {
         )}
         <ProcedimientosLectura procedimientos={a.procedimientos ?? []} />
         {a.incapacidad && <p><strong>Incapacidad:</strong> expidió incapacidad</p>}
-        {a.acompananteNombre && <p><strong>Acompañante:</strong> {a.acompananteNombre}{a.acompananteParentesco && ` (${a.acompananteParentesco})`}</p>}
+        {a.acompananteNombre && <p><strong>Acompañante:</strong> {a.acompananteNombre}{a.acompananteParentesco && ` (${a.acompananteParentesco})`}
+          {a.acompananteNumeroDocumento && ` · ${a.acompananteTipoDocumento ?? ""} ${a.acompananteNumeroDocumento}`}</p>}
         <Seccion titulo="Análisis" texto={a.analisis} />
         <Seccion titulo="Plan" texto={a.plan} />
       </div>
@@ -449,7 +460,8 @@ function DocumentosAtencion({ atencion, editable }: { atencion: Atencion; editab
 }
 
 function acompananteDe(a: Atencion) {
-  return { nombre: a.acompananteNombre ?? "", parentesco: a.acompananteParentesco ?? "" };
+  return { nombre: a.acompananteNombre ?? "", parentesco: a.acompananteParentesco ?? "",
+    tipoDocumento: a.acompananteTipoDocumento ?? "CC", numeroDocumento: a.acompananteNumeroDocumento ?? "" };
 }
 
 const CODIGO_INCAPACIDAD = "general.incapacidad";

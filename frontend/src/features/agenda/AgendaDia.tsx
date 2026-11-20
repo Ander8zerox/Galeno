@@ -136,6 +136,9 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
   const [completandoRips, setCompletandoRips] = useState(false);
   const [registrandoCobro, setRegistrandoCobro] = useState(false);
   const [anotandoEspera, setAnotandoEspera] = useState(false);
+  // Confirmar sin pagador o tipo de usuario del RIPS exige una justificación
+  const [justificando, setJustificando] = useState(false);
+  const [justificacion, setJustificacion] = useState("");
   const vigilarCorreo = useVigiaCorreo();
   const conceptos = useReferencia("concepto_recaudo");
   const diferida = useAccionDiferida();
@@ -148,7 +151,7 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
   });
 
   const cambiar = useMutation({
-    mutationFn: async (body: { estado: Estado; motivoCancelacion?: string }) =>
+    mutationFn: async (body: { estado: Estado; motivoCancelacion?: string; justificacionSinRips?: string }) =>
       unwrap(await api.PUT("/api/v1/agenda/citas/{citaId}/estado", { params: { path: { citaId: cita.id! } }, body })),
     onSuccess: (c, body) => {
       queryClient.invalidateQueries({ queryKey: ["citas"] });
@@ -156,6 +159,7 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
       queryClient.invalidateQueries({ queryKey: ["lista-espera"] });
       setCancelando(false);
       setMarcandoInasistencia(false);
+      setJustificando(false);
       if (body.estado === "CANCELADA") {
         vigilarCorreo(c.pacienteId!);
         onCancelada(c);
@@ -163,6 +167,15 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
     },
   });
   const cuando = `${cita.pacienteNombre} a las ${hora(cita.inicio!, zona)}`;
+  // Lo mínimo del RIPS para confirmar: sin esto, la confirmación pide justificación
+  const faltanParaConfirmar = (faltanRips ?? []).filter((f) => f === "Pagador" || f === "Tipo de usuario");
+  function confirmar() {
+    if (faltanParaConfirmar.length) {
+      setJustificando(true);
+      return;
+    }
+    diferida.programar("Confirmando la cita", () => cambiar.mutate({ estado: "CONFIRMADA" }));
+  }
 
   return (
     <div className={`cita cita-${cita.estado!.toLowerCase()}`}>
@@ -171,7 +184,9 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
         <div className="row">
           <Link to={`/pacientes/${cita.pacienteId}`}><strong>{cita.pacienteNombre}</strong></Link>
           <span className={`badge ${ESTADO_CLASE[cita.estado!]}`}>{ESTADO_NOMBRE[cita.estado!]}</span>
-          {cita.sobrecupo && <span className="badge badge-warn">Sobrecupo</span>}
+          {cita.sobrecupo && <span className="badge badge-warn" title={cita.motivoSobrecupo ?? undefined}>Sobrecupo</span>}
+          {cita.pacienteEdad != null && <span className="muted small">{cita.pacienteEdad} años</span>}
+          {(cita.prioridades ?? []).map((p) => <span key={p} className="badge badge-info" title="Atención prioritaria">Prioridad: {p}</span>)}
           {abierta(cita) && !!faltanRips?.length && (
             <button className="badge badge-warn badge-boton" title={`Falta: ${faltanRips.join(", ").toLowerCase()}`}
               onClick={() => setCompletandoRips((v) => !v)}>RIPS: faltan {faltanRips.length}</button>
@@ -184,6 +199,11 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
           {hora(cita.inicio!, zona)}–{hora(cita.fin!, zona)} · {cita.pacienteDocumento}
           {cita.pacienteTelefono && ` · ${cita.pacienteTelefono}`}
           {cita.motivo && ` · ${cita.motivo}`}
+          {cita.sobrecupo && cita.motivoSobrecupo && ` · Sobrecupo: ${cita.motivoSobrecupo}`}
+          {" · "}<span title={`Pedida el ${new Date(cita.solicitadaEn!).toLocaleDateString("es-CO")}${cita.fechaDeseada ? `; deseaba el ${cita.fechaDeseada}` : "; lo antes posible"}`}>
+            Espera: {cita.diasEspera} día(s){cita.fechaDeseada && cita.diasEsperaDeseada !== cita.diasEspera ? ` (${cita.diasEsperaDeseada} desde la fecha deseada)` : ""}
+          </span>
+          {cita.justificacionSinRips && ` · Confirmada sin datos RIPS: ${cita.justificacionSinRips}`}
           {cita.motivoCancelacion && ` · Cancelada: ${cita.motivoCancelacion}`}
         </div>
         {abierta(cita) && cobro?.pagadorId && !registrandoCobro && (
@@ -207,6 +227,21 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
             </div>
           </div>
         )}
+        {justificando && (
+          <div className="stack-sm confirmar">
+            <span className="small">
+              Falta en el RIPS del paciente: {faltanParaConfirmar.join(" y ").toLowerCase()}. Complételo (botón «RIPS: faltan»)
+              o confirme escribiendo por qué.
+            </span>
+            <div className="row">
+              <input className="grow" placeholder="Justificación (por ejemplo, el paciente trae el carné al llegar)" maxLength={300}
+                value={justificacion} onChange={(e) => setJustificacion(e.target.value)} autoFocus />
+              <button className="btn" disabled={!justificacion.trim() || cambiar.isPending}
+                onClick={() => cambiar.mutate({ estado: "CONFIRMADA", justificacionSinRips: justificacion.trim() })}>Confirmar así</button>
+              <button className="btn-link" onClick={() => setJustificando(false)}>Volver</button>
+            </div>
+          </div>
+        )}
         {marcandoInasistencia && (
           <div className="row confirmar">
             <span className="small grow">¿Marcar que no asistió {cuando}?</span>
@@ -222,9 +257,9 @@ function CitaFila({ cita, zona, faltanRips, cobro, onCancelada }: {
         )}
         {(cambiar.error || atender.error) && <p className="alert alert-error">{(cambiar.error ?? atender.error)?.message}</p>}
       </div>
-      {abierta(cita) && !cancelando && !marcandoInasistencia && !diferida.pendiente && (
+      {abierta(cita) && !cancelando && !marcandoInasistencia && !justificando && !diferida.pendiente && (
         <div className="row acciones">
-          {cita.estado === "PROGRAMADA" && <button className="btn-link" onClick={() => diferida.programar("Confirmando la cita", () => cambiar.mutate({ estado: "CONFIRMADA" }))}>Confirmar</button>}
+          {cita.estado === "PROGRAMADA" && <button className="btn-link" onClick={confirmar}>Confirmar</button>}
           {cobro && !registrandoCobro && <button className="btn-link" onClick={() => setRegistrandoCobro(true)}>Cobro</button>}
           {puede("HISTORIA_REGISTRAR") && esMiCita && <button className="btn" disabled={atender.isPending} onClick={() => diferida.programar("Abriendo la atención", () => atender.mutate())}>Atender</button>}
           {/* "Atender" no depende de la hora: solo de ser el médico de la cita y tener permiso de historia clínica */}

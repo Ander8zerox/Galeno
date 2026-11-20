@@ -11,12 +11,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.galeno.shared.security.AuthUser;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 import com.galeno.shared.web.TopesDiarios;
 
 /** API pública del módulo de pacientes: otros módulos la usan en lugar del repositorio. */
 @Service
 public class PacienteService {
+
+    /** Versión del texto de autorización de datos que se muestra en el formulario (cambia si cambia el texto). */
+    public static final String TEXTO_AUTORIZACION = "v1";
 
     private final PacienteRepository repository;
     private final TopesDiarios topes;
@@ -36,10 +40,35 @@ public class PacienteService {
     public Map<UUID, PacienteResumen> resumenes(Collection<UUID> ids) {
         return repository.findAllById(ids).stream().collect(Collectors.toMap(Paciente::getId,
                 p -> new PacienteResumen(p.getId(), p.getNombres() + " " + p.getApellidos(), p.getTipoDocumento(),
-                        p.getNumeroDocumento(), p.getTelefono())));
+                        p.getNumeroDocumento(), p.getTelefono(), p.getFechaNacimiento() == null ? null : p.edad(),
+                        prioridades(p))));
     }
 
-    public record PacienteResumen(UUID id, String nombre, String tipoDocumento, String numeroDocumento, String telefono) {
+    /**
+     * @param edad null si no tiene fecha de nacimiento
+     * @param prioridades por qué tiene atención prioritaria (menor, mayor de 60, gestante, discapacidad); vacía si no
+     */
+    public record PacienteResumen(UUID id, String nombre, String tipoDocumento, String numeroDocumento, String telefono,
+                                  Integer edad, java.util.List<String> prioridades) {
+    }
+
+    /** Atención prioritaria: menores de 18, mayores de 60, gestantes y personas con discapacidad. */
+    static java.util.List<String> prioridades(Paciente p) {
+        java.util.List<String> lista = new java.util.ArrayList<>();
+        Integer edad = p.getFechaNacimiento() == null ? null : p.edad();
+        if (edad != null && edad < 18) {
+            lista.add("Menor de edad");
+        }
+        if (edad != null && edad >= 60) {
+            lista.add("Mayor de 60");
+        }
+        if (p.isGestante()) {
+            lista.add("Gestante");
+        }
+        if (p.isDiscapacidad()) {
+            lista.add("Discapacidad");
+        }
+        return lista;
     }
 
     @Transactional(readOnly = true)
@@ -135,6 +164,9 @@ public class PacienteService {
         if (repository.existsByTipoDocumentoAndNumeroDocumento(r.tipoDocumento(), r.numeroDocumento().strip())) {
             throw ApiProblem.conflict("Ya existe un paciente con ese documento");
         }
+        if (!Boolean.TRUE.equals(r.autorizaDatos())) {
+            throw ApiProblem.badRequest("Registre la autorización de tratamiento de datos personales del paciente (Ley 1581 de 2012)");
+        }
         topes.paciente();
         Paciente paciente = new Paciente(r.tipoDocumento(), r.numeroDocumento().strip());
         apply(paciente, r, datosClinicos);
@@ -172,6 +204,11 @@ public class PacienteService {
                 r.responsableTelefono() == null || r.responsableTelefono().isBlank() ? null : Telefonos.normalizar(r.responsableTelefono()));
         if (r.sinCorreosCitas() != null) {
             p.preferirSinCorreosCitas(r.sinCorreosCitas());
+        }
+        p.actualizarPrioridad(r.gestante() != null ? r.gestante() : p.isGestante(),
+                r.discapacidad() != null ? r.discapacidad() : p.isDiscapacidad());
+        if (Boolean.TRUE.equals(r.autorizaDatos())) {
+            p.registrarAutorizacionDatos(AuthUser.current().id(), r.medioAutorizacion(), TEXTO_AUTORIZACION);
         }
         if (datosClinicos) {
             p.actualizarClinicos(r.alergias(), r.antecedentes());

@@ -56,11 +56,13 @@ class AgendaService {
     private final org.springframework.context.ApplicationEventPublisher eventos;
     private final BloqueoAgendaRepository bloqueos;
     private final TopesDiarios topes;
+    private final ObjectProvider<DatosRipsDeCitas> datosRips;
 
     AgendaService(AgendaMedicoRepository agendas, CitaRepository citas, IdentidadService identidad,
                   PacienteService pacientes, ObjectProvider<AtencionesDeCitas> atenciones, EnEsperaRepository espera,
                   org.springframework.context.ApplicationEventPublisher eventos, BloqueoAgendaRepository bloqueos,
-                  TopesDiarios topes) {
+                  TopesDiarios topes, ObjectProvider<DatosRipsDeCitas> datosRips) {
+        this.datosRips = datosRips;
         this.topes = topes;
         this.eventos = eventos;
         this.bloqueos = bloqueos;
@@ -87,15 +89,23 @@ class AgendaService {
     }
 
     @Transactional
-    /** @param atiendeFestivos null: se queda como estaba */
-    public Horario actualizarHorario(UUID medicoId, int duracionMinutos, List<Bloque> bloques, Boolean atiendeFestivos) {
+    /**
+     * @param atiendeFestivos null: se queda como estaba
+     * @param maxSobrecuposDia null: sin tope
+     */
+    public Horario actualizarHorario(UUID medicoId, int duracionMinutos, List<Bloque> bloques, Boolean atiendeFestivos,
+                                     Integer maxSobrecuposDia) {
         verificarAcceso(medicoId);
         if (!puedeEditarHorario(AuthUser.current(), medicoId)) {
             throw ApiProblem.forbidden("Solo el propio médico o un administrador cambian el horario");
         }
         validarHorario(duracionMinutos, bloques);
         AgendaMedico agenda = obtenerOCrear(medicoId);
-        agenda.actualizar(duracionMinutos, bloques, atiendeFestivos != null ? atiendeFestivos : agenda.isAtiendeFestivos());
+        if (maxSobrecuposDia != null && (maxSobrecuposDia < 0 || maxSobrecuposDia > 50)) {
+            throw ApiProblem.badRequest("El tope de sobrecupos por día debe estar entre 0 y 50");
+        }
+        agenda.actualizar(duracionMinutos, bloques, atiendeFestivos != null ? atiendeFestivos : agenda.isAtiendeFestivos(),
+                maxSobrecuposDia);
         return Horario.de(agenda);
     }
 
@@ -222,30 +232,41 @@ class AgendaService {
         return bloqueos.cruces(desde, hasta).stream().filter(b -> b.aplicaA(medicoId)).toList();
     }
 
+    /**
+     * @param motivoSobrecupo obligatorio con sobrecupo
+     * @param fechaDeseada la fecha que pidió el paciente; null: lo antes posible
+     * @param solicitadaEn cuándo la pidió (null: ahora; desde la lista de espera, cuando se anotó)
+     */
     @Transactional
     public CitaVista agendar(UUID medicoId, UUID pacienteId, Instant inicio, Integer duracionMinutos, String motivo,
-                             boolean sobrecupo) {
+                             boolean sobrecupo, String motivoSobrecupo, LocalDate fechaDeseada, Instant solicitadaEn) {
         verificarAcceso(medicoId);
         pacientes.get(pacienteId); // 404 si el paciente no es de este consultorio
         AgendaMedico agenda = obtenerOCrear(medicoId);
         Intervalo intervalo = intervalo(inicio, duracionMinutos != null ? duracionMinutos : agenda.getDuracionMinutos());
         validarCupo(agenda, intervalo, sobrecupo, null);
+        validarSobrecupo(agenda, intervalo, sobrecupo, motivoSobrecupo, null);
+        Instant solicitud = solicitadaEn != null ? solicitadaEn : Instant.now();
+        if (fechaDeseada != null && fechaDeseada.isBefore(solicitud.atZone(zona()).toLocalDate())) {
+            throw ApiProblem.badRequest("La fecha deseada no puede ser anterior al día en que el paciente pidió la cita");
+        }
         topes.cita();
         Cita cita = citas.save(new Cita(medicoId, pacienteId, intervalo.inicio(), intervalo.fin(), blankToNull(motivo),
-                sobrecupo, AuthUser.current().id()));
+                sobrecupo, blankToNull(motivoSobrecupo), solicitud, fechaDeseada, AuthUser.current().id()));
         eventos.publishEvent(new CambioCita(cita.getId(), CambioCita.Tipo.AGENDADA, null));
         return vistas(List.of(cita)).getFirst();
     }
 
     @Transactional
-    public CitaVista reprogramar(UUID citaId, Instant inicio, boolean sobrecupo) {
+    public CitaVista reprogramar(UUID citaId, Instant inicio, boolean sobrecupo, String motivoSobrecupo) {
         Cita cita = buscar(citaId);
         AgendaMedico agenda = obtenerOCrear(cita.getMedicoMembresiaId());
         int duracion = (int) Duration.between(cita.getInicio(), cita.getFin()).toMinutes();
         Intervalo intervalo = intervalo(inicio, duracion);
         validarCupo(agenda, intervalo, sobrecupo, cita.getId());
+        validarSobrecupo(agenda, intervalo, sobrecupo, motivoSobrecupo, cita.getId());
         Instant anterior = cita.getInicio();
-        cita.reprogramar(intervalo.inicio(), intervalo.fin(), sobrecupo);
+        cita.reprogramar(intervalo.inicio(), intervalo.fin(), sobrecupo, blankToNull(motivoSobrecupo));
         if (!anterior.equals(cita.getInicio())) {
             eventos.publishEvent(new CambioCita(cita.getId(), CambioCita.Tipo.REPROGRAMADA, anterior));
         }
@@ -253,8 +274,24 @@ class AgendaService {
     }
 
     @Transactional
-    public CitaVista cambiarEstado(UUID citaId, Cita.Estado estado, String motivoCancelacion) {
+    /**
+     * @param justificacionSinRips para confirmar sin el pagador o el tipo de usuario del RIPS (con el módulo activo);
+     *                             sin ella, la confirmación se rechaza y dice qué falta
+     */
+    public CitaVista cambiarEstado(UUID citaId, Cita.Estado estado, String motivoCancelacion, String justificacionSinRips) {
         Cita cita = buscar(citaId);
+        String justificacion = null;
+        if (estado == Cita.Estado.CONFIRMADA) {
+            DatosRipsDeCitas rips = datosRips.getIfAvailable();
+            List<String> faltan = rips == null ? List.of() : rips.faltanParaConfirmar(cita.getPacienteId());
+            if (!faltan.isEmpty()) {
+                justificacion = blankToNull(justificacionSinRips);
+                if (justificacion == null) {
+                    throw ApiProblem.conflict("Falta en el RIPS del paciente: " + String.join(", ", faltan).toLowerCase()
+                            + ". Complételo antes de confirmar, o confirme escribiendo la justificación.");
+                }
+            }
+        }
         if (estado == Cita.Estado.ATENDIDA) {
             AuthUser yo = AuthUser.current();
             if (!yo.puede(Permiso.HISTORIA_VER) || !cita.getMedicoMembresiaId().equals(yo.membresiaId())) {
@@ -268,7 +305,7 @@ class AgendaService {
                         + (estado == Cita.Estado.CANCELADA ? "cancelar la cita." : "marcar la inasistencia."));
             }
         }
-        cita.cambiarEstado(estado, motivoCancelacion);
+        cita.cambiarEstado(estado, motivoCancelacion, justificacion);
         if (estado == Cita.Estado.CANCELADA) {
             eventos.publishEvent(new CambioCita(cita.getId(), CambioCita.Tipo.CANCELADA, null));
         }
@@ -477,12 +514,14 @@ class AgendaService {
             if (!buscar(e.getCitaId()).getMedicoMembresiaId().equals(medicoId)) {
                 throw ApiProblem.badRequest("La cita que quiere adelantar es con otro médico");
             }
-            cita = reprogramar(e.getCitaId(), inicio, false);
+            cita = reprogramar(e.getCitaId(), inicio, false, null);
         } else {
             if (e.getMedicoMembresiaId() != null && !e.getMedicoMembresiaId().equals(medicoId)) {
                 throw ApiProblem.badRequest("Este paciente espera cita con otro médico");
             }
-            cita = agendar(medicoId, e.getPacienteId(), inicio, e.getDuracionMinutos(), e.getMotivo(), false);
+            // La solicitud es de cuando se anotó en la lista de espera: desde entonces está esperando
+            cita = agendar(medicoId, e.getPacienteId(), inicio, e.getDuracionMinutos(), e.getMotivo(), false, null, null,
+                    e.getCreadaEn());
         }
         e.asignar(cita.id());
         return cita;
@@ -549,6 +588,34 @@ class AgendaService {
                 .anyMatch(c -> !c.getId().equals(excluir));
         if (ocupado) {
             throw ApiProblem.conflict("Ese horario ya está ocupado. Elija otro cupo o use sobrecupo.");
+        }
+    }
+
+    /**
+     * Un sobrecupo lleva motivo y respeta el tope diario del médico. Las atenciones sin cita (que se registran solas
+     * como sobrecupo) no cuentan para el tope.
+     */
+    private void validarSobrecupo(AgendaMedico agenda, Intervalo intervalo, boolean sobrecupo, String motivo, UUID excluir) {
+        if (!sobrecupo) {
+            return;
+        }
+        if (motivo == null || motivo.isBlank()) {
+            throw ApiProblem.badRequest("Indique el motivo del sobrecupo");
+        }
+        Integer tope = agenda.getMaxSobrecuposDia();
+        if (tope == null) {
+            return;
+        }
+        ZoneId zona = zona();
+        LocalDate dia = intervalo.inicio().atZone(zona).toLocalDate();
+        long delDia = citas.cruces(agenda.getMedicoMembresiaId(), dia.atStartOfDay(zona).toInstant(),
+                        dia.plusDays(1).atStartOfDay(zona).toInstant()).stream()
+                .filter(c -> c.isSobrecupo() && !c.getId().equals(excluir) && c.getEstado() != Cita.Estado.CANCELADA)
+                .filter(c -> !AgendaPublica.MOTIVO_SIN_CITA.equals(c.getMotivo()))
+                .count();
+        if (delDia >= tope) {
+            throw ApiProblem.conflict(tope == 0 ? "Este médico no recibe sobrecupos"
+                    : "Ya hay " + delDia + " sobrecupo(s) ese día: es el tope del médico (" + tope + ")");
         }
     }
 
@@ -628,8 +695,9 @@ class AgendaService {
         Map<UUID, PacienteResumen> porPaciente = pacientes.resumenes(lista.stream().map(Cita::getPacienteId).toList());
         Map<UUID, String> medicos = identidad.medicosActivos().stream()
                 .collect(Collectors.toMap(MedicoResumen::membresiaId, MedicoResumen::nombre));
+        ZoneId zona = zona();
         return lista.stream().map(c -> CitaVista.de(c, porPaciente.get(c.getPacienteId()),
-                medicos.get(c.getMedicoMembresiaId()))).toList();
+                medicos.get(c.getMedicoMembresiaId()), zona)).toList();
     }
 
     private static String blankToNull(String s) {
@@ -674,13 +742,15 @@ class AgendaService {
     public record Sugerencias(Instant inicio, Instant fin, List<EnEsperaVista> espera, List<CitaVista> adelantar) {
     }
 
-    public record Horario(UUID medicoId, int duracionMinutos, List<BloqueVista> bloques, boolean atiendeFestivos) {
+    /** @param maxSobrecuposDia null: sin tope */
+    public record Horario(UUID medicoId, int duracionMinutos, List<BloqueVista> bloques, boolean atiendeFestivos,
+                          Integer maxSobrecuposDia) {
 
         static Horario de(AgendaMedico a) {
             return new Horario(a.getMedicoMembresiaId(), a.getDuracionMinutos(), a.getBloques().stream()
                     .sorted(Comparator.comparing(Bloque::getDiaSemana).thenComparing(Bloque::getHoraInicio))
                     .map(b -> new BloqueVista(b.getDiaSemana(), b.getHoraInicio(), b.getHoraFin()))
-                    .toList(), a.isAtiendeFestivos());
+                    .toList(), a.isAtiendeFestivos(), a.getMaxSobrecuposDia());
         }
     }
 
@@ -688,15 +758,34 @@ class AgendaService {
     public record BloqueVista(int diaSemana, LocalTime horaInicio, LocalTime horaFin) {
     }
 
+    /**
+     * @param solicitadaEn cuándo pidió la cita el paciente
+     * @param fechaDeseada la fecha que quería; null: lo antes posible
+     * @param diasEspera días entre la solicitud y la cita (oportunidad, Res. 1552 de 2013)
+     * @param diasEsperaDeseada días entre la fecha deseada (o la solicitud, si no hay) y la cita; 0 si fue antes
+     * @param pacienteEdad null si no tiene fecha de nacimiento
+     * @param prioridades por qué tiene atención prioritaria; vacía si no
+     */
     public record CitaVista(UUID id, UUID medicoId, String medicoNombre, UUID pacienteId, String pacienteNombre,
                             String pacienteDocumento, String pacienteTelefono, Instant inicio, Instant fin,
-                            Cita.Estado estado, String motivo, boolean sobrecupo, String motivoCancelacion) {
+                            Cita.Estado estado, String motivo, boolean sobrecupo, String motivoCancelacion,
+                            String motivoSobrecupo, String justificacionSinRips, Instant solicitadaEn,
+                            LocalDate fechaDeseada, long diasEspera, long diasEsperaDeseada, Integer pacienteEdad,
+                            List<String> prioridades) {
 
-        static CitaVista de(Cita c, PacienteResumen p, String medico) {
+        static CitaVista de(Cita c, PacienteResumen p, String medico, ZoneId zona) {
+            LocalDate dia = c.getInicio().atZone(zona).toLocalDate();
+            LocalDate solicitud = c.getSolicitadaEn().atZone(zona).toLocalDate();
+            LocalDate referencia = c.getFechaDeseada() != null && c.getFechaDeseada().isAfter(solicitud)
+                    ? c.getFechaDeseada() : solicitud;
             return new CitaVista(c.getId(), c.getMedicoMembresiaId(), medico, c.getPacienteId(),
                     p == null ? null : p.nombre(), p == null ? null : p.tipoDocumento() + " " + p.numeroDocumento(),
                     p == null ? null : p.telefono(), c.getInicio(), c.getFin(), c.getEstado(), c.getMotivo(),
-                    c.isSobrecupo(), c.getMotivoCancelacion());
+                    c.isSobrecupo(), c.getMotivoCancelacion(), c.getMotivoSobrecupo(), c.getJustificacionSinRips(),
+                    c.getSolicitadaEn(), c.getFechaDeseada(),
+                    Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(solicitud, dia)),
+                    Math.max(0, java.time.temporal.ChronoUnit.DAYS.between(referencia, dia)),
+                    p == null ? null : p.edad(), p == null ? List.of() : p.prioridades());
         }
     }
 }
