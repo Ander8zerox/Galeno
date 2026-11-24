@@ -64,6 +64,30 @@ class MotorFormatosTest {
     }
 
     @Test
+    void losFormatosDeNeumologiaEstanBienDefinidos() throws Exception {
+        for (String nombre : new String[] {"neumologia.historia.v1.json", "neumologia.complementos.v1.json"}) {
+            try (InputStream in = getClass().getResourceAsStream("/formatos/" + nombre)) {
+                var archivo = CatalogoFormatos.leer(in, nombre);
+                assertThat(archivo.codigo()).startsWith("neumologia.");
+                DefinicionFormato d = DefinicionFormato.leer(archivo.definicion());
+                d.verificar(nombre);
+                assertThat(d.secciones()).isNotEmpty();
+            }
+        }
+        // Examen pulmonar normal: los hallazgos marcados antes no se guardan; con hallazgos, sí
+        try (InputStream in = getClass().getResourceAsStream("/formatos/neumologia.historia.v1.json")) {
+            DefinicionFormato d = DefinicionFormato.leer(CatalogoFormatos.leer(in, "neumologia.historia.v1.json").definicion());
+            JsonNode limpio = ValidadorRespuestas.normalizar("Neumología", d, json("""
+                    {"resp_inferior": {"sintomas": ["Sibilancias", "Tos seca"], "comentario": "Nocturnas"},
+                     "ex_pulmonar": {"normal": true, "hallazgos": ["Sibilancias"], "auscultacion": "Limpia"},
+                     "ex_abdominal": {"normal": false, "hallazgos": ["Hepatomegalia"]}}"""));
+            assertThat(limpio.get("ex_pulmonar").has("hallazgos")).isFalse();
+            assertThat(limpio.get("ex_abdominal").get("hallazgos").get(0).asText()).isEqualTo("Hepatomegalia");
+            assertThat(limpio.get("resp_inferior").get("sintomas")).hasSize(2);
+        }
+    }
+
+    @Test
     void elNombreDelArchivoDebeCoincidirConCodigoYVersion() {
         String archivo = """
                 {"codigo": "odonto.historia", "nombre": "H", "especialidad": "O", "version": 2, "definicion": %s}"""

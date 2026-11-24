@@ -1,0 +1,703 @@
+{
+  "codigo": "neumologia.complementos",
+  "nombre": "Neumología: complementos",
+  "especialidad": "Neumología",
+  "descripcion": "Se agrega cuando hace falta: disnea (mMRC) y exacerbaciones, tratamiento respiratorio y oxígeno, exposiciones (tabaco, humo de leña, ocupacionales), puntajes de control (CAT, ACT, Epworth, STOP-BANG), clasificación GOLD y GINA, espirometría, caminata de 6 minutos, gases arteriales e imágenes del tórax.",
+  "version": 1,
+  "definicion": {
+    "secciones": [
+      {
+        "clave": "disnea",
+        "titulo": "Disnea y exacerbaciones",
+        "campos": [
+          {
+            "clave": "mmrc",
+            "tipo": "escala",
+            "etiqueta": "Disnea (escala mMRC)",
+            "items": [
+              {
+                "clave": "grado",
+                "etiqueta": "Grado de disnea",
+                "opciones": [
+                  {
+                    "etiqueta": "0 · Solo con ejercicio intenso",
+                    "puntaje": 0
+                  },
+                  {
+                    "etiqueta": "1 · Al caminar rápido en plano o subir una pendiente leve",
+                    "puntaje": 1
+                  },
+                  {
+                    "etiqueta": "2 · Camina más despacio que personas de su edad o debe parar en plano a su paso",
+                    "puntaje": 2
+                  },
+                  {
+                    "etiqueta": "3 · Debe parar después de unos 100 metros o pocos minutos en plano",
+                    "puntaje": 3
+                  },
+                  {
+                    "etiqueta": "4 · No sale de casa por la disnea, o la tiene al vestirse",
+                    "puntaje": 4
+                  }
+                ]
+              }
+            ],
+            "rangos": [
+              {
+                "min": 0,
+                "max": 1,
+                "interpretacion": "Disnea leve (menos síntomas)"
+              },
+              {
+                "min": 2,
+                "max": 4,
+                "interpretacion": "Disnea significativa (más síntomas)"
+              }
+            ]
+          },
+          {
+            "clave": "exacerbaciones",
+            "tipo": "numero",
+            "etiqueta": "Exacerbaciones en el último año",
+            "min": 0,
+            "max": 50
+          },
+          {
+            "clave": "hospitalizaciones",
+            "tipo": "numero",
+            "etiqueta": "Hospitalizaciones por causa respiratoria en el último año",
+            "min": 0,
+            "max": 50
+          }
+        ]
+      },
+      {
+        "clave": "tratamiento",
+        "titulo": "Tratamiento respiratorio",
+        "campos": [
+          {
+            "clave": "inhaladores",
+            "tipo": "texto_largo",
+            "etiqueta": "Inhaladores y tratamiento respiratorio actual",
+            "ayuda": "Medicamento, dosis y frecuencia"
+          },
+          {
+            "clave": "tecnica_inhalatoria",
+            "tipo": "seleccion",
+            "etiqueta": "Técnica inhalatoria",
+            "opciones": [
+              "Adecuada",
+              "Con errores (se corrigió)",
+              "Con errores",
+              "No usa inhaladores"
+            ]
+          },
+          {
+            "clave": "adherencia",
+            "tipo": "seleccion",
+            "etiqueta": "Adherencia al tratamiento",
+            "opciones": [
+              "Buena",
+              "Regular",
+              "Mala",
+              "Sin tratamiento"
+            ]
+          },
+          {
+            "clave": "oxigeno",
+            "tipo": "si_no",
+            "etiqueta": "Oxígeno domiciliario"
+          },
+          {
+            "clave": "oxigeno_litros",
+            "tipo": "numero",
+            "etiqueta": "Flujo de oxígeno",
+            "unidad": "L/min",
+            "min": 0,
+            "max": 15,
+            "visibleSi": {
+              "campo": "oxigeno",
+              "igual": true
+            }
+          },
+          {
+            "clave": "oxigeno_horas",
+            "tipo": "numero",
+            "etiqueta": "Horas al día con oxígeno",
+            "unidad": "horas",
+            "min": 0,
+            "max": 24,
+            "visibleSi": {
+              "campo": "oxigeno",
+              "igual": true
+            }
+          },
+          {
+            "clave": "cpap",
+            "tipo": "si_no",
+            "etiqueta": "Usa CPAP o BiPAP"
+          }
+        ]
+      },
+      {
+        "clave": "exposiciones",
+        "titulo": "Exposiciones",
+        "campos": [
+          {
+            "clave": "tabaquismo",
+            "tipo": "seleccion",
+            "etiqueta": "Tabaquismo",
+            "opciones": [
+              "Nunca ha fumado",
+              "Exfumador",
+              "Fumador actual"
+            ]
+          },
+          {
+            "clave": "paquetes_anio",
+            "tipo": "numero",
+            "etiqueta": "Índice paquetes/año",
+            "unidad": "paquetes/año",
+            "min": 0,
+            "max": 300,
+            "ayuda": "(Cigarrillos al día ÷ 20) × años fumando"
+          },
+          {
+            "clave": "cesacion",
+            "tipo": "texto",
+            "etiqueta": "Hace cuánto dejó de fumar",
+            "visibleSi": {
+              "campo": "tabaquismo",
+              "igual": "Exfumador"
+            }
+          },
+          {
+            "clave": "vapeo",
+            "tipo": "si_no",
+            "etiqueta": "Usa cigarrillo electrónico o vapeador"
+          },
+          {
+            "clave": "humo_lena",
+            "tipo": "si_no",
+            "etiqueta": "Exposición a humo de leña o biomasa"
+          },
+          {
+            "clave": "humo_lena_anios",
+            "tipo": "numero",
+            "etiqueta": "Años de exposición al humo de leña",
+            "unidad": "años",
+            "min": 0,
+            "max": 100,
+            "visibleSi": {
+              "campo": "humo_lena",
+              "igual": true
+            }
+          },
+          {
+            "clave": "humo_lena_horas",
+            "tipo": "numero",
+            "etiqueta": "Horas al día de exposición",
+            "unidad": "horas",
+            "min": 0,
+            "max": 24,
+            "visibleSi": {
+              "campo": "humo_lena",
+              "igual": true
+            }
+          },
+          {
+            "clave": "ocupacional",
+            "tipo": "multiple",
+            "etiqueta": "Exposición ocupacional",
+            "opciones": [
+              "Polvo de minería o canteras (sílice)",
+              "Asbesto",
+              "Polvos orgánicos (harinas, granos, madera)",
+              "Químicos o solventes",
+              "Humos de soldadura o combustión",
+              "Aves o animales",
+              "Otra"
+            ]
+          },
+          {
+            "clave": "ocupacional_detalle",
+            "tipo": "texto",
+            "etiqueta": "Oficio y tiempo de exposición"
+          },
+          {
+            "clave": "aves_casa",
+            "tipo": "si_no",
+            "etiqueta": "Aves o mascotas en casa"
+          },
+          {
+            "clave": "altitud",
+            "tipo": "seleccion",
+            "etiqueta": "Altitud de residencia",
+            "opciones": [
+              "Menos de 1.000 m",
+              "1.000 a 2.000 m",
+              "2.000 a 2.800 m",
+              "Más de 2.800 m"
+            ],
+            "ayuda": "Cambia la saturación esperada (en Bogotá, cerca de 2.600 m, una SatO₂ normal es más baja)"
+          }
+        ]
+      },
+      {
+        "clave": "puntajes",
+        "titulo": "Puntajes de control",
+        "campos": [
+          {
+            "clave": "cat",
+            "tipo": "numero",
+            "etiqueta": "CAT (impacto de la EPOC)",
+            "unidad": "puntos",
+            "min": 0,
+            "max": 40,
+            "ayuda": "Menos de 10: bajo · 10 a 20: medio · 21 a 30: alto · más de 30: muy alto"
+          },
+          {
+            "clave": "act",
+            "tipo": "numero",
+            "etiqueta": "ACT (control del asma)",
+            "unidad": "puntos",
+            "min": 5,
+            "max": 25,
+            "ayuda": "20 a 25: bien controlada · 16 a 19: no bien controlada · 15 o menos: muy mal controlada"
+          },
+          {
+            "clave": "epworth",
+            "tipo": "numero",
+            "etiqueta": "Epworth (somnolencia)",
+            "unidad": "puntos",
+            "min": 0,
+            "max": 24,
+            "ayuda": "0 a 10: normal · 11 a 14: leve · 15 a 17: moderada · 18 a 24: grave"
+          },
+          {
+            "clave": "stop_bang",
+            "tipo": "numero",
+            "etiqueta": "STOP-BANG (riesgo de apnea del sueño)",
+            "unidad": "puntos",
+            "min": 0,
+            "max": 8,
+            "ayuda": "0 a 2: bajo · 3 a 4: intermedio · 5 a 8: alto"
+          }
+        ]
+      },
+      {
+        "clave": "clasificacion",
+        "titulo": "Clasificación",
+        "campos": [
+          {
+            "clave": "gold_espirometrico",
+            "tipo": "seleccion",
+            "etiqueta": "EPOC: grado espirométrico (GOLD)",
+            "opciones": [
+              "GOLD 1 · Leve (VEF1 ≥ 80 %)",
+              "GOLD 2 · Moderado (50 a 79 %)",
+              "GOLD 3 · Grave (30 a 49 %)",
+              "GOLD 4 · Muy grave (< 30 %)"
+            ]
+          },
+          {
+            "clave": "gold_grupo",
+            "tipo": "seleccion",
+            "etiqueta": "EPOC: grupo (GOLD)",
+            "opciones": [
+              "A · Pocos síntomas, bajo riesgo",
+              "B · Más síntomas, bajo riesgo",
+              "E · Exacerbador"
+            ]
+          },
+          {
+            "clave": "asma_control",
+            "tipo": "seleccion",
+            "etiqueta": "Asma: nivel de control (GINA)",
+            "opciones": [
+              "Bien controlada",
+              "Parcialmente controlada",
+              "No controlada"
+            ]
+          },
+          {
+            "clave": "asma_paso",
+            "tipo": "seleccion",
+            "etiqueta": "Asma: paso de tratamiento (GINA)",
+            "opciones": [
+              "Paso 1",
+              "Paso 2",
+              "Paso 3",
+              "Paso 4",
+              "Paso 5"
+            ]
+          },
+          {
+            "clave": "observaciones",
+            "tipo": "texto_largo",
+            "etiqueta": "Observaciones"
+          }
+        ]
+      },
+      {
+        "clave": "espirometria",
+        "titulo": "Espirometría",
+        "campos": [
+          {
+            "clave": "realizada",
+            "tipo": "si_no",
+            "etiqueta": "Se realizó o se revisó una espirometría"
+          },
+          {
+            "clave": "fecha",
+            "tipo": "fecha",
+            "etiqueta": "Fecha de la espirometría",
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            }
+          },
+          {
+            "clave": "valores",
+            "tipo": "tabla",
+            "etiqueta": "Resultados",
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            },
+            "columnas": [
+              {
+                "clave": "pre",
+                "etiqueta": "Pre-BD",
+                "tipo": "numero"
+              },
+              {
+                "clave": "pre_pct",
+                "etiqueta": "Pre-BD % del predicho",
+                "tipo": "numero"
+              },
+              {
+                "clave": "post",
+                "etiqueta": "Post-BD",
+                "tipo": "numero"
+              },
+              {
+                "clave": "post_pct",
+                "etiqueta": "Post-BD % del predicho",
+                "tipo": "numero"
+              }
+            ],
+            "filas": [
+              {
+                "clave": "vef1",
+                "etiqueta": "VEF1 (L)"
+              },
+              {
+                "clave": "cvf",
+                "etiqueta": "CVF (L)"
+              },
+              {
+                "clave": "relacion",
+                "etiqueta": "VEF1/CVF (%)"
+              },
+              {
+                "clave": "fef2575",
+                "etiqueta": "FEF 25-75 (L/s)"
+              },
+              {
+                "clave": "fep",
+                "etiqueta": "FEP (L/s)"
+              }
+            ]
+          },
+          {
+            "clave": "calidad",
+            "tipo": "seleccion",
+            "etiqueta": "Calidad de la prueba (ATS/ERS)",
+            "opciones": [
+              "A",
+              "B",
+              "C",
+              "D",
+              "E",
+              "F"
+            ],
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            }
+          },
+          {
+            "clave": "patron",
+            "tipo": "seleccion",
+            "etiqueta": "Patrón",
+            "opciones": [
+              "Normal",
+              "Obstructivo",
+              "Restrictivo probable (confirmar con volúmenes)",
+              "Mixto",
+              "Inespecífico",
+              "No concluyente"
+            ],
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            }
+          },
+          {
+            "clave": "respuesta_bd",
+            "tipo": "seleccion",
+            "etiqueta": "Respuesta al broncodilatador",
+            "opciones": [
+              "Significativa",
+              "No significativa",
+              "No se realizó"
+            ],
+            "ayuda": "Significativa: VEF1 o CVF suben más de 10 % del valor predicho (ERS/ATS 2022)",
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            }
+          },
+          {
+            "clave": "interpretacion",
+            "tipo": "texto_largo",
+            "etiqueta": "Interpretación",
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            }
+          }
+        ]
+      },
+      {
+        "clave": "caminata",
+        "titulo": "Caminata de 6 minutos",
+        "campos": [
+          {
+            "clave": "realizada",
+            "tipo": "si_no",
+            "etiqueta": "Se realizó la caminata de 6 minutos"
+          },
+          {
+            "clave": "distancia",
+            "tipo": "numero",
+            "etiqueta": "Distancia recorrida",
+            "unidad": "m",
+            "min": 0,
+            "max": 1200,
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            }
+          },
+          {
+            "clave": "distancia_pct",
+            "tipo": "numero",
+            "etiqueta": "Distancia (% del predicho)",
+            "unidad": "%",
+            "min": 0,
+            "max": 200,
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            }
+          },
+          {
+            "clave": "valores",
+            "tipo": "tabla",
+            "etiqueta": "Mediciones",
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            },
+            "columnas": [
+              {
+                "clave": "inicio",
+                "etiqueta": "Al inicio",
+                "tipo": "numero"
+              },
+              {
+                "clave": "final",
+                "etiqueta": "Al final",
+                "tipo": "numero"
+              },
+              {
+                "clave": "minimo",
+                "etiqueta": "Mínimo o máximo",
+                "tipo": "numero"
+              }
+            ],
+            "filas": [
+              {
+                "clave": "sat",
+                "etiqueta": "SatO₂ (%)"
+              },
+              {
+                "clave": "fc",
+                "etiqueta": "Frecuencia cardiaca (lpm)"
+              },
+              {
+                "clave": "borg_disnea",
+                "etiqueta": "Borg disnea (0 a 10)"
+              },
+              {
+                "clave": "borg_fatiga",
+                "etiqueta": "Borg fatiga (0 a 10)"
+              }
+            ]
+          },
+          {
+            "clave": "oxigeno",
+            "tipo": "numero",
+            "etiqueta": "Oxígeno durante la prueba",
+            "unidad": "L/min",
+            "min": 0,
+            "max": 15,
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            }
+          },
+          {
+            "clave": "detenciones",
+            "tipo": "si_no",
+            "etiqueta": "Se detuvo durante la prueba",
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            }
+          },
+          {
+            "clave": "observaciones",
+            "tipo": "texto_largo",
+            "etiqueta": "Observaciones",
+            "visibleSi": {
+              "campo": "realizada",
+              "igual": true
+            }
+          }
+        ]
+      },
+      {
+        "clave": "gases",
+        "titulo": "Gases arteriales",
+        "campos": [
+          {
+            "clave": "realizados",
+            "tipo": "si_no",
+            "etiqueta": "Se tomaron o se revisaron gases arteriales"
+          },
+          {
+            "clave": "fio2",
+            "tipo": "numero",
+            "etiqueta": "FiO₂",
+            "unidad": "%",
+            "min": 21,
+            "max": 100,
+            "visibleSi": {
+              "campo": "realizados",
+              "igual": true
+            }
+          },
+          {
+            "clave": "ph",
+            "tipo": "numero",
+            "etiqueta": "pH",
+            "min": 6.8,
+            "max": 7.8,
+            "visibleSi": {
+              "campo": "realizados",
+              "igual": true
+            }
+          },
+          {
+            "clave": "pao2",
+            "tipo": "numero",
+            "etiqueta": "PaO₂",
+            "unidad": "mmHg",
+            "min": 20,
+            "max": 600,
+            "visibleSi": {
+              "campo": "realizados",
+              "igual": true
+            }
+          },
+          {
+            "clave": "paco2",
+            "tipo": "numero",
+            "etiqueta": "PaCO₂",
+            "unidad": "mmHg",
+            "min": 10,
+            "max": 150,
+            "visibleSi": {
+              "campo": "realizados",
+              "igual": true
+            }
+          },
+          {
+            "clave": "hco3",
+            "tipo": "numero",
+            "etiqueta": "HCO₃",
+            "unidad": "mEq/L",
+            "min": 5,
+            "max": 60,
+            "visibleSi": {
+              "campo": "realizados",
+              "igual": true
+            }
+          },
+          {
+            "clave": "sao2",
+            "tipo": "numero",
+            "etiqueta": "SaO₂",
+            "unidad": "%",
+            "min": 20,
+            "max": 100,
+            "visibleSi": {
+              "campo": "realizados",
+              "igual": true
+            }
+          },
+          {
+            "clave": "interpretacion",
+            "tipo": "texto_largo",
+            "etiqueta": "Interpretación",
+            "visibleSi": {
+              "campo": "realizados",
+              "igual": true
+            }
+          }
+        ]
+      },
+      {
+        "clave": "imagenes",
+        "titulo": "Imágenes del tórax",
+        "campos": [
+          {
+            "clave": "tipo",
+            "tipo": "multiple",
+            "etiqueta": "Estudios revisados",
+            "opciones": [
+              "Radiografía de tórax",
+              "TAC de tórax",
+              "TAC de alta resolución",
+              "Angio-TAC de tórax",
+              "Ecografía pleural"
+            ]
+          },
+          {
+            "clave": "fecha",
+            "tipo": "fecha",
+            "etiqueta": "Fecha del estudio más reciente"
+          },
+          {
+            "clave": "hallazgos",
+            "tipo": "texto_largo",
+            "etiqueta": "Hallazgos"
+          }
+        ]
+      }
+    ]
+  }
+}
