@@ -1,0 +1,156 @@
+{
+  "codigo": "neumologia.historia",
+  "nombre": "Historia neumológica",
+  "especialidad": "Neumología",
+  "descripcion": "Revisión por sistemas y examen físico por aparatos, como la historia de neumología pediátrica en papel: se marca solo lo positivo y se comenta por sistema. Talla, peso, temperatura, FC, FR, TA y saturación van en los signos vitales de la atención.",
+  "version": 1,
+  "definicion": {
+    "secciones": [
+      {
+        "clave": "estado",
+        "titulo": "Estado del paciente",
+        "campos": [
+          { "clave": "asintomatico", "tipo": "si_no", "etiqueta": "Asiste a control y está asintomático" },
+          { "clave": "evolucion", "tipo": "texto_largo", "etiqueta": "Evolución de los síntomas",
+            "visibleSi": { "campo": "asintomatico", "igual": false } }
+        ]
+      },
+      {
+        "clave": "resp_superior",
+        "titulo": "Respiratorio superior",
+        "campos": [
+          { "clave": "sintomas", "tipo": "multiple", "etiqueta": "Síntomas presentes",
+            "opciones": ["Aclaramiento faríngeo", "Congestión nasal", "Conjuntivitis", "Disfonía o tos cruposa", "Epistaxis",
+                         "Estornudos", "Estridor", "Halitosis", "Odinofagia", "Otalgia", "Otorrea", "Respiración bucal",
+                         "Rinorrea hialina", "Rinorrea purulenta", "Ronca al dormir"] },
+          { "clave": "comentario", "tipo": "texto", "etiqueta": "Comentario" }
+        ]
+      },
+      {
+        "clave": "resp_inferior",
+        "titulo": "Respiratorio inferior",
+        "campos": [
+          { "clave": "sintomas", "tipo": "multiple", "etiqueta": "Síntomas presentes",
+            "opciones": ["Cianosis", "Dificultad respiratoria", "Dolor torácico", "Hemoptisis", "Roncus", "Sibilancias",
+                         "Síntomas con el ejercicio", "Síntomas nocturnos", "Tos húmeda", "Tos seca"] },
+          { "clave": "comentario", "tipo": "texto", "etiqueta": "Comentario" }
+        ]
+      },
+      {
+        "clave": "gastrointestinal",
+        "titulo": "Gastrointestinales",
+        "campos": [
+          { "clave": "sintomas", "tipo": "multiple", "etiqueta": "Síntomas presentes",
+            "opciones": ["Cólico", "Deposición con sangre", "Diarrea", "Distensión abdominal", "Dolor epigástrico",
+                         "Dolor generalizado", "Dolor localizado", "Ictericia", "Estomatitis", "Estreñimiento", "Hipo",
+                         "Hiporexia", "Náusea", "Regurgitación", "Vómito"] },
+          { "clave": "comentario", "tipo": "texto", "etiqueta": "Comentario" }
+        ]
+      },
+      {
+        "clave": "urinario",
+        "titulo": "Urinarios",
+        "campos": [
+          { "clave": "sintomas", "tipo": "multiple", "etiqueta": "Síntomas presentes",
+            "opciones": ["Cistitis", "Coluria", "Disuria", "Enuresis", "Flujo genital", "Hematuria", "Oliguria",
+                         "Polaquiuria", "Poliuria"] },
+          { "clave": "comentario", "tipo": "texto", "etiqueta": "Comentario" }
+        ]
+      },
+      {
+        "clave": "generales",
+        "titulo": "Generales",
+        "campos": [
+          { "clave": "sintomas", "tipo": "multiple", "etiqueta": "Síntomas presentes",
+            "opciones": ["Adenopatías", "Adinamia", "Cefalea", "Escalofrío", "Febrícula", "Fiebre", "Irritabilidad",
+                         "Malestar general", "Mareo", "Mialgias", "Palidez", "Pérdida de peso"] },
+          { "clave": "comentario", "tipo": "texto", "etiqueta": "Comentario" },
+          { "clave": "otros_sintomas", "tipo": "texto_largo", "etiqueta": "Otros síntomas" }
+        ]
+      },
+      {
+        "clave": "vacunas",
+        "titulo": "Vacunas",
+        "campos": [
+          { "clave": "al_dia", "tipo": "si_no", "etiqueta": "Cuadro de vacunas al día" },
+          { "clave": "pendientes", "tipo": "texto", "etiqueta": "Vacunas pendientes",
+            "visibleSi": { "campo": "al_dia", "igual": false } }
+        ]
+      },
+      {
+        "clave": "antropometria",
+        "titulo": "Antropometría",
+        "campos": [
+          { "clave": "percentil_talla", "tipo": "numero", "etiqueta": "Percentil de talla", "min": 0, "max": 100,
+            "ayuda": "La talla y el peso se registran en los signos vitales de la atención" },
+          { "clave": "peso_talla", "tipo": "numero", "etiqueta": "Peso para la talla", "unidad": "kg", "min": 0, "max": 200 },
+          { "clave": "perimetro_cefalico", "tipo": "numero", "etiqueta": "Perímetro cefálico", "unidad": "cm", "min": 20, "max": 70 },
+          { "clave": "percentil_pc", "tipo": "numero", "etiqueta": "Percentil del perímetro cefálico", "min": 0, "max": 100 }
+        ]
+      },
+      {
+        "clave": "ex_ong",
+        "titulo": "Examen: oídos, nariz y garganta",
+        "campos": [
+          { "clave": "normal", "tipo": "si_no", "etiqueta": "Normal" },
+          { "clave": "hallazgos", "tipo": "multiple", "etiqueta": "Hallazgos",
+            "opciones": ["Amígdalas hipertróficas", "Amígdalas purulentas", "Conjuntivitis", "Cornetes hipertróficos",
+                         "Dolor del seno maxilar", "Escurrimiento faríngeo", "Estomatitis", "Faringe congestiva",
+                         "Faringe granulosa", "Infección del oído externo", "Mucositis", "Tímpano congestivo",
+                         "Tímpano abombado"],
+            "visibleSi": { "campo": "normal", "igual": false } },
+          { "clave": "comentario", "tipo": "texto", "etiqueta": "Comentario" }
+        ]
+      },
+      {
+        "clave": "ex_pulmonar",
+        "titulo": "Examen pulmonar",
+        "campos": [
+          { "clave": "normal", "tipo": "si_no", "etiqueta": "Ruidos respiratorios normales" },
+          { "clave": "hallazgos", "tipo": "multiple", "etiqueta": "Hallazgos",
+            "opciones": ["Aleteo nasal", "Cianosis", "Deformidad torácica", "Espiración prolongada", "Estertores finos",
+                         "Estertores gruesos", "Estridor", "Hipocratismo digital", "Percusión alterada", "Polipnea",
+                         "Retracciones o tirajes", "Roncus", "Sibilancias", "Murmullo vesicular disminuido"],
+            "visibleSi": { "campo": "normal", "igual": false } },
+          { "clave": "auscultacion", "tipo": "texto_largo", "etiqueta": "Auscultación",
+            "ayuda": "Detalle y localización: por ejemplo, sibilancias espiratorias en ambas bases" }
+        ]
+      },
+      {
+        "clave": "ex_cardiaco",
+        "titulo": "Examen cardíaco",
+        "campos": [
+          { "clave": "normal", "tipo": "si_no", "etiqueta": "Ruidos cardíacos normales" },
+          { "clave": "hallazgos", "tipo": "multiple", "etiqueta": "Hallazgos",
+            "opciones": ["Arritmia", "Mala perfusión", "Soplos"],
+            "visibleSi": { "campo": "normal", "igual": false } },
+          { "clave": "comentario", "tipo": "texto", "etiqueta": "Comentario" }
+        ]
+      },
+      {
+        "clave": "ex_abdominal",
+        "titulo": "Examen abdominal",
+        "campos": [
+          { "clave": "normal", "tipo": "si_no", "etiqueta": "Examen abdominal normal" },
+          { "clave": "hallazgos", "tipo": "multiple", "etiqueta": "Hallazgos",
+            "opciones": ["Blumberg positivo", "Dolor localizado", "Esplenomegalia", "Hepatomegalia", "Hernia inguinal",
+                         "Hernia umbilical", "Ictericia", "Masas"],
+            "visibleSi": { "campo": "normal", "igual": false } },
+          { "clave": "comentario", "tipo": "texto", "etiqueta": "Comentario" }
+        ]
+      },
+      {
+        "clave": "ex_general",
+        "titulo": "Examen general",
+        "campos": [
+          { "clave": "normal", "tipo": "si_no", "etiqueta": "Normal" },
+          { "clave": "hallazgos", "tipo": "multiple", "etiqueta": "Hallazgos",
+            "opciones": ["Adenopatías", "Cadera displásica", "Deshidratación", "Edemas", "Enoftalmos", "Fimosis",
+                         "Hiperelastosis articular", "Palidez", "Pie plano", "Pie valgo", "Pie varo"],
+            "visibleSi": { "campo": "normal", "igual": false } },
+          { "clave": "otros_signos", "tipo": "texto_largo", "etiqueta": "Otros signos" }
+        ]
+      }
+    ]
+  }
+}

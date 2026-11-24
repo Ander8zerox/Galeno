@@ -350,6 +350,12 @@ cita. Faltaría:
     encargado y transferencia a EE. UU.
 - **Validación clínica:** que un odontólogo revise la historia odontológica v1 y el odontograma (hallazgos y colores).
   Sus correcciones salen como v2 de cada formato.
+  - **Neumología (24 de noviembre de 2026):** "Historia neumológica" v1 sale de la historia en papel del neumólogo
+    pediatra que ya usa Galenum (revisión por sistemas y examen por aparatos; se marca lo positivo y se comenta por
+    sistema). "Neumología: complementos" v1 reúne lo de adulto y las pruebas de función pulmonar, sin campos
+    obligatorios. Que el neumólogo los revise. CAT, ACT, Epworth y STOP-BANG van como puntaje total: esos cuestionarios
+    tienen derechos de autor y su uso en software comercial pide licencia. Pendiente: ocultar fimosis y flujo genital
+    según el sexo del paciente (el motor de formatos aún no lo permite).
 - **Revisión legal:**
   - Términos y política de datos (hoy borradores en `/terminos` y `/politica-datos`), con la cláusula contra la copia.
   - Condiciones de los partners: contrato, retención en la fuente y ReteICA, cuenta de cobro o factura. Decidir si la
