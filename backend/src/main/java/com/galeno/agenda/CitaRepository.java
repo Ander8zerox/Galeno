@@ -14,6 +14,10 @@ interface CitaRepository extends JpaRepository<Cita, UUID> {
 
     long countByPacienteId(UUID pacienteId);
 
+    @Query("select distinct c.pacienteId from Cita c where c.pacienteId in :pacienteIds")
+    java.util.List<UUID> pacientesConAlguna(java.util.Collection<UUID> pacienteIds);
+
+
     @Query("""
             select c from Cita c
             where c.medicoMembresiaId = :medicoId and c.inicio >= :desde and c.inicio < :hasta

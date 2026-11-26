@@ -13,9 +13,46 @@ interface AtencionRepository extends JpaRepository<Atencion, UUID> {
 
     boolean existsByClaveImportacion(String claveImportacion);
 
+    @Query("select a.claveImportacion from Atencion a where a.claveImportacion in :claves")
+    List<String> clavesImportadas(java.util.Collection<String> claves);
+
     List<Atencion> findByLoteImportacionId(UUID loteImportacionId);
 
     long countByPacienteId(UUID pacienteId);
+
+    @Query("select distinct a.pacienteId from Atencion a where a.pacienteId in :pacienteIds")
+    java.util.List<UUID> pacientesConAlguna(java.util.Collection<UUID> pacienteIds);
+
+    @Query("select a.id from Atencion a where a.loteImportacionId = :loteId")
+    List<UUID> idsDelLote(UUID loteId);
+
+    /*
+     * Borrado en bloque de lo que creó una importación: primero las colecciones de cada atención y luego las atenciones.
+     * Si algo más las referencia (notas, fórmulas, documentos, lotes de RIPS), la llave foránea lo impide.
+     */
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(value = "DELETE d FROM atencion_diagnosticos d JOIN atenciones a ON a.id = d.atencion_id "
+            + "WHERE a.lote_importacion_id = :loteId AND a.tenant_id = :tenantId", nativeQuery = true)
+    int borrarDiagnosticosDelLote(UUID loteId, UUID tenantId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(value = "DELETE d FROM atencion_procedimientos d JOIN atenciones a ON a.id = d.atencion_id "
+            + "WHERE a.lote_importacion_id = :loteId AND a.tenant_id = :tenantId", nativeQuery = true)
+    int borrarProcedimientosDelLote(UUID loteId, UUID tenantId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(value = "DELETE d FROM atencion_ordenes d JOIN atenciones a ON a.id = d.atencion_id "
+            + "WHERE a.lote_importacion_id = :loteId AND a.tenant_id = :tenantId", nativeQuery = true)
+    int borrarOrdenesDelLote(UUID loteId, UUID tenantId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(value = "DELETE d FROM atencion_factores_riesgo d JOIN atenciones a ON a.id = d.atencion_id "
+            + "WHERE a.lote_importacion_id = :loteId AND a.tenant_id = :tenantId", nativeQuery = true)
+    int borrarFactoresDelLote(UUID loteId, UUID tenantId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query(value = "DELETE FROM atenciones WHERE lote_importacion_id = :loteId AND tenant_id = :tenantId", nativeQuery = true)
+    int borrarDelLote(UUID loteId, UUID tenantId);
 
     /** Las firmadas del paciente y los borradores propios de quien consulta. */
     @Query("""

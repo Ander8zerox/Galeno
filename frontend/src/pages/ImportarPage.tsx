@@ -27,11 +27,16 @@ const ESTADO_REGISTRO: Record<EstadoRegistro, [string, string]> = {
 const ORIGEN: Record<NonNullable<Lote["origen"]>, string> = {
   RIPS_JSON: "RIPS",
   PACIENTES_LISTADO: "Listado de pacientes",
+  PLANTILLA_GALENUM: "Plantilla de Galenum",
 };
 
 const CAMPO_CAMBIO: Record<string, string> = {
   nombres: "Nombres", apellidos: "Apellidos", telefono: "Teléfono", email: "Correo", datosIncompletos: "Datos incompletos",
+  alergias: "Alergias", alergiasEstado: "¿Tiene alergias?", antecedentes: "Antecedentes", responsableNombre: "Responsable",
+  responsableParentesco: "Parentesco del responsable", responsableTelefono: "Teléfono del responsable",
 };
+
+const VALOR_CAMBIO: Record<string, string> = { SI: "Sí", NIEGA: "Niega" };
 
 const TIPO_SERVICIO: Record<string, string> = {
   consultas: "Consulta",
@@ -40,7 +45,7 @@ const TIPO_SERVICIO: Record<string, string> = {
   hospitalizacion: "Hospitalización",
 };
 
-/** Lista de importaciones y carga de archivos RIPS o de listados de pacientes. */
+/** Lista de importaciones y carga de la plantilla de Galenum, archivos RIPS o listados de pacientes. */
 export function ImportarPage() {
   const lotes = useQuery({
     queryKey: ["importaciones"],
@@ -50,6 +55,7 @@ export function ImportarPage() {
   return (
     <section className="stack">
       <div className="page-header"><h1>Importar historias</h1></div>
+      <SubirPlantilla />
       <SubirRips />
       <SubirListado />
       <div className="stack">
@@ -68,7 +74,7 @@ export function ImportarPage() {
                     <td>{ORIGEN[l.origen!]}</td>
                     <td><EstadoLote estado={l.estado!} /></td>
                     <td>{l.pacientes}</td>
-                    <td>{l.origen === "RIPS_JSON" ? l.atenciones : "—"}</td>
+                    <td>{l.origen === "PACIENTES_LISTADO" ? "—" : l.atenciones}</td>
                     <td>{l.errores ? <span className="badge badge-danger">{l.errores}</span> : 0}</td>
                     <td><Link to={`/importar/${l.id}`}>{l.estado === "EN_REVISION" ? "Revisar" : "Ver"}</Link></td>
                   </tr>
@@ -85,6 +91,44 @@ export function ImportarPage() {
 function EstadoLote({ estado }: { estado: NonNullable<Lote["estado"]> }) {
   const [texto, clase] = ESTADO_LOTE[estado];
   return <span className={`badge ${clase}`}>{texto}</span>;
+}
+
+function SubirPlantilla() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [archivo, setArchivo] = useState<File | null>(null);
+
+  const subir = useMutation({
+    mutationFn: async () => {
+      const datos = new FormData();
+      datos.append("archivo", archivo!);
+      return subirArchivo<Lote>("/api/v1/importaciones/plantilla", datos);
+    },
+    onSuccess: (lote) => {
+      queryClient.invalidateQueries({ queryKey: ["importaciones"] });
+      navigate(`/importar/${lote.id}`);
+    },
+  });
+
+  return (
+    <div className="card stack">
+      <h3>Plantilla de Galenum</h3>
+      <p className="muted small">
+        Para traer pacientes e historias de cualquier sistema o de un Excel propio: una hoja con los pacientes y otra con
+        las atenciones (motivo, examen, signos vitales, diagnósticos y plan). Descargue la plantilla, llénela sin cambiar los
+        nombres de las hojas ni de las columnas y súbala aquí. Antes de importar podrá revisar cada paciente.
+      </p>
+      <div className="row">
+        <a className="btn btn-secondary" href="/plantillas/plantilla-importacion-galenum.xlsx" download>Descargar plantilla</a>
+        <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} />
+        <button className="btn" disabled={!archivo || subir.isPending} onClick={() => subir.mutate()}>
+          {subir.isPending ? "Leyendo la plantilla…" : "Revisar plantilla"}
+        </button>
+      </div>
+      {subir.error && <p className="alert alert-error">{subir.error.message}</p>}
+    </div>
+  );
 }
 
 function SubirRips() {
@@ -180,6 +224,7 @@ export function LoteImportacionPage() {
   const registros = detalle.data!.registros!;
   const enRevision = lote.estado === "EN_REVISION";
   const listado = lote.origen === "PACIENTES_LISTADO";
+  const plantilla = lote.origen === "PLANTILLA_GALENUM";
   const error = incluirTodos.error ?? confirmar.error ?? deshacer.error ?? descartar.error;
   const total = registros.total ?? 0;
 
@@ -193,7 +238,12 @@ export function LoteImportacionPage() {
 
       <div className="card stack">
         <div className="row">
-          {listado ? <Cifra valor={lote.pacientes} texto="pacientes en el archivo" /> : (
+          {listado ? <Cifra valor={lote.pacientes} texto="pacientes en el archivo" /> : plantilla ? (
+            <>
+              <Cifra valor={lote.pacientes} texto="pacientes" />
+              <Cifra valor={lote.atenciones} texto="atenciones" />
+            </>
+          ) : (
             <>
               <Cifra valor={lote.archivos} texto="archivos" />
               <Cifra valor={lote.facturas} texto="facturas" />
@@ -205,7 +255,10 @@ export function LoteImportacionPage() {
         </div>
         {!!lote.prestadores?.length && <small className="muted">Prestador (NIT): {lote.prestadores.join(", ")}</small>}
         {!!lote.omitidos && listado && <small className="muted">{lote.omitidos} filas vacías no se tienen en cuenta.</small>}
-        {!!lote.omitidos && !listado && (
+        {!!lote.omitidos && plantilla && (
+          <small className="muted">{lote.omitidos} filas vacías o que no se pudieron leer no se tienen en cuenta.</small>
+        )}
+        {!!lote.omitidos && !listado && !plantilla && (
           <small className="muted">
             {lote.omitidos === 1 ? "1 servicio" : `${lote.omitidos} servicios`} de medicamentos, recién nacidos u otros
             no se importan en esta versión.
@@ -224,6 +277,7 @@ export function LoteImportacionPage() {
           <div className="row">
             <button className="btn" disabled={!lote.incluidos || confirmar.isPending} onClick={() => {
               if (confirm(listado ? `Se completarán o crearán ${lote.incluidos} pacientes. ¿Continuar?`
+                : plantilla ? `Se completarán o crearán ${lote.incluidos} pacientes y se importarán sus atenciones a la historia clínica. ¿Continuar?`
                 : `Se importarán ${lote.incluidos} pacientes a la historia clínica. ¿Continuar?`)) confirmar.mutate();
             }}>
               {confirmar.isPending ? "Importando…" : `Importar ${lote.incluidos} pacientes`}
@@ -241,10 +295,12 @@ export function LoteImportacionPage() {
             <button className="btn btn-secondary" disabled={deshacer.isPending} onClick={() => {
               if (confirm(listado
                 ? "Los pacientes completados vuelven a sus datos anteriores y se borran los creados que no tengan otra actividad. ¿Deshacer?"
+                : plantilla ? "Se quitarán las atenciones importadas, los pacientes completados vuelven a sus datos anteriores y se borran los creados que no tengan otra actividad. ¿Deshacer?"
                 : "Se quitarán las atenciones importadas y los pacientes creados que no tengan otra actividad. ¿Deshacer?")) deshacer.mutate();
             }}>{deshacer.isPending ? "Deshaciendo…" : "Deshacer importación"}</button>
             <small className="muted">{listado
               ? "Los datos que alguien haya editado después de importar se conservan."
+              : plantilla ? "Solo es posible mientras nadie haya agregado notas o fórmulas a lo importado. Los datos editados después se conservan."
               : "Solo es posible mientras nadie haya agregado notas o fórmulas a lo importado."}</small>
           </div>
         )}
@@ -262,7 +318,14 @@ export function LoteImportacionPage() {
       {lote.estado === "DESCARTADO" ? <p className="muted">Los registros de una importación descartada se eliminan.</p> : (
         <div className="card table-wrap">
           <table>
-            {listado ? (
+            {plantilla ? (
+              <>
+                <thead><tr>{enRevision && <th>Importar</th>}<th>Paciente</th><th>Estado</th><th>{enRevision ? "Qué cambia" : "Qué cambió"}</th><th>Atenciones</th><th>Observaciones</th></tr></thead>
+                <tbody>
+                  {registros.items?.map((r) => <FilaPlantilla key={r.id} loteId={id!} registro={r} editable={enRevision} onCambio={refrescar} />)}
+                </tbody>
+              </>
+            ) : listado ? (
               <>
                 <thead><tr>{enRevision && <th>Importar</th>}<th>Fila</th><th>Documento</th><th>Estado</th><th>En el listado</th><th>{enRevision ? "Qué cambia" : "Qué cambió"}</th><th>Observaciones</th></tr></thead>
                 <tbody>
@@ -300,6 +363,22 @@ function Cifra({ valor, texto }: { valor?: number; texto: string }) {
 function Resultado({ lote }: { lote: Lote }) {
   const r = lote.resultado;
   if (!r) return null;
+  if (lote.origen === "PLANTILLA_GALENUM") {
+    return lote.estado === "DESHECHO" ? (
+      <p className="alert">
+        Deshecha el {fechaHora.format(new Date(lote.deshechoEn!))}: se quitaron {r.atencionesEliminadas} atenciones, se
+        borraron {r.pacientesEliminados} pacientes creados y {r.pacientesRestaurados} volvieron a sus datos anteriores
+        {!!r.pacientesConservados && ` (${r.pacientesConservados} creados se conservaron porque ya tienen otra actividad)`}.
+      </p>
+    ) : (
+      <p className="alert">
+        Importada el {fechaHora.format(new Date(lote.confirmadoEn!))}: {r.atencionesCreadas} atenciones, {r.pacientesCreados} pacientes
+        nuevos y {r.pacientesActualizados} completados.
+        {!!r.atencionesYaImportadas && ` ${r.atencionesYaImportadas} atenciones ya se habían importado antes y no se duplicaron.`}
+        {!!r.pacientesCreados && " Los pacientes nuevos quedan sin la autorización de tratamiento de datos: regístrela al editarlos en su próxima visita."}
+      </p>
+    );
+  }
   if (lote.origen === "PACIENTES_LISTADO") {
     return lote.estado === "DESHECHO" ? (
       <p className="alert">
@@ -427,6 +506,78 @@ function FilaRegistro({ loteId, registro: r, editable, onCambio }: { loteId: str
                 <li key={a.clave}>
                   <strong>{a.fecha?.replace("T", " ").slice(0, 16)}</strong> · {TIPO_SERVICIO[a.tipo!] ?? a.tipo}
                   {a.codigoCups && <> {a.codigoCups}{a.nombreCups && ` ${a.nombreCups}`}</>}
+                  {a.diagnosticos?.map((d) => (
+                    <div key={d.codigo} className="small muted">
+                      {d.principal ? "Dx principal" : "Relacionado"}: {d.codigo} {d.descripcion}
+                    </div>
+                  ))}
+                </li>
+              ))}
+            </ul>
+          </td>
+        </tr>
+      )}
+    </Fragment>
+  );
+}
+
+/** Un paciente de la plantilla: sus datos, qué cambia en Galenum y sus atenciones. */
+function FilaPlantilla({ loteId, registro: r, editable, onCambio }: { loteId: string; registro: Registro; editable: boolean; onCambio: () => void }) {
+  const [abierta, setAbierta] = useState(false);
+  const incluir = useMutation({
+    mutationFn: async (incluido: boolean) => unwrap(await api.PUT("/api/v1/importaciones/{id}/registros/{registroId}", {
+      params: { path: { id: loteId, registroId: r.id! } }, body: { incluido },
+    })),
+    onSuccess: onCambio,
+  });
+  const [texto, clase] = ESTADO_REGISTRO[r.estado!];
+  const p = r.persona;
+  const cambios = (r.cambios ?? []).filter((c) => c.campo !== "datosIncompletos");
+  const columnas = editable ? 6 : 5;
+
+  return (
+    <Fragment>
+      <tr>
+        {editable && (
+          <td><input type="checkbox" aria-label={`Importar ${r.tipoDocumento} ${r.numeroDocumento}`}
+            checked={!!r.incluido} disabled={r.estado === "ERROR" || incluir.isPending}
+            onChange={(e) => incluir.mutate(e.target.checked)} /></td>
+        )}
+        <td>
+          {r.tipoDocumento} {r.numeroDocumento}
+          {p && <div>{[p.nombres, p.apellidos].filter(Boolean).join(" ")}</div>}
+          {p && <div className="muted small">{[p.fechaNacimiento, p.sexo, p.telefono, p.email].filter(Boolean).join(" · ")}</div>}
+          {r.pacienteId && <Link to={`/pacientes/${r.pacienteId}`} className="small">{r.nombreActual ?? "Ver paciente"}</Link>}
+          {!p && !r.pacienteId && <div className="muted small">No está en la hoja Pacientes</div>}
+        </td>
+        <td><span className={`badge ${clase}`}>{texto}</span></td>
+        <td>
+          {r.estado === "NUEVO" && <div className="small">Se crea el paciente</div>}
+          {cambios.map((c) => (
+            <div key={c.campo} className="small">
+              {CAMPO_CAMBIO[c.campo!] ?? c.campo}: {c.antes ? <><s className="muted">{VALOR_CAMBIO[c.antes] ?? c.antes}</s> → </> : ""}{VALOR_CAMBIO[c.despues!] ?? c.despues}
+            </div>
+          ))}
+        </td>
+        <td>
+          {r.totalAtenciones}
+          {!!r.atenciones?.length && <> · <button className="btn-link" onClick={() => setAbierta(!abierta)}>{abierta ? "ocultar" : "ver"}</button></>}
+        </td>
+        <td>
+          {r.mensajes?.map((m, i) => (
+            <div key={i} className={m.nivel === "ERROR" ? "field-error" : "muted small"}>{m.texto}</div>
+          ))}
+          {incluir.error && <div className="field-error">{incluir.error.message}</div>}
+        </td>
+      </tr>
+      {abierta && (
+        <tr>
+          <td colSpan={columnas}>
+            <ul className="stack lista-compacta">
+              {r.atenciones?.map((a) => (
+                <li key={a.clave}>
+                  <strong>{a.fecha?.replace("T", " ").slice(0, 16)}</strong> · {a.profesional}
+                  {a.resumen && <div className="small">{a.resumen}</div>}
                   {a.diagnosticos?.map((d) => (
                     <div key={d.codigo} className="small muted">
                       {d.principal ? "Dx principal" : "Relacionado"}: {d.codigo} {d.descripcion}

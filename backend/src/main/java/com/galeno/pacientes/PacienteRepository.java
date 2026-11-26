@@ -15,6 +15,8 @@ interface PacienteRepository extends JpaRepository<Paciente, UUID> {
 
     java.util.List<Paciente> findByNumeroDocumento(String numeroDocumento);
 
+    java.util.List<Paciente> findByNumeroDocumentoIn(java.util.Collection<String> numerosDocumento);
+
     long countByDatosIncompletosTrue();
 
     @Query("""
