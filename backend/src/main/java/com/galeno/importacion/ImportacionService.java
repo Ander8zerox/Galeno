@@ -63,11 +63,14 @@ public class ImportacionService {
     private final RipsParser parser;
     private final ImportacionListadoService listado;
     private final DatosRipsService datosRips;
+    private final ImportacionPlantillaService plantilla;
 
     ImportacionService(LoteImportacionRepository lotes, RegistroImportacionRepository registros,
                        PacienteService pacientes, HistoriaService historia, FormulasPublica formulas,
                        AgendaPublica agenda, IdentidadService identidad, JsonMapper mapper,
-                       ImportacionListadoService listado, DatosRipsService datosRips) {
+                       ImportacionListadoService listado, DatosRipsService datosRips,
+                       ImportacionPlantillaService plantilla) {
+        this.plantilla = plantilla;
         this.listado = listado;
         this.datosRips = datosRips;
         this.lotes = lotes;
@@ -87,8 +90,9 @@ public class ImportacionService {
     }
 
     /** @param codigoVida identificador de la atención en la IHCE (Res. 948); null en lotes anteriores */
+    /** @param resumen inicio del motivo de consulta (plantilla de Galenum); null en el RIPS */
     record AtencionDatos(String clave, String tipo, LocalDateTime fecha, String codigoCups, String nombreCups,
-                         String profesional, String factura, List<DxDatos> diagnosticos, String codigoVida) {
+                         String profesional, String factura, List<DxDatos> diagnosticos, String codigoVida, String resumen) {
     }
 
     /** Los datos del usuario para el RIPS (país, zona, origen) son null en lotes anteriores. */
@@ -239,7 +243,7 @@ public class ImportacionService {
         }
         return new AtencionDatos(a.clave(), a.tipo(), a.fecha(), a.codigoCups(),
                 a.codigoCups() == null ? null : nombresCups.get(a.codigoCups()), a.profesional(), a.factura(), dx,
-                a.codigoVida());
+                a.codigoVida(), null);
     }
 
     /** Tabla de RIPS: 01 impresión diagnóstica, 02 confirmado nuevo, 03 confirmado repetido. */
@@ -263,6 +267,12 @@ public class ImportacionService {
     @Transactional
     public LoteVista crearDesdeListado(ArchivoSubido archivo, MapeoColumnas mapeo) {
         return vista(listado.crear(archivo.nombre(), archivo.contenido(), mapeo), List.of());
+    }
+
+    /** Arma el lote en revisión de la plantilla de Galenum (pacientes y atenciones). */
+    @Transactional
+    public LoteVista crearDesdePlantilla(ArchivoSubido archivo) {
+        return vista(plantilla.crear(archivo.nombre(), archivo.contenido()), List.of());
     }
 
     @Transactional(readOnly = true)
@@ -317,6 +327,10 @@ public class ImportacionService {
         lote.exigir(LoteImportacion.Estado.EN_REVISION, "confirmar");
         if (lote.getOrigen() == LoteImportacion.Origen.PACIENTES_LISTADO) {
             lote.confirmar(json(listado.confirmar(loteId)));
+            return vista(lote, List.of());
+        }
+        if (lote.getOrigen() == LoteImportacion.Origen.PLANTILLA_GALENUM) {
+            lote.confirmar(json(plantilla.confirmar(loteId)));
             return vista(lote, List.of());
         }
         ZoneId zona = identidad.zonaHoraria(AuthUser.current().tenantId());
@@ -375,6 +389,11 @@ public class ImportacionService {
         if (lote.getOrigen() == LoteImportacion.Origen.PACIENTES_LISTADO) {
             Resultado antes = lote.getResultado() == null ? null : mapper.readValue(lote.getResultado(), Resultado.class);
             lote.deshacer(json(listado.deshacer(loteId, antes)));
+            return vista(lote, List.of());
+        }
+        if (lote.getOrigen() == LoteImportacion.Origen.PLANTILLA_GALENUM) {
+            Resultado antes = lote.getResultado() == null ? null : mapper.readValue(lote.getResultado(), Resultado.class);
+            lote.deshacer(json(plantilla.deshacer(loteId, antes)));
             return vista(lote, List.of());
         }
         List<UUID> atencionIds = historia.atencionesDelLote(loteId);
@@ -461,6 +480,14 @@ public class ImportacionService {
                 .map(d -> new Diagnostico(d.codigo(), d.descripcion(), d.principal(), d.tipo())).toList();
     }
 
+    private static String resumen(String motivo) {
+        if (motivo == null) {
+            return null;
+        }
+        String una = motivo.replaceAll("\s+", " ").strip();
+        return una.length() <= 140 ? una : una.substring(0, 139) + "…";
+    }
+
     private LoteImportacion lote(UUID id) {
         return lotes.findById(id).orElseThrow(() -> ApiProblem.notFound("Lote no encontrado"));
     }
@@ -487,6 +514,17 @@ public class ImportacionService {
             return new RegistroVista(r.getId(), r.getTipoDocumento(), r.getNumeroDocumento(), r.getEstado(),
                     r.isIncluido(), 0, datos.persona().fechaNacimiento(), datos.persona().sexo(), mensajes,
                     r.getPacienteId(), nombreActual, List.of(), datos.fila(), datos.persona(), datos.cambios());
+        }
+        if (origen == LoteImportacion.Origen.PLANTILLA_GALENUM) {
+            ImportacionPlantillaService.DatosPlantilla datos = mapper.readValue(r.getDatos(), ImportacionPlantillaService.DatosPlantilla.class);
+            DatosPersona persona = datos.persona();
+            List<AtencionDatos> atenciones = !clinico ? List.of() : datos.atenciones().stream()
+                    .map(a -> new AtencionDatos(a.clave(), "plantilla", a.fecha(), null, null, a.contenido().profesional(), null,
+                            a.diagnosticos(), null, resumen(a.contenido().motivoConsulta()))).toList();
+            return new RegistroVista(r.getId(), r.getTipoDocumento(), r.getNumeroDocumento(), r.getEstado(), r.isIncluido(),
+                    r.getAtenciones(), persona == null ? null : persona.fechaNacimiento(), persona == null ? null : persona.sexo(),
+                    mensajes, r.getPacienteId(), nombreActual, atenciones, datos.fila(), persona,
+                    datos.cambios() == null ? List.of() : datos.cambios());
         }
         DatosRegistro datos = mapper.readValue(r.getDatos(), DatosRegistro.class);
         return new RegistroVista(r.getId(), r.getTipoDocumento(), r.getNumeroDocumento(), r.getEstado(), r.isIncluido(),

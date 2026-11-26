@@ -1284,6 +1284,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/importaciones/plantilla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["subirPlantilla"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/importaciones/pacientes": {
         parameters: {
             query?: never;
@@ -3159,7 +3175,7 @@ export interface components {
             /** Format: uuid */
             id?: string;
             /** @enum {string} */
-            origen?: "RIPS_JSON" | "PACIENTES_LISTADO";
+            origen?: "RIPS_JSON" | "PACIENTES_LISTADO" | "PLANTILLA_GALENUM";
             /** @enum {string} */
             estado?: "EN_REVISION" | "CONFIRMADO" | "DESHECHO" | "DESCARTADO";
             /** Format: int32 */
@@ -3215,6 +3231,7 @@ export interface components {
             factura?: string;
             diagnosticos?: components["schemas"]["DxDatos"][];
             codigoVida?: string;
+            resumen?: string;
         };
         Cambio: {
             campo?: string;
@@ -4427,26 +4444,26 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            boolean?: boolean;
-            string?: boolean;
-            int?: boolean;
-            short?: boolean;
-            pojo?: boolean;
-            long?: boolean;
-            /** @deprecated */
-            textual?: boolean;
-            object?: boolean;
-            binary?: boolean;
-            double?: boolean;
-            floatingPointNumber?: boolean;
-            bigDecimal?: boolean;
             missingNode?: boolean;
-            valueNode?: boolean;
-            container?: boolean;
-            integralNumber?: boolean;
-            bigInteger?: boolean;
+            floatingPointNumber?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            valueNode?: boolean;
+            container?: boolean;
+            bigDecimal?: boolean;
+            integralNumber?: boolean;
+            bigInteger?: boolean;
+            short?: boolean;
+            string?: boolean;
+            pojo?: boolean;
+            long?: boolean;
+            double?: boolean;
+            /** @deprecated */
+            textual?: boolean;
+            boolean?: boolean;
+            binary?: boolean;
+            object?: boolean;
+            int?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -7049,6 +7066,33 @@ export interface operations {
             content: {
                 "multipart/form-data": {
                     archivos: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoteVista"];
+                };
+            };
+        };
+    };
+    subirPlantilla: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    archivo: string;
                 };
             };
         };

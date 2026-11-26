@@ -128,6 +128,39 @@ public class PacienteService {
         return cambios;
     }
 
+    /** Los pacientes con alguno de esos números de documento (cualquier tipo), en consultas de 1.000 en 1.000. */
+    @Transactional(readOnly = true)
+    public java.util.List<Paciente> porNumerosDocumento(java.util.Collection<String> numeros) {
+        java.util.List<String> lista = java.util.List.copyOf(new java.util.LinkedHashSet<>(numeros));
+        java.util.List<Paciente> encontrados = new java.util.ArrayList<>();
+        for (int i = 0; i < lista.size(); i += 1000) {
+            encontrados.addAll(repository.findByNumeroDocumentoIn(lista.subList(i, Math.min(i + 1000, lista.size()))));
+        }
+        return encontrados;
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<Paciente> porIds(java.util.Collection<UUID> ids) {
+        return repository.findAllById(ids);
+    }
+
+    /** Lo que la plantilla llenaría en alergias, antecedentes y responsable de un paciente existente (para la revisión). */
+    @Transactional(readOnly = true)
+    public java.util.List<DatosPersona.Cambio> compararExtras(UUID id, ExtrasPersona extras) {
+        return get(id).cambiosDesde(extras);
+    }
+
+    /** Llena alergias, antecedentes y responsable si están vacíos y devuelve lo que cambió (para poder deshacerlo). */
+    @Transactional
+    public java.util.List<DatosPersona.Cambio> completarExtras(UUID id, ExtrasPersona extras) {
+        Paciente p = get(id);
+        java.util.List<DatosPersona.Cambio> cambios = p.cambiosDesde(extras);
+        if (!cambios.isEmpty()) {
+            p.aplicar(cambios);
+        }
+        return cambios;
+    }
+
     @Transactional
     public Paciente crearDesdeListado(String tipoDocumento, String numeroDocumento, DatosPersona datos, UUID loteId) {
         return repository.save(Paciente.desdeListado(tipoDocumento, numeroDocumento, datos, loteId));

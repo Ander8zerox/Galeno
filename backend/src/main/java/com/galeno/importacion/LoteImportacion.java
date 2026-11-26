@@ -28,7 +28,9 @@ class LoteImportacion {
     enum Origen {
         RIPS_JSON,
         /** Excel o CSV con los datos de los pacientes (nombres y contacto). */
-        PACIENTES_LISTADO
+        PACIENTES_LISTADO,
+        /** La plantilla de Galenum (.xlsx con las hojas Pacientes y Atenciones). */
+        PLANTILLA_GALENUM
     }
 
     enum Estado {

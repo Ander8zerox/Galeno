@@ -13,6 +13,13 @@ public final class Nombres {
 
     public static final String MENSAJE = "Solo letras, espacios, apóstrofo, punto o guion; sin números";
 
+    private static final java.util.regex.Pattern COMPILADO = java.util.regex.Pattern.compile(PATRON);
+
     private Nombres() {
+    }
+
+    /** Para los datos que no pasan por la validación de los formularios (p. ej. la importación). */
+    public static boolean valido(String s) {
+        return s != null && COMPILADO.matcher(s).matches();
     }
 }

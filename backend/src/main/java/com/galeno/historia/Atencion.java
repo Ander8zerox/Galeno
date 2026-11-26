@@ -323,6 +323,28 @@ public class Atencion {
         return a;
     }
 
+    /** Atención de la plantilla de importación: como la del RIPS, pero con el contenido clínico del sistema anterior. */
+    static Atencion importada(UUID pacienteId, Instant fecha, AtencionImportada c, List<Diagnostico> diagnosticos,
+                              String claveImportacion, UUID loteImportacionId) {
+        Atencion a = importada(pacienteId, fecha, c.motivoConsulta(), c.profesional(), diagnosticos, claveImportacion,
+                loteImportacionId);
+        a.registroMedico = c.registroMedico();
+        a.enfermedadActual = c.enfermedadActual();
+        a.revisionSistemas = c.revisionSistemas();
+        a.examenFisico = c.examenFisico();
+        a.taSistolica = c.taSistolica();
+        a.taDiastolica = c.taDiastolica();
+        a.frecuenciaCardiaca = c.frecuenciaCardiaca();
+        a.frecuenciaRespiratoria = c.frecuenciaRespiratoria();
+        a.temperatura = c.temperatura();
+        a.saturacionO2 = c.saturacionO2();
+        a.pesoKg = c.pesoKg();
+        a.tallaCm = c.tallaCm();
+        a.analisis = c.analisis();
+        a.plan = c.plan();
+        return a;
+    }
+
     void actualizar(Contenido c) {
         exigirBorrador();
         long principales = c.diagnosticos().stream().filter(Diagnostico::isPrincipal).count();

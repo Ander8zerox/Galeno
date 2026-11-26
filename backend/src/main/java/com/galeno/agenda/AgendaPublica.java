@@ -89,6 +89,16 @@ public class AgendaPublica {
     }
 
     @Transactional(readOnly = true)
+    /** De esos pacientes, los que tienen alguna cita (en consultas de 1.000 en 1.000). */
+    public java.util.Set<UUID> pacientesConCitas(java.util.Collection<UUID> pacienteIds) {
+        java.util.List<UUID> lista = java.util.List.copyOf(pacienteIds);
+        java.util.Set<UUID> con = new java.util.HashSet<>();
+        for (int i = 0; i < lista.size(); i += 1000) {
+            con.addAll(citas.pacientesConAlguna(lista.subList(i, Math.min(i + 1000, lista.size()))));
+        }
+        return con;
+    }
+
     public long citasDelPaciente(UUID pacienteId) {
         return citas.countByPacienteId(pacienteId);
     }

@@ -618,6 +618,38 @@ public class HistoriaService {
         return true;
     }
 
+    /** De esas claves de importación, las que ya tienen una atención (en consultas de 1.000 en 1.000). */
+    @Transactional(readOnly = true)
+    public java.util.Set<String> clavesImportadas(java.util.Collection<String> claves) {
+        List<String> lista = List.copyOf(new java.util.LinkedHashSet<>(claves));
+        java.util.Set<String> existentes = new java.util.HashSet<>();
+        for (int i = 0; i < lista.size(); i += 1000) {
+            existentes.addAll(atenciones.clavesImportadas(lista.subList(i, Math.min(i + 1000, lista.size()))));
+        }
+        return existentes;
+    }
+
+    /**
+     * Crea la atención importada sin consultar antes si la clave existe: quien llama ya lo verificó con
+     * {@link #clavesImportadas} (para importar miles sin una consulta por atención). La base igual rechaza un duplicado.
+     */
+    @Transactional
+    public void importarAtencionNueva(UUID pacienteId, java.time.Instant fecha, AtencionImportada contenido,
+                                      List<Diagnostico> diagnosticos, String clave, UUID loteId) {
+        atenciones.save(Atencion.importada(pacienteId, fecha, contenido, diagnosticos, clave, loteId));
+    }
+
+    /** Como {@link #importarAtencion(UUID, java.time.Instant, String, String, List, String, UUID)}, con el contenido clínico. */
+    @Transactional
+    public boolean importarAtencion(UUID pacienteId, java.time.Instant fecha, AtencionImportada contenido,
+                                    List<Diagnostico> diagnosticos, String clave, UUID loteId) {
+        if (atenciones.existsByClaveImportacion(clave)) {
+            return false;
+        }
+        atenciones.save(Atencion.importada(pacienteId, fecha, contenido, diagnosticos, clave, loteId));
+        return true;
+    }
+
     /** Descripción CIE-10 de cada código conocido (los desconocidos no aparecen en el mapa). */
     @Transactional(readOnly = true)
     public java.util.Map<String, String> nombresCie10(java.util.Collection<String> codigos) {
@@ -625,10 +657,10 @@ public class HistoriaService {
                 .collect(java.util.stream.Collectors.toMap(Cie10::getCodigo, Cie10::getDescripcion));
     }
 
-    /** Ids de las atenciones creadas por un lote. */
+    /** Ids de las atenciones creadas por un lote (sin cargarlas). */
     @Transactional(readOnly = true)
     public List<UUID> atencionesDelLote(UUID loteId) {
-        return atenciones.findByLoteImportacionId(loteId).stream().map(Atencion::getId).toList();
+        return atenciones.idsDelLote(loteId);
     }
 
     /** ¿Alguien agregó notas aclaratorias a las atenciones del lote? Entonces no se puede deshacer sin perderlas. */
@@ -637,11 +669,32 @@ public class HistoriaService {
         return atencionIds.isEmpty() ? 0 : notas.countByAtencionIdIn(atencionIds);
     }
 
+    /**
+     * Borra en bloque las atenciones de un lote y sus colecciones, sin cargarlas (un lote puede traer miles, cada una con
+     * cuatro colecciones). Quien llama ya verificó que no tienen notas ni fórmulas.
+     */
     @Transactional
     public int eliminarAtencionesDelLote(UUID loteId) {
-        List<Atencion> delLote = atenciones.findByLoteImportacionId(loteId);
-        atenciones.deleteAll(delLote);
-        return delLote.size();
+        UUID tenant = AuthUser.current().tenantId();
+        atenciones.flush();
+        atenciones.borrarDiagnosticosDelLote(loteId, tenant);
+        atenciones.borrarProcedimientosDelLote(loteId, tenant);
+        atenciones.borrarOrdenesDelLote(loteId, tenant);
+        atenciones.borrarFactoresDelLote(loteId, tenant);
+        return atenciones.borrarDelLote(loteId, tenant);
+    }
+
+    /** De esos pacientes, los que tienen atenciones o documentos en Galenum (en consultas de 1.000 en 1.000). */
+    @Transactional(readOnly = true)
+    public java.util.Set<UUID> pacientesConActividad(java.util.Collection<UUID> pacienteIds) {
+        List<UUID> lista = List.copyOf(pacienteIds);
+        java.util.Set<UUID> con = new java.util.HashSet<>();
+        for (int i = 0; i < lista.size(); i += 1000) {
+            List<UUID> parte = lista.subList(i, Math.min(i + 1000, lista.size()));
+            con.addAll(atenciones.pacientesConAlguna(parte));
+            con.addAll(documentos.pacientesConAlguna(parte));
+        }
+        return con;
     }
 
     /** Actividad clínica del paciente en Galenum (para saber si un paciente importado se puede borrar). */

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -74,6 +75,26 @@ class LectorTablaTest {
         assertThat(LectorTabla.indiceColumna("A1")).isZero();
         assertThat(LectorTabla.indiceColumna("C12")).isEqualTo(2);
         assertThat(LectorTabla.indiceColumna("AA3")).isEqualTo(26);
+    }
+
+    @Test
+    void leeTodasLasHojasPorNombre() throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(bytes)) {
+            parte(zip, "xl/workbook.xml", "<workbook><sheets><sheet name=\"Instrucciones\" sheetId=\"1\" r:id=\"rId1\"/>"
+                    + "<sheet name=\"Pacientes\" sheetId=\"2\" r:id=\"rId2\"/><sheet name=\"Vacía\" sheetId=\"3\" r:id=\"rId3\"/></sheets></workbook>");
+            parte(zip, "xl/_rels/workbook.xml.rels", "<Relationships><Relationship Id=\"rId1\" Target=\"worksheets/sheet1.xml\"/>"
+                    + "<Relationship Id=\"rId2\" Target=\"/xl/worksheets/sheet2.xml\"/><Relationship Id=\"rId3\" Target=\"worksheets/sheet3.xml\"/></Relationships>");
+            parte(zip, "xl/worksheets/sheet1.xml", "<worksheet><sheetData><row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>Léame</t></is></c></row></sheetData></worksheet>");
+            parte(zip, "xl/worksheets/sheet2.xml", "<worksheet><sheetData><row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>Documento</t></is></c></row>"
+                    + "<row r=\"2\"><c r=\"A2\"><v>123</v></c></row></sheetData></worksheet>");
+            parte(zip, "xl/worksheets/sheet3.xml", "<worksheet><sheetData/></worksheet>");
+        }
+        Map<String, Tabla> hojas = LectorTabla.leerHojas("plantilla.xlsx", bytes.toByteArray());
+        assertThat(hojas.keySet()).containsExactly("Instrucciones", "Pacientes", "Vacía");
+        assertThat(hojas.get("Pacientes").filas()).containsExactly(List.of("123"));
+        assertThat(hojas.get("Vacía").encabezados()).isEmpty();
+        assertThatThrownBy(() -> LectorTabla.leerHojas("plantilla.csv", new byte[] {1})).hasMessageContaining(".xlsx");
     }
 
     private static byte[] xlsx(String hoja, String compartidas) throws IOException {

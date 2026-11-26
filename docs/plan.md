@@ -26,6 +26,9 @@ producción en AWS, en https://galenum.com.co.
 - **Importación:**
   - RIPS JSON (varios archivos o ZIP) con revisión, confirmación y deshacer.
   - Listados de pacientes en Excel o CSV, con el mapeo de columnas recordado por sistema de origen.
+  - Plantilla de Galenum (.xlsx con hojas Pacientes y Atenciones): pacientes y atenciones con su contenido clínico,
+    signos vitales y CIE-10. Primera migración real: el neumólogo (1.228 pacientes y 1.401 atenciones, 26 de noviembre
+    de 2026).
 - **Registro de consultorios desde la web:** verificación del correo, NIT con dígito de verificación, aceptación de
   términos y política de datos, y límite de intentos. Al activarse, abre la agenda con un aviso de bienvenida.
 - **Seguridad de las cuentas:**
@@ -397,6 +400,7 @@ Principio: primero las fuentes masivas, todas por el mismo flujo **extraer → r
 |---|---|---|
 | ✔ | **RIPS JSON** | Hecho (Res. 2275 y 948, revisado contra el Documento Técnico 1 v003). Faltan medicamentos y otros servicios |
 | ✔ | **Excel o CSV de pacientes** | Hecho. Falta: sugerir con IA las columnas que no se reconocen |
+| ✔ | **Plantilla de Galenum (.xlsx)** | Hecho el 26 de noviembre de 2026. Para otros sistemas se convierte su exportación a la plantilla (como la base MySQL del neumólogo) |
 | 1 | RIPS TXT antiguos (AF, US, AC, AP…) | Solo si los clientes los tienen |
 | 3 | PDF en lote (ZIP, digitales o escaneados) | IA con salida estructurada, un trabajo por archivo; procesamiento por lotes de Bedrock para migraciones grandes |
 | 4 | Texto pegado (un paciente) | El mismo extractor de IA de los PDF |
@@ -407,6 +411,21 @@ Principio: primero las fuentes masivas, todas por el mismo flujo **extraer → r
 - **Legal:** contrato de encargado (Ley 1581) que mencione la IA, auditoría de quién importó y aprobó, y conservación
   del original (Res. 1995).
 - **Comercial:** ofrecer "migración asistida incluida" para el primer lote de cada cliente.
+
+### Manejo de errores de la importación (anotado el 26 de noviembre de 2026)
+
+Ya cubierto: archivo ilegible sin guardar nada, errores por fila en la revisión, confirmación todo o nada con el lote
+bloqueado, claves que evitan duplicados y deshacer. Falta:
+
+1. **Identificador en los errores inesperados (500).** Hoy la pantalla muestra un mensaje genérico. Devolver un código
+   («Error ABC123, comuníquelo a soporte») y registrar el detalle con ese código en CloudWatch. Sirve para toda la API,
+   no solo la importación.
+2. **Deshacer parcial.** Si alguien ya agregó notas o fórmulas a lo importado, hoy no se puede deshacer nada. Permitir
+   quitar el resto y conservar a los pacientes con actividad clínica posterior.
+3. **Ventana para deshacer.** Hoy se puede en cualquier momento; limitarlo (p. ej. 30 días) para que una importación
+   vieja no se borre por error.
+4. **Diálogos propios en vez de `confirm()`.** El navegador integrado de la app de Claude no muestra `confirm()` y los
+   botones Importar, Deshacer y Descartar parecen no hacer nada. Un diálogo de Galenum funciona en cualquier navegador.
 
 ## Dónde quedamos (18 de noviembre de 2026)
 

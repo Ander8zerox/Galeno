@@ -7,12 +7,19 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3317/galeno?useUnicode=true&characterEncoding=utf8&connectionTimeZone=UTC
     username: galeno
+    hikari:
+      data-source-properties:
+        rewriteBatchedStatements: true # MySQL: un lote JDBC va como un solo INSERT de varias filas
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate # el esquema lo manda Flyway, nunca Hibernate
     properties:
       hibernate.jdbc.time_zone: UTC
+      # Escrituras en lotes (importaciones de miles de filas). Sin order_inserts: varias tablas se enlazan por UUID sin
+      # asociación JPA y Hibernate no conocería el orden de sus llaves foráneas
+      hibernate.jdbc.batch_size: 100
+      hibernate.order_updates: true
   flyway:
     locations: classpath:db/migration
   threads:

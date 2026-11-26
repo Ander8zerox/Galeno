@@ -17,6 +17,16 @@ public class FormulasPublica implements com.galeno.historia.MedicamentosDeAtenci
     }
 
     @Transactional(readOnly = true)
+    /** De esos pacientes, los que tienen alguna fórmula (en consultas de 1.000 en 1.000). */
+    public java.util.Set<UUID> pacientesConFormulas(java.util.Collection<UUID> pacienteIds) {
+        java.util.List<UUID> lista = java.util.List.copyOf(pacienteIds);
+        java.util.Set<UUID> con = new java.util.HashSet<>();
+        for (int i = 0; i < lista.size(); i += 1000) {
+            con.addAll(formulas.pacientesConAlguna(lista.subList(i, Math.min(i + 1000, lista.size()))));
+        }
+        return con;
+    }
+
     public long delPaciente(UUID pacienteId) {
         return formulas.countByPacienteId(pacienteId);
     }

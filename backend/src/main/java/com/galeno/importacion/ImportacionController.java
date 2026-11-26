@@ -65,6 +65,13 @@ public class ImportacionController {
         return importacion.crearDesdeListado(leer(archivo), mapeo);
     }
 
+    /** La plantilla de Galenum (.xlsx con las hojas Pacientes y Atenciones). Arma el lote en revisión. */
+    @PostMapping(path = "/plantilla", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public LoteVista subirPlantilla(@RequestPart("archivo") MultipartFile archivo) {
+        return importacion.crearDesdePlantilla(leer(archivo));
+    }
+
     @GetMapping
     public Pagina<LoteVista> listar(@RequestParam(defaultValue = "0") @Min(0) int page,
                                     @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {

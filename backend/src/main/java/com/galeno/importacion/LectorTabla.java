@@ -11,6 +11,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -50,6 +51,35 @@ final class LectorTabla {
         } else {
             throw new IllegalArgumentException("Suba un archivo .xlsx o .csv");
         }
+        return tabla(filas);
+    }
+
+    /**
+     * Todas las hojas de un .xlsx, por nombre y en el orden del libro (la plantilla de Galenum trae varias). Una hoja
+     * vacía queda con encabezados y filas vacíos.
+     */
+    static Map<String, Tabla> leerHojas(String nombre, byte[] contenido) {
+        if (!nombre.toLowerCase(Locale.ROOT).endsWith(".xlsx")) {
+            throw new IllegalArgumentException("La plantilla de Galenum se sube como .xlsx (Excel), sin cambiarle el formato");
+        }
+        Map<String, byte[]> partes = partes(contenido);
+        try {
+            List<String> compartidas = partes.containsKey("xl/sharedStrings.xml")
+                    ? textosCompartidos(partes.get("xl/sharedStrings.xml")) : List.of();
+            Map<String, Tabla> hojas = new LinkedHashMap<>();
+            for (Map.Entry<String, String> h : hojas(partes).entrySet()) {
+                byte[] hoja = partes.get(h.getValue());
+                List<List<String>> filas = hoja == null ? List.of() : celdas(hoja, compartidas);
+                hojas.put(h.getKey(), filas.stream().allMatch(f -> f.stream().allMatch(String::isBlank))
+                        ? new Tabla(List.of(), List.of()) : tabla(filas));
+            }
+            return hojas;
+        } catch (XMLStreamException e) {
+            throw new IllegalArgumentException("No se pudo leer el Excel: el contenido está dañado");
+        }
+    }
+
+    private static Tabla tabla(List<List<String>> filas) {
         // Encabezados: la primera fila con algo escrito
         int inicio = 0;
         while (inicio < filas.size() && filas.get(inicio).stream().allMatch(String::isBlank)) {
@@ -156,6 +186,22 @@ final class LectorTabla {
     // --- XLSX ---
 
     private static List<List<String>> xlsx(byte[] contenido) {
+        Map<String, byte[]> partes = partes(contenido);
+        try {
+            List<String> compartidas = partes.containsKey("xl/sharedStrings.xml")
+                    ? textosCompartidos(partes.get("xl/sharedStrings.xml")) : List.of();
+            byte[] hoja = partes.get(primeraHoja(partes));
+            if (hoja == null) {
+                throw new IllegalArgumentException("El Excel no tiene hojas");
+            }
+            return celdas(hoja, compartidas);
+        } catch (XMLStreamException e) {
+            throw new IllegalArgumentException("No se pudo leer el Excel: el contenido está dañado");
+        }
+    }
+
+    /** Las partes del .xlsx que se usan, con un tope de tamaño descomprimido. */
+    private static Map<String, byte[]> partes(byte[] contenido) {
         Map<String, byte[]> partes = new HashMap<>();
         long total = 0;
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(contenido))) {
@@ -185,17 +231,38 @@ final class LectorTabla {
         if (!partes.containsKey("xl/workbook.xml")) {
             throw new IllegalArgumentException("No se pudo leer el Excel: ¿es un .xlsx válido?");
         }
-        try {
-            List<String> compartidas = partes.containsKey("xl/sharedStrings.xml")
-                    ? textosCompartidos(partes.get("xl/sharedStrings.xml")) : List.of();
-            byte[] hoja = partes.get(primeraHoja(partes));
-            if (hoja == null) {
-                throw new IllegalArgumentException("El Excel no tiene hojas");
+        return partes;
+    }
+
+    /** Nombre de cada hoja → su parte en el ZIP, en el orden del libro. */
+    private static Map<String, String> hojas(Map<String, byte[]> partes) throws XMLStreamException {
+        Map<String, String> relIds = new LinkedHashMap<>();
+        XMLStreamReader r = xml(partes.get("xl/workbook.xml"));
+        while (r.hasNext()) {
+            if (r.next() == XMLStreamConstants.START_ELEMENT && local(r).equals("sheet")) {
+                relIds.put(atributo(r, "name"), atributo(r, "id"));
             }
-            return celdas(hoja, compartidas);
-        } catch (XMLStreamException e) {
-            throw new IllegalArgumentException("No se pudo leer el Excel: el contenido está dañado");
         }
+        Map<String, String> destinos = new HashMap<>();
+        byte[] rels = partes.get("xl/_rels/workbook.xml.rels");
+        if (rels != null) {
+            XMLStreamReader rr = xml(rels);
+            while (rr.hasNext()) {
+                if (rr.next() == XMLStreamConstants.START_ELEMENT && local(rr).equals("Relationship")) {
+                    String destino = atributo(rr, "Target");
+                    if (destino != null) {
+                        destinos.put(atributo(rr, "Id"), destino.startsWith("/") ? destino.substring(1) : "xl/" + destino);
+                    }
+                }
+            }
+        }
+        Map<String, String> hojas = new LinkedHashMap<>();
+        relIds.forEach((nombre, id) -> {
+            if (nombre != null && id != null && destinos.containsKey(id)) {
+                hojas.put(nombre.strip(), destinos.get(id));
+            }
+        });
+        return hojas;
     }
 
     private static XMLStreamReader xml(byte[] b) throws XMLStreamException {

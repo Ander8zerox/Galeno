@@ -251,6 +251,35 @@ public class Paciente {
         return diferencias;
     }
 
+    /**
+     * Qué llenaría la plantilla de importación en alergias, antecedentes y responsable: solo los campos vacíos, como el
+     * listado con el teléfono y el correo. Unas alergias escritas como «niega» quedan como respuesta, sin texto.
+     */
+    List<Cambio> cambiosDesde(ExtrasPersona e) {
+        List<Cambio> cambios = new ArrayList<>();
+        if (alergiasEstado == null && alergias == null && e.alergias() != null) {
+            if (ExtrasPersona.niegaAlergias(e.alergias())) {
+                cambios.add(new Cambio("alergiasEstado", null, EstadoAlergias.NIEGA.name()));
+            } else {
+                cambios.add(new Cambio("alergiasEstado", null, EstadoAlergias.SI.name()));
+                cambios.add(new Cambio("alergias", null, e.alergias()));
+            }
+        }
+        if (antecedentes == null && e.antecedentes() != null) {
+            cambios.add(new Cambio("antecedentes", null, e.antecedentes()));
+        }
+        if (responsableNombre == null && e.responsableNombre() != null) {
+            cambios.add(new Cambio("responsableNombre", null, e.responsableNombre()));
+            if (responsableParentesco == null && e.responsableParentesco() != null) {
+                cambios.add(new Cambio("responsableParentesco", null, e.responsableParentesco()));
+            }
+            if (responsableTelefono == null && e.responsableTelefono() != null) {
+                cambios.add(new Cambio("responsableTelefono", null, e.responsableTelefono()));
+            }
+        }
+        return cambios;
+    }
+
     void aplicar(List<Cambio> cambios) {
         cambios.forEach(c -> poner(c.campo(), c.despues()));
         this.actualizadoEn = Instant.now();
@@ -273,6 +302,12 @@ public class Paciente {
             case "telefono" -> telefono;
             case "email" -> email;
             case "datosIncompletos" -> String.valueOf(datosIncompletos);
+            case "alergias" -> alergias;
+            case "alergiasEstado" -> alergiasEstado == null ? null : alergiasEstado.name();
+            case "antecedentes" -> antecedentes;
+            case "responsableNombre" -> responsableNombre;
+            case "responsableParentesco" -> responsableParentesco;
+            case "responsableTelefono" -> responsableTelefono;
             default -> throw new IllegalArgumentException(campo);
         };
     }
@@ -284,6 +319,12 @@ public class Paciente {
             case "telefono" -> telefono = valor;
             case "email" -> email = valor;
             case "datosIncompletos" -> datosIncompletos = Boolean.parseBoolean(valor);
+            case "alergias" -> alergias = valor;
+            case "alergiasEstado" -> alergiasEstado = valor == null ? null : EstadoAlergias.valueOf(valor);
+            case "antecedentes" -> antecedentes = valor;
+            case "responsableNombre" -> responsableNombre = valor;
+            case "responsableParentesco" -> responsableParentesco = valor;
+            case "responsableTelefono" -> responsableTelefono = valor;
             default -> throw new IllegalArgumentException(campo);
         }
     }
