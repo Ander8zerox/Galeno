@@ -35,5 +35,11 @@ public enum Permiso {
      */
     RIPS_PACIENTE,
     /** Registrar la preconsulta de una cita y ver o completar alergias y antecedentes del paciente. */
-    PRECONSULTA_REGISTRAR
+    PRECONSULTA_REGISTRAR,
+    /** Ver los planes de tratamiento y su presupuesto (son valores, no la historia clínica). */
+    TRATAMIENTO_VER,
+    /** Crear y editar planes de tratamiento: el odontólogo. */
+    TRATAMIENTO_REGISTRAR,
+    /** Registrar que el paciente aceptó el presupuesto (firma o constancia verbal). */
+    TRATAMIENTO_ACEPTAR
 }

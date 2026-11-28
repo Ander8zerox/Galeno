@@ -17,7 +17,8 @@ import com.galeno.modulos.ModulosService;
 import com.galeno.shared.web.ApiExceptionHandler.ApiProblem;
 
 /**
- * Lista de precios por CUPS del consultorio (fase 1 de RIPS). Con un pagador que tenga tarifa para el CUPS, vale la
+ * Lista de precios por CUPS del consultorio; funciona sin el módulo de RIPS (decidido el 28 de noviembre de 2026).
+ * Con un pagador que tenga tarifa para el CUPS (solo con el módulo), vale la
  * tarifa (convenio); si no, la lista general.
  */
 @Service
@@ -38,16 +39,19 @@ public class PreciosService implements ListaPrecios {
         this.modulos = modulos;
     }
 
-    /** Para la historia: sin el módulo activo no hay precios que proponer. */
+    /**
+     * Para la historia y el plan de tratamiento. La lista general vale siempre (también para consultorios de solo
+     * particulares); las tarifas por pagador, solo con el módulo de RIPS activo.
+     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, BigDecimal> precios(Collection<String> codigosCups, Contexto contexto) {
-        if (codigosCups.isEmpty() || !modulos.activo(Modulo.RIPS)) {
+        if (codigosCups.isEmpty()) {
             return Map.of();
         }
         Map<String, BigDecimal> resultado = new java.util.HashMap<>(precios.findByCodigoCupsIn(codigosCups).stream()
                 .collect(Collectors.toMap(PrecioCups::getCodigoCups, PrecioCups::getValor)));
-        if (contexto != null) {
+        if (contexto != null && modulos.activo(Modulo.RIPS)) {
             cobros.pagador(contexto).ifPresent(pagadorId -> resultado.putAll(pagadores.tarifas(pagadorId, codigosCups)));
         }
         return resultado;
@@ -55,7 +59,6 @@ public class PreciosService implements ListaPrecios {
 
     @Transactional(readOnly = true)
     public List<PrecioVista> listar() {
-        modulos.exigir(Modulo.RIPS);
         List<PrecioCups> todos = precios.findAllByOrderByCodigoCups();
         Map<String, String> nombres = historia.nombresCups(todos.stream().map(PrecioCups::getCodigoCups).toList());
         return todos.stream().map(p -> new PrecioVista(p.getCodigoCups(), nombres.getOrDefault(p.getCodigoCups(), ""),
@@ -64,7 +67,6 @@ public class PreciosService implements ListaPrecios {
 
     @Transactional
     public PrecioVista fijar(String codigoCups, BigDecimal valor) {
-        modulos.exigir(Modulo.RIPS);
         String codigo = codigoCups.strip().toUpperCase();
         String nombre = historia.nombresCups(List.of(codigo)).get(codigo);
         if (nombre == null) {
@@ -82,7 +84,6 @@ public class PreciosService implements ListaPrecios {
     /** Quitar el precio no cambia los procedimientos ya registrados (cada uno guarda su valor). */
     @Transactional
     public void quitar(String codigoCups) {
-        modulos.exigir(Modulo.RIPS);
         precios.findByCodigoCups(codigoCups.strip().toUpperCase()).ifPresent(precios::delete);
     }
 

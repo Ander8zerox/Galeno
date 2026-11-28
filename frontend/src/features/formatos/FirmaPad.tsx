@@ -14,7 +14,8 @@ const ALTO = 180;
  * Firma manuscrita en pantalla: con el dedo en un celular o tableta, o con el mouse. Al soltar, la firma pasa al
  * formato como PNG; "Borrar" la quita. Una firma ya guardada se muestra como imagen hasta que se pide firmar de nuevo.
  */
-export function FirmaPad({ valor, onChange }: { valor: ValorFirma | null; onChange: (v: ValorFirma | null) => void }) {
+export function FirmaPad({ valor, onChange, ayuda = "Firma lista. Guarde la atención para conservarla." }:
+  { valor: ValorFirma | null; onChange: (v: ValorFirma | null) => void; ayuda?: string }) {
   const lienzo = useRef<HTMLCanvasElement>(null);
   const dibujando = useRef(false);
   const [trazos, setTrazos] = useState(false);
@@ -97,7 +98,7 @@ export function FirmaPad({ valor, onChange }: { valor: ValorFirma | null; onChan
         aria-label="Espacio para firmar con el dedo o el mouse"
         onPointerDown={empezar} onPointerMove={mover} onPointerUp={terminar} onPointerCancel={terminar} />
       <div className="row between">
-        <span className="muted small">{trazos ? "Firma lista. Guarde la atención para conservarla." : "Firme dentro del recuadro con el dedo o el mouse."}</span>
+        <span className="muted small">{trazos ? ayuda : "Firme dentro del recuadro con el dedo o el mouse."}</span>
         <button type="button" className="btn-link" disabled={!trazos} onClick={borrar}>Borrar</button>
       </div>
       {campoNombre}

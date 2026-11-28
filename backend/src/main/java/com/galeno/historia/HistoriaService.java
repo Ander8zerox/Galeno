@@ -59,6 +59,24 @@ public class HistoriaService {
     private final ModulosService modulos;
     private final ListaPrecios precios;
     private final ServicioHabilitado servicio;
+    private final PlanEnAtencion plan;
+
+    /** Sin el paquete de tratamiento (pruebas): no hay plan. */
+    private static final PlanEnAtencion SIN_PLAN = new PlanEnAtencion() {
+        @Override
+        public boolean disponible() {
+            return false;
+        }
+
+        @Override
+        public void validar(UUID pacienteId, java.util.Collection<UUID> itemIds) {
+            throw ApiProblem.badRequest("El plan de tratamiento no está disponible");
+        }
+
+        @Override
+        public void realizados(UUID pacienteId, UUID atencionId, java.util.Collection<UUID> itemIds) {
+        }
+    };
 
     HistoriaService(AtencionRepository atenciones, NotaAclaratoriaRepository notas,
                     DocumentoClinicoRepository documentos, AccesoHistoriaRepository accesos, Cie10Repository cie10,
@@ -66,7 +84,9 @@ public class HistoriaService {
                     AgendaPublica agenda, PdfRenderer pdf, FormatosService formatos, CupsRepository cups,
                     ModulosService modulos, java.util.Optional<ListaPrecios> precios,
                     java.util.Optional<ServicioHabilitado> servicio, PreconsultaService preconsultaDe,
-                    java.util.Optional<MedicamentosDeAtencion> medicamentos) {
+                    java.util.Optional<MedicamentosDeAtencion> medicamentos,
+                    java.util.Optional<PlanEnAtencion> plan) {
+        this.plan = plan.orElse(SIN_PLAN);
         this.medicamentos = medicamentos.orElse(ids -> java.util.Map.of());
         this.preconsultaDe = preconsultaDe;
         this.atenciones = atenciones;
@@ -200,8 +220,19 @@ public class HistoriaService {
             formatos.guardar(atencionId, respuestasFormatos);
         }
         if (procedimientos != null) {
-            modulos.exigir(Modulo.RIPS);
-            atencion.registrarProcedimientos(procedimientos(procedimientos));
+            // Los procedimientos realizados se usan con el módulo de RIPS o con el plan de tratamiento
+            if (!modulos.activo(Modulo.RIPS) && !plan.disponible()) {
+                modulos.exigir(Modulo.RIPS);
+            }
+            List<Procedimiento> nuevos = procedimientos(procedimientos);
+            List<UUID> delPlan = nuevos.stream().map(Procedimiento::getItemPlanId).filter(java.util.Objects::nonNull).toList();
+            if (delPlan.size() != new java.util.HashSet<>(delPlan).size()) {
+                throw ApiProblem.badRequest("Un procedimiento del plan de tratamiento está dos veces en la atención");
+            }
+            if (!delPlan.isEmpty()) {
+                plan.validar(atencion.getPacienteId(), delPlan);
+            }
+            atencion.registrarProcedimientos(nuevos);
         }
         if (incapacidad != null) {
             atencion.marcarIncapacidad(incapacidad);
@@ -326,6 +357,11 @@ public class HistoriaService {
         // Con el formato de incapacidad, el RIPS lleva "incapacidad: SI" sin marcarlo aparte
         if (!atencion.firmada() && formatos.codigos(atencionId).contains(CODIGO_INCAPACIDAD)) {
             atencion.marcarIncapacidad(true);
+        }
+        List<UUID> delPlan = atencion.getProcedimientos().stream().map(Procedimiento::getItemPlanId)
+                .filter(java.util.Objects::nonNull).toList();
+        if (!atencion.firmada() && !delPlan.isEmpty()) {
+            plan.realizados(atencion.getPacienteId(), atencionId, delPlan);
         }
         atencion.firmar(registro);
         if (atencion.getCitaId() != null) {
@@ -474,7 +510,7 @@ public class HistoriaService {
                 throw ApiProblem.badRequest("El código " + p.codigoCups() + " no está en el catálogo CUPS");
             }
             return new Procedimiento(codigo, nombre, p.cantidad(), p.valorUnitario(), p.diente(), p.superficies())
-                    .conResultado(p.resultado());
+                    .conResultado(p.resultado()).delPlan(p.itemPlanId());
         }).toList();
     }
 
@@ -789,6 +825,12 @@ public class HistoriaService {
         return a;
     }
 
+    /** Para el plan de tratamiento: de ahí sale el último odontograma firmado. */
+    @Transactional(readOnly = true)
+    public List<UUID> atencionesFirmadasRecientes(UUID pacienteId) {
+        return firmadasRecientes(pacienteId);
+    }
+
     /** Atenciones firmadas del paciente, de la más reciente a la más antigua (de ahí se arrastra el odontograma). */
     private List<UUID> firmadasRecientes(UUID pacienteId) {
         List<UUID> ids = new ArrayList<>(atenciones.firmadas(pacienteId).stream().map(Atencion::getId).toList());
@@ -860,18 +902,19 @@ public class HistoriaService {
     }
 
     /** Lo que envía la pantalla; la descripción sale del catálogo. */
+    /** @param itemPlanId el ítem del plan de tratamiento que se realiza (opcional) */
     public record ProcedimientoNuevo(String codigoCups, int cantidad, java.math.BigDecimal valorUnitario, String diente,
-                                     String superficies, String resultado) {
+                                     String superficies, String resultado, UUID itemPlanId) {
     }
 
     /** @param consulta va en "consultas" del RIPS (CUPS 890…); si no, en "procedimientos" */
     public record ProcedimientoVista(String codigoCups, String descripcion, int cantidad,
                                      java.math.BigDecimal valorUnitario, String diente, String superficies,
-                                     boolean consulta, String resultado) {
+                                     boolean consulta, String resultado, UUID itemPlanId) {
 
         static ProcedimientoVista de(Procedimiento p) {
             return new ProcedimientoVista(p.getCodigoCups(), p.getDescripcion(), p.getCantidad(), p.getValorUnitario(),
-                    p.getDiente(), p.getSuperficies(), p.esConsulta(), p.getResultado());
+                    p.getDiente(), p.getSuperficies(), p.esConsulta(), p.getResultado(), p.getItemPlanId());
         }
     }
 

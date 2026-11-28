@@ -16,6 +16,7 @@ import { textoFormatos, type Definicion, type Respuestas } from "../features/for
 import { CobroAtencion } from "../features/rips/CobroAtencion";
 import { ProcedimientosEditor, ProcedimientosLectura, type ProcedimientoForm } from "../features/rips/ProcedimientosEditor";
 import { useModuloActivo } from "../features/rips/modulos";
+import { PlanEnAtencion, usePlanDelPaciente } from "../features/tratamiento/PlanEnAtencion";
 import { DatosEncuentro, EncuentroLectura, encuentroDe } from "../features/historia/DatosEncuentro";
 import { FactoresEditor, OrdenesEditor, OrdenesFactoresLectura, factoresDe, ordenesDe, sugerirFactores } from "../features/historia/OrdenesFactores";
 
@@ -58,7 +59,7 @@ function aForm(a: Atencion): Form {
 const procedimientosDe = (a: Atencion): ProcedimientoForm[] => (a.procedimientos ?? []).map((p) => ({
   codigoCups: p.codigoCups!, descripcion: p.descripcion, cantidad: p.cantidad ?? 1,
   valorUnitario: p.valorUnitario ?? undefined, diente: p.diente ?? undefined, superficies: p.superficies ?? undefined,
-  resultado: p.resultado ?? undefined,
+  resultado: p.resultado ?? undefined, itemPlanId: p.itemPlanId ?? undefined,
 }));
 
 const respuestasDe = (formatos?: Diligenciado[]) =>
@@ -114,6 +115,9 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
   // Con el módulo de RIPS: lo que se hizo, con su CUPS. Sin él, no se muestra ni se envía (el servidor no lo toca)
   const rips = useModuloActivo("RIPS");
   const [procedimientos, setProcedimientos] = useState<ProcedimientoForm[]>(() => procedimientosDe(atencion));
+  // Los procedimientos realizados se muestran con el módulo de RIPS o con el plan de tratamiento
+  const planTratamiento = usePlanDelPaciente(atencion.pacienteId!);
+  const conProcedimientos = rips || planTratamiento.disponible;
   const [acompanante, setAcompanante] = useState(() => acompananteDe(atencion));
   const [encuentro, setEncuentro] = useState(() => encuentroDe(atencion));
   const [ordenes, setOrdenes] = useState(() => ordenesDe(atencion));
@@ -150,7 +154,7 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
           examenFisico: txt(form.examenFisico), analisis: txt(form.analisis), plan: txt(form.plan),
           diagnosticos: dx,
           formatos: formatos.map((f) => ({ id: f.id!, respuestas: respuestas[f.id!] ?? {} })),
-          procedimientos: rips ? procedimientos.map(({ descripcion: _d, ...p }) => p) : undefined,
+          procedimientos: conProcedimientos ? procedimientos.map(({ descripcion: _d, ...p }) => p) : undefined,
           acompananteNombre: acompanante.nombre, acompananteParentesco: acompanante.parentesco,
           acompananteTipoDocumento: acompanante.numeroDocumento.trim() ? acompanante.tipoDocumento : "",
           acompananteNumeroDocumento: acompanante.numeroDocumento,
@@ -177,6 +181,7 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
       queryClient.setQueryData(["atencion", atencion.id], a);
       queryClient.invalidateQueries({ queryKey: ["historia"] });
       queryClient.invalidateQueries({ queryKey: ["citas"] });
+      queryClient.invalidateQueries({ queryKey: ["planes-tratamiento", atencion.pacienteId] });
     },
   });
 
@@ -274,9 +279,13 @@ function EditorAtencion({ atencion, paciente }: { atencion: Atencion; paciente?:
         <label>Examen físico<textarea rows={4} value={form.examenFisico} onChange={set("examenFisico")} /></label>
         <h3>Diagnósticos</h3>
         <DiagnosticosEditor value={dx} onChange={setDx} paciente={paciente} />
-        {rips && (
+        {conProcedimientos && (
           <>
             <h3>Procedimientos realizados</h3>
+            {planTratamiento.aceptado && (
+              <PlanEnAtencion plan={planTratamiento.aceptado} procedimientos={procedimientos}
+                onAgregar={(p) => setProcedimientos([...procedimientos, p])} />
+            )}
             <ProcedimientosEditor value={procedimientos} onChange={setProcedimientos} atencionId={atencion.id!} />
           </>
         )}

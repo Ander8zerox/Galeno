@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Blocks, BookOpen, CalendarDays, ClipboardList, CreditCard, FileUp, ReceiptText, ShieldCheck, Users, UsersRound } from "lucide-react";
+import { Blocks, BookOpen, CalendarDays, ClipboardList, CreditCard, FileUp, ReceiptText, Tags, ShieldCheck, Users, UsersRound } from "lucide-react";
 import { Shell, type ItemMenu } from "./components/Shell";
 import { VigiaCorreoProvider } from "./features/pacientes/VigiaCorreo";
 import { Bienvenida } from "./components/Bienvenida";
@@ -24,6 +24,7 @@ import { ImportarPage, LoteImportacionPage } from "./pages/ImportarPage";
 import { FormatosPage } from "./pages/FormatosPage";
 import { ModulosPage } from "./pages/ModulosPage";
 import { RipsPage } from "./pages/RipsPage";
+import { PreciosPage } from "./pages/PreciosPage";
 import { useModuloActivo } from "./features/rips/modulos";
 
 export function App() {
@@ -56,6 +57,8 @@ export function App() {
     ...(puede("IMPORTAR_HISTORIAS") ? [{ etiqueta: "Importar", icono: FileUp, to: "/importar" }] : []),
     ...(puede("FORMATOS_GESTIONAR") ? [{ etiqueta: "Formatos", icono: ClipboardList, to: "/formatos" }] : []),
     ...(rips && puede("RIPS_GESTIONAR") ? [{ etiqueta: "RIPS", icono: ReceiptText, to: "/rips" }] : []),
+    // Sin el módulo de RIPS, la lista de precios (para el plan de tratamiento y los procedimientos) va sola
+    ...(!rips && puede("RIPS_GESTIONAR") ? [{ etiqueta: "Precios", icono: Tags, to: "/precios" }] : []),
     ...(puede("MODULOS_GESTIONAR") ? [{ etiqueta: "Módulos", icono: Blocks, to: "/modulos" }] : []),
     ...(puede("SUSCRIPCION_GESTIONAR") ? [{ etiqueta: "Suscripción", icono: CreditCard, to: "/suscripcion" }] : []),
     { etiqueta: "Seguridad", icono: ShieldCheck, to: "/seguridad" },
@@ -90,7 +93,7 @@ export function App() {
           {puede("MODULOS_GESTIONAR") && <Route path="/modulos" element={<ModulosPage />} />}
           {/* Sin esperar a los módulos: al recargar /rips todavía no se han cargado (el servidor exige el módulo activo) */}
           {puede("RIPS_GESTIONAR") && <Route path="/rips" element={<RipsPage />} />}
-          {puede("RIPS_GESTIONAR") && <Route path="/precios" element={<Navigate to="/rips?pestana=precios" replace />} />}
+          {puede("RIPS_GESTIONAR") && <Route path="/precios" element={rips ? <Navigate to="/rips?pestana=precios" replace /> : <PreciosPage />} />}
           {puede("AGENDA_GESTIONAR") && <Route path="/agenda" element={<AgendaPage />} />}
           <Route path="/seguridad" element={<SeguridadPage />} />
           <Route path="*" element={<Navigate to={puede("AGENDA_GESTIONAR") ? "/agenda" : "/pacientes"} replace />} />

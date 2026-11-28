@@ -13,8 +13,18 @@ class RolTest {
     @Test
     void elSecretarioNoVeDatosClinicosNiUsaLaIa() {
         assertThat(Rol.permisosDe(List.of(Rol.SECRETARIO)))
-                .containsExactlyInAnyOrder(Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR, Permiso.RIPS_PACIENTE)
-                .doesNotContain(Permiso.HISTORIA_VER, Permiso.FORMULA_FIRMAR, Permiso.IA_DIAGNOSTICO);
+                .containsExactlyInAnyOrder(Permiso.PACIENTE_GESTIONAR, Permiso.AGENDA_GESTIONAR, Permiso.RIPS_PACIENTE,
+                        Permiso.TRATAMIENTO_VER, Permiso.TRATAMIENTO_ACEPTAR)
+                .doesNotContain(Permiso.HISTORIA_VER, Permiso.FORMULA_FIRMAR, Permiso.IA_DIAGNOSTICO,
+                        Permiso.TRATAMIENTO_REGISTRAR);
+    }
+
+    @Test
+    void soloElOdontologoEditaElPlanDeTratamiento() {
+        assertThat(Rol.permisosDe(List.of(Rol.MEDICO))).contains(Permiso.TRATAMIENTO_REGISTRAR, Permiso.TRATAMIENTO_ACEPTAR);
+        assertThat(Rol.permisosDe(List.of(Rol.ADMIN, Rol.FACTURACION, Rol.PRECONSULTA)))
+                .doesNotContain(Permiso.TRATAMIENTO_REGISTRAR, Permiso.TRATAMIENTO_ACEPTAR);
+        assertThat(Rol.permisosDe(List.of(Rol.PRECONSULTA))).doesNotContain(Permiso.TRATAMIENTO_VER);
     }
 
     @Test

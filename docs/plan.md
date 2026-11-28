@@ -102,6 +102,7 @@ Detalle en `docs/aws-capa-1.md` y operación en `docs/guia-operacion.md`.
 - `docs/arquitectura.md`, `docs/aws-capa-1.md` y `docs/guia-operacion.md`.
 - `docs/diseno-formatos.md`: fases 1 y 2 construidas.
 - `docs/diseno-rips.md`: fase 1 construida; la norma vigente quedó verificada.
+- `docs/diseno-plan-tratamiento.md` y `docs/diseno-contratos.md`: sin implementar (28 de noviembre de 2026).
 
 ## Siguiente (en orden)
 
@@ -213,7 +214,8 @@ la **Res. 948 de 2026**, con el Documento Técnico 1 v003 y el 2 v001, ambos del
 ### 3. Odontología, fase 3 de los formatos
 
 - **Plan de tratamiento con presupuesto:** procedimientos (CUPS) por fases, con diente, superficie y valor de la lista
-  de precios; aceptación del paciente; y una marca en cada sesión cuando se realizan. Antes, escribir su diseño.
+  de precios; aceptación del paciente; y una marca en cada sesión cuando se realizan. Diseño escrito el 28 de
+  noviembre de 2026 en `docs/diseno-plan-tratamiento.md` (3 entregas; decidido: precios siempre y cambios como adicional). **Hecho el 28 de noviembre de 2026** (entregas 1 a 3: backend, pantallas y realizar en la atención); falta validar con un odontólogo las sugerencias por hallazgo.
 - Periodontograma: profundidad de sondaje, sangrado, movilidad y recesión.
 - Consentimientos odontológicos: exodoncia, endodoncia y anestesia local.
 - Que un hallazgo del odontograma sugiera el CUPS del procedimiento.
@@ -296,7 +298,8 @@ Otros pendientes que salieron de leer las normas (Res. 1552 de 2013 y Circular 0
 
 Viene del informe de QA ("crear un módulo de contratación"). Se entiende como la gestión de los contratos del
 prestador con sus pagadores (EPS, aseguradoras, ARL, SOAT; Decreto 441 de 2022), que la factura exige al radicar
-(CUCON). **Confirmar con QA que es esto y no contratación de personal.**
+(CUCON). **Confirmar con QA que es esto y no contratación de personal.** Diseño escrito el 28 de noviembre de 2026
+en `docs/diseno-contratos.md` (4 entregas; decidido: tope contra lo facturado).
 
 Ya existe: pagadores con su CUCON, tarifas por pagador, lista de precios por CUPS y el aviso "Falta autorización" en la
 cita. Faltaría:

@@ -45,6 +45,20 @@ public class Procedimiento {
     @Column(length = 1000)
     private String resultado;
 
+    /** El ítem del plan de tratamiento que se realizó con este procedimiento (nulo si no viene de un plan). */
+    @Column(name = "item_plan_id")
+    private java.util.UUID itemPlanId;
+
+    /** Devuelve el mismo procedimiento enlazado al ítem del plan de tratamiento. */
+    public Procedimiento delPlan(java.util.UUID itemPlanId) {
+        this.itemPlanId = itemPlanId;
+        return this;
+    }
+
+    public java.util.UUID getItemPlanId() {
+        return itemPlanId;
+    }
+
     /** Devuelve el mismo procedimiento con su resultado (vacío: sin resultado). */
     public Procedimiento conResultado(String resultado) {
         if (resultado != null && resultado.length() > 1000) {

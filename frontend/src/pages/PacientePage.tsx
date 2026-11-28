@@ -10,6 +10,7 @@ import { PacienteForm } from "../features/pacientes/PacienteForm";
 import { DatosRipsPaciente } from "../features/rips/DatosRipsPaciente";
 import { AntecedentesPaciente, textoAlergias, useClinicos } from "../features/pacientes/AntecedentesPaciente";
 import { useModuloActivo } from "../features/rips/modulos";
+import { PlanTratamiento } from "../features/tratamiento/PlanTratamiento";
 
 // La fórmula y el apoyo diagnóstico se usan dentro de una atención ("Nueva atención" en la historia), para que queden
 // en el registro de la consulta con su diagnóstico; aquí solo se consultan
@@ -73,6 +74,8 @@ export function PacientePage() {
       {rips && <DatosRipsPaciente pacienteId={p.id!} />}
 
       {puede("AGENDA_GESTIONAR") && <ProximasCitas pacienteId={p.id!} />}
+
+      {puede("TRATAMIENTO_VER") && <PlanTratamiento pacienteId={p.id!} />}
 
       {clinico && (
         <>
