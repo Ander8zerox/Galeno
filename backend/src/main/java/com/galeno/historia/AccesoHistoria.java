@@ -32,6 +32,7 @@ public class AccesoHistoria {
         IMPRIMIR_ATENCION,
         IMPRIMIR_HISTORIA,
         IMPRIMIR_FORMULA,
+        IMPRIMIR_PRESUPUESTO,
         IMPORTAR_ATENCIONES,
         DESHACER_IMPORTACION,
         VER_RIPS,

@@ -85,6 +85,12 @@ public class FormatosService {
         return catalogo().stream().filter(f -> f.formatoId().equals(formatoId)).findFirst().orElseThrow();
     }
 
+    /** Si el formato (por su código, p. ej. "odonto.odontograma") está activo en el consultorio de la sesión. */
+    @Transactional(readOnly = true)
+    public boolean activoEnConsultorio(String codigo) {
+        return formatos.findByCodigo(codigo).map(f -> activos.existsByFormatoId(f.getId())).orElse(false);
+    }
+
     // --- formatos del profesional ---
 
     /** Los activos en el consultorio. Si no hay ninguno, la atención se ve exactamente como siempre. */

@@ -4,6 +4,38 @@
  */
 
 export interface paths {
+    "/api/v1/tratamientos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["verPlan"];
+        put: operations["datosPlan"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tratamientos/{id}/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["editarItemPlan"];
+        post?: never;
+        delete: operations["quitarItemPlan"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/rips/profesionales/{usuarioId}": {
         parameters: {
             query?: never;
@@ -542,6 +574,134 @@ export interface paths {
         get?: never;
         put: operations["cambiarEstado"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tratamientos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["planesDelPaciente"];
+        put?: never;
+        post: operations["crearPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tratamientos/{id}/terminar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["terminarPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tratamientos/{id}/presentar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["presentarPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tratamientos/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["agregarItemPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tratamientos/{id}/items/{itemId}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelarItemPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tratamientos/{id}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelarPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tratamientos/{id}/borrador": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["planABorrador"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tratamientos/{id}/aceptacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["aceptarPlan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1732,6 +1892,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tratamientos/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["presupuestoPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/suscripcion": {
         parameters: {
             query?: never;
@@ -2648,6 +2824,98 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        DatosPlanTratamiento: {
+            observaciones?: string;
+            /** Format: int32 */
+            vigenciaDias?: number;
+        };
+        AceptacionPlanVista: {
+            /** Format: int32 */
+            numero?: number;
+            /** Format: date-time */
+            aceptadoEn?: string;
+            /** Format: uuid */
+            registradoPor?: string;
+            conFirma?: boolean;
+            nombreFirmante?: string;
+            constanciaVerbal?: boolean;
+            total?: number;
+        };
+        ItemPlanVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: int32 */
+            fase?: number;
+            faseNombre?: string;
+            /** Format: int32 */
+            orden?: number;
+            codigoCups?: string;
+            descripcion?: string;
+            diente?: string;
+            superficies?: string;
+            /** Format: int32 */
+            cantidad?: number;
+            valorUnitario?: number;
+            descuento?: number;
+            total?: number;
+            estado?: string;
+            /** Format: int32 */
+            aceptacion?: number;
+            motivoCancelacion?: string;
+            /** Format: uuid */
+            atencionId?: string;
+            /** Format: date-time */
+            realizadoEn?: string;
+        };
+        PlanTratamientoVista: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            pacienteId?: string;
+            /** Format: uuid */
+            odontologoId?: string;
+            odontologo?: string;
+            estado?: string;
+            observaciones?: string;
+            /** Format: int32 */
+            vigenciaDias?: number;
+            /** Format: date-time */
+            presentadoEn?: string;
+            /** Format: date-time */
+            cerradoEn?: string;
+            motivoCierre?: string;
+            /** Format: date-time */
+            creadoEn?: string;
+            /** Format: date-time */
+            actualizadoEn?: string;
+            items?: components["schemas"]["ItemPlanVista"][];
+            aceptaciones?: components["schemas"]["AceptacionPlanVista"][];
+            totales?: components["schemas"]["TotalesPlan"];
+        };
+        TotalesPlan: {
+            aceptado?: number;
+            realizado?: number;
+            pendiente?: number;
+            cancelado?: number;
+            porAceptar?: number;
+            /** Format: int32 */
+            procedimientos?: number;
+            /** Format: int32 */
+            realizados?: number;
+        };
+        ItemPlanTratamiento: {
+            /** Format: int32 */
+            fase?: number;
+            faseNombre?: string;
+            codigoCups: string;
+            descripcion?: string;
+            diente?: string;
+            superficies?: string;
+            /** Format: int32 */
+            cantidad?: number;
+            valorUnitario?: number;
+            descuento?: number;
+        };
         DocumentoProfesional: {
             tipoDocumento: string;
             numeroDocumento: string;
@@ -3646,6 +3914,21 @@ export interface components {
             motivoCancelacion?: string;
             justificacionSinRips?: string;
         };
+        CrearPlanTratamiento: {
+            /** Format: uuid */
+            pacienteId: string;
+            observaciones?: string;
+            /** Format: int32 */
+            vigenciaDias?: number;
+        };
+        MotivoCierrePlan: {
+            motivo?: string;
+        };
+        AceptacionPlanTratamiento: {
+            firma?: string;
+            nombreFirmante?: string;
+            constanciaVerbal?: boolean;
+        };
         PagoVista: {
             /** Format: uuid */
             id?: string;
@@ -4419,7 +4702,7 @@ export interface components {
             /** Format: uuid */
             membresiaId?: string;
             roles?: ("ADMIN" | "MEDICO" | "SECRETARIO" | "FACTURACION" | "PRECONSULTA")[];
-            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR" | "FORMATOS_GESTIONAR" | "MODULOS_GESTIONAR" | "RIPS_GESTIONAR" | "RIPS_PACIENTE" | "PRECONSULTA_REGISTRAR")[];
+            permisos?: ("EQUIPO_GESTIONAR" | "PACIENTE_GESTIONAR" | "HISTORIA_VER" | "HISTORIA_REGISTRAR" | "FORMULA_REDACTAR" | "FORMULA_FIRMAR" | "IA_DIAGNOSTICO" | "AGENDA_GESTIONAR" | "IMPORTAR_HISTORIAS" | "SUSCRIPCION_GESTIONAR" | "FORMATOS_GESTIONAR" | "MODULOS_GESTIONAR" | "RIPS_GESTIONAR" | "RIPS_PACIENTE" | "PRECONSULTA_REGISTRAR" | "TRATAMIENTO_VER" | "TRATAMIENTO_REGISTRAR" | "TRATAMIENTO_ACEPTAR")[];
             /** Format: int32 */
             totalConsultorios?: number;
             iaDisponible?: boolean;
@@ -4444,26 +4727,26 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            missingNode?: boolean;
-            floatingPointNumber?: boolean;
-            /** @enum {string} */
-            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            valueNode?: boolean;
-            container?: boolean;
-            bigDecimal?: boolean;
-            integralNumber?: boolean;
-            bigInteger?: boolean;
-            short?: boolean;
+            binary?: boolean;
+            object?: boolean;
             string?: boolean;
             pojo?: boolean;
-            long?: boolean;
+            short?: boolean;
             double?: boolean;
             /** @deprecated */
             textual?: boolean;
-            boolean?: boolean;
-            binary?: boolean;
-            object?: boolean;
             int?: boolean;
+            boolean?: boolean;
+            long?: boolean;
+            floatingPointNumber?: boolean;
+            bigDecimal?: boolean;
+            bigInteger?: boolean;
+            missingNode?: boolean;
+            integralNumber?: boolean;
+            container?: boolean;
+            /** @enum {string} */
+            nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
+            valueNode?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -4543,6 +4826,104 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    verPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
+    datosPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DatosPlanTratamiento"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
+    editarItemPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemPlanTratamiento"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
+    quitarItemPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
     guardarProfesional: {
         parameters: {
             query?: never;
@@ -5800,6 +6181,227 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CitaVista"];
+                };
+            };
+        };
+    };
+    planesDelPaciente: {
+        parameters: {
+            query: {
+                pacienteId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"][];
+                };
+            };
+        };
+    };
+    crearPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrearPlanTratamiento"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
+    terminarPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotivoCierrePlan"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
+    presentarPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
+    agregarItemPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemPlanTratamiento"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
+    cancelarItemPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotivoCierrePlan"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
+    cancelarPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotivoCierrePlan"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
+    planABorrador: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
+                };
+            };
+        };
+    };
+    aceptarPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AceptacionPlanTratamiento"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PlanTratamientoVista"];
                 };
             };
         };
@@ -7865,6 +8467,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["BloqueoCreado"];
+                };
+            };
+        };
+    };
+    presupuestoPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };
