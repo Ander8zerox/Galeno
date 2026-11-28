@@ -75,6 +75,38 @@ public class TratamientosService {
         return vista(plan(id));
     }
 
+    /**
+     * Lo que sugiere el último odontograma firmado del paciente, con el precio de la lista si lo hay. No guarda nada:
+     * el odontólogo elige qué agregar.
+     */
+    @Transactional(readOnly = true)
+    public SugerenciasPlan sugerencias(UUID pacienteId) {
+        exigirFormato();
+        pacientes.get(pacienteId);
+        var ultimo = formatos.ultimasRespuestas(FORMATO_REQUERIDO, historia.atencionesFirmadasRecientes(pacienteId));
+        if (ultimo.isEmpty()) {
+            return new SugerenciasPlan(null, List.of());
+        }
+        List<SugerenciasOdontograma.Sugerencia> s = SugerenciasOdontograma.de(ultimo.get().respuestas());
+        List<String> codigos = s.stream().map(SugerenciasOdontograma.Sugerencia::codigoCups).distinct().toList();
+        Map<String, String> nombres = historia.nombresCups(codigos);
+        Map<String, BigDecimal> lista = precios.precios(codigos, new ListaPrecios.Contexto(pacienteId, null, null));
+        return new SugerenciasPlan(ultimo.get().atencionId(), s.stream()
+                .map(x -> new SugerenciaVista(x.fase(), x.fase() == 1 ? "Operatoria" : "Cirugía", x.codigoCups(),
+                        nombres.getOrDefault(x.codigoCups(), x.codigoCups()), x.diente(), x.superficies(), 1,
+                        lista.get(x.codigoCups()), x.motivo()))
+                .toList());
+    }
+
+    /** @param atencionId la atención del odontograma del que salen; nula si el paciente no tiene odontograma firmado */
+    public record SugerenciasPlan(UUID atencionId, List<SugerenciaVista> sugerencias) {
+    }
+
+    /** @param valorUnitario nulo si el CUPS no tiene precio en la lista */
+    public record SugerenciaVista(int fase, String faseNombre, String codigoCups, String descripcion, String diente,
+                                  String superficies, int cantidad, BigDecimal valorUnitario, String motivo) {
+    }
+
     // --- el plan ---
 
     @Transactional

@@ -53,8 +53,10 @@ final class PresupuestoPdf {
             String nombre = fase.getValue().stream().map(ItemPlan::getFaseNombre).filter(Objects::nonNull).findFirst()
                     .map(n -> "Fase " + fase.getKey() + ": " + n).orElse("Fase " + fase.getKey());
             b.append("<h2>").append(esc(nombre)).append("</h2>");
-            b.append("<table class=\"grilla\"><tr><th>Procedimiento</th><th>Diente</th><th class=\"derecha\">Cant.</th>"
-                    + "<th class=\"derecha\">Valor unitario</th><th class=\"derecha\">Descuento</th><th class=\"derecha\">Total</th></tr>");
+            b.append("<table class=\"grilla\" style=\"table-layout: fixed;\"><colgroup><col style=\"width: 44%;\" /><col style=\"width: 10%;\" />"
+                    + "<col style=\"width: 7%;\" /><col style=\"width: 13%;\" /><col style=\"width: 12%;\" /><col style=\"width: 14%;\" /></colgroup>"
+                    + "<tr><th>Procedimiento</th><th>Diente</th><th style=\"text-align: right;\">Cant.</th>"
+                    + "<th style=\"text-align: right;\">Valor unitario</th><th style=\"text-align: right;\">Descuento</th><th style=\"text-align: right;\">Total</th></tr>");
             BigDecimal totalFase = BigDecimal.ZERO;
             for (ItemPlan i : fase.getValue()) {
                 b.append("<tr><td>").append(esc(i.getDescripcion())).append("<br /><span class=\"small muted\">CUPS ")
@@ -96,7 +98,7 @@ final class PresupuestoPdf {
         if (odontologo.registroMedico() != null) {
             b.append("Registro ").append(esc(odontologo.registroMedico())).append("<br />");
         }
-        b.append("<span class=\"small muted\">Odontólogo tratante</span></div></div>");
+        b.append("<span class=\"small muted\">Profesional tratante</span></div></div>");
 
         if (pr.aceptaciones().isEmpty()) {
             b.append("<div class=\"firma\"><div class=\"linea\">Firma del paciente o su representante<br />"

@@ -789,6 +789,12 @@ public class HistoriaService {
         return a;
     }
 
+    /** Para el plan de tratamiento: de ahí sale el último odontograma firmado. */
+    @Transactional(readOnly = true)
+    public List<UUID> atencionesFirmadasRecientes(UUID pacienteId) {
+        return firmadasRecientes(pacienteId);
+    }
+
     /** Atenciones firmadas del paciente, de la más reciente a la más antigua (de ahí se arrastra el odontograma). */
     private List<UUID> firmadasRecientes(UUID pacienteId) {
         List<UUID> ids = new ArrayList<>(atenciones.firmadas(pacienteId).stream().map(Atencion::getId).toList());

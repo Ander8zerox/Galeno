@@ -91,6 +91,28 @@ public class FormatosService {
         return formatos.findByCodigo(codigo).map(f -> activos.existsByFormatoId(f.getId())).orElse(false);
     }
 
+    /**
+     * Las respuestas del formato (por código) en la atención más reciente que lo tenga, p. ej. el último odontograma.
+     *
+     * @param firmadas atenciones firmadas del paciente, de la más reciente a la más antigua
+     */
+    @Transactional(readOnly = true)
+    public java.util.Optional<UltimasRespuestas> ultimasRespuestas(String codigo, List<UUID> firmadas) {
+        java.util.Optional<Formato> formato = formatos.findByCodigo(codigo);
+        if (formato.isEmpty() || firmadas.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        Map<UUID, AtencionFormato> delFormato = new HashMap<>();
+        diligenciados.findByAtencionIdInOrderByOrden(firmadas).stream()
+                .filter(af -> version(af.getFormatoVersionId()).formatoId().equals(formato.get().getId()))
+                .forEach(af -> delFormato.put(af.getAtencionId(), af));
+        return firmadas.stream().map(delFormato::get).filter(Objects::nonNull).findFirst()
+                .map(af -> new UltimasRespuestas(af.getAtencionId(), leer(af.getRespuestas())));
+    }
+
+    public record UltimasRespuestas(UUID atencionId, JsonNode respuestas) {
+    }
+
     // --- formatos del profesional ---
 
     /** Los activos en el consultorio. Si no hay ninguno, la atención se ve exactamente como siempre. */

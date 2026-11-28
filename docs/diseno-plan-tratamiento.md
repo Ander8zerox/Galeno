@@ -136,3 +136,22 @@ Backend completo, sin pantallas todavía.
 - **Pruebas:** `PresupuestoTest` (totales, PDF, firma y formato de pesos) y `RolTest`. E2E contra `galeno_e2e`: 26 de
   26 casos (estados, validaciones, adicionales, PDF, cierre). Los permisos por rol no se probaron en vivo (los usuarios
   semilla de médico 2 y secretaría piden MFA).
+
+## Cómo quedó la entrega 2 (28 de noviembre de 2026)
+
+- **Ficha del paciente:** tarjeta "Plan de tratamiento" (`features/tratamiento/PlanTratamiento.tsx`). Si el
+  consultorio no tiene el odontograma activo, el servidor responde 404 y la tarjeta no aparece. Muestra el plan
+  vigente (estado, totales, avance y procedimientos por fase) y los planes anteriores con su PDF.
+- **Desde el odontograma:** `GET /api/v1/tratamientos/sugerencias` lee el último odontograma firmado y propone
+  (`SugerenciasOdontograma`): resina por caries (con las superficies) o fractura, y exodoncia por extracción indicada
+  (permanente o temporal, unirradicular o multirradicular según el diente). Dientes ausentes o con implante no se
+  sugieren. El odontólogo marca cuáles agregar y escribe el valor de los que no tienen precio. Solo lo ve quien
+  registra el plan (`TRATAMIENTO_REGISTRAR`): lee datos clínicos.
+- **Acciones sin `confirm()`:** presentar, volver a borrador, registrar la aceptación (firma en pantalla con
+  `FirmaPad`, o "aceptó de palabra"), editar y quitar lo no aceptado, cancelar con motivo lo aceptado, terminar y
+  cancelar el plan, observaciones y vigencia. Los motivos se piden en el mismo panel.
+- **Lista de precios sin RIPS:** con el módulo apagado, el menú muestra "Precios" (`/precios`); con el módulo
+  activo, `/precios` sigue llevando a la pestaña de RIPS.
+- **PDF:** columnas de igual ancho en todas las fases y "Profesional tratante" bajo la firma.
+- **Verificado** en el navegador contra `galeno_e2e`: crear, sugerencias del odontograma, presentar, aceptar con
+  firma y el PDF con la firma; la página de precios con RIPS apagado y encendido. 232 pruebas del backend en verde.

@@ -100,6 +100,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/formatos/consultorio/**").hasAuthority(Permiso.FORMATOS_GESTIONAR.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/formatos/**").hasAuthority(Permiso.HISTORIA_VER.name())
                         .requestMatchers("/api/v1/formatos/**").hasAuthority(Permiso.HISTORIA_REGISTRAR.name())
+                        // Las sugerencias leen el odontograma (dato clínico): solo quien registra el plan
+                        .requestMatchers(HttpMethod.GET, "/api/v1/tratamientos/sugerencias")
+                                .hasAuthority(Permiso.TRATAMIENTO_REGISTRAR.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/tratamientos/**", "/api/v1/tratamientos")
                                 .hasAuthority(Permiso.TRATAMIENTO_VER.name())
                         .requestMatchers(HttpMethod.POST, "/api/v1/tratamientos/*/aceptacion")

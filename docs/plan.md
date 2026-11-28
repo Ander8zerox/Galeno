@@ -215,7 +215,7 @@ la **Res. 948 de 2026**, con el Documento Técnico 1 v003 y el 2 v001, ambos del
 
 - **Plan de tratamiento con presupuesto:** procedimientos (CUPS) por fases, con diente, superficie y valor de la lista
   de precios; aceptación del paciente; y una marca en cada sesión cuando se realizan. Diseño escrito el 28 de
-  noviembre de 2026 en `docs/diseno-plan-tratamiento.md` (3 entregas; decidido: precios siempre y cambios como adicional). **Entrega 1 (backend) hecha el 28 de noviembre de 2026**; faltan las pantallas (2) y realizar en la atención (3).
+  noviembre de 2026 en `docs/diseno-plan-tratamiento.md` (3 entregas; decidido: precios siempre y cambios como adicional). **Entregas 1 (backend) y 2 (pantallas) hechas el 28 de noviembre de 2026**; falta realizar en la atención (3).
 - Periodontograma: profundidad de sondaje, sangrado, movilidad y recesión.
 - Consentimientos odontológicos: exodoncia, endodoncia y anestesia local.
 - Que un hallazgo del odontograma sugiera el CUPS del procedimiento.

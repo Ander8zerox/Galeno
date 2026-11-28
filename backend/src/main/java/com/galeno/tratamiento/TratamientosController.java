@@ -67,6 +67,12 @@ public class TratamientosController {
         return servicio.delPaciente(pacienteId);
     }
 
+    /** Procedimientos que sugiere el último odontograma firmado (no guarda nada). */
+    @GetMapping("/sugerencias")
+    public TratamientosService.SugerenciasPlan sugerenciasPlan(@RequestParam UUID pacienteId) {
+        return servicio.sugerencias(pacienteId);
+    }
+
     @GetMapping("/{id}")
     public PlanTratamientoVista verPlan(@PathVariable UUID id) {
         return servicio.ver(id);
