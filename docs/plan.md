@@ -321,7 +321,9 @@ cita. Faltaría:
 
 - **RIPS, fases 3 y 4:**
   - Envío al MUV (API REST en Docker, tipo B, por cuenta de cada consultorio y con sus credenciales de SISPRO).
-  - Factura electrónica desde Galenum.
+  - Factura electrónica desde Galenum, con **Siigo** (diseño del 28 de noviembre de 2026 en `docs/diseno-rips.md`,
+    "Fase 4"): conexión por consultorio, factura particular desde la atención, factura a EPS desde el lote de RIPS
+    y envío en segundo plano. Espera la empresa de pruebas de Siigo.
 - **Interoperabilidad de la historia clínica (IHCE)** del Ministerio: el RIPS ya trae `codigoVIDA` (el id de la
   atención en la IHCE), que será obligatorio cuando el sistema entre en operación. Seguir su calendario.
 - Portal del paciente: cuenta separada que ve sus citas y fórmulas.
@@ -343,6 +345,8 @@ cita. Faltaría:
 
 ## Pendientes que dependen del usuario (no de código)
 
+- **Siigo (factura electrónica):** conseguir una empresa de pruebas de Siigo de un consultorio con el sector salud y
+  la API activos, y preguntar a soporteapi@siigo.com lo que quedó "Por confirmar" en `docs/diseno-rips.md`.
 - **IA en producción (Bedrock):**
   - Hoy está bloqueada. Haiku 5.5 solo tiene cuotas entre regiones (perfil `us.`), y AWS las dejó en 0 y negó la
     primera solicitud.
