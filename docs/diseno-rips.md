@@ -637,3 +637,77 @@ de consultas y procedimientos quedaron como recursos de prueba en `backend/src/t
   traigan los archivos, **solo si el paciente aún no los tiene** (nunca reemplaza lo digitado). Un código que no está
   en las tablas de SISPRO queda vacío y la ficha avisa que falta. Al deshacer un lote que creó al paciente, sus datos
   RIPS se borran con él. `incapacidad` y `registroSIRAS` son de cada atención (van en el cobro), no del paciente.
+
+## Fase 4: factura electrónica con Siigo (diseño, 28 de noviembre de 2026; sin implementar)
+
+El consultorio emite la factura de salud en **su propia cuenta de Siigo Nube**, desde Galenum. Galenum no se vuelve
+facturador: llama a la API de Siigo con las credenciales del consultorio y guarda el número, el CUFE y el XML.
+Verificado contra la documentación oficial (developers.siigo.com, página "Crear factura", sección `healthcare_company`).
+
+### Qué dice la API de Siigo
+
+- **Autenticación:** `username` y `access_key` del usuario API del consultorio (Siigo Nube → Configuración → API).
+  El token se reutiliza hasta que vence; la vigencia de 24 h no está en la documentación oficial (confirmarla).
+- **`Partner-Id`** en todas las llamadas: 3 a 100 caracteres alfanuméricos, sin espacios, **el mismo para todos los
+  consultorios** (`Galenum`). Siigo bloquea a quien envíe valores falsos.
+- **Límites:** 100 llamadas por minuto por empresa (10 en la empresa de pruebas). Crear una factura puede tardar:
+  Siigo recomienda esperar hasta 120 s.
+- **`Idempotency-Key`** (máximo 32 caracteres) evita facturas duplicadas por reintentos.
+- **Factura (`POST /v1/invoices`):** `document.id` (el comprobante de salud), `date` (no anterior a hoy), `customer`
+  (debe existir o se crea en la misma llamada con sus datos), `seller`, `items` (cada `code` debe existir como producto
+  en Siigo), `payments` (la suma debe dar el total), `stamp.send: true` (la envía a la DIAN) y `mail.send`.
+- **`healthcare_company`:**
+
+| Campo | Regla |
+|---|---|
+| `operation_type` | Obligatorio: `SS-SinAporte`, `SS-CUFE` o `SS-Recaudo` |
+| `period_start`, `period_end` | AAAA-MM-DD, obligatorios en SS-SinAporte y SS-CUFE (campos sueltos, no un objeto `period`) |
+| `payment_method` | 01 paquete/caso, 02 pago global prospectivo, 03 capitación, 04 evento |
+| `service_plan` | Cobertura: 02 a 17 (15 particular, 16 UPC contributivo, 17 UPC subsidiado). **No existe el 01** |
+| `contract_number` | Máximo 64. Si va, no van `policy_number` ni `non_contract_invoice_reason` (ni vacíos) |
+| `policy_number` | Máximo 50 |
+| `non_contract_invoice_reason` | Obligatorio sin contrato: 01 urgencias, 02 ADRES/SOAT/planes voluntarios, 03 tutela, 04 portabilidad, 05 excepcionales sin contrato, 06 órganos, **07 profesional independiente con paciente particular** |
+| `copayment`, `coinsurance` (cuota moderadora), `cost_sharing`, `recovery_charge` | Solo SS-CUFE, y al menos uno es obligatorio |
+
+- **El tipo de operación depende de los aportes del paciente, no de quién paga:** sin copago ni cuota moderadora es
+  SS-SinAporte (particular o EPS); con aportes facturados aparte es SS-CUFE; la factura del copago al paciente es
+  SS-Recaudo.
+- **El código REPS no va en la API:** se configura en el comprobante de salud dentro de Siigo Nube. `advance_payment`
+  es anticipo, no copago.
+- **Respuesta:** `id` (UUID), `name` (por ejemplo FV-2-22), `stamp.cufe` y `stamp.status` (Draft, Accepted,
+  Rejected; una rechazada se corrige en Siigo Nube). El XML sale de `GET /v1/invoices/{id}/xml` en base64.
+
+### Propuesta
+
+1. **Conexión por consultorio** (ADMIN, con el módulo de RIPS activo):
+   - Credenciales cifradas, nunca en logs ni en respuestas; botón "Probar conexión".
+   - Galenum trae los catálogos de Siigo y el administrador elige el comprobante de salud, el vendedor y las formas de
+     pago.
+   - Los CUPS que se facturan se crean como productos en Siigo si faltan.
+2. **Factura particular desde la atención (o el cobro de la cita):** botón "Facturar" con los procedimientos
+   realizados y sus valores. SS-SinAporte, cobertura 15, motivo 07 (o el que indique el contador si el consultorio
+   factura como empresa), cliente = el paciente.
+3. **Factura a EPS desde el lote de RIPS:** botón "Emitir en Siigo". SS-SinAporte o SS-CUFE según los cobros,
+   `contract_number` del pagador, período del lote. Al aceptarse, el lote queda con el número de factura y el XML
+   (que ya lee `FacturaXml`), listo para el MUV.
+4. **Envío al MUV** (fase 3).
+
+### Cómo se envía
+
+- **En segundo plano:** CloudFront corta a los 30 s y Siigo puede tardar hasta 120 s. Galenum guarda la factura como
+  "Enviando", la manda en un proceso aparte y la pantalla consulta el estado (Enviando, Aceptada, Rechazada, Error).
+- **`Idempotency-Key`** = id de la factura en Galenum: un doble clic o un reintento no crea dos facturas.
+- Tabla `rips_facturas`: consultorio, atención o lote, id y número de Siigo, CUFE, estado DIAN, errores, XML.
+- La factura aceptada queda inmutable; las correcciones van por nota crédito (fuera de esta fase).
+
+### Por confirmar con Siigo (soporteapi@siigo.com)
+
+- Qué plan de Siigo Nube incluye la API para el sector salud.
+- Vigencia del token y si el timbrado ante la DIAN es inmediato o queda en proceso.
+- Cómo se referencia el CUFE de la factura del copago (SS-Recaudo) en una factura SS-CUFE.
+- Endpoint del PDF de la factura.
+
+### Antes de construir
+
+Una **empresa de pruebas de Siigo** de un consultorio real, con la factura electrónica, el sector salud y la API
+activos, y su usuario API.
