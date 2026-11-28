@@ -155,3 +155,25 @@ Backend completo, sin pantallas todavía.
 - **PDF:** columnas de igual ancho en todas las fases y "Profesional tratante" bajo la firma.
 - **Verificado** en el navegador contra `galeno_e2e`: crear, sugerencias del odontograma, presentar, aceptar con
   firma y el PDF con la firma; la página de precios con RIPS apagado y encendido. 232 pruebas del backend en verde.
+
+## Cómo quedó la entrega 3 (28 de noviembre de 2026)
+
+- **Enlace en la historia (V44):** `atencion_procedimientos.item_plan_id`. La historia habla con el plan por la
+  interfaz `historia.PlanEnAtencion` (la implementa `tratamiento.ItemsEnAtencion`), sin depender del paquete.
+- **Al guardar la atención:** un procedimiento con `itemPlanId` debe ser de un ítem aceptado y pendiente del plan
+  vigente del paciente; no puede ir dos veces. Los procedimientos realizados se aceptan con el módulo de RIPS **o** con
+  el plan de tratamiento disponible (odontograma activo).
+- **Al firmar:** los ítems quedan **Realizados** con la atención y la fecha. Si alguno ya se realizó en otra atención
+  o se canceló, la firma se rechaza y pide quitarlo. Con todo realizado o cancelado, el plan termina solo.
+- **En la atención:** bajo "Procedimientos realizados", la tarjeta del plan lista lo pendiente con "Realizar en esta
+  atención": agrega el procedimiento con su CUPS, diente, superficies y el valor aceptado (con el descuento repartido
+  por unidad). La fila queda marcada "Del plan" y la atención firmada lo muestra "del plan de tratamiento".
+- **Seguimiento:** `GET /api/v1/tratamientos/seguimiento?dias=60` (por defecto 60) lista los planes aceptados con
+  pendientes y sin actividad (aceptación o procedimiento realizado) en ese tiempo. En Pacientes aparece "Tratamientos
+  sin continuar" con el teléfono, el odontólogo, lo pendiente y la última actividad.
+- **Verificado:** E2E contra `galeno_e2e` (10/10: sin aceptar, duplicado, otro paciente, firmar, ya realizado, el plan
+  termina solo, seguimiento) y en el navegador (realizar desde la atención, firmar y ver el plan actualizado; la lista
+  de seguimiento con un plan envejecido 90 días en la base de pruebas).
+
+Con esto el plan de tratamiento queda completo según este diseño. Pendiente: validar con un odontólogo las
+sugerencias por hallazgo y los CUPS.

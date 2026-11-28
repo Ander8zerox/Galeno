@@ -67,6 +67,12 @@ public class TratamientosController {
         return servicio.delPaciente(pacienteId);
     }
 
+    /** Planes aceptados con pendientes y sin actividad en {@code dias} (60 por defecto): para llamar al paciente. */
+    @GetMapping("/seguimiento")
+    public List<TratamientosService.SeguimientoPlan> seguimientoPlanes(@RequestParam(defaultValue = "60") int dias) {
+        return servicio.sinActividad(dias);
+    }
+
     /** Procedimientos que sugiere el último odontograma firmado (no guarda nada). */
     @GetMapping("/sugerencias")
     public TratamientosService.SugerenciasPlan sugerenciasPlan(@RequestParam UUID pacienteId) {

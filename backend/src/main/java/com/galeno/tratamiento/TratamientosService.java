@@ -107,6 +107,56 @@ public class TratamientosService {
                                   String superficies, int cantidad, BigDecimal valorUnitario, String motivo) {
     }
 
+    /**
+     * Planes aceptados con procedimientos pendientes y sin actividad (aceptación o procedimiento realizado) en los
+     * últimos {@code dias}: para que la secretaría llame al paciente. Los más olvidados primero.
+     */
+    @Transactional(readOnly = true)
+    public List<SeguimientoPlan> sinActividad(int dias) {
+        exigirFormato();
+        if (dias < 1 || dias > 365) {
+            throw ApiProblem.badRequest("Los días deben estar entre 1 y 365");
+        }
+        Instant limite = Instant.now().minus(java.time.Duration.ofDays(dias));
+        List<PlanTratamiento> aceptados = planes.findByEstado(PlanTratamiento.Estado.ACEPTADO);
+        if (aceptados.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> ids = aceptados.stream().map(PlanTratamiento::getId).toList();
+        Map<UUID, List<ItemPlan>> itemsPorPlan = items.findByPlanIdIn(ids).stream()
+                .collect(java.util.stream.Collectors.groupingBy(ItemPlan::getPlanId));
+        Map<UUID, Instant> ultimaAceptacion = aceptaciones.findByPlanIdIn(ids).stream()
+                .collect(java.util.stream.Collectors.toMap(AceptacionPlan::getPlanId, AceptacionPlan::getAceptadoEn,
+                        (a, b) -> a.isAfter(b) ? a : b));
+        record Candidato(PlanTratamiento plan, Instant ultima, List<ItemPlan> pendientes) {
+        }
+        List<Candidato> candidatos = new java.util.ArrayList<>();
+        for (PlanTratamiento p : aceptados) {
+            List<ItemPlan> delPlan = itemsPorPlan.getOrDefault(p.getId(), List.of());
+            List<ItemPlan> pendientes = delPlan.stream()
+                    .filter(i -> i.aceptado() && i.getEstado() == ItemPlan.Estado.PENDIENTE).toList();
+            Instant ultima = delPlan.stream().map(ItemPlan::getRealizadoEn).filter(java.util.Objects::nonNull)
+                    .reduce(ultimaAceptacion.getOrDefault(p.getId(), p.getActualizadoEn()), (a, b) -> a.isAfter(b) ? a : b);
+            if (!pendientes.isEmpty() && ultima.isBefore(limite)) {
+                candidatos.add(new Candidato(p, ultima, pendientes));
+            }
+        }
+        Map<UUID, com.galeno.pacientes.Paciente> pacientesPorId = pacientes.porIds(candidatos.stream()
+                .map(c -> c.plan().getPacienteId()).toList()).stream()
+                .collect(java.util.stream.Collectors.toMap(com.galeno.pacientes.Paciente::getId, x -> x));
+        return candidatos.stream().sorted(java.util.Comparator.comparing(Candidato::ultima)).map(c -> {
+            var pa = pacientesPorId.get(c.plan().getPacienteId());
+            return new SeguimientoPlan(c.plan().getId(), c.plan().getPacienteId(),
+                    pa == null ? "" : pa.getNombres() + " " + pa.getApellidos(), pa == null ? null : pa.getTelefono(),
+                    identidad.profesional(c.plan().getOdontologoId()).nombre(), c.pendientes().size(),
+                    c.pendientes().stream().map(ItemPlan::total).reduce(BigDecimal.ZERO, BigDecimal::add), c.ultima());
+        }).toList();
+    }
+
+    public record SeguimientoPlan(UUID planId, UUID pacienteId, String paciente, String telefono, String odontologo,
+                                  int pendientes, BigDecimal valorPendiente, Instant ultimaActividad) {
+    }
+
     // --- el plan ---
 
     @Transactional

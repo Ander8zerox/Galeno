@@ -1924,6 +1924,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tratamientos/seguimiento": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["seguimientoPlanes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/suscripcion": {
         parameters: {
             query?: never;
@@ -3635,6 +3651,8 @@ export interface components {
             diente?: string;
             superficies?: string;
             resultado?: string;
+            /** Format: uuid */
+            itemPlanId?: string;
         };
         RespuestasFormatoRequest: {
             /** Format: uuid */
@@ -3780,6 +3798,8 @@ export interface components {
             superficies?: string;
             consulta?: boolean;
             resultado?: string;
+            /** Format: uuid */
+            itemPlanId?: string;
         };
         PorDefecto: {
             porDefecto: boolean;
@@ -4469,6 +4489,20 @@ export interface components {
             atencionId?: string;
             sugerencias?: components["schemas"]["SugerenciaVista"][];
         };
+        SeguimientoPlan: {
+            /** Format: uuid */
+            planId?: string;
+            /** Format: uuid */
+            pacienteId?: string;
+            paciente?: string;
+            telefono?: string;
+            odontologo?: string;
+            /** Format: int32 */
+            pendientes?: number;
+            valorPendiente?: number;
+            /** Format: date-time */
+            ultimaActividad?: string;
+        };
         OpcionesPago: {
             planes?: components["schemas"]["PlanPrecio"][];
             datosPago?: string;
@@ -4761,26 +4795,26 @@ export interface components {
             null?: boolean;
             float?: boolean;
             number?: boolean;
-            floatingPointNumber?: boolean;
+            object?: boolean;
+            string?: boolean;
             pojo?: boolean;
+            short?: boolean;
+            int?: boolean;
+            long?: boolean;
+            boolean?: boolean;
             binary?: boolean;
             double?: boolean;
-            boolean?: boolean;
-            string?: boolean;
-            short?: boolean;
             /** @deprecated */
             textual?: boolean;
-            long?: boolean;
-            int?: boolean;
-            object?: boolean;
+            missingNode?: boolean;
+            valueNode?: boolean;
+            integralNumber?: boolean;
+            container?: boolean;
+            bigDecimal?: boolean;
             bigInteger?: boolean;
             /** @enum {string} */
             nodeType?: "ARRAY" | "BINARY" | "BOOLEAN" | "MISSING" | "NULL" | "NUMBER" | "OBJECT" | "POJO" | "STRING";
-            integralNumber?: boolean;
-            missingNode?: boolean;
-            container?: boolean;
-            valueNode?: boolean;
-            bigDecimal?: boolean;
+            floatingPointNumber?: boolean;
             embeddedValue?: boolean;
         };
         MedicoAgenda: {
@@ -8545,6 +8579,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SugerenciasPlan"];
+                };
+            };
+        };
+    };
+    seguimientoPlanes: {
+        parameters: {
+            query?: {
+                dias?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SeguimientoPlan"][];
                 };
             };
         };

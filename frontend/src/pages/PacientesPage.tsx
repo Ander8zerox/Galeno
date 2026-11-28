@@ -4,13 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { api, unwrap } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { PacienteForm } from "../features/pacientes/PacienteForm";
+import { SeguimientoPlanes } from "../features/tratamiento/SeguimientoPlanes";
 
 export function PacientesPage() {
   const [q, setQ] = useState("");
   const [creando, setCreando] = useState(false);
   const [soloIncompletos, setSoloIncompletos] = useState(false);
   const navigate = useNavigate();
-  const clinico = useAuth().puede("HISTORIA_VER");
+  const { puede } = useAuth();
+  const clinico = puede("HISTORIA_VER");
 
   const pacientes = useQuery({
     queryKey: ["pacientes", q, soloIncompletos],
@@ -32,6 +34,8 @@ export function PacientesPage() {
       </div>
 
       {creando && <PacienteForm onGuardado={(p) => navigate(`/pacientes/${p.id}`)} />}
+
+      {puede("TRATAMIENTO_VER") && <SeguimientoPlanes />}
 
       <div className="row">
         <input className="search grow" placeholder="Buscar por nombre o documento…" value={q} onChange={(e) => setQ(e.target.value)} />

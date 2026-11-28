@@ -113,6 +113,12 @@ class ItemPlan {
         this.aceptacion = numero;
     }
 
+    void realizar(UUID atencionId) {
+        this.estado = Estado.REALIZADO;
+        this.atencionId = atencionId;
+        this.realizadoEn = Instant.now();
+    }
+
     void cancelar(String motivo) {
         this.estado = Estado.CANCELADO;
         this.motivoCancelacion = motivo;

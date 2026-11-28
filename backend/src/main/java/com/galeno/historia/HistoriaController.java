@@ -119,7 +119,7 @@ public class HistoriaController {
                         .map(f -> new RespuestasFormato(f.id(), f.respuestas())).toList(),
                 r.procedimientos() == null ? null : r.procedimientos().stream()
                         .map(p -> new ProcedimientoNuevo(p.codigoCups(), p.cantidad(), p.valorUnitario(), p.diente(),
-                                p.superficies(), p.resultado())).toList(),
+                                p.superficies(), p.resultado(), p.itemPlanId())).toList(),
                 r.incapacidad(), new HistoriaService.Acompanante(r.acompananteNombre(), r.acompananteParentesco(),
                         r.acompananteTipoDocumento(), r.acompananteNumeroDocumento()),
                 r.modalidadAtencion() == null && r.grupoServicios() == null && r.causaExterna() == null && r.entorno() == null
@@ -272,7 +272,7 @@ public class HistoriaController {
                                        @Min(1) @Max(99) int cantidad,
                                        @DecimalMin("0.00") @DecimalMax("999999999.99") BigDecimal valorUnitario,
                                        @Size(max = 2) String diente, @Size(max = 5) String superficies,
-                                       @Size(max = 1000) String resultado) {
+                                       @Size(max = 1000) String resultado, UUID itemPlanId) {
     }
 
     /** @param codigoCups opcional: sin él va la descripción (interconsulta o estudio fuera del catálogo) */

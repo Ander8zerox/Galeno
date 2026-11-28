@@ -33,7 +33,7 @@ export function ProcedimientosEditor({ value, onChange, atencionId }: {
             <tbody>
               {value.map((p, i) => (
                 <tr key={`${p.codigoCups}-${i}`}>
-                  <td><strong>{p.codigoCups}</strong> <span className="small">{p.descripcion}</span></td>
+                  <td><strong>{p.codigoCups}</strong> <span className="small">{p.descripcion}</span>{p.itemPlanId && <> <span className="badge badge-info">Del plan</span></>}</td>
                   <td><input aria-label="Cantidad" className="campo-corto" type="number" min={1} max={99} value={p.cantidad ?? 1}
                     onChange={(e) => actualizar(i, { cantidad: Math.max(1, Number(e.target.value) || 1) })} /></td>
                   <td><input aria-label="Valor unitario" className="campo-medio" inputMode="numeric" value={p.valorUnitario ?? ""} placeholder="Sin precio"
@@ -81,6 +81,7 @@ export function ProcedimientosLectura({ procedimientos }: { procedimientos: Sche
             {p.cantidad !== 1 && ` × ${p.cantidad}`}
             {p.diente && ` · diente ${p.diente}${p.superficies ? ` ${p.superficies}` : ""}`}
             {" · "}<span className="muted">{pesos(p.valorUnitario)}</span>
+            {p.itemPlanId && <span className="muted small"> · del plan de tratamiento</span>}
             {p.resultado && <div className="small">Resultado: {p.resultado}</div>}
           </li>
         ))}
