@@ -57,7 +57,7 @@ class ArmadorRipsTest {
 
     private static ProcedimientoVista proc(String codigo, int cantidad, String valor) {
         return new ProcedimientoVista(codigo, "Descripción " + codigo, cantidad, valor == null ? null : new BigDecimal(valor),
-                null, null, codigo.startsWith("890"), null);
+                null, null, codigo.startsWith("890"), null, null);
     }
 
     private static AtencionLote atencion(ArmadorRips.PacienteRips p, CobroVista c, List<DiagnosticoVista> dx,
